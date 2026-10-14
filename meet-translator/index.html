@@ -1,0 +1,303 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#14181f">
+<link rel="manifest" href="manifest.json">
+<title>Souffleur EN→FR</title>
+<style>
+  :root {
+    --bg: #14181f; --panel: #1d232d; --line: #2c3442;
+    --fg: #e9edf3; --muted: #8d97a8; --accent: #f0b90b; --live: #3ddc97; --err: #ff6b6b;
+    --body: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+    color-scheme: dark;
+  }
+  * { box-sizing: border-box; }
+  html, body { height: 100%; margin: 0; }
+  body {
+    background: var(--bg); color: var(--fg); font: 16px/1.45 var(--body);
+    display: flex; flex-direction: column;
+    padding: env(safe-area-inset-top, 0px) max(12px, env(safe-area-inset-right, 0px)) env(safe-area-inset-bottom, 0px) max(12px, env(safe-area-inset-left, 0px));
+  }
+  header { display: flex; align-items: center; gap: 10px; padding-block: 10px; }
+  header h1 { font-size: 17px; margin: 0; flex: 1; }
+  .dot { width: 10px; height: 10px; border-radius: 50%; background: var(--muted); }
+  .dot.on { background: var(--live); box-shadow: 0 0 0 4px rgba(61,220,151,.18); }
+  button {
+    font: inherit; color: var(--fg); background: var(--panel); border: 1px solid var(--line);
+    border-radius: 10px; padding: 10px 14px; cursor: pointer;
+  }
+  button:focus-visible, input:focus-visible, textarea:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  button.primary { background: var(--accent); color: #111; border-color: var(--accent); font-weight: 700; }
+  button.small { padding: 6px 10px; font-size: 14px; }
+  #feed { flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 10px; padding-bottom: 10px; }
+  .card { background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 10px 12px; }
+  .card .en { color: var(--muted); font-size: 14px; }
+  .card .fr { font-size: 19px; font-weight: 600; margin-top: 2px; }
+  .card.interim .fr { color: var(--muted); font-weight: 400; font-style: italic; }
+  .hint { color: var(--muted); font-size: 14px; }
+  .hint ol { padding-left: 20px; margin: 6px 0; }
+  .bar { display: flex; gap: 8px; flex-wrap: wrap; padding-block: 8px; border-top: 1px solid var(--line); }
+  .bar > * { flex: 1 1 auto; }
+  #sugg { display: flex; flex-direction: column; gap: 8px; }
+  .sug { border-left: 3px solid var(--accent); }
+  .sug .say { font-size: 18px; font-weight: 600; }
+  .sug .gloss { color: var(--muted); font-size: 14px; }
+  textarea, input {
+    width: 100%; font: inherit; color: var(--fg); background: var(--bg);
+    border: 1px solid var(--line); border-radius: 10px; padding: 10px;
+  }
+  dialog { background: var(--panel); color: var(--fg); border: 1px solid var(--line); border-radius: 14px; width: min(520px, 94vw); }
+  dialog::backdrop { background: rgba(0,0,0,.6); }
+  label { display: block; font-size: 14px; color: var(--muted); margin: 10px 0 4px; }
+  .row { display: flex; gap: 8px; align-items: center; }
+  .err { color: var(--err); }
+</style>
+</head>
+<body>
+<header>
+  <span id="dot" class="dot"></span>
+  <h1>Souffleur EN→FR</h1>
+  <button class="small" id="btnSettings" aria-label="Réglages">⚙︎</button>
+</header>
+
+<main id="feed" aria-live="polite">
+  <div class="card hint" id="intro">
+    <b>Comment l'utiliser pendant ton appel Google Meet :</b>
+    <ol>
+      <li>Lance Meet sur ton <b>PC</b> (haut-parleurs, pas de casque).</li>
+      <li>Ouvre cette page dans <b>Chrome</b> sur ton téléphone, pose-le à côté du PC.</li>
+      <li>Appuie sur <b>Écouter</b> et autorise le micro. L'écran reste allumé.</li>
+    </ol>
+    Chaque phrase anglaise apparaît, avec sa traduction française en gros.
+    « Suggérer une réponse » propose quoi répondre en anglais (clé API dans ⚙︎).
+  </div>
+</main>
+
+<section id="sugg"></section>
+
+<div class="bar">
+  <button class="primary" id="btnListen">▶ Écouter</button>
+  <button id="btnSuggest">💡 Suggérer une réponse</button>
+  <button id="btnSay">🇫🇷→🇬🇧 Je veux dire…</button>
+</div>
+
+<dialog id="dlgSay">
+  <form method="dialog" id="formSay">
+    <label for="sayFr">Écris (ou dicte) en français ce que tu veux dire :</label>
+    <textarea id="sayFr" rows="3" placeholder="Ex : Je voudrais savoir comment améliorer mes vidéos."></textarea>
+    <div class="row" style="margin-top:8px">
+      <button type="button" id="btnSayGo" class="primary">Traduire</button>
+      <button type="button" id="btnSayClose">Fermer</button>
+    </div>
+    <div id="sayOut" style="margin-top:10px"></div>
+  </form>
+</dialog>
+
+<dialog id="dlgSettings">
+  <form method="dialog">
+    <label for="apiKey">Clé API Anthropic (facultatif, pour les suggestions de réponses)</label>
+    <input id="apiKey" type="password" autocomplete="off" placeholder="sk-ant-…">
+    <p class="hint">Elle reste sur ton téléphone uniquement (stockage local du navigateur). Crée-la sur console.anthropic.com.</p>
+    <label for="ctx">Contexte de l'appel (aide les suggestions)</label>
+    <textarea id="ctx" rows="3"></textarea>
+    <div class="row" style="margin-top:10px">
+      <button class="primary" id="btnSaveSettings" value="save">Enregistrer</button>
+      <button id="btnClear" type="button">Effacer l'historique</button>
+    </div>
+  </form>
+</dialog>
+
+<script>
+const $ = (id) => document.getElementById(id);
+const feed = $("feed");
+const store = {
+  get(k, d = "") { try { return localStorage.getItem(k) ?? d; } catch { return d; } },
+  set(k, v) { try { localStorage.setItem(k, v); } catch {} },
+};
+const DEFAULT_CTX = "Séance 1:1 de 15 minutes avec l'équipe Binance (programme Binance Creators). Ils me donnent un retour personnalisé sur mon contenu (challenges #002 Agent OS, #003 bStocks, #004 Why Binance?) et répondent à mes questions. Je suis francophone, mon anglais est moyen.";
+$("apiKey").value = store.get("apiKey");
+$("ctx").value = store.get("ctx", DEFAULT_CTX);
+
+const transcript = []; // {en, fr}
+
+// ---------- Traduction ----------
+async function translate(text, sl, tl) {
+  try {
+    const u = `https://translate.googleapis.com/translate_a/single?client=gtx&sl=${sl}&tl=${tl}&dt=t&q=${encodeURIComponent(text)}`;
+    const r = await fetch(u);
+    if (!r.ok) throw new Error(r.status);
+    const j = await r.json();
+    return j[0].map((p) => p[0]).join("");
+  } catch {
+    const r = await fetch(`https://api.mymemory.translated.net/get?q=${encodeURIComponent(text)}&langpair=${sl}|${tl}`);
+    const j = await r.json();
+    return j.responseData.translatedText;
+  }
+}
+
+// ---------- Affichage ----------
+let interimCard = null;
+function nearBottom() { return feed.scrollHeight - feed.scrollTop - feed.clientHeight < 120; }
+function scrollDown(force) { if (force || nearBottom()) feed.scrollTop = feed.scrollHeight; }
+function makeCard(en, fr, cls = "") {
+  const c = document.createElement("div");
+  c.className = "card " + cls;
+  c.innerHTML = '<div class="en"></div><div class="fr"></div>';
+  c.querySelector(".en").textContent = en;
+  c.querySelector(".fr").textContent = fr;
+  return c;
+}
+function showInterim(text) {
+  const stick = nearBottom();
+  if (!interimCard) { interimCard = makeCard("", "…", "interim"); feed.appendChild(interimCard); }
+  interimCard.querySelector(".en").textContent = text;
+  scrollDown(stick);
+}
+async function addFinal(text) {
+  text = text.trim();
+  if (!text) return;
+  const stick = nearBottom();
+  if (interimCard) { interimCard.remove(); interimCard = null; }
+  const card = makeCard(text, "…");
+  feed.appendChild(card);
+  scrollDown(stick);
+  const entry = { en: text, fr: "" };
+  transcript.push(entry);
+  try { entry.fr = await translate(text, "en", "fr"); }
+  catch { entry.fr = "(traduction indisponible — vérifie ta connexion)"; }
+  card.querySelector(".fr").textContent = entry.fr;
+  scrollDown(stick);
+}
+
+// ---------- Reconnaissance vocale ----------
+const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+let rec = null, listening = false, wakeLock = null;
+
+function setListening(on) {
+  listening = on;
+  $("dot").classList.toggle("on", on);
+  $("btnListen").textContent = on ? "■ Arrêter" : "▶ Écouter";
+}
+async function keepAwake() {
+  try { wakeLock = await navigator.wakeLock?.request("screen"); } catch {}
+}
+document.addEventListener("visibilitychange", () => { if (listening && document.visibilityState === "visible") keepAwake(); });
+
+function startRec() {
+  if (!SR) {
+    feed.appendChild(makeCard("", "Ce navigateur ne gère pas la reconnaissance vocale. Ouvre cette page dans Google Chrome.", "err"));
+    return;
+  }
+  rec = new SR();
+  rec.lang = "en-US";
+  rec.continuous = true;
+  rec.interimResults = true;
+  rec.onresult = (e) => {
+    let interim = "";
+    for (let i = e.resultIndex; i < e.results.length; i++) {
+      const r = e.results[i];
+      if (r.isFinal) addFinal(r[0].transcript);
+      else interim += r[0].transcript;
+    }
+    if (interim) showInterim(interim);
+  };
+  rec.onerror = (e) => {
+    if (e.error === "not-allowed" || e.error === "service-not-allowed") {
+      feed.appendChild(makeCard("", "Micro refusé. Autorise le micro pour ce site dans Chrome, puis réessaie.", "err"));
+      setListening(false);
+    }
+  };
+  // Chrome coupe la reconnaissance après un silence : on relance automatiquement.
+  rec.onend = () => { if (listening) { try { rec.start(); } catch {} } };
+  setListening(true);
+  rec.start();
+  keepAwake();
+  $("intro")?.remove();
+}
+function stopRec() {
+  setListening(false);
+  try { rec?.stop(); } catch {}
+  try { wakeLock?.release(); } catch {}
+}
+$("btnListen").onclick = () => (listening ? stopRec() : startRec());
+
+// ---------- Suggestions de réponses (Claude) ----------
+async function askClaude(prompt) {
+  const key = store.get("apiKey");
+  if (!key) throw new Error("Ajoute ta clé API Anthropic dans ⚙︎ pour activer les suggestions.");
+  const r = await fetch("https://api.anthropic.com/v1/messages", {
+    method: "POST",
+    headers: {
+      "content-type": "application/json",
+      "x-api-key": key,
+      "anthropic-version": "2023-06-01",
+      "anthropic-dangerous-direct-browser-access": "true",
+    },
+    body: JSON.stringify({
+      model: "claude-haiku-5-5",
+      max_tokens: 600,
+      messages: [{ role: "user", content: prompt }],
+    }),
+  });
+  const j = await r.json();
+  if (!r.ok) throw new Error(j.error?.message || "Erreur API " + r.status);
+  return j.content.map((b) => b.text || "").join("");
+}
+
+$("btnSuggest").onclick = async () => {
+  const box = $("sugg");
+  box.innerHTML = '<div class="card hint">Je réfléchis…</div>';
+  const last = transcript.slice(-12).map((t) => "- " + t.en).join("\n") || "(rien encore)";
+  const prompt = `Contexte : ${store.get("ctx", DEFAULT_CTX)}
+
+Voici les dernières phrases dites (en anglais) par mon interlocuteur :
+${last}
+
+Propose 3 réponses courtes que je peux dire à voix haute maintenant, en anglais simple (niveau B1, phrases courtes, faciles à prononcer), naturelles et polies. Réponds UNIQUEMENT en JSON : [{"en":"...","fr":"traduction française"}]`;
+  try {
+    const raw = await askClaude(prompt);
+    const list = JSON.parse(raw.slice(raw.indexOf("["), raw.lastIndexOf("]") + 1));
+    box.innerHTML = "";
+    for (const s of list) {
+      const c = document.createElement("div");
+      c.className = "card sug";
+      c.innerHTML = '<div class="say"></div><div class="gloss"></div>';
+      c.querySelector(".say").textContent = s.en;
+      c.querySelector(".gloss").textContent = s.fr;
+      c.onclick = () => c.remove();
+      box.appendChild(c);
+    }
+  } catch (e) {
+    box.innerHTML = "";
+    const c = makeCard("", e.message, "err"); c.onclick = () => c.remove(); box.appendChild(c);
+  }
+};
+
+// ---------- Je veux dire… (FR → EN) ----------
+$("btnSay").onclick = () => $("dlgSay").showModal();
+$("btnSayClose").onclick = () => $("dlgSay").close();
+$("btnSayGo").onclick = async () => {
+  const fr = $("sayFr").value.trim();
+  if (!fr) return;
+  const out = $("sayOut");
+  out.textContent = "…";
+  try {
+    const en = await translate(fr, "fr", "en");
+    out.innerHTML = '<div class="card sug"><div class="say"></div><button type="button" class="small" style="margin-top:6px">🔊 Écouter la prononciation</button></div>';
+    out.querySelector(".say").textContent = en;
+    out.querySelector("button").onclick = () => {
+      const u = new SpeechSynthesisUtterance(en); u.lang = "en-US"; u.rate = 0.9;
+      speechSynthesis.speak(u);
+    };
+  } catch { out.textContent = "Traduction indisponible — vérifie ta connexion."; }
+};
+
+// ---------- Réglages ----------
+$("btnSettings").onclick = () => $("dlgSettings").showModal();
+$("btnSaveSettings").onclick = () => { store.set("apiKey", $("apiKey").value.trim()); store.set("ctx", $("ctx").value.trim()); };
+$("btnClear").onclick = () => { transcript.length = 0; feed.innerHTML = ""; $("sugg").innerHTML = ""; $("dlgSettings").close(); };
+</script>
+</body>
+</html>
