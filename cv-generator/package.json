@@ -1,0 +1,55 @@
+{
+  "name": "cv-studio",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "description": "Générateur de CV et de lettres de motivation aux normes actuelles, avec adaptation aux offres d'emploi par IA.",
+  "scripts": {
+    "dev": "concurrently -k -n web,api -c blue,magenta \"vite\" \"tsx watch server/index.ts\"",
+    "dev:web": "vite",
+    "dev:api": "tsx watch server/index.ts",
+    "build": "tsc --noEmit && vite build",
+    "start": "NODE_ENV=production tsx server/index.ts",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "android:sync": "vite build && cap sync android",
+    "android:open": "cap open android"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "dependencies": {
+    "@anthropic-ai/sdk": "^0.137.0",
+    "@capacitor/android": "^8.5.3",
+    "@capacitor/app": "^8.1.2",
+    "@capacitor/core": "^8.5.3",
+    "@capacitor/filesystem": "^8.1.5",
+    "@capacitor/share": "^8.0.3",
+    "@fontsource/inter": "^5.3.0",
+    "@hono/node-server": "^2.1.5",
+    "@react-pdf/renderer": "^4.9.0",
+    "docx": "^9.13.0",
+    "hono": "^4.13.13",
+    "lucide-react": "^1.60.0",
+    "pdfjs-dist": "^5.7.284",
+    "react": "^19.3.1",
+    "react-dom": "^19.3.1",
+    "tsx": "^4.23.15",
+    "zod": "^4.6.7",
+    "zustand": "^5.0.15"
+  },
+  "devDependencies": {
+    "@capacitor/cli": "^8.5.3",
+    "@react-pdf/types": "^2.14.0",
+    "@tailwindcss/vite": "^4.3.3",
+    "@types/node": "^22.20.5",
+    "@types/react": "^19.3.0",
+    "@types/react-dom": "^19.3.0",
+    "@vitejs/plugin-react": "^5.2.0",
+    "concurrently": "^10.0.6",
+    "tailwindcss": "^4.3.3",
+    "typescript": "~5.9.3",
+    "vite": "^7.3.7",
+    "vitest": "^3.2.7"
+  }
+}

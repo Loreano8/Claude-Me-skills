@@ -1,0 +1,58 @@
+name: CV Studio
+
+on:
+  push:
+    paths: ['cv-generator/**', '.github/workflows/cv-generator.yml']
+  pull_request:
+    paths: ['cv-generator/**', '.github/workflows/cv-generator.yml']
+  workflow_dispatch:
+
+defaults:
+  run:
+    working-directory: cv-generator
+
+jobs:
+  web:
+    name: Site web (vérifications et tests)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: cv-generator/package-lock.json
+      - run: npm ci
+      - run: npm run typecheck
+      - run: npm test
+      - run: npm run build
+
+  android:
+    name: Application Android (APK de test)
+    needs: web
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: cv-generator/package-lock.json
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 21
+      - run: npm ci
+      - name: Compiler le site pour l'application
+        run: npm run build
+        env:
+          # Adresse du serveur IA en ligne (Settings > Secrets and variables > Actions > Variables).
+          VITE_API_URL: ${{ vars.VITE_API_URL }}
+      - run: npx cap sync android
+      - name: Compiler l'APK
+        working-directory: cv-generator/android
+        run: ./gradlew assembleDebug --no-daemon
+      - uses: actions/upload-artifact@v4
+        with:
+          name: cv-studio-apk
+          path: cv-generator/android/app/build/outputs/apk/debug/app-debug.apk
