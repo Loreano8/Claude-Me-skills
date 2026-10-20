@@ -260,7 +260,8 @@ export function buildLetterDocx(letter: CoverLetter, cv: CvDocument): Document {
     children.push(
       new Paragraph({
         spacing: { before: 420, after: 300 },
-        children: [new TextRun({ text: 'Objet : ', bold: true }), new TextRun({ text: letter.subject.replace(/^objet\s*:\s*/i, '') })],
+        children: [new TextRun({ text: letter.lang === 'en' ? 'Subject: ' : 'Objet : ', bold: true }),
+          new TextRun({ text: letter.subject.replace(/^(objet|subject|re)\s*:\s*/i, '') }),],
       }),
     );
   }

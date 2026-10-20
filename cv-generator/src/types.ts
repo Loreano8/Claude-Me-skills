@@ -1,4 +1,4 @@
-import type { AdaptResult, Attachment, Lang } from '../shared/schema.ts';
+import type { AdaptResult, Attachment, Lang, Market } from '../shared/schema.ts';
 
 export type TemplateId = 'moderne' | 'classique' | 'elegant';
 
@@ -84,6 +84,8 @@ export interface CvDocument {
   settings: CvSettings;
   /** Présent quand ce CV a été adapté à une offre. */
   adaptation?: { job: AdaptResult['job']; analysis: AdaptResult['analysis']; createdAt: number };
+  /** Présent quand ce CV est une version traduite. */
+  translation?: { lang: Lang; market: Market; notes: string[]; createdAt: number };
 }
 
 export interface CoverLetter {
@@ -99,6 +101,8 @@ export interface CoverLetter {
   closing: string;
   showSignature: boolean;
   accent: string;
+  /** Langue de la lettre (absente dans les lettres enregistrées avant l'ajout de l'anglais : français). */
+  lang?: Lang;
 }
 
 export interface JobPostingDraft {

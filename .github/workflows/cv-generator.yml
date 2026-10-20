@@ -56,3 +56,38 @@ jobs:
         with:
           name: cv-studio-apk
           path: cv-generator/android/app/build/outputs/apk/debug/app-debug.apk
+
+  site:
+    name: Mise en ligne du site (GitHub Pages)
+    needs: web
+    if: github.event_name != 'pull_request'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deploy.outputs.page_url }}
+    concurrency:
+      group: pages
+      cancel-in-progress: true
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: cv-generator/package-lock.json
+      - run: npm ci
+      - run: npm run build
+        env:
+          VITE_API_URL: ${{ vars.VITE_API_URL }}
+      - uses: actions/configure-pages@v5
+        with:
+          enablement: true
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: cv-generator/dist
+      - id: deploy
+        uses: actions/deploy-pages@v4

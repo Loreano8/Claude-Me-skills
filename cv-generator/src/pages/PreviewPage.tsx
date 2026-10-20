@@ -1,12 +1,14 @@
 import { useState } from 'react';
-import { AlertTriangle, CheckCircle2, FileDown, FileText, Lightbulb } from 'lucide-react';
-import { useActiveCv, useStore } from '../store.ts';
+import { AlertTriangle, CheckCircle2, FileDown, FileText, Languages, Lightbulb } from 'lucide-react';
+import type { Market } from '../../shared/schema.ts';
+import { MARKET_LABELS, useActiveCv, useStore } from '../store.ts';
 import type { CvDocument, CvSettings } from '../types.ts';
-import { ACCENTS } from '../lib/cv.ts';
+import { ACCENTS, isCvEmpty, toAiContent } from '../lib/cv.ts';
+import { api } from '../lib/api.ts';
 import { checkCv } from '../lib/checks.ts';
 import { exportCvDocx, exportCvPdf } from '../export/exporters.ts';
 import { Preview } from '../components/Preview.tsx';
-import { Button, Card, cx, Notice, Toggle } from '../components/ui.tsx';
+import { Button, Card, cx, Notice, Select, Toggle } from '../components/ui.tsx';
 
 const TEMPLATES: { id: CvSettings['template']; name: string; description: string }[] = [
   { id: 'moderne', name: 'Moderne', description: 'Colonne colorée avec photo. Convient à la plupart des métiers.' },
@@ -164,6 +166,78 @@ export function ExportButtons({ cv }: { cv: CvDocument }) {
   );
 }
 
+const MARKETS: { value: Market; lang: 'fr' | 'en'; hint: string }[] = [
+  { value: 'international', lang: 'en', hint: 'Multinationales, ONG, organisations internationales.' },
+  { value: 'uk', lang: 'en', hint: 'Royaume-Uni : orthographe britannique, « CV ».' },
+  { value: 'us', lang: 'en', hint: 'États-Unis et Canada anglophone : « resume » très concis.' },
+  { value: 'france', lang: 'fr', hint: 'France : diplômes étrangers avec leur équivalent français.' },
+  { value: 'afrique', lang: 'fr', hint: 'Afrique francophone.' },
+];
+
+function TranslateCard({ cv }: { cv: CvDocument }) {
+  const addTranslatedCv = useStore((s) => s.addTranslatedCv);
+  const [market, setMarket] = useState<Market>(cv.settings.headingLang === 'en' ? 'france' : 'international');
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const target = MARKETS.find((m) => m.value === market)!;
+
+  async function run() {
+    setBusy(true);
+    setError(null);
+    try {
+      const res = await api.translate({ cv: toAiContent(cv), targetLang: target.lang, market });
+      addTranslatedCv(cv, res, target.lang, market);
+    } catch (e) {
+      setError((e as Error).message);
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  return (
+    <Card
+      title={
+        <span className="flex items-center gap-2">
+          <Languages className="size-5 text-violet-600" /> Mon CV dans une autre langue
+        </span>
+      }
+      subtitle="L’IA traduit tout votre CV (postes, diplômes, compétences…) et l’adapte aux usages du pays visé. Votre CV d’origine est conservé."
+    >
+      {cv.translation && (
+        <div className="mb-3">
+          <Notice tone="info">
+            Ce CV est la version « {MARKET_LABELS[cv.translation.market]} ».
+            {cv.translation.lang === 'en' && ' Photo, date de naissance, nationalité et signature sont masquées, comme le veut l’usage anglophone (vous pouvez les réactiver ci-dessous).'}
+            {cv.translation.notes.length > 0 && (
+              <ul className="mt-1.5 list-disc pl-5">
+                {cv.translation.notes.map((n, i) => (
+                  <li key={i}>{n}</li>
+                ))}
+              </ul>
+            )}
+          </Notice>
+        </div>
+      )}
+      <Select
+        label="Version à créer"
+        value={market}
+        onChange={setMarket}
+        options={MARKETS.map((m) => ({ value: m.value, label: MARKET_LABELS[m.value] }))}
+      />
+      <p className="mt-1 text-xs text-slate-500">{target.hint}</p>
+      <Button className="mt-3" variant="ai" icon={<Languages className="size-4" />} loading={busy} disabled={isCvEmpty(cv)} onClick={run}>
+        Créer cette version
+      </Button>
+      {busy && <p className="mt-2 text-sm text-violet-700">Traduction en cours… (jusqu’à une minute)</p>}
+      {error && (
+        <div className="mt-3">
+          <Notice tone="error">{error}</Notice>
+        </div>
+      )}
+    </Card>
+  );
+}
+
 function ChecksCard({ cv }: { cv: CvDocument }) {
   const checks = checkCv(cv);
   return (
@@ -196,17 +270,20 @@ export function PreviewPage() {
   const cv = useActiveCv();
   return (
     // Sur téléphone : export, puis aperçu, puis réglages. Sur grand écran : réglages à gauche, aperçu à droite.
-    <div className="grid gap-4 lg:grid-cols-[360px_1fr] lg:grid-rows-[auto_auto_1fr]">
+    <div className="grid gap-4 lg:grid-cols-[360px_1fr] lg:grid-rows-[auto_auto_auto_1fr]">
       <Card title="Télécharger mon CV" className="lg:col-start-1">
         <ExportButtons cv={cv} />
       </Card>
-      <div className="lg:sticky lg:top-20 lg:col-start-2 lg:row-span-3 lg:row-start-1 lg:self-start">
+      <div className="lg:sticky lg:top-20 lg:col-start-2 lg:row-span-4 lg:row-start-1 lg:self-start">
         <div className="mx-auto max-w-[700px]">
           <Preview source={{ kind: 'cv', cv }} />
         </div>
       </div>
       <div className="lg:col-start-1">
         <DesignPanel cv={cv} />
+      </div>
+      <div className="lg:col-start-1">
+        <TranslateCard cv={cv} />
       </div>
       <div className="lg:col-start-1">
         <ChecksCard cv={cv} />

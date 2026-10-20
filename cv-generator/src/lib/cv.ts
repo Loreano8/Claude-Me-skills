@@ -1,4 +1,4 @@
-import type { AiCvContent } from '../../shared/schema.ts';
+import type { AiCvContent, Lang } from '../../shared/schema.ts';
 import type { CoverLetter, CvDocument, CvSettings, Personal } from '../types.ts';
 
 export const uid = (): string =>
@@ -10,6 +10,13 @@ export const ACCENTS = ['#1F4E79', '#0F766E', '#7F1D1D', '#334155', '#5B21B6', '
 
 export function todayFr(): string {
   return new Date().toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' });
+}
+
+/** Date du jour telle qu'elle s'écrit en tête de lettre (« le 20 octobre 2026 » / « 20 October 2026 »). */
+export function letterDate(lang: Lang): string {
+  return lang === 'en'
+    ? new Date().toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' })
+    : `le ${todayFr()}`;
 }
 
 export function emptyPersonal(): Personal {
@@ -71,13 +78,14 @@ export function emptyLetter(): CoverLetter {
     recipientCompany: '',
     recipientAddress: '',
     place: '',
-    date: `le ${todayFr()}`,
+    date: letterDate('fr'),
     subject: '',
     salutation: 'Madame, Monsieur,',
     body: '',
     closing: "Je vous prie d'agréer, Madame, Monsieur, l'expression de mes salutations distinguées.",
     showSignature: true,
     accent: ACCENTS[0],
+    lang: 'fr',
   };
 }
 
@@ -106,11 +114,24 @@ export function toAiContent(cv: CvDocument): AiCvContent {
   };
 }
 
-/** Applique un contenu renvoyé par l'IA sur un CV, en gardant photo, signature et réglages. */
-export function applyAiContent(cv: CvDocument, ai: AiCvContent, opts: { keepPersonal?: boolean } = {}): CvDocument {
-  const personal: Personal = opts.keepPersonal
-    ? { ...cv.personal, title: ai.personal.title || cv.personal.title }
-    : { ...emptyPersonal(), ...cv.personal, ...nonEmpty(ai.personal) };
+/**
+ * Applique un contenu renvoyé par l'IA sur un CV, en gardant photo, signature et réglages.
+ * - merge (défaut) : les infos personnelles non vides de l'IA complètent celles du CV ;
+ * - keepPersonal : seules le titre change (CV adapté à une offre) ;
+ * - keepContact : tout peut être traduit sauf les moyens de contact (CV traduit).
+ */
+export function applyAiContent(
+  cv: CvDocument,
+  ai: AiCvContent,
+  opts: { mode?: 'merge' | 'keepPersonal' | 'keepContact' } = {},
+): CvDocument {
+  const p = cv.personal;
+  const personal: Personal =
+    opts.mode === 'keepPersonal'
+      ? { ...p, title: ai.personal.title || p.title }
+      : opts.mode === 'keepContact'
+        ? { ...p, ...nonEmpty(ai.personal), email: p.email, phone: p.phone, linkedin: p.linkedin, website: p.website }
+        : { ...emptyPersonal(), ...p, ...nonEmpty(ai.personal) };
   return {
     ...cv,
     updatedAt: Date.now(),

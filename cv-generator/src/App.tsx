@@ -23,7 +23,7 @@ const isTab = (v: string): v is Tab => TABS.some((t) => t.id === v);
 function Logo() {
   return (
     <div className="flex items-center gap-2">
-      <img src="/icons/icon.svg" alt="" className="size-8" />
+      <img src={`${import.meta.env.BASE_URL}icons/icon.svg`} alt="" className="size-8" />
       <span className="text-lg font-bold tracking-tight text-slate-900">
         CV <span className="text-brand-600">Studio</span>
       </span>

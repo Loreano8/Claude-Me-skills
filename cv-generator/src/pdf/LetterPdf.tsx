@@ -43,7 +43,8 @@ export function LetterPdf({ letter, cv }: { letter: CoverLetter; cv: CvDocument 
 
         {letter.subject ? (
           <Text style={s.subject}>
-            Objet : <Text style={{ fontWeight: 400 }}>{letter.subject.replace(/^objet\s*:\s*/i, '')}</Text>
+            {letter.lang === 'en' ? 'Subject: ' : 'Objet : '}
+            <Text style={{ fontWeight: 400 }}>{letter.subject.replace(/^(objet|subject|re)\s*:\s*/i, '')}</Text>
           </Text>
         ) : null}
 

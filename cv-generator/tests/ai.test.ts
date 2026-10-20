@@ -45,4 +45,13 @@ describe('appels à Claude', () => {
     expect(text).toContain('<notes_du_candidat>');
     expect(req.system).toContain('180 à 250');
   });
+
+  it('traduit le CV en anglais avec les usages du marché visé', async () => {
+    const { client, parse } = fakeClient({ stop_reason: 'end_turn', parsed_output: { cv: {}, notes: [] } });
+    await createAi(client).translate({ cv: toAiContent(sampleCv()), targetLang: 'en', market: 'us' });
+    const req = (parse.mock.calls[0] as unknown[])[0] as Record<string, any>;
+    expect(req.system).toContain('États-Unis');
+    expect(req.system).toContain('en anglais');
+    expect(req.system).toContain('Ne traduis pas les noms propres');
+  });
 });

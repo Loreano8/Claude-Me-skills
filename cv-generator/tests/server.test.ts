@@ -2,13 +2,14 @@ import { describe, expect, it, vi } from 'vitest';
 import { createApp } from '../server/app.ts';
 import { AiError, type Ai } from '../server/ai.ts';
 import { toAiContent } from '../src/lib/cv.ts';
-import { sampleAdapt, sampleCv, sampleLetter } from './fixtures.ts';
+import { sampleAdapt, sampleCv, sampleLetter, sampleTranslation } from './fixtures.ts';
 
 function fakeAi(overrides: Partial<Ai> = {}): Ai {
   return {
     structure: vi.fn(async () => ({ cv: sampleAdapt.cv, suggestions: ['ok'] })),
     adapt: vi.fn(async () => sampleAdapt),
     coverLetter: vi.fn(async () => sampleLetter),
+    translate: vi.fn(async () => sampleTranslation),
     ...overrides,
   };
 }
@@ -50,6 +51,16 @@ describe('API', () => {
     const letter = await post(app, '/api/ai/cover-letter', { cv, job: { text: '' }, notes: 'Candidature spontanée chez X' });
     expect(letter.status).toBe(200);
     expect((await letter.json()).paragraphs).toHaveLength(3);
+  });
+
+  it('traduit le CV pour un marché donné', async () => {
+    const ai = fakeAi();
+    const app = createApp({ ai, allowedOrigins: [], rateLimitPerHour: 50 });
+    const res = await post(app, '/api/ai/translate', { cv: toAiContent(sampleCv()), targetLang: 'en', market: 'uk' });
+    expect(res.status).toBe(200);
+    expect((await res.json()).cv.personal.title).toBe('Senior Accountant');
+    expect(ai.translate).toHaveBeenCalledWith(expect.objectContaining({ targetLang: 'en', market: 'uk' }));
+    expect((await post(app, '/api/ai/translate', { cv: toAiContent(sampleCv()), targetLang: 'xx' })).status).toBe(400);
   });
 
   it('transmet les erreurs de l’IA avec un message lisible', async () => {

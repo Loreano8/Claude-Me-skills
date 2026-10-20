@@ -3,13 +3,13 @@
   "short_name": "CV Studio",
   "description": "Créez un CV aux normes actuelles, adaptez-le aux offres d'emploi et générez vos lettres de motivation.",
   "lang": "fr",
-  "start_url": "/",
+  "start_url": ".",
   "display": "standalone",
   "background_color": "#f1f5f9",
   "theme_color": "#2549eb",
   "icons": [
-    { "src": "/icons/icon-192.png", "sizes": "192x192", "type": "image/png" },
-    { "src": "/icons/icon-512.png", "sizes": "512x512", "type": "image/png" },
-    { "src": "/icons/icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+    { "src": "icons/icon-192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "icons/icon-512.png", "sizes": "512x512", "type": "image/png" },
+    { "src": "icons/icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
   ]
 }

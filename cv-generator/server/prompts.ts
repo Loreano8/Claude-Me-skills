@@ -62,6 +62,7 @@ Analyse :
 - changes : liste courte des modifications que tu as apportées au CV.
 - advice : 3 à 5 conseils concrets pour réussir cette candidature.
 - job : résumé de l'offre (keyRequirements = 4 à 8 exigences principales).
+- language : la langue dans laquelle tu as rédigé le CV adapté ("fr" ou "en").
 
 ${UNTRUSTED_INPUT_RULE}
 ${langRule}`;
@@ -75,7 +76,7 @@ export function coverLetterSystem(opts: {
   const words = opts.length === 'courte' ? '180 à 250' : '250 à 380';
   const langRule = opts.lang
     ? `Rédige la lettre en ${opts.lang === 'en' ? 'anglais' : 'français'}.`
-    : "Rédige la lettre dans la langue de l'offre d'emploi (en français s'il n'y a pas d'offre).";
+    : "Rédige la lettre dans la langue de l'offre d'emploi (dans la langue du CV s'il n'y a pas d'offre).";
   return `Tu es un expert en recrutement qui rédige des lettres de motivation modernes.
 
 Une bonne lettre aujourd'hui :
@@ -86,8 +87,39 @@ Une bonne lettre aujourd'hui :
 - Formule d'appel : le nom du recruteur s'il est connu, sinon « Madame, Monsieur, » (« Dear Hiring Manager, » en anglais).
 - Formule de politesse finale sobre, ex. « Je vous prie d'agréer, Madame, Monsieur, l'expression de mes salutations distinguées. »
 - "paragraphs" contient uniquement le corps de la lettre (sans l'objet, la formule d'appel ni la formule de politesse).
+- "language" indique la langue de la lettre ("fr" ou "en"). En anglais, suis les usages anglophones (« Dear Hiring Manager, », « Yours sincerely, » ou « Kind regards, »).
 
 ${HONESTY_RULE} Sur l'entreprise, n'utilise que ce que disent l'offre et les notes du candidat.
 ${UNTRUSTED_INPUT_RULE}
 ${langRule}`;
+}
+
+const MARKET_RULES: Record<string, string> = {
+  uk: `Marché visé : Royaume-Uni. Orthographe britannique (organisation, analyse). Le document s'appelle un « CV ». Dates au format « Jan 2021 – Present ».`,
+  us: `Marché visé : États-Unis et Canada anglophone. Orthographe américaine (organization, analyze). Le document s'appelle un « resume » : très concis, orienté résultats. Dates au format « Jan 2021 – Present ».`,
+  international: `Marché visé : candidature internationale (organisations internationales, ONG, multinationales). Anglais international clair, orthographe britannique. Dates au format « Jan 2021 – Present ».`,
+  france: `Marché visé : France. Dates au format MM/AAAA. Les diplômes étrangers sont suivis de leur équivalent français entre parenthèses quand il est évident (ex. « Bachelor of Science (équivalent licence) »).`,
+  afrique: `Marché visé : Afrique francophone. Dates au format MM/AAAA. Garde les intitulés officiels des diplômes et précise le système (ex. LMD, BTS) quand c'est utile.`,
+};
+
+export function translateSystem(targetLang: 'fr' | 'en', market: string): string {
+  const english = targetLang === 'en';
+  return `Tu es un expert en recrutement international et en traduction de CV.
+On te donne un CV (JSON). Ta mission : produire ce même CV ${english ? 'en anglais' : 'en français'}, adapté aux usages du pays visé — pas une traduction mot à mot.
+
+${MARKET_RULES[market] ?? MARKET_RULES.international}
+
+Règles :
+- Traduis tout le contenu : titre, accroche, postes, réalisations, intitulés de diplômes, compétences, qualités, niveaux de langue, centres d'intérêt, ville et pays.
+- Ne traduis pas les noms propres (entreprises, écoles, universités, logiciels, certifications officielles).
+- Diplômes : utilise l'intitulé courant dans la langue cible ; si le système d'origine est différent, ajoute l'équivalent entre parenthèses quand il est évident (ex. « Master's degree in Accounting (5-year degree) »). N'invente pas d'équivalence douteuse.
+${english
+    ? `- Usages anglophones : pas de « je » ; réalisations au passé pour les postes terminés (Managed, Reduced, Led) et au présent pour le poste actuel ; accroche (Professional Summary) de 2 à 3 phrases ; niveaux de langue du type « Native », « Fluent (C1) », « Intermediate (B1) ».
+- Les informations personnelles comme la date de naissance et la nationalité ne s'affichent pas sur un CV anglophone : recopie-les telles quelles (l'application les masquera), sans les traduire.`
+    : `- Usages francophones : pas de « je » dans les réalisations, chaque ligne commence par un verbe d'action ; niveaux de langue du type « Langue maternelle », « Courant (C1) ».`}
+- Garde exactement les mêmes e-mail, téléphone, liens et chiffres. Ne retire ni n'ajoute aucune expérience, formation ou compétence.
+- ${HONESTY_RULE}
+- ${UNTRUSTED_INPUT_RULE}
+
+Dans "notes", liste en français 2 à 5 adaptations que tu as faites (ex. « Diplômes accompagnés de leur équivalent », « Dates au format anglais »).`;
 }

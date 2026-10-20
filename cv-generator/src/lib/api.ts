@@ -6,6 +6,8 @@ import type {
   CoverLetterResult,
   StructureRequest,
   StructureResult,
+  TranslateRequest,
+  TranslateResult,
 } from '../../shared/schema.ts';
 
 // Sur le web, l'API est servie par le même domaine. Dans l'application Android,
@@ -30,7 +32,9 @@ async function post<T>(path: string, body: unknown): Promise<T> {
   }
   const data = await res.json().catch(() => null);
   if (!res.ok) {
-    throw new ApiError((data as { error?: string } | null)?.error ?? `Erreur ${res.status}`);
+    const message = (data as { error?: unknown } | null)?.error;
+    // Pas de réponse de notre API : site publié sans serveur (ex. version de démonstration).
+    throw new ApiError(typeof message === 'string' ? message : 'Les fonctions IA ne sont pas encore activées sur ce site.');
   }
   return data as T;
 }
@@ -39,4 +43,5 @@ export const api = {
   structure: (req: StructureRequest) => post<StructureResult>('/api/ai/structure', req),
   adapt: (req: AdaptRequest) => post<AdaptResult>('/api/ai/adapt', req),
   coverLetter: (req: CoverLetterRequest) => post<CoverLetterResult>('/api/ai/cover-letter', req),
+  translate: (req: TranslateRequest) => post<TranslateResult>('/api/ai/translate', req),
 };

@@ -15,6 +15,7 @@ function GenerateCard({ onNavigate }: { onNavigate: (t: Tab) => void }) {
   const applyLetter = useStore((s) => s.applyLetter);
   const [tone, setTone] = useState<CoverLetterRequest['tone']>('formel');
   const [length, setLength] = useState<CoverLetterRequest['length']>('standard');
+  const [lang, setLang] = useState<'auto' | 'fr' | 'en'>('auto');
   const [notes, setNotes] = useState('');
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -30,7 +31,8 @@ function GenerateCard({ onNavigate }: { onNavigate: (t: Tab) => void }) {
         notes,
         tone,
         length,
-        lang: null,
+        // « Automatique » : la langue de l'offre, sinon celle du CV.
+        lang: lang === 'auto' ? (hasJob ? null : cv.settings.headingLang) : lang,
       });
       applyLetter(res, cv);
     } catch (e) {
@@ -79,6 +81,17 @@ function GenerateCard({ onNavigate }: { onNavigate: (t: Tab) => void }) {
           options={[
             { value: 'standard', label: 'Standard (≈ 300 mots)' },
             { value: 'courte', label: 'Courte (≈ 200 mots)' },
+          ]}
+        />
+        <Select
+          className="sm:col-span-2"
+          label="Langue"
+          value={lang}
+          onChange={setLang}
+          options={[
+            { value: 'auto', label: hasJob ? 'Automatique (langue de l’offre)' : 'Automatique (langue du CV)' },
+            { value: 'fr', label: 'Français' },
+            { value: 'en', label: 'Anglais' },
           ]}
         />
         <TextArea

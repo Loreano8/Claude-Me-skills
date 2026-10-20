@@ -38,7 +38,7 @@ describe('conversion CV <-> IA', () => {
     const cv = sampleCv();
     const ai = toAiContent(cv);
     ai.personal = { ...ai.personal, title: 'Responsable comptable', email: 'autre@x.com', phone: '0' };
-    const next = applyAiContent(cv, ai, { keepPersonal: true });
+    const next = applyAiContent(cv, ai, { mode: 'keepPersonal' });
     expect(next.personal.title).toBe('Responsable comptable');
     expect(next.personal.email).toBe(cv.personal.email);
     expect(next.personal.phone).toBe(cv.personal.phone);
@@ -71,5 +71,18 @@ describe('utilitaires', () => {
   it('donne des conseils sur un CV incomplet et valide un CV complet', () => {
     expect(checkCv(emptyCv()).some((c) => c.level === 'warn')).toBe(true);
     expect(checkCv(sampleCv())).toEqual([expect.objectContaining({ level: 'ok' })]);
+  });
+});
+
+describe('version traduite', () => {
+  it('traduit tout sauf les moyens de contact', () => {
+    const cv = sampleCv();
+    const ai = toAiContent(cv);
+    ai.personal = { ...ai.personal, title: 'Senior Accountant', country: 'Senegal', email: 'changed@x.com', phone: '' };
+    const next = applyAiContent(cv, ai, { mode: 'keepContact' });
+    expect(next.personal.title).toBe('Senior Accountant');
+    expect(next.personal.country).toBe('Senegal');
+    expect(next.personal.email).toBe(cv.personal.email);
+    expect(next.personal.phone).toBe(cv.personal.phone);
   });
 });

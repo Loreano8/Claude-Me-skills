@@ -2,7 +2,7 @@ import { Hono, type Context } from 'hono';
 import { cors } from 'hono/cors';
 import { bodyLimit } from 'hono/body-limit';
 import type { z } from 'zod';
-import { AdaptRequest, CoverLetterRequest, StructureRequest } from '../shared/schema.ts';
+import { AdaptRequest, CoverLetterRequest, StructureRequest, TranslateRequest } from '../shared/schema.ts';
 import { AiError, type Ai } from './ai.ts';
 
 export interface AppOptions {
@@ -93,6 +93,11 @@ export function createApp({ ai, allowedOrigins, rateLimitPerHour }: AppOptions) 
   app.post(
     '/api/ai/cover-letter',
     aiRoute(CoverLetterRequest, (ai, body) => ai.coverLetter(body)),
+  );
+
+  app.post(
+    '/api/ai/translate',
+    aiRoute(TranslateRequest, (ai, body) => ai.translate(body)),
   );
 
   return app;

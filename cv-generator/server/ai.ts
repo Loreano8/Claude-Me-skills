@@ -5,13 +5,15 @@ import {
   AdaptResult,
   CoverLetterResult,
   StructureResult,
+  TranslateResult,
   type AdaptRequest,
   type Attachment,
   type CoverLetterRequest,
   type JobInput,
   type StructureRequest,
+  type TranslateRequest,
 } from '../shared/schema.ts';
-import { adaptSystem, coverLetterSystem, structureSystem } from './prompts.ts';
+import { adaptSystem, coverLetterSystem, structureSystem, translateSystem } from './prompts.ts';
 
 type ContentBlock = Anthropic.Beta.BetaContentBlockParam;
 type Effort = 'low' | 'medium' | 'high';
@@ -141,6 +143,14 @@ export function createAi(client: Anthropic, model = DEFAULT_MODEL) {
             : 'Il n’y a pas d’offre : rédige une lettre de candidature spontanée à partir du CV et des notes.',
       });
       return run(CoverLetterResult, coverLetterSystem(req), content, 'medium');
+    },
+
+    translate(req: TranslateRequest): Promise<TranslateResult> {
+      const content: ContentBlock[] = [
+        cvBlock('cv', req.cv),
+        { type: 'text', text: 'Produis la version de ce CV dans la langue et pour le pays demandés.' },
+      ];
+      return run(TranslateResult, translateSystem(req.targetLang, req.market), content, 'medium');
     },
   };
 }

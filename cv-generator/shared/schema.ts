@@ -84,6 +84,7 @@ export const JobSummary = z.object({
 export type JobSummary = z.infer<typeof JobSummary>;
 
 export const AdaptResult = z.object({
+  language: Lang.describe('Langue dans laquelle le CV adapté est rédigé'),
   job: JobSummary,
   cv: AiCvContent,
   analysis: z.object({
@@ -97,6 +98,7 @@ export const AdaptResult = z.object({
 export type AdaptResult = z.infer<typeof AdaptResult>;
 
 export const CoverLetterResult = z.object({
+  language: Lang.describe('Langue dans laquelle la lettre est rédigée'),
   recipientName: z.string().describe('Nom ou fonction du destinataire si connu, sinon « Service des ressources humaines »'),
   recipientCompany: z.string(),
   recipientAddress: z.string(),
@@ -106,6 +108,16 @@ export const CoverLetterResult = z.object({
   closing: z.string().describe('Formule de politesse finale'),
 });
 export type CoverLetterResult = z.infer<typeof CoverLetterResult>;
+
+export const TranslateResult = z.object({
+  cv: AiCvContent,
+  notes: z.array(z.string()).describe('Adaptations faites pour le pays visé, en français, 2 à 5 éléments courts'),
+});
+export type TranslateResult = z.infer<typeof TranslateResult>;
+
+/** Marché visé par une version traduite (conventions, orthographe). */
+export const Market = z.enum(['international', 'uk', 'us', 'france', 'afrique']);
+export type Market = z.infer<typeof Market>;
 
 // ---- Requêtes envoyées au serveur ------------------------------------------
 
@@ -147,3 +159,10 @@ export const CoverLetterRequest = z.object({
   lang: Lang.nullable().default(null),
 });
 export type CoverLetterRequest = z.output<typeof CoverLetterRequest>;
+
+export const TranslateRequest = z.object({
+  cv: AiCvContent,
+  targetLang: Lang,
+  market: Market.default('international'),
+});
+export type TranslateRequest = z.output<typeof TranslateRequest>;

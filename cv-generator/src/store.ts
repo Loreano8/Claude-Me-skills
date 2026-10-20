@@ -1,8 +1,8 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
-import type { AdaptResult, CoverLetterResult } from '../shared/schema.ts';
+import type { AdaptResult, CoverLetterResult, Lang, Market, TranslateResult } from '../shared/schema.ts';
 import type { CoverLetter, CvDocument, JobPostingDraft } from './types.ts';
-import { applyAiContent, emptyCv, emptyLetter, uid } from './lib/cv.ts';
+import { applyAiContent, emptyCv, emptyLetter, letterDate, uid } from './lib/cv.ts';
 
 interface State {
   cvs: CvDocument[];
@@ -17,9 +17,28 @@ interface State {
   deleteCv: (id: string) => void;
   renameCv: (id: string, label: string) => void;
   addAdaptedCv: (base: CvDocument, result: AdaptResult) => string;
+  addTranslatedCv: (base: CvDocument, result: TranslateResult, lang: Lang, market: Market) => string;
   setJob: (job: JobPostingDraft) => void;
   updateLetter: (patch: Partial<CoverLetter>) => void;
   applyLetter: (result: CoverLetterResult, cv: CvDocument) => void;
+}
+
+export const MARKET_LABELS: Record<Market, string> = {
+  international: 'English (international)',
+  uk: 'English (UK)',
+  us: 'English (US / Canada)',
+  france: 'Français (France)',
+  afrique: 'Français (Afrique)',
+};
+
+/**
+ * Réglages d'affichage selon la langue : un CV anglophone n'affiche ni photo,
+ * ni date de naissance, ni nationalité, ni signature (règles anti-discrimination).
+ */
+function settingsForLang(lang: Lang): Partial<CvDocument['settings']> {
+  return lang === 'en'
+    ? { headingLang: 'en', showPhoto: false, showBirthDate: false, showNationality: false, showSignature: false }
+    : { headingLang: 'fr' };
 }
 
 const first = emptyCv();
@@ -61,12 +80,24 @@ export const useStore = create<State>()(
       renameCv: (id, label) => set((s) => ({ cvs: s.cvs.map((c) => (c.id === id ? { ...c, label } : c)) })),
 
       addAdaptedCv: (base, result) => {
-        const adapted = applyAiContent({ ...structuredClone(base), id: uid() }, result.cv, { keepPersonal: true });
+        const adapted = applyAiContent({ ...structuredClone(base), id: uid() }, result.cv, { mode: 'keepPersonal' });
         const where = [result.job.title, result.job.company].filter(Boolean).join(' – ');
         adapted.label = where ? `Adapté : ${where}` : 'CV adapté';
         adapted.adaptation = { job: result.job, analysis: result.analysis, createdAt: Date.now() };
+        if (result.language !== base.settings.headingLang) {
+          adapted.settings = { ...adapted.settings, ...settingsForLang(result.language) };
+        }
         set((s) => ({ cvs: [...s.cvs, adapted], activeId: adapted.id }));
         return adapted.id;
+      },
+
+      addTranslatedCv: (base, result, lang, market) => {
+        const translated = applyAiContent({ ...structuredClone(base), id: uid() }, result.cv, { mode: 'keepContact' });
+        translated.label = `${base.label} – ${MARKET_LABELS[market]}`;
+        translated.settings = { ...translated.settings, ...settingsForLang(lang) };
+        translated.translation = { lang, market, notes: result.notes, createdAt: Date.now() };
+        set((s) => ({ cvs: [...s.cvs, translated], activeId: translated.id }));
+        return translated.id;
       },
 
       setJob: (job) => set({ job }),
@@ -77,6 +108,8 @@ export const useStore = create<State>()(
         set((s) => ({
           letter: {
             ...s.letter,
+            lang: result.language,
+            date: result.language === (s.letter.lang ?? 'fr') ? s.letter.date : letterDate(result.language),
             recipientName: result.recipientName,
             recipientCompany: result.recipientCompany,
             recipientAddress: result.recipientAddress,

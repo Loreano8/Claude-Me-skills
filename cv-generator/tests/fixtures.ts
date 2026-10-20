@@ -1,4 +1,4 @@
-import type { AdaptResult, CoverLetterResult } from '../shared/schema.ts';
+import type { AdaptResult, CoverLetterResult, TranslateResult } from '../shared/schema.ts';
 import type { CvDocument } from '../src/types.ts';
 import { defaultSettings } from '../src/lib/cv.ts';
 
@@ -67,6 +67,7 @@ export function sampleCv(): CvDocument {
 }
 
 export const sampleAdapt: AdaptResult = {
+  language: 'fr',
   job: {
     title: 'Responsable comptable',
     company: 'Groupe Logistique Ouest',
@@ -127,6 +128,7 @@ export const sampleAdapt: AdaptResult = {
 };
 
 export const sampleLetter: CoverLetterResult = {
+  language: 'fr',
   recipientName: 'Service des ressources humaines',
   recipientCompany: 'Groupe Logistique Ouest',
   recipientAddress: 'Zone industrielle\nDakar',
@@ -140,3 +142,18 @@ export const sampleLetter: CoverLetterResult = {
   closing: 'Je vous prie d’agréer, Madame, Monsieur, l’expression de mes salutations distinguées.',
 };
 
+
+export const sampleTranslation: TranslateResult = {
+  cv: {
+    ...sampleAdapt.cv,
+    personal: { ...sampleCv().personal, title: 'Senior Accountant', country: 'Senegal' },
+    summary: 'Accountant with 5 years of experience in transport, specialising in tax and payroll.',
+    skills: ['General accounting', 'Tax', 'Payroll', 'Sage 100', 'Advanced Excel', 'SYSCOHADA'],
+    languages: [
+      { name: 'French', level: 'Fluent (C1)' },
+      { name: 'Wolof', level: 'Native' },
+      { name: 'English', level: 'Intermediate (B1)' },
+    ],
+  },
+  notes: ['Dates au format anglais', 'Diplômes accompagnés de leur équivalent'],
+};

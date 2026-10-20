@@ -4,6 +4,8 @@ import react from '@vitejs/plugin-react';
 import tailwindcss from '@tailwindcss/vite';
 
 export default defineConfig({
+  // Chemins relatifs : le même build marche sur un domaine, dans un sous-dossier (GitHub Pages) et dans l'appli Android.
+  base: './',
   plugins: [react(), tailwindcss()],
   server: {
     proxy: {
