@@ -10,6 +10,7 @@ Site web (et application Android) pour créer un CV aux normes actuelles, l’ad
 | | **Saisie rapide avec l’IA** : l’utilisateur écrit tout en vrac (ou dicte avec le micro du clavier), ou importe son ancien CV en PDF ou en photo. L’IA range les informations et les rédige proprement. |
 | **Aperçu & export** | 3 modèles (Moderne, Classique « ATS », Élégant), 8 couleurs + couleur libre, options (photo, date de naissance, nationalité, signature, titres en français ou en anglais). Aperçu fidèle, export PDF et Word. Conseils automatiques sur le CV. |
 | **Adapter à une offre** | L’utilisateur colle le texte de l’annonce ou importe le PDF / une capture d’écran. L’IA crée une **version du CV adaptée** à ce poste (le CV d’origine est conservé), donne un score d’adéquation, les points forts, les exigences manquantes et des conseils. |
+| | **Mon CV dans une autre langue** : l’IA traduit tout le CV (postes, diplômes, compétences…) et l’adapte au pays visé (anglais Royaume-Uni, États-Unis/Canada ou international ; français France ou Afrique). Une nouvelle version est créée, l’original est conservé. En anglais, photo, date de naissance, nationalité et signature sont masquées comme le veut l’usage. |
 | **Lettre de motivation** | Rédaction par l’IA à partir du CV et de l’offre (ou candidature spontanée), ton et longueur au choix, modifiable, signée, export PDF et Word. |
 
 Les données restent sur le téléphone ou l’ordinateur de l’utilisateur (stockage local du navigateur). Seules les demandes à l’IA passent par le serveur.
@@ -59,6 +60,15 @@ Sans clé API, tout fonctionne sauf les boutons « IA ». La clé se crée sur [
 Autres commandes : `npm test` (tests), `npm run typecheck`, `npm run build` (version de production dans `dist/`), `npm start` (sert le site et l’API ensemble, après `npm run build`).
 
 ## Mettre le site en ligne
+
+### Version gratuite sur GitHub Pages (sans l’IA)
+
+1. Sur GitHub : *Settings → Pages → Build and deployment → Source* : choisir **GitHub Actions** (à faire une seule fois).
+2. Fusionner les modifications dans la branche `main` : le site est publié automatiquement à l’adresse `https://loreano8.github.io/Claude-Me-skills/`, puis mis à jour à chaque modification.
+
+Sans serveur, les boutons IA affichent « Les fonctions IA ne sont pas encore activées sur ce site » ; tout le reste fonctionne (formulaire, modèles, export PDF et Word). Une fois le serveur ci-dessous en ligne, renseignez son adresse dans la variable `VITE_API_URL` (*Settings → Secrets and variables → Actions → Variables*) et ajoutez `https://loreano8.github.io` à `ALLOWED_ORIGINS` du serveur.
+
+### Version complète avec l’IA
 
 Il faut un hébergeur qui fait tourner Node.js (Render, Railway, Fly.io, un VPS…) :
 

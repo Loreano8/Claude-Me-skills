@@ -60,7 +60,8 @@ jobs:
   site:
     name: Mise en ligne du site (GitHub Pages)
     needs: web
-    if: github.event_name != 'pull_request'
+    # GitHub Pages ne publie que depuis la branche principale.
+    if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
     runs-on: ubuntu-latest
     permissions:
       contents: read
