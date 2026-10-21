@@ -1,40 +1,13 @@
-# Déploiement Render (Blueprint) : site + API. La base de données est sur Supabase (gratuite).
-# Render → New → Blueprint → choisir ce dépôt : Render lit ce fichier et crée tout (application dans cv-generator/).
-# Les valeurs "sync: false" sont demandées une seule fois à la création (clés secrètes).
+# Site CV Studio sur Render : uniquement les pages (site statique, gratuit, sans mise en veille).
+# Le serveur (IA, comptes, paiements) est une fonction Supabase : voir cv-generator/README.md.
 services:
   - type: web
-    name: cv-studio
-    runtime: node
-    rootDir: cv-generator
-    plan: free               # passer à "starter" (7 $/mois) pour supprimer la mise en veille
-    buildCommand: npm ci --include=dev && npm run build
-    startCommand: npm start
-    healthCheckPath: /api/health
-    autoDeploy: true
+    runtime: static
+    name: cv-studio-site
+    buildCommand: cd cv-generator && npm ci --include=dev && npm run build
+    staticPublishPath: cv-generator/dist
     envVars:
-      - key: NODE_ENV
-        value: production
-      - key: CLAUDE_MODEL
-        value: claude-sonnet-5-5
-      - key: ANTHROPIC_API_KEY
-        sync: false
-      # Base Postgres Supabase (gratuite) : utilisateur cvstudio_app, schéma privé cvstudio.
-      - key: DATABASE_URL
-        sync: false
-      - key: DATABASE_SSL
-        value: "true"
-      - key: SESSION_SECRET
-        generateValue: true
-      - key: ADMIN_TOKEN
-        generateValue: true
-      - key: FREE_CREDITS
-        value: "1"
-      - key: FEDAPAY_SECRET_KEY
-        sync: false
-      - key: FEDAPAY_ENV
-        value: sandbox       # passer à "live" quand le compte FedaPay est validé
-      - key: PUBLIC_URL
-        value: https://cv-studio-932m.onrender.com
-      - key: ALLOWED_ORIGINS
-        value: https://cv-studio-932m.onrender.com,https://localhost,capacitor://localhost
-
+      - key: VITE_API_URL
+        value: https://clgmqhyzyiswnekmoygw.supabase.co/functions/v1
+      - key: NODE_VERSION
+        value: "22"

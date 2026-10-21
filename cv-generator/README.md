@@ -53,26 +53,26 @@ cv-generator/
 - Les appels à l’IA passent par le serveur, avec la clé API du propriétaire du service : l’utilisateur ne voit jamais la clé, il paie des crédits.
 - Anti-abus : le crédit offert n’est donné qu’**une fois par appareil** (téléphone ou navigateur) et **une fois par connexion internet tous les 30 jours** (`FREE_IP_COOLDOWN_DAYS`). On peut créer d’autres comptes, mais sans nouveau crédit gratuit. Crédit rendu automatiquement si l’IA échoue.
 - Ajouter des crédits à la main (ex. paiement reçu directement) :
-  `curl -X POST https://cv-studio-932m.onrender.com/api/admin/credits -H "Authorization: Bearer <ADMIN_TOKEN>" -H "Content-Type: application/json" -d '{"identifier":"+22997000000","credits":10}'`
-  (`ADMIN_TOKEN` se trouve dans Render → cv-studio → Environment).
+  `curl -X POST https://clgmqhyzyiswnekmoygw.supabase.co/functions/v1/api/admin/credits -H "Authorization: Bearer <ADMIN_TOKEN>" -H "Content-Type: application/json" -d '{"identifier":"+22997000000","credits":10}'`
+  (`ADMIN_TOKEN` se trouve dans la table `cvstudio.settings` de Supabase).
 
-## Mise en ligne (Render)
+## Mise en ligne
 
-Tout est décrit dans `render.yaml` à la racine du dépôt : le site, l’API et la base de données Postgres.
+| Partie | Où | Adresse |
+| --- | --- | --- |
+| Pages du site | Render, site statique (gratuit, ne s’endort jamais) | https://cv-studio-site.onrender.com |
+| Serveur : IA, comptes, crédits, paiements | Supabase, fonction `api` (gratuit, ne s’endort jamais) | https://clgmqhyzyiswnekmoygw.supabase.co/functions/v1/api/health |
+| Base de données | Supabase, schéma privé `cvstudio` | — |
 
-Déjà en place :
-- **Render** (région Francfort, la plus proche de l’Afrique de l’Ouest) : le service **cv-studio** (https://cv-studio-932m.onrender.com, lien court https://bit.ly/cv-studio), qui suit la branche `claude/cv-generator-app-a1kcdw`.
-- **Supabase** (Francfort, offre gratuite) : le projet **cv-studio**. Le serveur s’y connecte avec un utilisateur dédié `cvstudio_app`, et les tables sont dans un schéma privé `cvstudio`, invisible depuis l’API publique de Supabase. Les tables se créent seules au démarrage du serveur.
+- **Coût mensuel : 0 $.** Seule l’IA (Anthropic) est payée, à l’usage.
+- Le site statique se met à jour tout seul à chaque `git push` sur la branche `claude/cv-generator-app-a1kcdw`.
+- **La fonction Supabase** charge le code du serveur depuis ce dépôt GitHub, figé sur un commit (`supabase/functions/api/index.ts` déployé). Pour la mettre à jour : remplacer le numéro de commit dans ce fichier et redéployer la fonction (`npm run edge:bundle` puis `supabase functions deploy api --no-verify-jwt` avec la CLI Supabase, ou via l’outil Supabase de Claude).
+- **Réglages secrets** (clé Anthropic, clé FedaPay, secret de session, jeton admin…) : table privée `cvstudio.settings`, lisible seulement par l’utilisateur `cvstudio_app` de l’application. Pour changer une valeur : `update cvstudio.settings set value = '…' where key = 'ANTHROPIC_API_KEY';` dans l’éditeur SQL de Supabase. La fonction relit les réglages à chaque démarrage.
+- **Webhook FedaPay** (sandbox et live) : `https://clgmqhyzyiswnekmoygw.supabase.co/functions/v1/api/payments/webhook`.
+- Passer FedaPay en réel : mettre la clé `sk_live_…` dans `FEDAPAY_SECRET_KEY` et `live` dans `FEDAPAY_ENV`.
+- Les tables se créent avec `npm run migrate` (la fonction ne le refait pas à chaque démarrage, pour répondre plus vite).
 
-1. Variables du service Render : `DATABASE_URL` (Supabase, *session pooler*), `DATABASE_SSL=true`, `ANTHROPIC_API_KEY`, `SESSION_SECRET`, `ADMIN_TOKEN`, puis `FEDAPAY_SECRET_KEY` quand le compte FedaPay est prêt.
-2. L’offre gratuite Supabase met le projet en pause après 7 jours sans aucune visite (un clic dans Supabase le relance).
-3. Dans FedaPay, ajouter le webhook `https://cv-studio-932m.onrender.com/api/payments/webhook`.
-4. Quand FedaPay a validé le compte marchand : mettre la clé **live** et `FEDAPAY_ENV=live`.
-
-Coût de l’hébergement : gratuit pendant les essais. Le site gratuit de Render s’endort sans visite (30 à 50 s d’attente pour le premier visiteur) : passer cv-studio en *Starter* (7 $/mois) quand il y aura du trafic. Coût de l’IA (Claude Sonnet 5.5) : quelques dizaines de FCFA par action, couverts largement par le prix d’un crédit.
-
-Chaque `git push` sur la branche suivie par Render redéploie le site automatiquement.
-
+Le serveur Node (`npm start`, `server/index.ts`) reste utilisable pour un hébergement classique : même code, mêmes réglages en variables d’environnement.
 
 ## Application Android
 
