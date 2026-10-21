@@ -20,8 +20,11 @@ export class AccountError extends Error {
 export interface AccountOptions {
   /** Crédits offerts à l'inscription. */
   freeCredits: number;
-  /** Au-delà de ce nombre d'inscriptions par adresse IP sur 24 h, plus de crédit offert (anti-abus). */
-  maxFreeSignupsPerIp: number;
+  /**
+   * Anti-abus : le crédit offert n'est donné qu'une seule fois par appareil, et une seule fois
+   * par connexion internet (adresse IP) pendant ce nombre de jours.
+   */
+  freeIpCooldownDays: number;
 }
 
 const USER_COLUMNS = 'id, identifier, name, credits';
@@ -38,7 +41,7 @@ export function createAccounts(db: Db, opts: AccountOptions) {
   }
 
   return {
-    async register(input: { identifier: string; password: string; name?: string; ip: string }): Promise<User> {
+    async register(input: { identifier: string; password: string; name?: string; ip: string; device: string }): Promise<User> {
       const identifier = normalizeIdentifier(input.identifier);
       if (!identifier) throw new AccountError('Indiquez un e-mail ou un numéro de téléphone valide.', 400);
       if (input.password.length < 6) throw new AccountError('Le mot de passe doit faire au moins 6 caractères.', 400);
@@ -46,15 +49,19 @@ export function createAccounts(db: Db, opts: AccountOptions) {
       return db.transaction(async (tx) => {
         const [existing] = await tx.query('select id from users where identifier = $1', [identifier]);
         if (existing) throw new AccountError('Un compte existe déjà avec cet identifiant. Connectez-vous.', 409);
+        const device = input.device.trim().slice(0, 100);
         const [{ n }] = await tx.query<{ n: number }>(
-          "select count(*)::int as n from users where signup_ip = $1 and created_at > now() - interval '1 day'",
-          [input.ip],
+          `select count(*)::int as n from credit_ledger l join users u on u.id = l.user_id
+           where l.reason = 'welcome'
+             and (u.signup_device = $1 or (u.signup_ip = $2 and l.created_at > now() - make_interval(days => $3)))`,
+          [device, input.ip, opts.freeIpCooldownDays],
         );
         const [user] = await tx.query<User>(
-          `insert into users (identifier, name, password_hash, signup_ip) values ($1, $2, $3, $4) returning ${USER_COLUMNS}`,
-          [identifier, (input.name ?? '').trim().slice(0, 80), passwordHash, input.ip],
+          `insert into users (identifier, name, password_hash, signup_ip, signup_device) values ($1, $2, $3, $4, $5) returning ${USER_COLUMNS}`,
+          [identifier, (input.name ?? '').trim().slice(0, 80), passwordHash, input.ip, device],
         );
-        if (opts.freeCredits > 0 && n < opts.maxFreeSignupsPerIp) {
+        // Sans identifiant d'appareil (client trop ancien ou bricolé), pas de crédit offert.
+        if (opts.freeCredits > 0 && device.length >= 8 && n === 0) {
           user.credits = await addCredits(tx, user.id, opts.freeCredits, 'welcome');
         }
         return user;

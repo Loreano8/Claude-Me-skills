@@ -7,7 +7,7 @@ import { createPayments } from '../server/payments.ts';
 import { testDb } from './pglite.ts';
 import { sampleAdapt, sampleLetter, sampleTranslation } from './fixtures.ts';
 const db = await testDb();
-const accounts = createAccounts(db, { freeCredits: 1, maxFreeSignupsPerIp: 10 });
+const accounts = createAccounts(db, { freeCredits: 1, freeIpCooldownDays: 0 });
 const paid = new Set<string>();
 const payments = createPayments(db, accounts, {
   name: 'fedapay',

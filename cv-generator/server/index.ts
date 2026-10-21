@@ -27,7 +27,7 @@ if (env.DATABASE_URL) {
   await migrate(db);
   accounts = createAccounts(db, {
     freeCredits: Number(env.FREE_CREDITS ?? 1),
-    maxFreeSignupsPerIp: Number(env.MAX_FREE_SIGNUPS_PER_IP ?? 3),
+    freeIpCooldownDays: Number(env.FREE_IP_COOLDOWN_DAYS ?? 30),
   });
   const provider = env.FEDAPAY_SECRET_KEY ? fedapay(env.FEDAPAY_SECRET_KEY, env.FEDAPAY_ENV === 'live' ? 'live' : 'sandbox') : null;
   payments = createPayments(db, accounts, provider);

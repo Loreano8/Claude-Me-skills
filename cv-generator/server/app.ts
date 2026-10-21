@@ -99,7 +99,7 @@ export function createApp({ ai, allowedOrigins, rateLimitPerHour, accounts = nul
     const parsed = Credentials.safeParse(await c.req.json().catch(() => null));
     if (!parsed.success) return c.json({ error: 'Requête invalide.' }, 400);
     try {
-      const user = await accounts.register({ ...parsed.data, ip: clientKey(c) });
+      const user = await accounts.register({ ...parsed.data, ip: clientKey(c), device: c.req.header('x-device-id') ?? '' });
       return c.json({ token: signToken(user.id, sessionSecret), user: publicUser(user) });
     } catch (error) {
       return accountError(c, error);

@@ -14,8 +14,13 @@ function fakeAi(overrides: Partial<Ai> = {}): Ai {
   };
 }
 
+let deviceSeq = 0;
 const post = (app: ReturnType<typeof createApp>, path: string, body: unknown, ip = '1.1.1.1') =>
-  app.request(path, { method: 'POST', headers: { 'content-type': 'application/json', 'x-forwarded-for': ip }, body: JSON.stringify(body) });
+  app.request(path, {
+    method: 'POST',
+    headers: { 'content-type': 'application/json', 'x-forwarded-for': ip, 'x-device-id': `test-device-${++deviceSeq}` },
+    body: JSON.stringify(body),
+  });
 
 describe('API', () => {
   it('indique si l’IA est configurée', async () => {
@@ -98,7 +103,7 @@ describe('API avec comptes et crédits', async () => {
 
   async function setup(aiOverrides: Partial<Ai> = {}) {
     const db = await testDb();
-    const accounts = createAccounts(db, { freeCredits: 1, maxFreeSignupsPerIp: 5 });
+    const accounts = createAccounts(db, { freeCredits: 1, freeIpCooldownDays: 0 });
     const status = { value: 'pending' };
     const payments = createPayments(db, accounts, {
       name: 'fedapay',

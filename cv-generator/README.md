@@ -51,7 +51,7 @@ cv-generator/
 - **Packs** (modifiables dans `server/payments.ts`) : 3 crédits = 500 FCFA, 10 crédits = 1 500 FCFA, 25 crédits = 3 000 FCFA.
 - **Paiement** par FedaPay (MTN MoMo, Moov Money, carte). Dès que FedaPay confirme le paiement, les crédits sont ajoutés automatiquement au compte : rien à faire à la main.
 - Les appels à l’IA passent par le serveur, avec la clé API du propriétaire du service : l’utilisateur ne voit jamais la clé, il paie des crédits.
-- Anti-abus : crédit offert limité à 3 inscriptions par adresse IP et par jour ; crédit rendu automatiquement si l’IA échoue.
+- Anti-abus : le crédit offert n’est donné qu’**une fois par appareil** (téléphone ou navigateur) et **une fois par connexion internet tous les 30 jours** (`FREE_IP_COOLDOWN_DAYS`). On peut créer d’autres comptes, mais sans nouveau crédit gratuit. Crédit rendu automatiquement si l’IA échoue.
 - Ajouter des crédits à la main (ex. paiement reçu directement) :
   `curl -X POST https://cv-studio.onrender.com/api/admin/credits -H "Authorization: Bearer <ADMIN_TOKEN>" -H "Content-Type: application/json" -d '{"identifier":"+22997000000","credits":10}'`
   (`ADMIN_TOKEN` se trouve dans Render → cv-studio → Environment).

@@ -10,6 +10,7 @@ import type {
   TranslateResult,
 } from '../../shared/schema.ts';
 import { useAccount, type AccountUser, type Pack } from './account.ts';
+import { deviceId } from './device.ts';
 
 // Sur le web, l'API est servie par le même domaine. Dans l'application Android,
 // VITE_API_URL pointe vers le serveur en ligne.
@@ -28,6 +29,7 @@ async function request<T>(method: 'GET' | 'POST', path: string, body?: unknown):
       method,
       headers: {
         'Content-Type': 'application/json',
+        'X-Device-Id': await deviceId(),
         ...(account.token ? { Authorization: `Bearer ${account.token}` } : {}),
       },
       body: body === undefined ? undefined : JSON.stringify(body),

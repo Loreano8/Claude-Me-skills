@@ -18,6 +18,9 @@ create table if not exists users (
   created_at timestamptz not null default now()
 );
 
+-- Identifiant de l'appareil (téléphone ou navigateur) utilisé à l'inscription : sert à n'offrir le crédit gratuit qu'une fois par appareil.
+alter table users add column if not exists signup_device text not null default '';
+
 -- Historique de chaque mouvement de crédits (offerts, achetés, dépensés, remboursés).
 create table if not exists credit_ledger (
   id serial primary key,

@@ -4,16 +4,18 @@ import { normalizeIdentifier, signToken, verifyToken } from '../server/auth.ts';
 import { createPayments, fedapay, type PaymentProvider } from '../server/payments.ts';
 import { testDb } from './pglite.ts';
 
-const opts = { freeCredits: 1, maxFreeSignupsPerIp: 2 };
+const opts = { freeCredits: 1, freeIpCooldownDays: 30 };
+let seq = 0;
+const dev = () => `device-${++seq}-xxxxxxxx`;
 
 describe('comptes', () => {
   it('inscrit avec 1 crédit offert puis connecte', async () => {
     const accounts = createAccounts(await testDb(), opts);
-    const user = await accounts.register({ identifier: ' Awa@Mail.com ', password: 'secret12', name: 'Awa', ip: '1.1.1.1' });
+    const user = await accounts.register({ identifier: ' Awa@Mail.com ', password: 'secret12', name: 'Awa', ip: '1.1.1.1', device: dev() });
     expect(user.credits).toBe(1);
     expect((await accounts.login('awa@mail.com', 'secret12')).id).toBe(user.id);
     await expect(accounts.login('awa@mail.com', 'mauvais')).rejects.toMatchObject({ status: 401 });
-    await expect(accounts.register({ identifier: 'awa@mail.com', password: 'secret12', ip: '2.2.2.2' })).rejects.toMatchObject({ status: 409 });
+    await expect(accounts.register({ identifier: 'awa@mail.com', password: 'secret12', ip: '2.2.2.2', device: dev() })).rejects.toMatchObject({ status: 409 });
   });
 
   it('accepte un numéro de téléphone et refuse un identifiant invalide', () => {
@@ -21,16 +23,19 @@ describe('comptes', () => {
     expect(normalizeIdentifier('bonjour')).toBeNull();
   });
 
-  it('ne donne plus de crédit offert au-delà de 2 inscriptions par IP et par jour', async () => {
+  it('n’offre le crédit gratuit qu’une fois par appareil et par connexion internet', async () => {
     const accounts = createAccounts(await testDb(), opts);
-    const credits = [];
-    for (const n of [1, 2, 3]) credits.push((await accounts.register({ identifier: `u${n}@x.com`, password: 'secret12', ip: '9.9.9.9' })).credits);
-    expect(credits).toEqual([1, 1, 0]);
+    const reg = (id: string, ip: string, device: string) => accounts.register({ identifier: id, password: 'secret12', ip, device }).then((u) => u.credits);
+    expect(await reg('u1@x.com', '9.9.9.9', 'phone-AAAAAAAA')).toBe(1);
+    expect(await reg('u2@x.com', '8.8.8.8', 'phone-AAAAAAAA')).toBe(0); // même téléphone, autre réseau
+    expect(await reg('u3@x.com', '9.9.9.9', 'phone-BBBBBBBB')).toBe(0); // autre téléphone, même connexion
+    expect(await reg('u4@x.com', '7.7.7.7', 'phone-CCCCCCCC')).toBe(1); // nouvelle personne
+    expect(await reg('u5@x.com', '6.6.6.6', '')).toBe(0); // pas d’identifiant d’appareil
   });
 
   it('dépense, refuse quand il n’y a plus de crédit, et rembourse', async () => {
     const accounts = createAccounts(await testDb(), opts);
-    const user = await accounts.register({ identifier: 'a@b.co', password: 'secret12', ip: '1.1.1.1' });
+    const user = await accounts.register({ identifier: 'a@b.co', password: 'secret12', ip: '1.1.1.1', device: dev() });
     expect(await accounts.spend(user.id, 'structure')).toBe(0);
     await expect(accounts.spend(user.id, 'adapt')).rejects.toMatchObject({ status: 402 });
     expect(await accounts.refund(user.id, 'structure')).toBe(1);
@@ -60,7 +65,7 @@ describe('paiements', () => {
     const accounts = createAccounts(db, opts);
     const provider = fakeProvider('pending');
     const payments = createPayments(db, accounts, provider);
-    const user = await accounts.register({ identifier: 'a@b.co', password: 'secret12', ip: '1.1.1.1' });
+    const user = await accounts.register({ identifier: 'a@b.co', password: 'secret12', ip: '1.1.1.1', device: dev() });
     expect(await payments.checkout(user, 'candidature', 'https://site/return')).toBe('https://pay.example/tx-1');
     expect((await payments.confirm('tx-1')).status).toBe('pending');
     expect((await accounts.get(user.id))!.credits).toBe(1);
@@ -73,7 +78,7 @@ describe('paiements', () => {
   it('refuse un pack inconnu', async () => {
     const db = await testDb();
     const accounts = createAccounts(db, opts);
-    const user = await accounts.register({ identifier: 'a@b.co', password: 'secret12', ip: '1.1.1.1' });
+    const user = await accounts.register({ identifier: 'a@b.co', password: 'secret12', ip: '1.1.1.1', device: dev() });
     await expect(createPayments(db, accounts, fakeProvider('pending')).checkout(user, 'gratuit', 'x')).rejects.toMatchObject({ status: 400 });
   });
 
