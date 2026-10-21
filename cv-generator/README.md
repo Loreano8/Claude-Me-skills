@@ -71,6 +71,8 @@ Coût de l’hébergement : gratuit pendant les essais. Avant d’ouvrir au publ
 
 Chaque `git push` sur la branche suivie par Render redéploie le site automatiquement.
 
+**Base de données gratuite et durable (Supabase)** : la base gratuite de Render est supprimée après 30 jours. Pour rester gratuit, créer un projet sur [supabase.com](https://supabase.com) (région Europe), copier l’adresse *Connection string → Session pooler*, puis dans Render → cv-studio → Environment : remplacer `DATABASE_URL` par cette adresse et ajouter `DATABASE_SSL=true`. Les tables se créent seules au démarrage. Limite de l’offre gratuite Supabase : le projet se met en pause après 7 jours sans aucune visite (un clic dans Supabase le relance).
+
 ## Application Android
 
 Le même site, emballé avec [Capacitor](https://capacitorjs.com) ; il parle au serveur Render (`VITE_API_URL`).

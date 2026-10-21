@@ -86,6 +86,10 @@ export function createAi(client: Anthropic, model = DEFAULT_MODEL) {
       if (error instanceof Anthropic.RateLimitError) {
         throw new AiError('Le service IA est très sollicité. Réessayez dans un instant.', 429, 'rate_limited');
       }
+      if (error instanceof Anthropic.BadRequestError && /credit balance/i.test(error.message)) {
+        console.error('Compte Anthropic sans crédit : rechargez sur console.anthropic.com');
+        throw new AiError('Le service IA est momentanément indisponible. Réessayez plus tard.', 503, 'billing');
+      }
       if (error instanceof Anthropic.BadRequestError) {
         throw new AiError('Le document envoyé n’a pas pu être lu (fichier trop lourd ou illisible ?).', 400, 'bad_request');
       }

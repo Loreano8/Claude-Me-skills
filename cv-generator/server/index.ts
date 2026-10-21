@@ -27,7 +27,8 @@ let accounts = null;
 let payments = null;
 if (env.DATABASE_URL) {
   if (!env.SESSION_SECRET) throw new Error('SESSION_SECRET est obligatoire quand DATABASE_URL est défini.');
-  const db = createPgDb(env.DATABASE_URL);
+  // DATABASE_SSL=true pour une base externe (Supabase…) ; inutile pour la base interne de Render.
+  const db = createPgDb(env.DATABASE_URL, env.DATABASE_SSL === 'true');
   await migrate(db);
   accounts = createAccounts(db, {
     freeCredits: Number(env.FREE_CREDITS ?? 1),
