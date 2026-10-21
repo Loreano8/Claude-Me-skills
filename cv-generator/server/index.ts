@@ -3,6 +3,9 @@ import { serveStatic } from '@hono/node-server/serve-static';
 import Anthropic from '@anthropic-ai/sdk';
 import { createAi, DEFAULT_MODEL } from './ai.ts';
 import { createApp } from './app.ts';
+import { createAccounts } from './accounts.ts';
+import { createPgDb, migrate } from './db.ts';
+import { createPayments, fedapay } from './payments.ts';
 
 try {
   process.loadEnvFile();
@@ -10,25 +13,49 @@ try {
   // Pas de fichier .env : on utilise les variables d'environnement déjà définies.
 }
 
-const port = Number(process.env.PORT ?? 8787);
-const model = process.env.CLAUDE_MODEL || DEFAULT_MODEL;
-const ai = process.env.ANTHROPIC_API_KEY ? createAi(new Anthropic(), model) : null;
+const env = process.env;
+const port = Number(env.PORT ?? 8787);
+const model = env.CLAUDE_MODEL || DEFAULT_MODEL;
+const ai = env.ANTHROPIC_API_KEY ? createAi(new Anthropic(), model) : null;
+
+// Comptes et crédits : actifs dès qu'une base de données est configurée.
+let accounts = null;
+let payments = null;
+if (env.DATABASE_URL) {
+  if (!env.SESSION_SECRET) throw new Error('SESSION_SECRET est obligatoire quand DATABASE_URL est défini.');
+  const db = createPgDb(env.DATABASE_URL);
+  await migrate(db);
+  accounts = createAccounts(db, {
+    freeCredits: Number(env.FREE_CREDITS ?? 1),
+    maxFreeSignupsPerIp: Number(env.MAX_FREE_SIGNUPS_PER_IP ?? 3),
+  });
+  const provider = env.FEDAPAY_SECRET_KEY ? fedapay(env.FEDAPAY_SECRET_KEY, env.FEDAPAY_ENV === 'live' ? 'live' : 'sandbox') : null;
+  payments = createPayments(db, accounts, provider);
+}
 
 const app = createApp({
   ai,
-  allowedOrigins: (process.env.ALLOWED_ORIGINS ?? 'http://localhost:5173,https://localhost,capacitor://localhost')
+  accounts,
+  payments: payments && env.FEDAPAY_SECRET_KEY ? payments : null,
+  sessionSecret: env.SESSION_SECRET ?? '',
+  publicUrl: env.PUBLIC_URL ?? '',
+  adminToken: env.ADMIN_TOKEN ?? '',
+  allowedOrigins: (env.ALLOWED_ORIGINS ?? 'http://localhost:5173,https://localhost,capacitor://localhost')
     .split(',')
     .map((o) => o.trim())
     .filter(Boolean),
-  rateLimitPerHour: Number(process.env.RATE_LIMIT_PER_HOUR ?? 30),
+  rateLimitPerHour: Number(env.RATE_LIMIT_PER_HOUR ?? 30),
 });
 
 // En production, le même serveur sert aussi le site web compilé (dossier dist).
-if (process.env.NODE_ENV === 'production') {
+if (env.NODE_ENV === 'production') {
   app.use('/*', serveStatic({ root: './dist' }));
   app.get('*', serveStatic({ path: './dist/index.html' }));
 }
 
 serve({ fetch: app.fetch, port }, () => {
-  console.log(`API CV Studio sur http://localhost:${port} — IA ${ai ? `active (${model})` : 'désactivée : ANTHROPIC_API_KEY manquante'}`);
+  console.log(
+    `API CV Studio sur http://localhost:${port} — IA ${ai ? `active (${model})` : 'désactivée'}, ` +
+      `comptes ${accounts ? 'actifs' : 'désactivés (accès libre)'}, paiement ${env.FEDAPAY_SECRET_KEY ? `FedaPay ${env.FEDAPAY_ENV ?? 'sandbox'}` : 'désactivé'}`,
+  );
 });

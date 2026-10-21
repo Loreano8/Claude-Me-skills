@@ -44,55 +44,48 @@ cv-generator/
 └── tests/               Tests automatiques
 ```
 
-## Lancer le projet sur son ordinateur
+## Gratuit et payant
+
+- **Gratuit, sans compte** : remplir son CV, les 3 modèles, l’export PDF et Word, les conseils.
+- **IA** : il faut un compte (e-mail ou téléphone + mot de passe). **1 génération offerte** à l’inscription, puis **1 crédit par action** (générer, améliorer, adapter à une offre, lettre, traduction).
+- **Packs** (modifiables dans `server/payments.ts`) : 3 crédits = 500 FCFA, 10 crédits = 1 500 FCFA, 25 crédits = 3 000 FCFA.
+- **Paiement** par FedaPay (MTN MoMo, Moov Money, carte). Dès que FedaPay confirme le paiement, les crédits sont ajoutés automatiquement au compte : rien à faire à la main.
+- Les appels à l’IA passent par le serveur, avec la clé API du propriétaire du service : l’utilisateur ne voit jamais la clé, il paie des crédits.
+- Anti-abus : crédit offert limité à 3 inscriptions par adresse IP et par jour ; crédit rendu automatiquement si l’IA échoue.
+- Ajouter des crédits à la main (ex. paiement reçu directement) :
+  `curl -X POST https://cv-studio.onrender.com/api/admin/credits -H "Authorization: Bearer <ADMIN_TOKEN>" -H "Content-Type: application/json" -d '{"identifier":"+22997000000","credits":10}'`
+  (`ADMIN_TOKEN` se trouve dans Render → cv-studio → Environment).
+
+## Mise en ligne (Render)
+
+Tout est décrit dans `render.yaml` à la racine du dépôt : le site, l’API et la base de données Postgres.
+
+1. Créer un compte sur [render.com](https://render.com) → **New → Blueprint** → choisir ce dépôt GitHub.
+2. Render demande **ANTHROPIC_API_KEY** (créée sur [console.anthropic.com](https://console.anthropic.com), avec un peu de crédit) et **FEDAPAY_SECRET_KEY** (tableau de bord FedaPay → Paramètres → Clés API ; laisser vide au début, le paiement s’active quand on la renseigne).
+3. Dans FedaPay, ajouter le webhook `https://cv-studio.onrender.com/api/payments/webhook`.
+4. Quand FedaPay a validé le compte marchand : mettre la clé **live** et `FEDAPAY_ENV=live`.
+
+Coût de l’hébergement : environ 13 $/mois (serveur sans mise en veille 7 $ + base de données 6 $). Coût de l’IA (Claude Sonnet 5.5) : quelques dizaines de FCFA par action, couverts largement par le prix d’un crédit.
+
+Chaque `git push` sur la branche suivie par Render redéploie le site automatiquement.
+
+## Application Android
+
+Le même site, emballé avec [Capacitor](https://capacitorjs.com) ; il parle au serveur Render (`VITE_API_URL`).
+
+- **APK de test** : onglet *Actions* du dépôt GitHub → workflow « CV Studio » → fichier `cv-studio-apk`.
+- **Play Store** : compte Google Play Console (25 $ une fois), puis Android Studio → *Build → Generate Signed Bundle*.
+  Règle Google : dans l’appli du Play Store, l’achat de crédits devra passer par **Google Play Billing**. Le système de crédits est prêt pour ça (un prestataire de paiement de plus dans `server/payments.ts`) ; le site garde FedaPay.
+- **iPhone** : le site s’installe depuis Safari (« Sur l’écran d’accueil ») et fonctionne comme une appli.
+
+## Développement
 
 Prérequis : [Node.js](https://nodejs.org) 20 ou plus récent.
 
 ```bash
 cd cv-generator
 npm install
-cp .env.example .env        # puis mettre la clé API dans ANTHROPIC_API_KEY
-npm run dev                 # site sur http://localhost:5173, API sur le port 8787
+npm run demo     # tout fonctionne en local, IA et paiement simulés : http://localhost:5173
+npm run dev      # avec le vrai serveur (.env : voir .env.example)
+npm test         # tests automatiques
 ```
-
-Sans clé API, tout fonctionne sauf les boutons « IA ». La clé se crée sur [console.anthropic.com](https://console.anthropic.com).
-
-Autres commandes : `npm test` (tests), `npm run typecheck`, `npm run build` (version de production dans `dist/`), `npm start` (sert le site et l’API ensemble, après `npm run build`).
-
-## Mettre le site en ligne
-
-### Version gratuite sur GitHub Pages (sans l’IA)
-
-1. Sur GitHub : *Settings → Pages → Build and deployment → Source* : choisir **GitHub Actions** (à faire une seule fois).
-2. Fusionner les modifications dans la branche `main` : le site est publié automatiquement à l’adresse `https://loreano8.github.io/Claude-Me-skills/`, puis mis à jour à chaque modification.
-
-Sans serveur, les boutons IA affichent « Les fonctions IA ne sont pas encore activées sur ce site » ; tout le reste fonctionne (formulaire, modèles, export PDF et Word). Une fois le serveur ci-dessous en ligne, renseignez son adresse dans la variable `VITE_API_URL` (*Settings → Secrets and variables → Actions → Variables*) et ajoutez `https://loreano8.github.io` à `ALLOWED_ORIGINS` du serveur.
-
-### Version complète avec l’IA
-
-Il faut un hébergeur qui fait tourner Node.js (Render, Railway, Fly.io, un VPS…) :
-
-1. Commande d’installation : `npm ci && npm run build` — dossier : `cv-generator`.
-2. Commande de démarrage : `npm start`.
-3. Variables d’environnement : `ANTHROPIC_API_KEY`, et `ALLOWED_ORIGINS` (ajoutez `https://localhost` pour l’application Android).
-
-Le site est **installable** comme une application depuis le navigateur (« Ajouter à l’écran d’accueil »), **y compris sur iPhone** avec Safari : c’est une solution en attendant une vraie application iOS.
-
-## Application Android
-
-L’application Android est le même site, emballé avec [Capacitor](https://capacitorjs.com). Sur Android, les fichiers PDF / Word s’ouvrent dans le menu de partage (enregistrer, envoyer par WhatsApp, e-mail, Drive…).
-
-**Obtenir l’APK sans rien installer** : à chaque modification poussée sur GitHub, l’onglet *Actions* du dépôt compile l’APK (workflow « CV Studio », fichier `cv-studio-apk` à télécharger). Pour que l’IA marche dans l’application, renseignez d’abord l’adresse du serveur en ligne dans *Settings → Secrets and variables → Actions → Variables* : `VITE_API_URL = https://votre-serveur…`.
-
-**Compiler soi-même** (Android Studio installé) :
-
-```bash
-VITE_API_URL=https://votre-serveur.example.com npm run android:sync
-npm run android:open        # ouvre Android Studio → Run
-```
-
-Pour publier sur le Play Store : générer un APK/AAB **signé** depuis Android Studio (*Build → Generate Signed Bundle*) et créer un compte développeur Google Play (25 $ une fois).
-
-## Coût de l’IA
-
-Le serveur utilise le modèle `claude-opus-5-5` (modifiable avec `CLAUDE_MODEL`). À titre indicatif, chaque action IA (générer, adapter, rédiger une lettre) coûte environ 5 à 20 centimes de dollar selon la longueur du CV et de l’offre. `RATE_LIMIT_PER_HOUR` limite le nombre de demandes par utilisateur et par heure pour éviter les abus.

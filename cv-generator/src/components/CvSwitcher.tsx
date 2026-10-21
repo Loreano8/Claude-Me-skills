@@ -26,7 +26,7 @@ export function CvSwitcher() {
       <button
         type="button"
         onClick={() => setOpen(!open)}
-        className="flex max-w-[60vw] items-center gap-1.5 rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-800 hover:bg-slate-50 sm:max-w-xs"
+        className="flex max-w-[42vw] items-center gap-1.5 rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-800 hover:bg-slate-50 sm:max-w-xs"
       >
         <span className="truncate">{active.label}</span>
         <ChevronDown className="size-4 shrink-0 text-slate-400" />

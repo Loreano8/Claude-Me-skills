@@ -1,0 +1,98 @@
+import { describe, expect, it, vi } from 'vitest';
+import { createAccounts } from '../server/accounts.ts';
+import { normalizeIdentifier, signToken, verifyToken } from '../server/auth.ts';
+import { createPayments, fedapay, type PaymentProvider } from '../server/payments.ts';
+import { testDb } from './pglite.ts';
+
+const opts = { freeCredits: 1, maxFreeSignupsPerIp: 2 };
+
+describe('comptes', () => {
+  it('inscrit avec 1 crédit offert puis connecte', async () => {
+    const accounts = createAccounts(await testDb(), opts);
+    const user = await accounts.register({ identifier: ' Awa@Mail.com ', password: 'secret12', name: 'Awa', ip: '1.1.1.1' });
+    expect(user.credits).toBe(1);
+    expect((await accounts.login('awa@mail.com', 'secret12')).id).toBe(user.id);
+    await expect(accounts.login('awa@mail.com', 'mauvais')).rejects.toMatchObject({ status: 401 });
+    await expect(accounts.register({ identifier: 'awa@mail.com', password: 'secret12', ip: '2.2.2.2' })).rejects.toMatchObject({ status: 409 });
+  });
+
+  it('accepte un numéro de téléphone et refuse un identifiant invalide', () => {
+    expect(normalizeIdentifier('+229 97 00 00 00')).toBe('+22997000000');
+    expect(normalizeIdentifier('bonjour')).toBeNull();
+  });
+
+  it('ne donne plus de crédit offert au-delà de 2 inscriptions par IP et par jour', async () => {
+    const accounts = createAccounts(await testDb(), opts);
+    const credits = [];
+    for (const n of [1, 2, 3]) credits.push((await accounts.register({ identifier: `u${n}@x.com`, password: 'secret12', ip: '9.9.9.9' })).credits);
+    expect(credits).toEqual([1, 1, 0]);
+  });
+
+  it('dépense, refuse quand il n’y a plus de crédit, et rembourse', async () => {
+    const accounts = createAccounts(await testDb(), opts);
+    const user = await accounts.register({ identifier: 'a@b.co', password: 'secret12', ip: '1.1.1.1' });
+    expect(await accounts.spend(user.id, 'structure')).toBe(0);
+    await expect(accounts.spend(user.id, 'adapt')).rejects.toMatchObject({ status: 402 });
+    expect(await accounts.refund(user.id, 'structure')).toBe(1);
+  });
+
+  it('signe et vérifie les jetons de session', () => {
+    const token = signToken(42, 'secret');
+    expect(verifyToken(token, 'secret')).toBe(42);
+    expect(verifyToken(token, 'autre')).toBeNull();
+    expect(verifyToken(token.slice(0, -2) + 'xx', 'secret')).toBeNull();
+  });
+});
+
+describe('paiements', () => {
+  function fakeProvider(status: string): PaymentProvider & { statusRef: { value: string } } {
+    const statusRef = { value: status };
+    return {
+      name: 'fake',
+      statusRef,
+      createCheckout: async () => ({ ref: 'tx-1', url: 'https://pay.example/tx-1' }),
+      fetchStatus: async () => statusRef.value as never,
+    };
+  }
+
+  it('ajoute les crédits une seule fois quand le paiement est approuvé', async () => {
+    const db = await testDb();
+    const accounts = createAccounts(db, opts);
+    const provider = fakeProvider('pending');
+    const payments = createPayments(db, accounts, provider);
+    const user = await accounts.register({ identifier: 'a@b.co', password: 'secret12', ip: '1.1.1.1' });
+    expect(await payments.checkout(user, 'candidature', 'https://site/return')).toBe('https://pay.example/tx-1');
+    expect((await payments.confirm('tx-1')).status).toBe('pending');
+    expect((await accounts.get(user.id))!.credits).toBe(1);
+    provider.statusRef.value = 'approved';
+    expect((await payments.confirm('tx-1')).credits).toBe(11);
+    await payments.confirm('tx-1');
+    expect((await accounts.get(user.id))!.credits).toBe(11);
+  });
+
+  it('refuse un pack inconnu', async () => {
+    const db = await testDb();
+    const accounts = createAccounts(db, opts);
+    const user = await accounts.register({ identifier: 'a@b.co', password: 'secret12', ip: '1.1.1.1' });
+    await expect(createPayments(db, accounts, fakeProvider('pending')).checkout(user, 'gratuit', 'x')).rejects.toMatchObject({ status: 400 });
+  });
+
+  it('appelle l’API FedaPay pour créer le paiement et lire son statut', async () => {
+    const calls: { url: string; init: RequestInit }[] = [];
+    const fetchImpl = vi.fn(async (url: string, init: RequestInit) => {
+      calls.push({ url, init });
+      const body = url.endsWith('/token')
+        ? { token: 'tok', url: 'https://checkout.fedapay.com/tok' }
+        : { 'v1/transaction': { id: 123, status: url.endsWith('/123') ? 'approved' : 'pending' } };
+      return new Response(JSON.stringify(body), { status: 200 });
+    }) as unknown as typeof fetch;
+    const provider = fedapay('sk_test', 'sandbox', fetchImpl);
+    const user = { id: 1, identifier: 'a@b.co', name: 'Awa', credits: 0 };
+    const res = await provider.createCheckout({ user, pack: { id: 'p', name: 'P', credits: 3, price: 500 }, returnUrl: 'https://site/return' });
+    expect(res).toEqual({ ref: '123', url: 'https://checkout.fedapay.com/tok' });
+    expect(calls[0].url).toBe('https://sandbox-api.fedapay.com/v1/transactions');
+    expect(JSON.parse(String(calls[0].init.body))).toMatchObject({ amount: 500, currency: { iso: 'XOF' }, callback_url: 'https://site/return' });
+    expect((calls[0].init.headers as Record<string, string>).Authorization).toBe('Bearer sk_test');
+    expect(await provider.fetchStatus('123')).toBe('approved');
+  });
+});

@@ -2,6 +2,8 @@ import { useEffect, useState } from 'react';
 import { FileDown, FileUser, Mail, Target } from 'lucide-react';
 import { useActiveCv } from './store.ts';
 import { CvSwitcher } from './components/CvSwitcher.tsx';
+import { AccountButton, AccountDialogs } from './components/AccountDialogs.tsx';
+import { refreshAccount } from './lib/api.ts';
 import { Preview } from './components/Preview.tsx';
 import { cx } from './components/ui.tsx';
 import { EditorPage } from './pages/EditorPage.tsx';
@@ -51,6 +53,10 @@ export default function App() {
   });
 
   useEffect(() => {
+    void refreshAccount();
+  }, []);
+
+  useEffect(() => {
     const onHash = () => {
       const h = window.location.hash.slice(1);
       if (isTab(h)) setTabState(h);
@@ -85,9 +91,13 @@ export default function App() {
               </button>
             ))}
           </nav>
-          <CvSwitcher />
+          <div className="flex min-w-0 items-center gap-2">
+            <CvSwitcher />
+            <AccountButton />
+          </div>
         </div>
       </header>
+      <AccountDialogs />
 
       <main className="mx-auto max-w-7xl px-4 pt-4 pb-28 md:pb-10">
         {tab === 'infos' && <InfosLayout />}

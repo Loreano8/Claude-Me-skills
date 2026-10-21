@@ -17,5 +17,7 @@ export default defineConfig({
   },
   test: {
     environment: 'node',
+    // La base Postgres en mémoire (PGlite) met quelques secondes à démarrer.
+    testTimeout: 30_000,
   },
 });
