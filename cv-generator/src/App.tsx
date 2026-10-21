@@ -4,6 +4,7 @@ import { useActiveCv } from './store.ts';
 import { CvSwitcher } from './components/CvSwitcher.tsx';
 import { AccountButton, AccountDialogs } from './components/AccountDialogs.tsx';
 import { refreshAccount } from './lib/api.ts';
+import { useAccount } from './lib/account.ts';
 import { Preview } from './components/Preview.tsx';
 import { cx } from './components/ui.tsx';
 import { EditorPage } from './pages/EditorPage.tsx';
@@ -54,6 +55,17 @@ export default function App() {
 
   useEffect(() => {
     void refreshAccount();
+    // Retour d'une page de paiement : #paiement-approved, #paiement-pending, #paiement-failed…
+    const h = window.location.hash.slice(1);
+    if (h.startsWith('paiement-')) {
+      const messages: Record<string, string> = {
+        approved: 'Paiement reçu : vos crédits ont été ajoutés. Merci !',
+        pending: 'Paiement en cours de confirmation : vos crédits seront ajoutés automatiquement dans quelques instants.',
+        failed: 'Le paiement a été annulé ou refusé. Aucun montant n’a été prélevé.',
+      };
+      useAccount.getState().open('credits', messages[h.slice(9)] ?? 'Impossible de vérifier le paiement pour le moment. S’il a abouti, vos crédits seront ajoutés automatiquement.');
+      window.history.replaceState(null, '', `${window.location.pathname}#infos`);
+    }
   }, []);
 
   useEffect(() => {

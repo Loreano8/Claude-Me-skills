@@ -1,0 +1,11 @@
+{
+  "imports": {
+    "@anthropic-ai/sdk": "npm:@anthropic-ai/sdk@0.135.0",
+    "@anthropic-ai/sdk/helpers/beta/zod": "npm:@anthropic-ai/sdk@0.135.0/helpers/beta/zod",
+    "hono": "npm:hono@4.13.13",
+    "hono/cors": "npm:hono@4.13.13/cors",
+    "hono/body-limit": "npm:hono@4.13.13/body-limit",
+    "pg": "npm:pg@8.23.1",
+    "zod": "npm:zod@4.6.7"
+  }
+}

@@ -18,6 +18,8 @@ export interface AppOptions {
   sessionSecret?: string;
   /** Adresse publique du site, pour revenir après un paiement. */
   publicUrl?: string;
+  /** Adresse publique de l'API (ex. fonction Supabase), si elle diffère de celle de la requête. */
+  apiPublicUrl?: string;
   /** Jeton secret de l'administrateur (ajout manuel de crédits). */
   adminToken?: string;
 }
@@ -48,17 +50,7 @@ const Credentials = z.object({
   name: z.string().max(80).optional(),
 });
 
-const escapeHtml = (s: string) => s.replace(/[&<>"']/g, (ch) => `&#${ch.charCodeAt(0)};`);
-
-function resultPage(title: string, message: string, backUrl: string): string {
-  return `<!doctype html><html lang="fr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>${escapeHtml(title)}</title><style>body{font-family:system-ui,sans-serif;background:#f1f5f9;color:#0f172a;display:grid;place-items:center;min-height:100vh;margin:0;padding:16px}
-main{background:#fff;border-radius:20px;padding:28px;max-width:420px;text-align:center;box-shadow:0 4px 20px #0001}a{display:inline-block;margin-top:16px;background:#2549eb;color:#fff;padding:12px 20px;border-radius:12px;text-decoration:none;font-weight:600}</style></head>
-<body><main><h1>${escapeHtml(title)}</h1><p>${escapeHtml(message)}</p><a href="${escapeHtml(backUrl)}">Retour à CV Studio</a>
-<p style="color:#64748b;font-size:14px">Dans l’application, vous pouvez simplement fermer cette page.</p></main></body></html>`;
-}
-
-export function createApp({ ai, allowedOrigins, rateLimitPerHour, accounts = null, payments = null, sessionSecret = '', publicUrl = '', adminToken = '' }: AppOptions) {
+export function createApp({ ai, allowedOrigins, rateLimitPerHour, accounts = null, payments = null, sessionSecret = '', publicUrl = '', apiPublicUrl = '', adminToken = '' }: AppOptions) {
   const app = new Hono();
   const allow = createRateLimiter(rateLimitPerHour);
   const allowAuth = createRateLimiter(20);
@@ -133,30 +125,26 @@ export function createApp({ ai, allowedOrigins, rateLimitPerHour, accounts = nul
     if (!user || !payments) return c.json({ error: user ? 'Le paiement en ligne n’est pas encore activé.' : 'Connectez-vous pour acheter des crédits.' }, user ? 503 : 401);
     const body = (await c.req.json().catch(() => null)) as { packId?: string } | null;
     try {
-      const returnUrl = `${new URL(c.req.url).origin}/api/payments/return`;
+      const returnUrl = `${apiPublicUrl || new URL(c.req.url).origin}/api/payments/return`;
       return c.json({ url: await payments.checkout(user, String(body?.packId ?? ''), returnUrl) });
     } catch (error) {
       return accountError(c, error);
     }
   });
 
-  // Le client revient ici après avoir payé sur la page FedaPay.
+  // Le client revient ici après avoir payé sur la page FedaPay : on vérifie, puis on le renvoie
+  // sur le site, qui affiche le résultat (#paiement-approved, #paiement-pending, #paiement-failed…).
   app.get('/api/payments/return', async (c) => {
-    const back = `${publicUrl || new URL(c.req.url).origin}/#apercu`;
+    const site = publicUrl || new URL(c.req.url).origin;
     const ref = c.req.query('id') ?? c.req.query('transaction_id') ?? '';
-    if (!payments || !ref) return c.html(resultPage('Paiement', 'Aucun paiement à vérifier.', back), 400);
+    if (!payments || !ref) return c.redirect(`${site}/#paiement-error`);
     try {
-      const result = await payments.confirm(ref);
-      if (result.status === 'approved') {
-        return c.html(resultPage('Paiement reçu ✅', 'Vos crédits ont été ajoutés à votre compte. Merci !', back));
-      }
-      if (result.status === 'pending') {
-        return c.html(resultPage('Paiement en cours…', 'Le paiement n’est pas encore confirmé. Vos crédits seront ajoutés automatiquement dès sa validation.', back));
-      }
-      return c.html(resultPage('Paiement non abouti', 'Le paiement a été annulé ou refusé. Aucun montant n’a été prélevé.', back));
+      const { status } = await payments.confirm(ref);
+      const outcome = status === 'approved' || status === 'pending' ? status : 'failed';
+      return c.redirect(`${site}/#paiement-${outcome}`);
     } catch (error) {
       console.error(error);
-      return c.html(resultPage('Paiement', 'Impossible de vérifier le paiement pour le moment. S’il a abouti, vos crédits seront ajoutés automatiquement.', back), 502);
+      return c.redirect(`${site}/#paiement-error`);
     }
   });
 

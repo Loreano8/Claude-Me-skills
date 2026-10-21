@@ -110,7 +110,7 @@ describe('API avec comptes et crédits', async () => {
       createCheckout: async () => ({ ref: '777', url: 'https://checkout.example/777' }),
       fetchStatus: async () => status.value as never,
     });
-    const app = createApp({ ai: fakeAi(aiOverrides), accounts, payments, sessionSecret: 's3cret', adminToken: 'adm', allowedOrigins: [], rateLimitPerHour: 50 });
+    const app = createApp({ ai: fakeAi(aiOverrides), accounts, payments, sessionSecret: 's3cret', adminToken: 'adm', publicUrl: 'https://site.example', allowedOrigins: [], rateLimitPerHour: 50 });
     return { app, status };
   }
 
@@ -146,8 +146,9 @@ describe('API avec comptes et crédits', async () => {
     const checkout = await authed(app, '/api/payments/checkout', token, { packId: 'essentiel' });
     expect((await checkout.json()).url).toBe('https://checkout.example/777');
     status.value = 'approved';
-    const page = await app.request('/api/payments/return?id=777&status=approved');
-    expect(await page.text()).toContain('Paiement reçu');
+    const back = await app.request('/api/payments/return?id=777&status=approved');
+    expect(back.status).toBe(302);
+    expect(back.headers.get('location')).toBe('https://site.example/#paiement-approved');
     await post(app, '/api/payments/webhook', { name: 'transaction.approved', entity: { id: 777 } });
     const me = await app.request('/api/me', { headers: { authorization: `Bearer ${token}` } });
     expect((await me.json()).user.credits).toBe(4);
