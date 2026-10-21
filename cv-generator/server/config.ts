@@ -2,7 +2,7 @@ import Anthropic from '@anthropic-ai/sdk';
 import { createAi, DEFAULT_MODEL } from './ai.ts';
 import { createApp } from './app.ts';
 import { createAccounts } from './accounts.ts';
-import { createPgDb, migrate } from './db.ts';
+import { createPgDb, migrate, type Db } from './db.ts';
 import { createPayments, fedapay } from './payments.ts';
 
 export type Settings = Record<string, string | undefined>;
@@ -11,23 +11,24 @@ export type Settings = Record<string, string | undefined>;
  * Construit le serveur à partir de ses réglages. Utilisé par le serveur Node (server/index.ts)
  * et par la fonction Supabase (server/edge.ts) : le comportement est le même partout.
  */
-export async function createServer(env: Settings) {
+export async function createServer(env: Settings, opts: { db?: Db; migrate?: boolean } = {}) {
   const production = env.NODE_ENV === 'production';
   const model = env.CLAUDE_MODEL || DEFAULT_MODEL;
   // En production, l'IA n'est ouverte que si les comptes (et donc les crédits) sont actifs :
   // sinon n'importe qui pourrait l'utiliser gratuitement avec la clé du propriétaire.
-  const aiAllowed = Boolean(env.ANTHROPIC_API_KEY) && (!production || Boolean(env.DATABASE_URL));
+  const hasDb = Boolean(opts.db || env.DATABASE_URL);
+  const aiAllowed = Boolean(env.ANTHROPIC_API_KEY) && (!production || hasDb);
   if (env.ANTHROPIC_API_KEY && !aiAllowed) console.warn('IA désactivée : DATABASE_URL manquante en production.');
   const ai = aiAllowed ? createAi(new Anthropic({ apiKey: env.ANTHROPIC_API_KEY }), model) : null;
 
   // Comptes et crédits : actifs dès qu'une base de données est configurée.
   let accounts = null;
   let payments = null;
-  if (env.DATABASE_URL) {
-    if (!env.SESSION_SECRET) throw new Error('SESSION_SECRET est obligatoire quand DATABASE_URL est défini.');
+  if (hasDb) {
+    if (!env.SESSION_SECRET) throw new Error('SESSION_SECRET est obligatoire avec une base de données.');
     // DATABASE_SSL=true pour une base externe (Supabase…) ; inutile pour la base interne de Render.
-    const db = createPgDb(env.DATABASE_URL, env.DATABASE_SSL === 'true');
-    await migrate(db);
+    const db = opts.db ?? createPgDb(env.DATABASE_URL!, env.DATABASE_SSL === 'true');
+    if (opts.migrate !== false) await migrate(db);
     accounts = createAccounts(db, {
       freeCredits: Number(env.FREE_CREDITS ?? 1),
       freeIpCooldownDays: Number(env.FREE_IP_COOLDOWN_DAYS ?? 30),

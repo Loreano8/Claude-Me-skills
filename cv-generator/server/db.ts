@@ -50,8 +50,8 @@ create table if not exists payments (
 /**
  * @param ssl true pour une base hébergée hors de Render (ex. Supabase) : connexion chiffrée.
  */
-export function createPgDb(connectionString: string, ssl = false): Db {
-  const pool = new pg.Pool({ connectionString, max: 5, ssl: ssl ? { rejectUnauthorized: false } : undefined });
+export function createPgDb(connectionString: string, ssl = false, options?: string): Db {
+  const pool = new pg.Pool({ connectionString, max: 5, ssl: ssl ? { rejectUnauthorized: false } : undefined, options });
   const wrap = (client: pg.Pool | pg.PoolClient): Db['query'] =>
     async (sql, params = []) => (await client.query(sql, params)).rows;
   return {

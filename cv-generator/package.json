@@ -15,7 +15,8 @@
     "android:sync": "vite build && cap sync android",
     "android:open": "cap open android",
     "demo": "concurrently -k -n web,api -c blue,magenta \"vite\" \"tsx tests/demo-server.ts\"",
-    "edge:bundle": "node scripts/edge-bundle.mjs"
+    "edge:bundle": "node scripts/edge-bundle.mjs",
+    "migrate": "tsx server/migrate.ts"
   },
   "engines": {
     "node": ">=20"
