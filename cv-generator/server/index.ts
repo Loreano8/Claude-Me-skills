@@ -16,7 +16,11 @@ try {
 const env = process.env;
 const port = Number(env.PORT ?? 8787);
 const model = env.CLAUDE_MODEL || DEFAULT_MODEL;
-const ai = env.ANTHROPIC_API_KEY ? createAi(new Anthropic(), model) : null;
+// En production, l'IA n'est ouverte que si les comptes (et donc les crédits) sont actifs :
+// sinon n'importe qui pourrait l'utiliser gratuitement avec la clé du propriétaire.
+const aiAllowed = Boolean(env.ANTHROPIC_API_KEY) && (env.NODE_ENV !== 'production' || Boolean(env.DATABASE_URL));
+if (env.ANTHROPIC_API_KEY && !aiAllowed) console.warn('IA désactivée : DATABASE_URL manquante en production.');
+const ai = aiAllowed ? createAi(new Anthropic(), model) : null;
 
 // Comptes et crédits : actifs dès qu'une base de données est configurée.
 let accounts = null;
