@@ -53,19 +53,21 @@ cv-generator/
 - Les appels à l’IA passent par le serveur, avec la clé API du propriétaire du service : l’utilisateur ne voit jamais la clé, il paie des crédits.
 - Anti-abus : le crédit offert n’est donné qu’**une fois par appareil** (téléphone ou navigateur) et **une fois par connexion internet tous les 30 jours** (`FREE_IP_COOLDOWN_DAYS`). On peut créer d’autres comptes, mais sans nouveau crédit gratuit. Crédit rendu automatiquement si l’IA échoue.
 - Ajouter des crédits à la main (ex. paiement reçu directement) :
-  `curl -X POST https://cv-studio.onrender.com/api/admin/credits -H "Authorization: Bearer <ADMIN_TOKEN>" -H "Content-Type: application/json" -d '{"identifier":"+22997000000","credits":10}'`
+  `curl -X POST https://cv-studio-932m.onrender.com/api/admin/credits -H "Authorization: Bearer <ADMIN_TOKEN>" -H "Content-Type: application/json" -d '{"identifier":"+22997000000","credits":10}'`
   (`ADMIN_TOKEN` se trouve dans Render → cv-studio → Environment).
 
 ## Mise en ligne (Render)
 
 Tout est décrit dans `render.yaml` à la racine du dépôt : le site, l’API et la base de données Postgres.
 
-1. Créer un compte sur [render.com](https://render.com) → **New → Blueprint** → choisir ce dépôt GitHub.
-2. Render demande **ANTHROPIC_API_KEY** (créée sur [console.anthropic.com](https://console.anthropic.com), avec un peu de crédit) et **FEDAPAY_SECRET_KEY** (tableau de bord FedaPay → Paramètres → Clés API ; laisser vide au début, le paiement s’active quand on la renseigne).
-3. Dans FedaPay, ajouter le webhook `https://cv-studio.onrender.com/api/payments/webhook`.
+Déjà en place sur Render (région Francfort, la plus proche de l’Afrique de l’Ouest) : le service **cv-studio** (https://cv-studio-932m.onrender.com), qui suit la branche `claude/cv-generator-app-a1kcdw`, et la base **cv-studio-db**. Le fichier `render.yaml` décrit la même configuration pour la recréer ailleurs.
+
+1. Render → cv-studio-db → *Connect* → copier l’**Internal Database URL**, puis Render → cv-studio → *Environment* → ajouter `DATABASE_URL` avec cette valeur.
+2. Ajouter `ANTHROPIC_API_KEY` (créée sur [console.anthropic.com](https://console.anthropic.com)) et, quand le compte FedaPay est prêt, `FEDAPAY_SECRET_KEY`.
+3. Dans FedaPay, ajouter le webhook `https://cv-studio-932m.onrender.com/api/payments/webhook`.
 4. Quand FedaPay a validé le compte marchand : mettre la clé **live** et `FEDAPAY_ENV=live`.
 
-Coût de l’hébergement : environ 13 $/mois (serveur sans mise en veille 7 $ + base de données 6 $). Coût de l’IA (Claude Sonnet 5.5) : quelques dizaines de FCFA par action, couverts largement par le prix d’un crédit.
+Coût de l’hébergement : gratuit pendant les essais. Avant d’ouvrir au public : passer cv-studio en *Starter* (7 $/mois, pas de mise en veille) et cv-studio-db en *Basic* (6 $/mois ; la base gratuite est supprimée au bout de 30 jours). Coût de l’IA (Claude Sonnet 5.5) : quelques dizaines de FCFA par action, couverts largement par le prix d’un crédit.
 
 Chaque `git push` sur la branche suivie par Render redéploie le site automatiquement.
 

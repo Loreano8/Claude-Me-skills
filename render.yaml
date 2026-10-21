@@ -33,9 +33,9 @@ services:
       - key: FEDAPAY_ENV
         value: sandbox       # passer à "live" quand le compte FedaPay est validé
       - key: PUBLIC_URL
-        value: https://cv-studio.onrender.com
+        value: https://cv-studio-932m.onrender.com
       - key: ALLOWED_ORIGINS
-        value: https://cv-studio.onrender.com,https://localhost,capacitor://localhost
+        value: https://cv-studio-932m.onrender.com,https://localhost,capacitor://localhost
 
 databases:
   - name: cv-studio-db

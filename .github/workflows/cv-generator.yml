@@ -47,7 +47,7 @@ jobs:
         run: npm run build
         env:
           # Adresse du serveur IA en ligne (Settings > Secrets and variables > Actions > Variables).
-          VITE_API_URL: ${{ vars.VITE_API_URL || 'https://cv-studio.onrender.com' }}
+          VITE_API_URL: ${{ vars.VITE_API_URL || 'https://cv-studio-932m.onrender.com' }}
       - run: npx cap sync android
       - name: Compiler l'APK
         working-directory: cv-generator/android
