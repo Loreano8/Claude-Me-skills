@@ -149,18 +149,19 @@ export function createApp({ ai, allowedOrigins, rateLimitPerHour, accounts = nul
   });
 
   // Notification envoyée par FedaPay. Le statut est revérifié auprès de FedaPay : un faux message est sans effet.
+  // On répond toujours 200 : FedaPay désactive un webhook qui renvoie des erreurs, et le retour du client
+  // (/api/payments/return) confirme de toute façon le paiement.
   app.post('/api/payments/webhook', async (c) => {
-    if (!payments) return c.json({ ok: false }, 503);
-    const body = (await c.req.json().catch(() => null)) as { entity?: { id?: unknown } } | null;
+    const body = (await c.req.json().catch(() => null)) as { name?: unknown; entity?: { id?: unknown } } | null;
     const ref = body?.entity?.id;
-    if (ref === undefined || ref === null) return c.json({ ok: false }, 400);
+    const isTransaction = typeof body?.name === 'string' && body.name.startsWith('transaction.');
+    if (!payments || !isTransaction || ref === undefined || ref === null) return c.json({ ok: true, ignored: true });
     try {
       await payments.confirm(String(ref));
       return c.json({ ok: true });
     } catch (error) {
-      if (error instanceof PaymentError && error.status === 404) return c.json({ ok: true });
-      console.error(error);
-      return c.json({ ok: false }, 500);
+      if (!(error instanceof PaymentError && error.status === 404)) console.error('Webhook FedaPay', error);
+      return c.json({ ok: true, ignored: true });
     }
   });
 

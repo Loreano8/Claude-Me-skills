@@ -99,6 +99,9 @@ export function createPayments(db: Db, accounts: Accounts, provider: PaymentProv
      */
     async confirm(ref: string): Promise<{ status: PaymentStatus; credits?: number; userId?: number }> {
       if (!provider) throw new PaymentError('Le paiement en ligne n’est pas encore activé.', 503);
+      // Paiement qui n'a pas été créé par CV Studio (autre projet sur le même compte FedaPay…) : on l'ignore.
+      const [known] = await db.query('select 1 from payments where provider = $1 and provider_ref = $2', [provider.name, ref]);
+      if (!known) throw new PaymentError('Paiement introuvable.', 404);
       const status = await provider.fetchStatus(ref);
       return db.transaction(async (tx) => {
         const [payment] = await tx.query<{ id: number; user_id: number; credits: number; status: string }>(
