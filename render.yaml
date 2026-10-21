@@ -1,4 +1,4 @@
-# Déploiement Render (Blueprint) : site + API + base de données.
+# Déploiement Render (Blueprint) : site + API. La base de données est sur Supabase (gratuite).
 # Render → New → Blueprint → choisir ce dépôt : Render lit ce fichier et crée tout (application dans cv-generator/).
 # Les valeurs "sync: false" sont demandées une seule fois à la création (clés secrètes).
 services:
@@ -6,7 +6,7 @@ services:
     name: cv-studio
     runtime: node
     rootDir: cv-generator
-    plan: starter            # pas de mise en veille ; "free" possible pour tester
+    plan: free               # passer à "starter" (7 $/mois) pour supprimer la mise en veille
     buildCommand: npm ci --include=dev && npm run build
     startCommand: npm start
     healthCheckPath: /api/health
@@ -18,10 +18,11 @@ services:
         value: claude-sonnet-5-5
       - key: ANTHROPIC_API_KEY
         sync: false
+      # Base Postgres Supabase (gratuite) : utilisateur cvstudio_app, schéma privé cvstudio.
       - key: DATABASE_URL
-        fromDatabase:
-          name: cv-studio-db
-          property: connectionString
+        sync: false
+      - key: DATABASE_SSL
+        value: "true"
       - key: SESSION_SECRET
         generateValue: true
       - key: ADMIN_TOKEN
@@ -37,8 +38,3 @@ services:
       - key: ALLOWED_ORIGINS
         value: https://cv-studio-932m.onrender.com,https://localhost,capacitor://localhost
 
-databases:
-  - name: cv-studio-db
-    plan: basic-256mb        # base persistante (la base gratuite de Render est supprimée après 30 jours)
-    databaseName: cvstudio
-    user: cvstudio

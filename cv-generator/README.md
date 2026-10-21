@@ -60,18 +60,19 @@ cv-generator/
 
 Tout est décrit dans `render.yaml` à la racine du dépôt : le site, l’API et la base de données Postgres.
 
-Déjà en place sur Render (région Francfort, la plus proche de l’Afrique de l’Ouest) : le service **cv-studio** (https://cv-studio-932m.onrender.com), qui suit la branche `claude/cv-generator-app-a1kcdw`, et la base **cv-studio-db**. Le fichier `render.yaml` décrit la même configuration pour la recréer ailleurs.
+Déjà en place :
+- **Render** (région Francfort, la plus proche de l’Afrique de l’Ouest) : le service **cv-studio** (https://cv-studio-932m.onrender.com, lien court https://bit.ly/cv-studio), qui suit la branche `claude/cv-generator-app-a1kcdw`.
+- **Supabase** (Francfort, offre gratuite) : le projet **cv-studio**. Le serveur s’y connecte avec un utilisateur dédié `cvstudio_app`, et les tables sont dans un schéma privé `cvstudio`, invisible depuis l’API publique de Supabase. Les tables se créent seules au démarrage du serveur.
 
-1. Render → cv-studio-db → *Connect* → copier l’**Internal Database URL**, puis Render → cv-studio → *Environment* → ajouter `DATABASE_URL` avec cette valeur.
-2. Ajouter `ANTHROPIC_API_KEY` (créée sur [console.anthropic.com](https://console.anthropic.com)) et, quand le compte FedaPay est prêt, `FEDAPAY_SECRET_KEY`.
+1. Variables du service Render : `DATABASE_URL` (Supabase, *session pooler*), `DATABASE_SSL=true`, `ANTHROPIC_API_KEY`, `SESSION_SECRET`, `ADMIN_TOKEN`, puis `FEDAPAY_SECRET_KEY` quand le compte FedaPay est prêt.
+2. L’offre gratuite Supabase met le projet en pause après 7 jours sans aucune visite (un clic dans Supabase le relance).
 3. Dans FedaPay, ajouter le webhook `https://cv-studio-932m.onrender.com/api/payments/webhook`.
 4. Quand FedaPay a validé le compte marchand : mettre la clé **live** et `FEDAPAY_ENV=live`.
 
-Coût de l’hébergement : gratuit pendant les essais. Avant d’ouvrir au public : passer cv-studio en *Starter* (7 $/mois, pas de mise en veille) et cv-studio-db en *Basic* (6 $/mois ; la base gratuite est supprimée au bout de 30 jours). Coût de l’IA (Claude Sonnet 5.5) : quelques dizaines de FCFA par action, couverts largement par le prix d’un crédit.
+Coût de l’hébergement : gratuit pendant les essais. Le site gratuit de Render s’endort sans visite (30 à 50 s d’attente pour le premier visiteur) : passer cv-studio en *Starter* (7 $/mois) quand il y aura du trafic. Coût de l’IA (Claude Sonnet 5.5) : quelques dizaines de FCFA par action, couverts largement par le prix d’un crédit.
 
 Chaque `git push` sur la branche suivie par Render redéploie le site automatiquement.
 
-**Base de données gratuite et durable (Supabase)** : la base gratuite de Render est supprimée après 30 jours. Pour rester gratuit, créer un projet sur [supabase.com](https://supabase.com) (région Europe), copier l’adresse *Connection string → Session pooler*, puis dans Render → cv-studio → Environment : remplacer `DATABASE_URL` par cette adresse et ajouter `DATABASE_SSL=true`. Les tables se créent seules au démarrage. Limite de l’offre gratuite Supabase : le projet se met en pause après 7 jours sans aucune visite (un clic dans Supabase le relance).
 
 ## Application Android
 
