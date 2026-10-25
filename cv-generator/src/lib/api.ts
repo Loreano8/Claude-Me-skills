@@ -53,7 +53,7 @@ async function request<T>(method: 'GET' | 'POST', path: string, body?: unknown, 
     const message = typeof data?.error === 'string' ? data.error : null;
     // Pas de réponse de notre API : site publié sans serveur (ex. version de démonstration).
     if (!message) throw new ApiError('Les fonctions IA ne sont pas encore activées sur ce site.');
-    if (res.status === 401 && path.startsWith('/api/ai/')) {
+    if (res.status === 401 && (path.startsWith('/api/ai/') || path === '/api/unlock')) {
       account.logout();
       account.open('account', message);
     }
@@ -83,6 +83,7 @@ export const api = {
   me: () => request<{ user: AccountUser }>('GET', '/api/me'),
   health: () => request<{ ai: boolean; accounts: boolean; payments: boolean }>('GET', '/api/health'),
   packs: () => request<{ packs: Pack[]; payments: boolean }>('GET', '/api/packs'),
+  unlock: () => post<{ credits: number | null }>('/api/unlock', {}),
   checkout: (packId: string) => post<{ url: string }>('/api/payments/checkout', { packId }),
 
   support: () => request<{ messages: SupportMessage[] }>('GET', '/api/support', undefined, supportHeaders()),

@@ -89,6 +89,8 @@ export interface CvDocument {
   settings: CvSettings;
   /** Présent quand ce CV a été adapté à une offre. */
   adaptation?: { job: AdaptResult['job']; analysis: AdaptResult['analysis']; createdAt: number };
+  /** Version Pro (1 crédit) : PDF sans la mention « Créé avec CV Studio », tous les modèles, export Word. */
+  unlocked?: { at: number };
   /** Présent quand ce CV est une version traduite. */
   translation?: { lang: Lang; market: Market; notes: string[]; createdAt: number };
 }

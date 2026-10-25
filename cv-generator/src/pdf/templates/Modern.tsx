@@ -2,7 +2,7 @@ import { Document, Page, StyleSheet, Text, View } from '@react-pdf/renderer';
 import type { CvDocument } from '../../types.ts';
 import { achievementsList, fullName } from '../../lib/cv.ts';
 import { LABELS } from '../labels.ts';
-import { Bullets, Photo, SignatureBlock } from '../parts.tsx';
+import { Bullets, Photo, SignatureBlock, FreeMark } from '../parts.tsx';
 import { FONT, contactItems, dateRange, tint } from '../theme.ts';
 
 const SIDEBAR = 182;
@@ -149,6 +149,7 @@ export function ModernTemplate({ cv }: { cv: CvDocument }) {
 
           <SignatureBlock cv={cv} L={L} />
         </View>
+        <FreeMark cv={cv} />
       </Page>
     </Document>
   );

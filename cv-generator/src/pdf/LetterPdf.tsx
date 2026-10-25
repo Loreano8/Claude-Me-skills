@@ -3,6 +3,7 @@ import type { CoverLetter, CvDocument } from '../types.ts';
 import { fullName } from '../lib/cv.ts';
 import { letterParagraphs } from './letterText.ts';
 import { FONT } from './theme.ts';
+import { FreeMark } from './parts.tsx';
 
 const s = StyleSheet.create({
   page: { fontFamily: FONT, fontSize: 10.2, color: '#111827', lineHeight: 1.5, paddingVertical: 48, paddingHorizontal: 56 },
@@ -64,6 +65,7 @@ export function LetterPdf({ letter, cv }: { letter: CoverLetter; cv: CvDocument 
           ) : null}
           <Text style={{ fontWeight: 600 }}>{name}</Text>
         </View>
+        <FreeMark cv={cv} />
       </Page>
     </Document>
   );

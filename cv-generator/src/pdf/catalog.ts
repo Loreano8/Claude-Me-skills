@@ -130,6 +130,10 @@ export const CATALOG: CatalogEntry[] = [
   },
 ];
 
+/** Modèles utilisables gratuitement ; les autres (et « Mon style ») demandent la version Pro. */
+export const FREE_TEMPLATES: readonly string[] = ['moderne', 'classique', 'elegant'];
+export const isProTemplate = (id: string) => !FREE_TEMPLATES.includes(id);
+
 export const catalogEntry = (id: string) => CATALOG.find((t) => t.id === id);
 
 /** Réglages appliqués en choisissant un modèle : sa couleur, sa forme de photo, et ses réglages propres. */

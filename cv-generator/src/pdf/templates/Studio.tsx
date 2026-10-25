@@ -5,7 +5,7 @@ import type { TemplateStyle } from '../../../shared/schema.ts';
 import type { CvDocument } from '../../types.ts';
 import { achievementsList, fullName } from '../../lib/cv.ts';
 import { LABELS, type Labels } from '../labels.ts';
-import { Bullets, Photo, SignatureBlock } from '../parts.tsx';
+import { Bullets, Photo, SignatureBlock, FreeMark } from '../parts.tsx';
 import { FONT, SERIF, contactItems, dateRange, tint } from '../theme.ts';
 
 // Moteur de mise en page : un seul composant produit tous les modèles décrits par une fiche de style
@@ -362,6 +362,7 @@ export function StudioTemplate({ cv, style }: { cv: CvDocument; style: TemplateS
     <Document title={`CV – ${fullName(cv.personal)}`} author={fullName(cv.personal)} creator="CV Studio">
       <Page size="A4" style={{ ...page, ...pageStyle }}>
         {children}
+        <FreeMark cv={cv} />
       </Page>
     </Document>
   );

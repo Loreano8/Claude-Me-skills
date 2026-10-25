@@ -1,11 +1,12 @@
 import { useState } from 'react';
-import { FileDown, FileText, Mail, Wand2 } from 'lucide-react';
+import { FileDown, FileText, Lock, Mail, Wand2 } from 'lucide-react';
 import { useActiveCv, useStore } from '../store.ts';
 import type { CoverLetterRequest } from '../../shared/schema.ts';
 import { api } from '../lib/api.ts';
 import { isCvEmpty, toAiContent } from '../lib/cv.ts';
 import { exportLetterDocx, exportLetterPdf } from '../export/exporters.ts';
 import { Preview } from '../components/Preview.tsx';
+import { ProOffer } from '../components/ProUnlock.tsx';
 import { Button, Card, Field, Notice, Select, TextArea, Toggle } from '../components/ui.tsx';
 import type { Tab } from '../App.tsx';
 
@@ -130,12 +131,18 @@ export function LetterPage({ onNavigate }: { onNavigate: (t: Tab) => void }) {
   const update = useStore((s) => s.updateLetter);
   const [busy, setBusy] = useState<'pdf' | 'docx' | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [needPro, setNeedPro] = useState(false);
+  const pro = Boolean(cv.unlocked);
 
-  async function exportAs(kind: 'pdf' | 'docx') {
+  async function exportAs(kind: 'pdf' | 'docx', unlockedNow = false) {
+    // La lettre suit la version du CV : gratuite avec mention, ou Pro (sans mention, et en Word).
+    if (kind === 'docx' && !pro && !unlockedNow) return setNeedPro(true);
+    setNeedPro(false);
     setBusy(kind);
     setError(null);
     try {
-      await (kind === 'pdf' ? exportLetterPdf(letter, cv) : exportLetterDocx(letter, cv));
+      const doc = unlockedNow ? { ...cv, unlocked: { at: Date.now() } } : cv;
+      await (kind === 'pdf' ? exportLetterPdf(letter, doc) : exportLetterDocx(letter, doc));
     } catch (e) {
       setError((e as Error).message);
     } finally {
@@ -188,12 +195,13 @@ export function LetterPage({ onNavigate }: { onNavigate: (t: Tab) => void }) {
       <div className="space-y-3 lg:sticky lg:top-20 lg:self-start">
         <div className="grid grid-cols-2 gap-2">
           <Button size="lg" icon={<FileDown className="size-5" />} loading={busy === 'pdf'} onClick={() => exportAs('pdf')}>
-            PDF
+            {pro ? 'PDF' : 'PDF gratuit'}
           </Button>
-          <Button size="lg" variant="secondary" icon={<FileText className="size-5" />} loading={busy === 'docx'} onClick={() => exportAs('docx')}>
+          <Button size="lg" variant="secondary" icon={pro ? <FileText className="size-5" /> : <Lock className="size-5" />} loading={busy === 'docx'} onClick={() => exportAs('docx')}>
             Word
           </Button>
         </div>
+        <ProOffer cv={cv} reason={needPro ? 'L’export Word fait partie de la version Pro.' : null} onUnlocked={() => needPro && void exportAs('docx', true)} />
         {error && <Notice tone="error">{error}</Notice>}
         <div className="mx-auto max-w-[700px]">
           <Preview source={{ kind: 'letter', letter, cv }} />

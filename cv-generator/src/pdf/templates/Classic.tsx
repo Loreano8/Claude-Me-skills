@@ -2,7 +2,7 @@ import { Document, Page, StyleSheet, Text, View } from '@react-pdf/renderer';
 import type { CvDocument } from '../../types.ts';
 import { achievementsList, fullName } from '../../lib/cv.ts';
 import { LABELS } from '../labels.ts';
-import { Bullets, Photo, SignatureBlock } from '../parts.tsx';
+import { Bullets, Photo, SignatureBlock, FreeMark } from '../parts.tsx';
 import { FONT, contactItems, dateRange } from '../theme.ts';
 
 // Une seule colonne, intitulés standards : c'est la mise en page la mieux lue par les ATS.
@@ -139,6 +139,7 @@ export function ClassicTemplate({ cv }: { cv: CvDocument }) {
         )}
 
         <SignatureBlock cv={cv} L={L} />
+        <FreeMark cv={cv} />
       </Page>
     </Document>
   );

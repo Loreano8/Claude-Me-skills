@@ -45,3 +45,18 @@ export function SignatureBlock({ cv, L, align = 'right' }: { cv: CvDocument; L: 
     </View>
   );
 }
+
+/**
+ * Mention « Créé avec CV Studio » en bas de chaque page des documents gratuits.
+ * La version Pro (1 crédit) la retire.
+ */
+export function FreeMark({ cv }: { cv: CvDocument }) {
+  if (cv.unlocked) return null;
+  return (
+    <View fixed style={{ position: 'absolute', bottom: 9, left: 0, right: 0, alignItems: 'center' }}>
+      <Text style={{ fontSize: 7.5, color: '#64748b', backgroundColor: '#ffffff', paddingHorizontal: 8, paddingVertical: 2, borderRadius: 6 }}>
+        Créé gratuitement avec CV Studio · cv-studio-site.onrender.com
+      </Text>
+    </View>
+  );
+}

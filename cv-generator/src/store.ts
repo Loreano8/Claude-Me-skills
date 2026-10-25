@@ -16,6 +16,8 @@ interface State {
   newCv: () => void;
   duplicateCv: (id: string) => void;
   deleteCv: (id: string) => void;
+  /** Passe un CV en version Pro (après paiement d'un crédit). */
+  unlockCv: (id: string) => void;
   renameCv: (id: string, label: string) => void;
   addAdaptedCv: (base: CvDocument, result: AdaptResult) => string;
   addTranslatedCv: (base: CvDocument, result: TranslateResult, lang: Lang, market: Market) => string;
@@ -73,10 +75,12 @@ export const useStore = create<State>()(
       duplicateCv: (id) => {
         const src = get().cvs.find((c) => c.id === id);
         if (!src) return;
-        const copy: CvDocument = { ...structuredClone(src), id: uid(), label: `${src.label} (copie)`, updatedAt: Date.now() };
+        // Une copie repart en version gratuite : la version Pro est propre au CV débloqué.
+        const copy: CvDocument = { ...structuredClone(src), id: uid(), label: `${src.label} (copie)`, updatedAt: Date.now(), unlocked: undefined };
         set((s) => ({ cvs: [...s.cvs, copy], activeId: copy.id }));
       },
 
+      unlockCv: (id) => set((s) => ({ cvs: s.cvs.map((c) => (c.id === id ? { ...c, unlocked: { at: Date.now() } } : c)) })),
       deleteCv: (id) =>
         set((s) => {
           const cvs = s.cvs.filter((c) => c.id !== id);
@@ -91,6 +95,8 @@ export const useStore = create<State>()(
         const where = [result.job.title, result.job.company].filter(Boolean).join(' – ');
         adapted.label = where ? `Adapté : ${where}` : 'CV adapté';
         adapted.adaptation = { job: result.job, analysis: result.analysis, createdAt: Date.now() };
+        // L'adaptation a déjà coûté un crédit : le CV adapté est livré en version Pro.
+        adapted.unlocked = { at: Date.now() };
         if (result.language !== base.settings.headingLang) {
           adapted.settings = { ...adapted.settings, ...settingsForLang(result.language) };
         }
@@ -115,6 +121,8 @@ export const useStore = create<State>()(
 
       addTranslatedCv: (base, result, lang, market) => {
         const translated = applyAiContent({ ...structuredClone(base), id: uid() }, result.cv, { mode: 'keepContact' });
+        // La traduction a déjà coûté un crédit : la version traduite est livrée en version Pro.
+        translated.unlocked = { at: Date.now() };
         translated.label = `${base.label} – ${MARKET_LABELS[market]}`;
         translated.settings = { ...translated.settings, ...settingsForLang(lang) };
         translated.translation = { lang, market, notes: result.notes, createdAt: Date.now() };

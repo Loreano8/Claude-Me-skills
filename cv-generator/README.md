@@ -59,7 +59,8 @@ Les nouveaux modèles ne sont pas dessinés un par un : une **fiche de style** (
 
 ## Gratuit et payant
 
-- **Gratuit, sans compte** : remplir son CV, les 3 modèles, l’export PDF et Word, les conseils.
+- **Gratuit, sans compte** : remplir son CV, les 3 modèles de base (Moderne, Classique, Élégant), l’export PDF avec une petite mention « Créé avec CV Studio » en bas de chaque page, les conseils.
+- **Version Pro d’un CV : 1 crédit**, définitif pour ce CV : PDF sans la mention, les 13 modèles et « Mon style », export Word (CV et lettre). Les CV adaptés à une offre ou traduits par l’IA sont livrés directement en version Pro (ils ont déjà coûté un crédit) ; une copie manuelle repart en version gratuite.
 - **IA** : il faut un compte (e-mail ou téléphone + mot de passe). **1 génération offerte** à l’inscription, puis **1 crédit par action** (générer, améliorer, corriger, adapter à une offre, lettre, fiche entretien, traduction, analyse d’un modèle importé).
 - **Packs** (modifiables dans `server/payments.ts`) : 3 crédits = 500 FCFA, 10 crédits = 1 500 FCFA, 25 crédits = 3 000 FCFA.
 - **Paiement** par FedaPay (Mobile Money : MTN MoMo, Moov Money ; la carte bancaire sera ajoutée aux textes une fois activée sur le compte FedaPay). Dès que FedaPay confirme le paiement, les crédits sont ajoutés automatiquement au compte : rien à faire à la main.

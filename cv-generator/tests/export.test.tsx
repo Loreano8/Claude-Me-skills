@@ -75,6 +75,15 @@ describe('export PDF', () => {
     expect(pages.length).toBeGreaterThan(1);
   });
 
+  it('génère la version gratuite (avec mention) et la version Pro', async () => {
+    const free = fullCv('moderne');
+    const pro = { ...fullCv('moderne'), unlocked: { at: 1 } };
+    const [a, b] = await Promise.all([renderToBuffer(<CvPdf cv={free} />), renderToBuffer(<CvPdf cv={pro} />)]);
+    expect(a.subarray(0, 5).toString()).toBe('%PDF-');
+    expect(b.subarray(0, 5).toString()).toBe('%PDF-');
+    expect(a.length).toBeGreaterThan(b.length); // la mention ajoute du contenu sur la page
+  });
+
   it('génère la lettre', async () => {
     const letter = { ...emptyLetter(), ...sampleLetter, body: sampleLetter.paragraphs.join('\n\n') };
     const buf = await renderToBuffer(<LetterPdf letter={letter} cv={fullCv('moderne')} />);

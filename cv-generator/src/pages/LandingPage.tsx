@@ -10,7 +10,7 @@ const fcfa = (n: number) => `${n.toLocaleString('fr-FR')} FCFA`;
 const STEPS = [
   { icon: PenLine, title: 'Écrivez comme vous parlez', text: 'Tapez ou dictez votre parcours en vrac, ou importez votre ancien CV (PDF ou photo). L’IA range et rédige tout proprement.' },
   { icon: Target, title: 'Collez l’offre', text: 'Texte copié depuis WhatsApp, PDF ou capture d’écran de l’annonce : vous obtenez un CV adapté au poste et un score de compatibilité.' },
-  { icon: FileDown, title: 'Téléchargez et postulez', text: 'PDF prêt pour les logiciels de tri des recruteurs, ou Word pour le retoucher. Avec la lettre de motivation qui va avec.' },
+  { icon: FileDown, title: 'Téléchargez et postulez', text: 'PDF prêt pour les logiciels de tri des recruteurs (gratuit), ou version Pro sans mention avec le Word. Avec la lettre de motivation qui va avec.' },
 ];
 
 const FEATURES: { icon: typeof Target; title: string; text: string }[] = [
@@ -47,7 +47,7 @@ function Marquee({ items, reverse = false, duration }: { items: string[]; revers
 }
 
 const FAQ: { q: string; a: ReactNode }[] = [
-  { q: 'Est-ce vraiment gratuit ?', a: 'Oui : créer son CV, choisir parmi les 3 modèles et télécharger en PDF ou Word est gratuit et sans compte. Seules les fonctions IA utilisent des crédits, et la première est offerte.' },
+  { q: 'Est-ce vraiment gratuit ?', a: 'Oui : créer son CV avec les 3 modèles de base et le télécharger en PDF est gratuit et sans compte (avec une petite mention « Créé avec CV Studio » en bas de page). La version Pro d’un CV (sans mention, 13 modèles, export Word) et les fonctions IA coûtent 1 crédit chacune ; la première action IA est offerte.' },
   { q: 'Faut-il un abonnement ?', a: 'Non. Vous achetez un pack de crédits une fois, quand vous en avez besoin. Rien n’est prélevé automatiquement ensuite.' },
   { q: 'Comment payer ?', a: 'Par Mobile Money (MTN MoMo, Moov Money), via FedaPay. Les crédits arrivent sur votre compte dès que le paiement est confirmé.' },
   { q: 'L’IA peut-elle inventer des diplômes ou des expériences ?', a: 'Non. Elle a pour consigne stricte de ne rien inventer : elle reformule et met en valeur ce que vous avez réellement fait.' },
@@ -188,7 +188,7 @@ export function LandingPage({ onNavigate }: { onNavigate: (t: Tab) => void }) {
             <h3 className="font-semibold text-slate-900">Gratuit</h3>
             <p className="mt-1 text-2xl font-bold text-slate-900">0 FCFA</p>
             <ul className="mt-3 space-y-1.5 text-sm text-slate-600">
-              {['CV complet, 3 modèles', 'Export PDF et Word', 'Photo et signature', '1 action IA offerte'].map((x) => (
+              {['CV complet, 3 modèles', 'Export PDF (avec mention CV Studio)', 'Photo et signature', '1 action IA offerte'].map((x) => (
                 <li key={x} className="flex gap-2">
                   <Check className="mt-0.5 size-4 shrink-0 text-emerald-600" /> {x}
                 </li>
@@ -202,7 +202,7 @@ export function LandingPage({ onNavigate }: { onNavigate: (t: Tab) => void }) {
               <p className="mt-1 text-sm text-slate-600">
                 {p.credits} crédits · {fcfa(Math.round(p.price / p.credits))} l’action
               </p>
-              <p className="mt-3 text-xs text-slate-500">1 crédit = 1 CV adapté, 1 lettre, 1 fiche entretien ou 1 traduction.</p>
+              <p className="mt-3 text-xs text-slate-500">1 crédit = 1 CV adapté, 1 lettre, 1 fiche entretien, 1 traduction, ou 1 CV en version Pro.</p>
             </div>
           ))}
         </div>

@@ -4,7 +4,7 @@ import type { TemplateAnalysis, TemplateStyle } from '../../shared/schema.ts';
 import type { CvDocument, CvSettings } from '../types.ts';
 import { api } from '../lib/api.ts';
 import { fileToAttachment } from '../lib/files.ts';
-import { CATALOG, CATEGORY_LABELS, catalogEntry, settingsForTemplate, type CatalogEntry, type TemplateCategory } from '../pdf/catalog.ts';
+import { CATALOG, CATEGORY_LABELS, catalogEntry, isProTemplate, settingsForTemplate, type CatalogEntry, type TemplateCategory } from '../pdf/catalog.ts';
 import { tint } from '../pdf/theme.ts';
 import { Button, cx, Notice } from './ui.tsx';
 
@@ -328,7 +328,10 @@ export function TemplateGallery({ cv, set }: { cv: CvDocument; set: (patch: Part
             <div className="aspect-[1/1.25] overflow-hidden rounded-md bg-white ring-1 ring-slate-200">
               <StyleThumb st={{ ...st.customStyle, accent: st.template === 'perso' ? st.accent : st.customStyle.accent }} />
             </div>
-            <p className="mt-1.5 truncate text-xs font-semibold text-slate-800 sm:text-sm">Mon style</p>
+            <p className="mt-1.5 flex items-center gap-1 text-xs font-semibold text-slate-800 sm:text-sm">
+              <span className="truncate">Mon style</span>
+              {!cv.unlocked && <span className="shrink-0 rounded bg-amber-100 px-1 text-[10px] font-bold text-amber-800">PRO</span>}
+            </p>
           </button>
         )}
         {shown.map((t) => (
@@ -344,7 +347,10 @@ export function TemplateGallery({ cv, set }: { cv: CvDocument; set: (patch: Part
             <div className="aspect-[1/1.25] overflow-hidden rounded-md bg-white ring-1 ring-slate-200">
               <Thumb entry={t} accent={st.template === t.id ? st.accent : t.accent} />
             </div>
-            <p className="mt-1.5 truncate text-xs font-semibold text-slate-800 sm:text-sm">{t.name}</p>
+            <p className="mt-1.5 flex items-center gap-1 text-xs font-semibold text-slate-800 sm:text-sm">
+              <span className="truncate">{t.name}</span>
+              {isProTemplate(t.id) && !cv.unlocked && <span className="shrink-0 rounded bg-amber-100 px-1 text-[10px] font-bold text-amber-800">PRO</span>}
+            </p>
           </button>
         ))}
         <button type="button" onClick={() => setImporting(true)} className="flex flex-col items-center justify-center gap-1.5 rounded-xl border-2 border-dashed border-violet-300 p-2 text-center text-violet-700 hover:bg-violet-50">

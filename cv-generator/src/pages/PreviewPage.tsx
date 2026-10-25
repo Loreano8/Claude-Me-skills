@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { AlertTriangle, CheckCircle2, FileDown, FileText, Languages, Lightbulb } from 'lucide-react';
+import { AlertTriangle, CheckCircle2, FileDown, FileText, Languages, Lightbulb, Lock } from 'lucide-react';
 import type { Market } from '../../shared/schema.ts';
 import { MARKET_LABELS, useActiveCv, useStore } from '../store.ts';
 import type { CvDocument, CvSettings } from '../types.ts';
@@ -9,6 +9,8 @@ import { checkCv } from '../lib/checks.ts';
 import { exportCvDocx, exportCvPdf } from '../export/exporters.ts';
 import { Preview } from '../components/Preview.tsx';
 import { TemplateGallery } from '../components/TemplateGallery.tsx';
+import { ProOffer } from '../components/ProUnlock.tsx';
+import { isProTemplate } from '../pdf/catalog.ts';
 import { ReviseCard } from '../components/ReviseCard.tsx';
 import { Button, Card, cx, Notice, Select, Toggle } from '../components/ui.tsx';
 
@@ -67,12 +69,22 @@ export function DesignPanel({ cv }: { cv: CvDocument }) {
 export function ExportButtons({ cv }: { cv: CvDocument }) {
   const [busy, setBusy] = useState<'pdf' | 'docx' | null>(null);
   const [error, setError] = useState<string | null>(null);
+  // Ce qu'il fallait débloquer quand la personne a cliqué (Word, ou PDF d'un modèle Pro).
+  const [needPro, setNeedPro] = useState<{ kind: 'pdf' | 'docx'; reason: string } | null>(null);
+  const pro = Boolean(cv.unlocked);
 
-  async function run(kind: 'pdf' | 'docx') {
+  async function run(kind: 'pdf' | 'docx', unlockedNow = false) {
+    if (!pro && !unlockedNow) {
+      if (kind === 'docx') return setNeedPro({ kind, reason: 'L’export Word fait partie de la version Pro.' });
+      if (isProTemplate(cv.settings.template)) return setNeedPro({ kind, reason: 'Ce modèle fait partie de la version Pro.' });
+    }
+    setNeedPro(null);
     setBusy(kind);
     setError(null);
     try {
-      await (kind === 'pdf' ? exportCvPdf(cv) : exportCvDocx(cv));
+      // Juste après le paiement, le CV en mémoire n'est pas encore marqué : on le marque pour l'export.
+      const doc = unlockedNow ? { ...cv, unlocked: { at: Date.now() } } : cv;
+      await (kind === 'pdf' ? exportCvPdf(doc) : exportCvDocx(doc));
     } catch (e) {
       setError((e as Error).message);
     } finally {
@@ -84,13 +96,18 @@ export function ExportButtons({ cv }: { cv: CvDocument }) {
     <div className="space-y-2">
       <div className="grid grid-cols-2 gap-2">
         <Button size="lg" icon={<FileDown className="size-5" />} loading={busy === 'pdf'} onClick={() => run('pdf')}>
-          PDF
+          {pro ? 'PDF' : 'PDF gratuit'}
         </Button>
-        <Button size="lg" variant="secondary" icon={<FileText className="size-5" />} loading={busy === 'docx'} onClick={() => run('docx')}>
+        <Button size="lg" variant="secondary" icon={pro ? <FileText className="size-5" /> : <Lock className="size-5" />} loading={busy === 'docx'} onClick={() => run('docx')}>
           Word
         </Button>
       </div>
-      <p className="text-xs text-slate-500">Le PDF garde exactement la mise en page. Le fichier Word, plus simple, se modifie facilement.</p>
+      <p className="text-xs text-slate-500">
+        {pro
+          ? 'Le PDF garde exactement la mise en page. Le fichier Word se modifie facilement.'
+          : 'Le PDF gratuit porte une petite mention « Créé avec CV Studio » en bas de page.'}
+      </p>
+      <ProOffer cv={cv} reason={needPro?.reason} onUnlocked={() => needPro && void run(needPro.kind, true)} />
       {error && <Notice tone="error">{error}</Notice>}
     </div>
   );
@@ -200,7 +217,7 @@ export function PreviewPage() {
   const cv = useActiveCv();
   return (
     // Sur téléphone : export, puis aperçu, puis réglages. Sur grand écran : réglages à gauche, aperçu à droite.
-    <div className="grid gap-4 lg:grid-cols-[360px_1fr] lg:grid-rows-[auto_auto_auto_auto_1fr]">
+    <div className="grid grid-cols-[minmax(0,1fr)] gap-4 lg:grid-cols-[360px_minmax(0,1fr)] lg:grid-rows-[auto_auto_auto_auto_1fr]">
       <Card title="Télécharger mon CV" className="lg:col-start-1">
         <ExportButtons cv={cv} />
       </Card>
