@@ -175,7 +175,7 @@ function CreditsDialog() {
         {!packs && !error && <div className="h-40 animate-pulse rounded-2xl bg-slate-100" />}
       </div>
       <p className="mt-3 flex items-center gap-1.5 text-xs text-slate-500">
-        <Check className="size-3.5" /> Paiement sécurisé par FedaPay : MTN MoMo, Moov Money ou carte bancaire.
+        <Check className="size-3.5" /> Paiement sécurisé par FedaPay : MTN MoMo ou Moov Money.
       </p>
       {!paymentsOn && (
         <div className="mt-3">

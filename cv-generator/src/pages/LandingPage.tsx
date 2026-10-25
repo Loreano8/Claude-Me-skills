@@ -49,7 +49,7 @@ function Marquee({ items, reverse = false, duration }: { items: string[]; revers
 const FAQ: { q: string; a: ReactNode }[] = [
   { q: 'Est-ce vraiment gratuit ?', a: 'Oui : créer son CV, choisir parmi les 3 modèles et télécharger en PDF ou Word est gratuit et sans compte. Seules les fonctions IA utilisent des crédits, et la première est offerte.' },
   { q: 'Faut-il un abonnement ?', a: 'Non. Vous achetez un pack de crédits une fois, quand vous en avez besoin. Rien n’est prélevé automatiquement ensuite.' },
-  { q: 'Comment payer ?', a: 'MTN MoMo, Moov Money ou carte bancaire, via FedaPay. Les crédits arrivent sur votre compte dès que le paiement est confirmé.' },
+  { q: 'Comment payer ?', a: 'Par Mobile Money (MTN MoMo, Moov Money), via FedaPay. Les crédits arrivent sur votre compte dès que le paiement est confirmé.' },
   { q: 'L’IA peut-elle inventer des diplômes ou des expériences ?', a: 'Non. Elle a pour consigne stricte de ne rien inventer : elle reformule et met en valeur ce que vous avez réellement fait.' },
   { q: 'Où sont mes données ?', a: 'Votre CV reste sur votre téléphone ou votre ordinateur. Seul le texte nécessaire à une demande IA passe par notre serveur, le temps de la traiter.' },
   { q: 'Ça marche sur iPhone ?', a: 'Oui, depuis Safari. Touchez « Partager » puis « Sur l’écran d’accueil » pour l’utiliser comme une application. Sur Android, l’application est aussi disponible.' },
@@ -206,7 +206,7 @@ export function LandingPage({ onNavigate }: { onNavigate: (t: Tab) => void }) {
             </div>
           ))}
         </div>
-        <p className="mt-4 text-center text-sm text-slate-500">Sans abonnement · MTN MoMo, Moov Money ou carte · Crédit rendu si l’IA échoue</p>
+        <p className="mt-4 text-center text-sm text-slate-500">Sans abonnement · MTN MoMo ou Moov Money · Crédit rendu si l’IA échoue</p>
       </section>
 
       <section className="bg-white px-4 py-12">

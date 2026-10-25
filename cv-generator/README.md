@@ -62,7 +62,7 @@ Les nouveaux modèles ne sont pas dessinés un par un : une **fiche de style** (
 - **Gratuit, sans compte** : remplir son CV, les 3 modèles, l’export PDF et Word, les conseils.
 - **IA** : il faut un compte (e-mail ou téléphone + mot de passe). **1 génération offerte** à l’inscription, puis **1 crédit par action** (générer, améliorer, corriger, adapter à une offre, lettre, fiche entretien, traduction, analyse d’un modèle importé).
 - **Packs** (modifiables dans `server/payments.ts`) : 3 crédits = 500 FCFA, 10 crédits = 1 500 FCFA, 25 crédits = 3 000 FCFA.
-- **Paiement** par FedaPay (MTN MoMo, Moov Money, carte). Dès que FedaPay confirme le paiement, les crédits sont ajoutés automatiquement au compte : rien à faire à la main.
+- **Paiement** par FedaPay (Mobile Money : MTN MoMo, Moov Money ; la carte bancaire sera ajoutée aux textes une fois activée sur le compte FedaPay). Dès que FedaPay confirme le paiement, les crédits sont ajoutés automatiquement au compte : rien à faire à la main.
 - Les appels à l’IA passent par le serveur, avec la clé API du propriétaire du service : l’utilisateur ne voit jamais la clé, il paie des crédits.
 - Anti-abus : le crédit offert n’est donné qu’**une fois par appareil** (téléphone ou navigateur) et **une fois par connexion internet tous les 30 jours** (`FREE_IP_COOLDOWN_DAYS`). On peut créer d’autres comptes, mais sans nouveau crédit gratuit. Crédit rendu automatiquement si l’IA échoue.
 - Ajouter des crédits à la main (ex. paiement reçu directement) :
