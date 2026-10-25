@@ -9,9 +9,12 @@ Site web (et application Android) pour créer un CV aux normes actuelles, l’ad
 | **Mes infos** | Formulaire complet : identité, photo (recadrée automatiquement), accroche, expériences, formations, compétences, langues, certifications, centres d’intérêt, signature dessinée au doigt ou importée. |
 | | **Saisie rapide avec l’IA** : l’utilisateur écrit tout en vrac (ou dicte avec le micro du clavier), ou importe son ancien CV en PDF ou en photo. L’IA range les informations et les rédige proprement. |
 | **Aperçu & export** | 3 modèles (Moderne, Classique « ATS », Élégant), 8 couleurs + couleur libre, options (photo, date de naissance, nationalité, signature, titres en français ou en anglais). Aperçu fidèle, export PDF et Word. Conseils automatiques sur le CV. |
-| **Adapter à une offre** | L’utilisateur colle le texte de l’annonce ou importe le PDF / une capture d’écran. L’IA crée une **version du CV adaptée** à ce poste (le CV d’origine est conservé), donne un score d’adéquation, les points forts, les exigences manquantes et des conseils. |
+| **Adapter à une offre** | L’utilisateur colle le texte de l’annonce ou importe le PDF / une capture d’écran. L’IA crée une **version du CV adaptée** à ce poste (le CV d’origine est conservé), donne un score d’adéquation avant → après adaptation, les points forts, les exigences manquantes et des conseils. |
 | | **Mon CV dans une autre langue** : l’IA traduit tout le CV (postes, diplômes, compétences…) et l’adapte au pays visé (anglais Royaume-Uni, États-Unis/Canada ou international ; français France ou Afrique). Une nouvelle version est créée, l’original est conservé. En anglais, photo, date de naissance, nationalité et signature sont masquées comme le veut l’usage. |
+| | **Fiche entretien** : questions probables pour ce poste avec réponses construites à partir du CV, points faibles et comment les aborder, questions à poser au recruteur, conseils. Copiable pour WhatsApp. |
 | **Lettre de motivation** | Rédaction par l’IA à partir du CV et de l’offre (ou candidature spontanée), ton et longueur au choix, modifiable, signée, export PDF et Word. |
+| **Mes candidatures** | Suivi de chaque offre (en préparation, envoyée, entretien, acceptée, refusée), avec le CV adapté, le score et la fiche entretien. Créé automatiquement à chaque adaptation. |
+| **Accueil** | Page de présentation (fonctionnalités, tarifs en FCFA, questions fréquentes), affichée à la première visite ou en touchant le logo. |
 
 Les données restent sur le téléphone ou l’ordinateur de l’utilisateur (stockage local du navigateur). Seules les demandes à l’IA passent par le serveur.
 
@@ -32,7 +35,7 @@ Ces règles sont dans `server/prompts.ts` (pour l’IA) et `src/lib/checks.ts` (
 ```
 cv-generator/
 ├── src/                 Site web (React + TypeScript + Tailwind)
-│   ├── pages/           Les 4 onglets
+│   ├── pages/           Accueil et les 5 onglets
 │   ├── components/      Formulaires, photo, signature, aperçu PDF
 │   ├── pdf/             Modèles de CV et de lettre (PDF)
 │   ├── export/          Export Word (.docx) et enregistrement des fichiers
@@ -47,7 +50,7 @@ cv-generator/
 ## Gratuit et payant
 
 - **Gratuit, sans compte** : remplir son CV, les 3 modèles, l’export PDF et Word, les conseils.
-- **IA** : il faut un compte (e-mail ou téléphone + mot de passe). **1 génération offerte** à l’inscription, puis **1 crédit par action** (générer, améliorer, adapter à une offre, lettre, traduction).
+- **IA** : il faut un compte (e-mail ou téléphone + mot de passe). **1 génération offerte** à l’inscription, puis **1 crédit par action** (générer, améliorer, adapter à une offre, lettre, fiche entretien, traduction).
 - **Packs** (modifiables dans `server/payments.ts`) : 3 crédits = 500 FCFA, 10 crédits = 1 500 FCFA, 25 crédits = 3 000 FCFA.
 - **Paiement** par FedaPay (MTN MoMo, Moov Money, carte). Dès que FedaPay confirme le paiement, les crédits sont ajoutés automatiquement au compte : rien à faire à la main.
 - Les appels à l’IA passent par le serveur, avec la clé API du propriétaire du service : l’utilisateur ne voit jamais la clé, il paie des crédits.

@@ -1,7 +1,7 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
-import type { AdaptResult, CoverLetterResult, Lang, Market, TranslateResult } from '../shared/schema.ts';
-import type { CoverLetter, CvDocument, JobPostingDraft } from './types.ts';
+import type { AdaptResult, CoverLetterResult, InterviewResult, Lang, Market, TranslateResult } from '../shared/schema.ts';
+import type { Application, CoverLetter, CvDocument, JobPostingDraft } from './types.ts';
 import { applyAiContent, emptyCv, emptyLetter, letterDate, uid } from './lib/cv.ts';
 
 interface State {
@@ -9,6 +9,7 @@ interface State {
   activeId: string;
   letter: CoverLetter;
   job: JobPostingDraft;
+  applications: Application[];
 
   updateCv: (recipe: (cv: CvDocument) => CvDocument) => void;
   setActive: (id: string) => void;
@@ -19,6 +20,11 @@ interface State {
   addAdaptedCv: (base: CvDocument, result: AdaptResult) => string;
   addTranslatedCv: (base: CvDocument, result: TranslateResult, lang: Lang, market: Market) => string;
   setJob: (job: JobPostingDraft) => void;
+  addApplication: (fields: Partial<Application> & Pick<Application, 'title'>) => string;
+  updateApplication: (id: string, patch: Partial<Application>) => void;
+  deleteApplication: (id: string) => void;
+  /** Range la fiche d'entretien dans la candidature correspondante (créée si besoin). */
+  saveInterview: (applicationId: string | null, title: string, interview: InterviewResult) => string;
   updateLetter: (patch: Partial<CoverLetter>) => void;
   applyLetter: (result: CoverLetterResult, cv: CvDocument) => void;
 }
@@ -50,6 +56,7 @@ export const useStore = create<State>()(
       activeId: first.id,
       letter: emptyLetter(),
       job: { text: '', file: null },
+      applications: [],
 
       updateCv: (recipe) =>
         set((s) => ({
@@ -87,7 +94,22 @@ export const useStore = create<State>()(
         if (result.language !== base.settings.headingLang) {
           adapted.settings = { ...adapted.settings, ...settingsForLang(result.language) };
         }
-        set((s) => ({ cvs: [...s.cvs, adapted], activeId: adapted.id }));
+        // Chaque adaptation ouvre une candidature dans le suivi.
+        const now = Date.now();
+        const application: Application = {
+          id: uid(),
+          title: result.job.title || 'Offre sans titre',
+          company: result.job.company,
+          location: result.job.location,
+          status: 'preparation',
+          createdAt: now,
+          updatedAt: now,
+          date: '',
+          notes: '',
+          cvId: adapted.id,
+          score: { before: result.analysis.matchScore, after: result.analysis.matchScoreAfter },
+        };
+        set((s) => ({ cvs: [...s.cvs, adapted], activeId: adapted.id, applications: [application, ...s.applications] }));
         return adapted.id;
       },
 
@@ -101,6 +123,37 @@ export const useStore = create<State>()(
       },
 
       setJob: (job) => set({ job }),
+
+      addApplication: (fields) => {
+        const now = Date.now();
+        const application: Application = {
+          company: '',
+          location: '',
+          status: 'preparation',
+          date: '',
+          notes: '',
+          ...fields,
+          id: uid(),
+          createdAt: now,
+          updatedAt: now,
+        };
+        set((s) => ({ applications: [application, ...s.applications] }));
+        return application.id;
+      },
+
+      updateApplication: (id, patch) =>
+        set((s) => ({ applications: s.applications.map((a) => (a.id === id ? { ...a, ...patch, updatedAt: Date.now() } : a)) })),
+
+      deleteApplication: (id) => set((s) => ({ applications: s.applications.filter((a) => a.id !== id) })),
+
+      saveInterview: (applicationId, title, interview) => {
+        const existing = applicationId && get().applications.find((a) => a.id === applicationId);
+        if (existing) {
+          get().updateApplication(existing.id, { interview });
+          return existing.id;
+        }
+        return get().addApplication({ title, interview });
+      },
 
       updateLetter: (patch) => set((s) => ({ letter: { ...s.letter, ...patch } })),
 
@@ -131,6 +184,7 @@ export const useStore = create<State>()(
         activeId: s.activeId,
         letter: s.letter,
         job: { text: s.job.text, file: null },
+        applications: s.applications,
       }),
     },
   ),

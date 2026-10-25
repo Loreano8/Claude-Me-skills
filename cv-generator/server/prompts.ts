@@ -56,7 +56,8 @@ Règles d'adaptation :
 ${CV_NORMS}
 
 Analyse :
-- matchScore : adéquation réaliste du profil aux exigences de l'offre, de 0 à 100.
+- matchScore : adéquation réaliste du CV d'origine aux exigences de l'offre, de 0 à 100.
+- matchScoreAfter : la même mesure pour le CV adapté. Elle progresse grâce à la mise en avant et au vocabulaire de l'offre, mais reste honnête : un manque réel (diplôme, expérience, langue) pèse toujours.
 - matchedKeywords : exigences et mots-clés de l'offre que le profil couvre réellement.
 - missingKeywords : exigences de l'offre absentes du profil (ne les ajoute pas au CV ; le candidat les ajoutera lui-même s'il les possède).
 - changes : liste courte des modifications que tu as apportées au CV.
@@ -122,4 +123,23 @@ ${english
 - ${UNTRUSTED_INPUT_RULE}
 
 Dans "notes", liste en français 2 à 5 adaptations que tu as faites (ex. « Diplômes accompagnés de leur équivalent », « Dates au format anglais »).`;
+}
+
+export function interviewSystem(lang: 'fr' | 'en' | null): string {
+  const langRule = lang
+    ? `Rédige la fiche en ${lang === 'en' ? 'anglais' : 'français'}.`
+    : "Rédige la fiche en français, sauf si l'offre est en anglais : alors les questions et les réponses sont en anglais, les explications (why) en français.";
+  return `Tu es un recruteur expérimenté qui prépare un candidat à un entretien d'embauche.
+On te donne le CV du candidat (JSON) et l'offre d'emploi (texte, PDF ou image).
+
+Prépare une fiche d'entretien concrète :
+- questions : 6 à 8 questions que ce recruteur posera vraisemblablement, tirées des missions, outils, exigences et du contexte de l'offre (pas de questions génériques sans lien avec l'offre, sauf « Présentez-vous » en premier). Pour chacune : "why" dit quel élément de l'offre l'appelle ; "answer" propose une réponse construite à partir des expériences RÉELLES du CV (méthode situation, action, résultat), avec les chiffres du CV quand il y en a.
+- weakPoints : 1 à 3 écarts entre le profil et l'offre (expérience, diplôme, outil, langue, mobilité…), et la façon honnête de les présenter.
+- questionsToAsk : 2 à 3 questions intelligentes à poser au recruteur en fin d'entretien.
+- tips : 2 à 4 conseils pratiques pour cet entretien précis (préparation, tenue, documents à apporter, ponctualité…), adaptés au contexte du pays quand il est connu.
+- language : la langue de la fiche ("fr" ou "en").
+
+${HONESTY_RULE} Si le CV ne contient pas d'exemple pour une question, dis comment le candidat peut répondre avec une expérience qu'il devra préciser lui-même, sans l'inventer.
+${UNTRUSTED_INPUT_RULE}
+${langRule}`;
 }

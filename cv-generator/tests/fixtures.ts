@@ -1,4 +1,4 @@
-import type { AdaptResult, CoverLetterResult, TranslateResult } from '../shared/schema.ts';
+import type { AdaptResult, CoverLetterResult, InterviewResult, TranslateResult } from '../shared/schema.ts';
 import type { CvDocument } from '../src/types.ts';
 import { defaultSettings } from '../src/lib/cv.ts';
 
@@ -120,6 +120,7 @@ export const sampleAdapt: AdaptResult = {
   },
   analysis: {
     matchScore: 72,
+    matchScoreAfter: 86,
     matchedKeywords: ['SYSCOHADA', 'Fiscalité', '5 ans d’expérience', 'Paie'],
     missingKeywords: ['Management d’équipe', 'ERP'],
     changes: ['Titre aligné sur l’intitulé du poste', 'Accroche réécrite pour un poste de responsable', 'Réalisations fiscales mises en premier'],
@@ -156,4 +157,15 @@ export const sampleTranslation: TranslateResult = {
     ],
   },
   notes: ['Dates au format anglais', 'Diplômes accompagnés de leur équivalent'],
+};
+
+export const sampleInterview: InterviewResult = {
+  language: 'fr',
+  questions: [
+    { question: 'Présentez-vous.', why: 'Ouverture classique de l’entretien.', answer: 'Comptable depuis 5 ans dans le transport, je gère la paie de 120 salariés et la fiscalité.' },
+    { question: 'Comment avez-vous réduit les retards de paiement ?', why: 'L’offre insiste sur la fiabilité des processus.', answer: 'En mettant en place un circuit de validation qui a réduit les retards de 30 %.' },
+  ],
+  weakPoints: [{ gap: 'Pas d’expérience de management', howToAddress: 'Mettre en avant la coordination avec les autres services et l’envie d’encadrer.' }],
+  questionsToAsk: ['Comment est organisée l’équipe comptable ?'],
+  tips: ['Apportez vos diplômes et attestations de travail.'],
 };

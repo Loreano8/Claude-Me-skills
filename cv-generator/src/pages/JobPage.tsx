@@ -1,14 +1,15 @@
 import { useState } from 'react';
-import { CheckCircle2, Eye, Mail, PencilLine, Target, Wand2 } from 'lucide-react';
-import type { AdaptResult } from '../../shared/schema.ts';
+import { ArrowRight, CheckCircle2, ClipboardList, Eye, Mail, MessagesSquare, PencilLine, Target, Wand2 } from 'lucide-react';
+import type { AdaptResult, InterviewResult } from '../../shared/schema.ts';
 import { useActiveCv, useStore } from '../store.ts';
 import { api } from '../lib/api.ts';
 import { isCvEmpty, toAiContent } from '../lib/cv.ts';
 import { JobInputCard } from '../components/JobInputCard.tsx';
+import { InterviewSheet } from '../components/InterviewSheet.tsx';
 import { Button, Card, Chip, Notice } from '../components/ui.tsx';
 import type { Tab } from '../App.tsx';
 
-function ScoreRing({ score }: { score: number }) {
+function ScoreRing({ score, label }: { score: number; label?: string }) {
   const value = Math.max(0, Math.min(100, Math.round(score)));
   const color = value >= 70 ? '#059669' : value >= 45 ? '#d97706' : '#dc2626';
   return (
@@ -18,7 +19,7 @@ function ScoreRing({ score }: { score: number }) {
     >
       <div className="flex size-16 flex-col items-center justify-center rounded-full bg-white">
         <span className="text-xl font-bold text-slate-900">{value}</span>
-        <span className="-mt-1 text-[10px] text-slate-500">/ 100</span>
+        <span className="-mt-1 text-[10px] text-slate-500">{label ?? '/ 100'}</span>
       </div>
     </div>
   );
@@ -28,12 +29,25 @@ export function AnalysisCard({ result, onNavigate }: { result: Pick<AdaptResult,
   const { job, analysis } = result;
   return (
     <Card title="Analyse de l’offre" subtitle={[job.title, job.company, job.location].filter(Boolean).join(' · ')}>
-      <div className="flex items-center gap-4">
-        <ScoreRing score={analysis.matchScore} />
-        <p className="text-sm text-slate-600">
-          Adéquation estimée entre votre profil et l’offre. Une version de votre CV adaptée à ce poste a été créée : votre CV d’origine est conservé.
-        </p>
-      </div>
+      {typeof analysis.matchScoreAfter === 'number' ? (
+        <div className="flex flex-wrap items-center gap-3">
+          <div className="flex items-center gap-2">
+            <ScoreRing score={analysis.matchScore} label="avant" />
+            <ArrowRight className="size-5 text-slate-400" />
+            <ScoreRing score={analysis.matchScoreAfter} label="après" />
+          </div>
+          <p className="min-w-0 flex-1 text-sm text-slate-600">
+            Compatibilité de votre CV avec l’offre, avant et après adaptation. Votre CV d’origine est conservé ; la version adaptée est enregistrée à part.
+          </p>
+        </div>
+      ) : (
+        <div className="flex items-center gap-4">
+          <ScoreRing score={analysis.matchScore} />
+          <p className="text-sm text-slate-600">
+            Adéquation estimée entre votre profil et l’offre. Une version de votre CV adaptée à ce poste a été créée : votre CV d’origine est conservé.
+          </p>
+        </div>
+      )}
 
       {analysis.matchedKeywords.length > 0 && (
         <div className="mt-4">
@@ -103,7 +117,10 @@ export function JobPage({ onNavigate }: { onNavigate: (t: Tab) => void }) {
   const job = useStore((s) => s.job);
   const addAdaptedCv = useStore((s) => s.addAdaptedCv);
   const applyLetter = useStore((s) => s.applyLetter);
-  const [busy, setBusy] = useState<'adapt' | 'letter' | null>(null);
+  const saveInterview = useStore((s) => s.saveInterview);
+  const linkedApplication = useStore((s) => s.applications.find((a) => a.cvId === cv.id) ?? null);
+  const [interview, setInterview] = useState<InterviewResult | null>(null);
+  const [busy, setBusy] = useState<'adapt' | 'letter' | 'interview' | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [result, setResult] = useState<AdaptResult | null>(null);
 
@@ -118,6 +135,23 @@ export function JobPage({ onNavigate }: { onNavigate: (t: Tab) => void }) {
       const res = await api.adapt({ cv: toAiContent(cv), job: jobBody, lang: null });
       addAdaptedCv(cv, res);
       setResult(res);
+    } catch (e) {
+      setError((e as Error).message);
+    } finally {
+      setBusy(null);
+    }
+  }
+
+  const jobTitle =
+    result?.job.title || cv.adaptation?.job.title || job.text.trim().split('\n')[0]?.slice(0, 60) || 'Offre sans titre';
+
+  async function prepareInterview() {
+    setBusy('interview');
+    setError(null);
+    try {
+      const res = await api.interview({ cv: toAiContent(cv), job: jobBody, lang: null });
+      saveInterview(linkedApplication?.id ?? null, jobTitle, res);
+      setInterview(res);
     } catch (e) {
       setError((e as Error).message);
     } finally {
@@ -161,7 +195,11 @@ export function JobPage({ onNavigate }: { onNavigate: (t: Tab) => void }) {
           <Button variant="secondary" size="lg" icon={<Mail className="size-5" />} loading={busy === 'letter'} disabled={!hasJob || empty || busy !== null} onClick={letter}>
             Rédiger la lettre de motivation
           </Button>
+          <Button variant="secondary" size="lg" icon={<MessagesSquare className="size-5" />} loading={busy === 'interview'} disabled={!hasJob || empty || busy !== null} onClick={prepareInterview}>
+            Préparer l’entretien
+          </Button>
         </div>
+        <p className="mt-2 text-xs text-slate-500">Chaque action utilise 1 crédit.</p>
         {busy && <p className="mt-3 text-sm text-violet-700">L’IA lit l’offre et prépare votre candidature… (jusqu’à une minute)</p>}
         {error && (
           <div className="mt-3">
@@ -174,6 +212,24 @@ export function JobPage({ onNavigate }: { onNavigate: (t: Tab) => void }) {
       </Card>
 
       {shown && <AnalysisCard result={shown} onNavigate={onNavigate} />}
+
+      {(interview ?? linkedApplication?.interview) && (
+        <Card
+          title={
+            <span className="flex items-center gap-2">
+              <MessagesSquare className="size-5 text-brand-600" /> Fiche entretien
+            </span>
+          }
+          subtitle={jobTitle}
+          actions={
+            <Button variant="ghost" size="sm" icon={<ClipboardList className="size-4" />} onClick={() => onNavigate('suivi')}>
+              Mes candidatures
+            </Button>
+          }
+        >
+          <InterviewSheet sheet={(interview ?? linkedApplication?.interview)!} title={jobTitle} />
+        </Card>
+      )}
     </div>
   );
 }

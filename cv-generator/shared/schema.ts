@@ -88,7 +88,8 @@ export const AdaptResult = z.object({
   job: JobSummary,
   cv: AiCvContent,
   analysis: z.object({
-    matchScore: z.number().describe('Adéquation du profil à l’offre, de 0 à 100'),
+    matchScore: z.number().describe('Adéquation du CV d’origine à l’offre, de 0 à 100'),
+    matchScoreAfter: z.number().describe('Adéquation du CV adapté à l’offre, de 0 à 100'),
     matchedKeywords: z.array(z.string()),
     missingKeywords: z.array(z.string()),
     changes: z.array(z.string()),
@@ -108,6 +109,25 @@ export const CoverLetterResult = z.object({
   closing: z.string().describe('Formule de politesse finale'),
 });
 export type CoverLetterResult = z.infer<typeof CoverLetterResult>;
+
+export const InterviewResult = z.object({
+  language: Lang.describe('Langue de la fiche'),
+  questions: z
+    .array(
+      z.object({
+        question: z.string(),
+        why: z.string().describe('Pourquoi le recruteur la posera (élément de l’offre)'),
+        answer: z.string().describe('Comment y répondre avec les expériences réelles du CV, 2 à 4 phrases'),
+      }),
+    )
+    .describe('6 à 8 questions probables'),
+  weakPoints: z
+    .array(z.object({ gap: z.string(), howToAddress: z.string() }))
+    .describe('1 à 3 écarts entre le profil et l’offre, et comment les présenter'),
+  questionsToAsk: z.array(z.string()).describe('2 à 3 questions pertinentes à poser au recruteur'),
+  tips: z.array(z.string()).describe('2 à 4 conseils pratiques pour cet entretien'),
+});
+export type InterviewResult = z.infer<typeof InterviewResult>;
 
 export const TranslateResult = z.object({
   cv: AiCvContent,
@@ -159,6 +179,13 @@ export const CoverLetterRequest = z.object({
   lang: Lang.nullable().default(null),
 });
 export type CoverLetterRequest = z.output<typeof CoverLetterRequest>;
+
+export const InterviewRequest = z.object({
+  cv: AiCvContent,
+  job: JobInput,
+  lang: Lang.nullable().default(null),
+});
+export type InterviewRequest = z.output<typeof InterviewRequest>;
 
 export const TranslateRequest = z.object({
   cv: AiCvContent,

@@ -2,7 +2,7 @@ import { Hono, type Context } from 'hono';
 import { cors } from 'hono/cors';
 import { bodyLimit } from 'hono/body-limit';
 import { z } from 'zod';
-import { AdaptRequest, CoverLetterRequest, StructureRequest, TranslateRequest } from '../shared/schema.ts';
+import { AdaptRequest, CoverLetterRequest, InterviewRequest, StructureRequest, TranslateRequest } from '../shared/schema.ts';
 import { AiError, type Ai } from './ai.ts';
 import { AccountError, type Accounts, type User } from './accounts.ts';
 import { signToken, verifyToken } from './auth.ts';
@@ -250,6 +250,13 @@ export function createApp({ ai, allowedOrigins, rateLimitPerHour, accounts = nul
   app.post(
     '/api/ai/cover-letter',
     aiRoute('cover-letter', CoverLetterRequest, (ai, body) => ai.coverLetter(body)),
+  );
+
+  app.post(
+    '/api/ai/interview',
+    aiRoute('interview', InterviewRequest, (ai, body) => ai.interview(body), (body) =>
+      !body.job.text.trim() && !body.job.file ? 'Collez le texte de l’offre ou joignez le fichier de l’annonce.' : null,
+    ),
   );
 
   app.post(

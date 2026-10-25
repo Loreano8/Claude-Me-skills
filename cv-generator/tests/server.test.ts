@@ -2,7 +2,7 @@ import { describe, expect, it, vi } from 'vitest';
 import { createApp } from '../server/app.ts';
 import { AiError, type Ai } from '../server/ai.ts';
 import { toAiContent } from '../src/lib/cv.ts';
-import { sampleAdapt, sampleCv, sampleLetter, sampleTranslation } from './fixtures.ts';
+import { sampleAdapt, sampleCv, sampleInterview, sampleLetter, sampleTranslation } from './fixtures.ts';
 
 function fakeAi(overrides: Partial<Ai> = {}): Ai {
   return {
@@ -10,6 +10,7 @@ function fakeAi(overrides: Partial<Ai> = {}): Ai {
     adapt: vi.fn(async () => sampleAdapt),
     coverLetter: vi.fn(async () => sampleLetter),
     translate: vi.fn(async () => sampleTranslation),
+    interview: vi.fn(async () => sampleInterview),
     ...overrides,
   };
 }
@@ -56,6 +57,15 @@ describe('API', () => {
     const letter = await post(app, '/api/ai/cover-letter', { cv, job: { text: '' }, notes: 'Candidature spontanée chez X' });
     expect(letter.status).toBe(200);
     expect((await letter.json()).paragraphs).toHaveLength(3);
+  });
+
+  it('prépare la fiche d’entretien', async () => {
+    const app = createApp({ ai: fakeAi(), allowedOrigins: [], rateLimitPerHour: 50 });
+    const cv = toAiContent(sampleCv());
+    expect((await post(app, '/api/ai/interview', { cv, job: { text: '' } })).status).toBe(400);
+    const res = await post(app, '/api/ai/interview', { cv, job: { text: 'Responsable comptable' } });
+    expect(res.status).toBe(200);
+    expect((await res.json()).questions).toHaveLength(2);
   });
 
   it('traduit le CV pour un marché donné', async () => {

@@ -1,4 +1,4 @@
-import type { AdaptResult, Attachment, Lang, Market } from '../shared/schema.ts';
+import type { AdaptResult, Attachment, InterviewResult, Lang, Market } from '../shared/schema.ts';
 
 export type TemplateId = 'moderne' | 'classique' | 'elegant';
 
@@ -108,4 +108,24 @@ export interface CoverLetter {
 export interface JobPostingDraft {
   text: string;
   file: (Attachment & { size: number }) | null;
+}
+
+export type ApplicationStatus = 'preparation' | 'envoyee' | 'entretien' | 'offre' | 'refus';
+
+/** Une candidature suivie dans « Mes candidatures ». */
+export interface Application {
+  id: string;
+  title: string;
+  company: string;
+  location: string;
+  status: ApplicationStatus;
+  createdAt: number;
+  updatedAt: number;
+  /** Date d'envoi, d'entretien… saisie librement (ex. 12/11). */
+  date: string;
+  notes: string;
+  /** CV adapté à cette offre, s'il existe. */
+  cvId?: string;
+  score?: { before: number; after: number };
+  interview?: InterviewResult;
 }

@@ -8,6 +8,8 @@ import type {
   StructureResult,
   TranslateRequest,
   TranslateResult,
+  InterviewRequest,
+  InterviewResult,
 } from '../../shared/schema.ts';
 import { useAccount, type AccountUser, type Pack } from './account.ts';
 import { deviceId } from './device.ts';
@@ -65,6 +67,7 @@ export const api = {
   adapt: (req: AdaptRequest) => post<AdaptResult>('/api/ai/adapt', req),
   coverLetter: (req: CoverLetterRequest) => post<CoverLetterResult>('/api/ai/cover-letter', req),
   translate: (req: TranslateRequest) => post<TranslateResult>('/api/ai/translate', req),
+  interview: (req: InterviewRequest) => post<InterviewResult>('/api/ai/interview', req),
 
   register: (identifier: string, password: string, name: string) => post<Session>('/api/auth/register', { identifier, password, name }),
   login: (identifier: string, password: string) => post<Session>('/api/auth/login', { identifier, password }),
