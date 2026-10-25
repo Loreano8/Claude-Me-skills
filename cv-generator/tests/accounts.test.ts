@@ -101,3 +101,11 @@ describe('paiements', () => {
     expect(await provider.fetchStatus('123')).toBe('approved');
   });
 });
+
+describe('santé du serveur', () => {
+  it('interroge la base pour la garder active', async () => {
+    const { createApp } = await import('../server/app.ts');
+    const app = createApp({ ai: null, allowedOrigins: [], rateLimitPerHour: 5, accounts: createAccounts(await testDb(), opts) });
+    expect(await (await app.request('/api/health')).json()).toMatchObject({ ok: true, accounts: true, db: true });
+  });
+});

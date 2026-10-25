@@ -67,7 +67,11 @@ export function createApp({ ai, allowedOrigins, rateLimitPerHour, accounts = nul
     }),
   );
 
-  app.get('/api/health', (c) => c.json({ ok: true, ai: ai !== null, accounts: accounts !== null, payments: payments !== null }));
+  app.get('/api/health', async (c) => {
+    // Appelée chaque jour par une tâche automatique : la requête à la base empêche la mise en veille du projet.
+    const db = accounts ? await accounts.ping().catch(() => false) : null;
+    return c.json({ ok: db !== false, ai: ai !== null, accounts: accounts !== null, payments: payments !== null, db }, db === false ? 503 : 200);
+  });
 
   async function currentUser(c: Context): Promise<User | null> {
     if (!accounts) return null;

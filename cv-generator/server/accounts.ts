@@ -41,6 +41,12 @@ export function createAccounts(db: Db, opts: AccountOptions) {
   }
 
   return {
+    /** Petite requête à la base : la garde active (Supabase gratuit met en pause un projet inactif). */
+    async ping(): Promise<boolean> {
+      await db.query('select 1');
+      return true;
+    },
+
     async register(input: { identifier: string; password: string; name?: string; ip: string; device: string }): Promise<User> {
       const identifier = normalizeIdentifier(input.identifier);
       if (!identifier) throw new AccountError('Indiquez un e-mail ou un numéro de téléphone valide.', 400);
