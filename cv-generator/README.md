@@ -85,6 +85,7 @@ Les témoignages arrivent « en attente » et n’apparaissent sur la page d’a
 | Serveur : IA, comptes, crédits, paiements | Supabase, fonction `api` (gratuit, ne s’endort jamais) | https://clgmqhyzyiswnekmoygw.supabase.co/functions/v1/api/health |
 | Base de données | Supabase, schéma privé `cvstudio` | — |
 
+- **Réveil quotidien** : la tâche GitHub « CV Studio – réveil quotidien » (`.github/workflows/cv-studio-reveil.yml`, sur la branche `main` car GitHub n’exécute les tâches planifiées que depuis la branche principale) appelle `/api/health` chaque matin. Cette route fait une petite requête à la base, ce qui empêche la mise en pause du projet Supabase gratuit (après ~7 jours sans activité). Si le serveur ne répond pas, GitHub envoie un e-mail d’alerte.
 - **Coût mensuel : 0 $.** Seule l’IA (Anthropic) est payée, à l’usage.
 - Le site statique se met à jour tout seul à chaque `git push` sur la branche `claude/cv-generator-app-a1kcdw`.
 - **La fonction Supabase** charge le code du serveur depuis ce dépôt GitHub, figé sur un commit (`supabase/functions/api/index.ts` déployé). Pour la mettre à jour : remplacer le numéro de commit dans ce fichier et redéployer la fonction (`npm run edge:bundle` puis `supabase functions deploy api --no-verify-jwt` avec la CLI Supabase, ou via l’outil Supabase de Claude).
