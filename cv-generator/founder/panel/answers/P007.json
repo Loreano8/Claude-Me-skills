@@ -1,0 +1,13 @@
+{
+  "id": "P007",
+  "buys": false,
+  "purchases_first_month": 0,
+  "reason_code": "habit",
+  "reason": "I would take the free CV and the free first action, then print at the secrétariat like always. Paying with my data and my MoMo for more AI, when ChatGPT does letters for free, is not something I would do this month.",
+  "objection": "Why pay 500 francs for something ChatGPT or Canva gives me free? And a match score from an app does not get me the job. The boss still looks at who you know.",
+  "would_change_my_mind": "If a friend showed me that the adapted CV actually got her called for an interview for a real offer.",
+  "price_too_cheap": 100,
+  "price_cheap": 200,
+  "price_expensive": 500,
+  "price_too_expensive": 1000
+}

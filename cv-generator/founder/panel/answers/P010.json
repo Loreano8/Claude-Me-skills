@@ -1,0 +1,13 @@
+{
+  "id": "P010",
+  "buys": true,
+  "purchases_first_month": 1,
+  "reason_code": "need",
+  "reason": "I send applications almost every day from the WhatsApp groups, and a CV adapted to each offer could really help me get called. I would test the free action first, and if the result is good I can risk 500 FCFA. That is less than a trip by zem.",
+  "objection": "A bit.ly link from people I don't know, asking me for my personal information and my MoMo, looks like the scams that go around in the job groups. And I don't know if this 'match score' means anything to a real recruiter.",
+  "would_change_my_mind": "If the free action gives me a bad or generic CV, or if I see in the group that someone paid and got nothing, I would not pay.",
+  "price_too_cheap": 100,
+  "price_cheap": 300,
+  "price_expensive": 1500,
+  "price_too_expensive": 3000
+}

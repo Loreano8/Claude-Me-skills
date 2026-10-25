@@ -1,0 +1,13 @@
+{
+  "id": "P009",
+  "buys": false,
+  "purchases_first_month": 0,
+  "reason_code": "price",
+  "reason": "I'd use the free part, make the CV, download the PDF, take the one free AI action, and then stop. 500 FCFA is half of an internet top-up for me, and ChatGPT already writes cover letters for free.",
+  "objection": "Why pay 500 FCFA for something ChatGPT does for free, when I don't even know if that match score helps anyone get hired?",
+  "would_change_my_mind": "A real interview call for a job I applied to with the adapted CV. Then I might pay 500 FCFA once for the next offer.",
+  "price_too_cheap": 50,
+  "price_cheap": 100,
+  "price_expensive": 300,
+  "price_too_expensive": 500
+}

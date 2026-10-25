@@ -1,0 +1,13 @@
+{
+  "id": "P014",
+  "buys": true,
+  "purchases_first_month": 1,
+  "reason_code": "need",
+  "reason": "I sent more than ten CVs this year and got nothing back, so I'll use the free action on the next offer someone forwards me. If the letter and CV look serious, 500 FCFA on MoMo is nothing for me, so I'd pay for the small pack once and see if anyone calls back.",
+  "objection": "A score going from 68 to 86 is just a number the app gives itself. What I care about is a recruiter answering me. Plus if every candidate in the WhatsApp group uses the same AI, all our CVs will look the same.",
+  "would_change_my_mind": "If after the first pack I still hear nothing from anyone, I stop and don't buy again.",
+  "price_too_cheap": 100,
+  "price_cheap": 300,
+  "price_expensive": 1500,
+  "price_too_expensive": 3000
+}

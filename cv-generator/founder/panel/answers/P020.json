@@ -1,0 +1,13 @@
+{
+  "id": "P020",
+  "buys": false,
+  "purchases_first_month": 0,
+  "reason_code": "need",
+  "reason": "I already have a stable job and for the concours they ask for a dossier and an exam, not a CV adapted to an offer. If I need a CV I make the free one on the website or my cousin fixes it, I don't pay for that.",
+  "objection": "Here a CV alone doesn't get you the job, it is relationships and the concours. A score of 68 to 86 from an AI means nothing to the recruiter who already has his candidate.",
+  "would_change_my_mind": "If I was really applying to a private company job offer that I want badly, and a friend showed me it got her an interview, I would maybe pay 500 once.",
+  "price_too_cheap": 100,
+  "price_cheap": 300,
+  "price_expensive": 1500,
+  "price_too_expensive": 3000
+}

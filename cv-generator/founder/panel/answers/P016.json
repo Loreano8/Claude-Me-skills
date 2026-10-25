@@ -1,0 +1,13 @@
+{
+  "id": "P016",
+  "buys": false,
+  "purchases_first_month": 0,
+  "reason_code": "price",
+  "reason": "I would make the free CV and use the one free AI action, but paying 500 FCFA for something I can't touch, when that money is transport or food this week, no. I already sent more than ten CVs with no answer, so I'm not sure a better score changes anything.",
+  "objection": "A score going from 68 to 86 is just a number on their screen. I don't know if recruiters will actually call me back, and I don't want to send Mobile Money to a bit.ly link I saw on WhatsApp.",
+  "would_change_my_mind": "Someone I know getting an interview or a job after using it, and having a real offer in hand that I really want to get.",
+  "price_too_cheap": 100,
+  "price_cheap": 200,
+  "price_expensive": 500,
+  "price_too_expensive": 1000
+}

@@ -1,0 +1,163 @@
+{
+ "business": "CV Studio: AI CV builder on mobile for French-speaking Africa",
+ "seed": 952483,
+ "dealt": 20,
+ "answered": 20,
+ "skipped": [],
+ "buys": 6,
+ "passes": 14,
+ "buy_rate": 0.3,
+ "by_segment": [
+  [
+   "Professional preparing an application abroad (Canada, France)",
+   2,
+   1.0
+  ],
+  [
+   "Young graduate looking for a first job (no regular income, helped by family)",
+   8,
+   0.375
+  ],
+  [
+   "Employee or civil-service candidate (concours) with a stable salary",
+   4,
+   0.25
+  ],
+  [
+   "Worker in an informal or small job who wants a better position",
+   6,
+   0.0
+  ]
+ ],
+ "by_behaviour": [
+  [
+   "Invests in career",
+   2,
+   1.0
+  ],
+  [
+   "Careful with online payments",
+   2,
+   0.5
+  ],
+  [
+   "Does everything on WhatsApp",
+   5,
+   0.4
+  ],
+  [
+   "Cybercafé user",
+   4,
+   0.25
+  ],
+  [
+   "Free-only",
+   4,
+   0.0
+  ],
+  [
+   "Asks a friend or relative",
+   3,
+   0.0
+  ]
+ ],
+ "by_income": [
+  [
+   "$3,000 and up",
+   9,
+   0.3333333333333333
+  ],
+  [
+   "$1,000 to $3,000",
+   10,
+   0.3
+  ],
+  [
+   "under $1,000",
+   1,
+   0.0
+  ]
+ ],
+ "why_not": [
+  [
+   "habit",
+   5,
+   [
+    "I'd make the free CV and use the one free AI action, but after that I'd paste the job offer into ChatGPT myself and ask it to adapt my CV and write the letter. I never pay for apps, and I'm not starting now.",
+    "I never pay for apps. I'd make the free CV, use the one free AI action on an offer, and for the other letters I'd just ask ChatGPT for free. 500 FCFA is a few days of internet data for me."
+   ],
+   [
+    "P001",
+    "P002"
+   ]
+  ],
+  [
+   "need",
+   5,
+   [
+    "I would make my CV for free and use the free AI action on one offer, that is enough for me. Here the job comes from who you know, not from a score going from 68 to 86, so I am not paying with my family's money for more.",
+    "I would make my CV for free and use the one free AI action on a good offer from my WhatsApp groups. After that I would just send the same CV to the other offers, or ask my cousin to fix it, like I always do."
+   ],
+   [
+    "P003",
+    "P004"
+   ]
+  ],
+  [
+   "price",
+   2,
+   [
+    "I'd use the free part, make the CV, download the PDF, take the one free AI action, and then stop. 500 FCFA is half of an internet top-up for me, and ChatGPT already writes cover letters for free.",
+    "I would make the free CV and use the one free AI action, but paying 500 FCFA for something I can't touch, when that money is transport or food this week, no. I already sent more than ten CVs with no answer, so I'm not sure a better score changes anything."
+   ],
+   [
+    "P009",
+    "P016"
+   ]
+  ],
+  [
+   "trust",
+   2,
+   [
+    "A bit.ly link from people I don't know asking for my Mobile Money is exactly how people get cheated. If the CV part is really free with no account, I might try that, but I'm not sending 500 FCFA to strangers. My cousin can look at my CV for nothing.",
+    "A bit.ly link forwarded on WhatsApp asking me to pay with MoMo, from people I don't know, that's exactly how scams look. Right now I'm working on my concours file, which needs official documents, not an AI CV, so I would just use the free CV and the free action and stop there."
+   ],
+   [
+    "P015",
+    "P018"
+   ]
+  ]
+ ],
+ "why_yes": [
+  [
+   "need",
+   6,
+   [
+    "I have sent more than ten applications with no answer, so if the free action really makes my CV fit the offer better, I would put 500 FCFA on the small pack for the next good offer. Not more than that until I see a reply from an employer.",
+    "I send applications almost every day from the WhatsApp groups, and a CV adapted to each offer could really help me get called. I would test the free action first, and if the result is good I can risk 500 FCFA. That is less than a trip by zem."
+   ],
+   [
+    "P008",
+    "P010"
+   ]
+  ]
+ ],
+ "flip": [
+  "Seeing someone I know get an interview or a concours result because of it, or a lot more free actions so I can see results before paying anything.",
+  "If I got an offer for a job I really want and the free action showed me it truly raised my chances, I might pay 500 FCFA once for that one offer.",
+  "If my cousin in Canada told me the AI makes a proper Canadian-style CV and someone actually got a callback from it, I would pay 500 FCFA for the applications over there.",
+  "If a friend or someone in my group tells me they got an interview because of the adapted CV, then I would pay 500 FCFA for a job I really want.",
+  "If someone I know actually got called for an interview because of this, and told me so on WhatsApp.",
+  "If the free AI action got me called for an interview, or a friend in my WhatsApp group showed me it worked for him, I would pay 500 FCFA before the next offer.",
+  "If a friend showed me that the adapted CV actually got her called for an interview for a real offer.",
+  "A real interview call for a job I applied to with the adapted CV. Then I might pay 500 FCFA once for the next offer.",
+  "Someone I know personally telling me they got called for an interview after using it, and a free try that shows me the result before I pay anything.",
+  "Someone I know, a friend or relative, telling me they paid, it worked, and they got called for an interview.",
+  "Someone I know getting an interview or a job after using it, and having a real offer in hand that I really want to get.",
+  "A friend I trust telling me they got an interview with a CV adapted by it, and a real job offer coming that I want to apply for.",
+  "A friend I trust who got a job or passed a concours with it, and paid without any trouble.",
+  "If I was really applying to a private company job offer that I want badly, and a friend showed me it got her an interview, I would maybe pay 500 once."
+ ],
+ "purchases_first_month_per_buyer": 1.0,
+ "price_answers": 20
+}

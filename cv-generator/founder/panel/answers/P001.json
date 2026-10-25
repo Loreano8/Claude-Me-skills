@@ -1,0 +1,13 @@
+{
+  "id": "P001",
+  "buys": false,
+  "purchases_first_month": 0,
+  "reason_code": "habit",
+  "reason": "I'd make the free CV and use the one free AI action, but after that I'd paste the job offer into ChatGPT myself and ask it to adapt my CV and write the letter. I never pay for apps, and I'm not starting now.",
+  "objection": "ChatGPT and Canva already do this for free. A match score of 68 to 86 doesn't prove a recruiter will finally answer me, and I've sent more than ten applications with no reply.",
+  "would_change_my_mind": "Seeing someone I know get an interview or a concours result because of it, or a lot more free actions so I can see results before paying anything.",
+  "price_too_cheap": 100,
+  "price_cheap": 200,
+  "price_expensive": 500,
+  "price_too_expensive": 1000
+}

@@ -1,0 +1,13 @@
+{
+  "id": "P011",
+  "buys": true,
+  "purchases_first_month": 1,
+  "reason_code": "need",
+  "reason": "I'd make the free CV first and use the free AI action on a real offer. If the score really goes up and the letter is good, I'd risk 500 FCFA once for the next offers, because more than ten applications with no answer is starting to hurt. I wouldn't go above the small pack.",
+  "objection": "A bit.ly link going around on WhatsApp asking for MoMo looks like a lot of the scams I've seen. And a score from 68 to 86 doesn't prove a recruiter will call me back.",
+  "would_change_my_mind": "If the free AI action gives me something generic or sloppy, or if the MoMo payment goes to a personal number instead of a clear merchant name, I don't pay at all.",
+  "price_too_cheap": 100,
+  "price_cheap": 300,
+  "price_expensive": 1000,
+  "price_too_expensive": 2000
+}

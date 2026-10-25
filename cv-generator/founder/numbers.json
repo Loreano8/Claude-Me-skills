@@ -1,0 +1,22 @@
+{
+  "business": "CV Studio",
+  "unit": "pack de crédits vendu (moyenne pondérée)",
+  "price": 695,
+  "variable": [
+    {"label": "IA Anthropic : 4,05 actions utilisées × 32 FCFA (mesuré)", "cost": 130},
+    {"label": "Frais FedaPay (1,8 %, observé)", "cost": 13},
+    {"label": "Crédits gratuits des non-payeurs et du payeur, ramenés à une vente (estimation)", "cost": 200}
+  ],
+  "fixed_monthly": [
+    {"label": "Hébergement Render + Supabase (offres gratuites)", "cost": 0},
+    {"label": "Publicité Facebook/TikTok (estimation, à fixer par le plan marketing)", "cost": 30000}
+  ],
+  "startup": [
+    {"label": "Compte développeur Google Play (25 $)", "cost": 15000},
+    {"label": "Pub de lancement, première semaine (estimation)", "cost": 20000},
+    {"label": "Solde Anthropic prépayé (avance de trésorerie)", "cost": 3000}
+  ],
+  "days_per_month": 30,
+  "plan_per_day": 6,
+  "ramp_per_day": [0.5, 1, 1.5, 2, 2.5, 3, 3.5, 4, 4.5, 5, 5.5, 6]
+}

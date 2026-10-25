@@ -1,0 +1,13 @@
+{
+  "id": "P002",
+  "buys": false,
+  "purchases_first_month": 0,
+  "reason_code": "habit",
+  "reason": "I never pay for apps. I'd make the free CV, use the one free AI action on an offer, and for the other letters I'd just ask ChatGPT for free. 500 FCFA is a few days of internet data for me.",
+  "objection": "Why pay when ChatGPT does letters for free? And I'm still not sure the AI won't put things in my CV that aren't true, like skills I don't have, and the recruiter catches it.",
+  "would_change_my_mind": "If I got an offer for a job I really want and the free action showed me it truly raised my chances, I might pay 500 FCFA once for that one offer.",
+  "price_too_cheap": 100,
+  "price_cheap": 200,
+  "price_expensive": 500,
+  "price_too_expensive": 1000
+}

@@ -1,0 +1,37 @@
+{
+  "business": "CV Studio: AI CV builder on mobile for French-speaking Africa",
+  "target": "Job seekers in Benin, Togo, Senegal and Côte d'Ivoire who use WhatsApp, TikTok and Facebook on an Android phone and pay with Mobile Money",
+  "where": "Cotonou, Lomé, Dakar, Abidjan (online, from a phone)",
+  "age": [20, 40],
+  "segments": [
+    {"name": "Young graduate looking for a first job (no regular income, helped by family)", "share": 0.40, "income": [300, 1500]},
+    {"name": "Worker in an informal or small job who wants a better position", "share": 0.30, "income": [1200, 3600]},
+    {"name": "Employee or civil-service candidate (concours) with a stable salary", "share": 0.20, "income": [3000, 7000]},
+    {"name": "Professional preparing an application abroad (Canada, France)", "share": 0.10, "income": [4000, 12000]}
+  ],
+  "behaviours": [
+    {"name": "Does everything on WhatsApp", "share": 0.25, "how": "Gets job offers forwarded in WhatsApp groups, sends CVs as PDF from the phone."},
+    {"name": "Cybercafé user", "share": 0.20, "how": "Goes to the cybercafé or a 'secrétariat' to type and print the CV, pays cash."},
+    {"name": "Free-only", "share": 0.20, "how": "Never pays for apps or online services; uses free templates, Canva or ChatGPT."},
+    {"name": "Asks a friend or relative", "share": 0.15, "how": "Copies the CV of a cousin or asks someone 'who knows' to fix it."},
+    {"name": "Careful with online payments", "share": 0.10, "how": "Has been scammed or knows someone who was; needs proof before paying even a small amount."},
+    {"name": "Invests in career", "share": 0.10, "how": "Pays for trainings, certificates and coaching when it can lead to a job."}
+  ],
+  "objections": [
+    "ChatGPT or Canva already does this for free",
+    "Is this a scam? I don't know these people",
+    "A CV alone does not get you a job here, it is relationships",
+    "I don't have money right now, even 500 FCFA counts",
+    "Will the AI write things that are not true about me?",
+    "The cybercafé guy already does my CV",
+    "I'll try the free part and see"
+  ],
+  "habits": [
+    "you are in 4 WhatsApp groups that share job offers every day",
+    "your phone has little storage left and you hate installing apps",
+    "you top up 1,000 FCFA of internet data a few times a week",
+    "you applied to more than ten offers this year without an answer",
+    "a cousin in Canada keeps telling you to apply over there",
+    "you are preparing a civil-service exam (concours) file"
+  ]
+}

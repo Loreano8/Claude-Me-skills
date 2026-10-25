@@ -1,0 +1,13 @@
+{
+  "id": "P005",
+  "buys": false,
+  "purchases_first_month": 0,
+  "reason_code": "need",
+  "reason": "I would make the free CV and maybe use the one free AI action, but I would not pay after that. Here jobs come from who you know, so a better match score does not put food on the table, and my 500 FCFA goes on data.",
+  "objection": "A beautiful CV is not what gets you hired here, it is relationships. Paying for a score going from 68 to 86 does not mean anyone will call me back.",
+  "would_change_my_mind": "If someone I know actually got called for an interview because of this, and told me so on WhatsApp.",
+  "price_too_cheap": 100,
+  "price_cheap": 200,
+  "price_expensive": 500,
+  "price_too_expensive": 1000
+}

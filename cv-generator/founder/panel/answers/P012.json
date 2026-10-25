@@ -1,0 +1,13 @@
+{
+  "id": "P012",
+  "buys": true,
+  "purchases_first_month": 1,
+  "reason_code": "need",
+  "reason": "I'm applying to Canada and France and every offer wants a different CV, so if the free action really gives me a better score and a ready cover letter, 500 FCFA is less than one data top-up and I'd pay it once to try more offers. But I'd only take the small pack, not more.",
+  "objection": "ChatGPT already rewrites my CV for free if I paste the offer, so I don't see why I should pay for each action. And I don't know if this match score means anything to a recruiter in Canada or if it's just a number to make me buy.",
+  "would_change_my_mind": "If the free try gives me something no better than ChatGPT, I stop and never pay.",
+  "price_too_cheap": 100,
+  "price_cheap": 300,
+  "price_expensive": 1000,
+  "price_too_expensive": 2000
+}

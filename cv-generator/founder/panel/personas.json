@@ -1,0 +1,222 @@
+[
+ {
+  "id": "P001",
+  "name": "Olivia",
+  "age": 24,
+  "segment": "Employee or civil-service candidate (concours) with a stable salary",
+  "income": 5000,
+  "behaviour": "Free-only",
+  "behaviour_how": "Never pays for apps or online services; uses free templates, Canva or ChatGPT.",
+  "objection": "ChatGPT or Canva already does this for free",
+  "habit": "you applied to more than ten offers this year without an answer"
+ },
+ {
+  "id": "P002",
+  "name": "Felix",
+  "age": 20,
+  "segment": "Young graduate looking for a first job (no regular income, helped by family)",
+  "income": 1000,
+  "behaviour": "Free-only",
+  "behaviour_how": "Never pays for apps or online services; uses free templates, Canva or ChatGPT.",
+  "objection": "Will the AI write things that are not true about me?",
+  "habit": "you top up 1,000 FCFA of internet data a few times a week"
+ },
+ {
+  "id": "P003",
+  "name": "Min",
+  "age": 28,
+  "segment": "Young graduate looking for a first job (no regular income, helped by family)",
+  "income": 0,
+  "behaviour": "Does everything on WhatsApp",
+  "behaviour_how": "Gets job offers forwarded in WhatsApp groups, sends CVs as PDF from the phone.",
+  "objection": "A CV alone does not get you a job here, it is relationships",
+  "habit": "a cousin in Canada keeps telling you to apply over there"
+ },
+ {
+  "id": "P004",
+  "name": "Isla",
+  "age": 25,
+  "segment": "Worker in an informal or small job who wants a better position",
+  "income": 3000,
+  "behaviour": "Asks a friend or relative",
+  "behaviour_how": "Copies the CV of a cousin or asks someone 'who knows' to fix it.",
+  "objection": "I'll try the free part and see",
+  "habit": "you are in 4 WhatsApp groups that share job offers every day"
+ },
+ {
+  "id": "P005",
+  "name": "Ezra",
+  "age": 28,
+  "segment": "Worker in an informal or small job who wants a better position",
+  "income": 1000,
+  "behaviour": "Cybercafé user",
+  "behaviour_how": "Goes to the cybercafé or a 'secrétariat' to type and print the CV, pays cash.",
+  "objection": "A CV alone does not get you a job here, it is relationships",
+  "habit": "you top up 1,000 FCFA of internet data a few times a week"
+ },
+ {
+  "id": "P006",
+  "name": "Darius",
+  "age": 24,
+  "segment": "Young graduate looking for a first job (no regular income, helped by family)",
+  "income": 1000,
+  "behaviour": "Does everything on WhatsApp",
+  "behaviour_how": "Gets job offers forwarded in WhatsApp groups, sends CVs as PDF from the phone.",
+  "objection": "ChatGPT or Canva already does this for free",
+  "habit": "a cousin in Canada keeps telling you to apply over there"
+ },
+ {
+  "id": "P007",
+  "name": "Keisha",
+  "age": 37,
+  "segment": "Worker in an informal or small job who wants a better position",
+  "income": 3000,
+  "behaviour": "Cybercafé user",
+  "behaviour_how": "Goes to the cybercafé or a 'secrétariat' to type and print the CV, pays cash.",
+  "objection": "ChatGPT or Canva already does this for free",
+  "habit": "you top up 1,000 FCFA of internet data a few times a week"
+ },
+ {
+  "id": "P008",
+  "name": "Aisha",
+  "age": 30,
+  "segment": "Young graduate looking for a first job (no regular income, helped by family)",
+  "income": 1000,
+  "behaviour": "Invests in career",
+  "behaviour_how": "Pays for trainings, certificates and coaching when it can lead to a job.",
+  "objection": "I don't have money right now, even 500 FCFA counts",
+  "habit": "you applied to more than ten offers this year without an answer"
+ },
+ {
+  "id": "P009",
+  "name": "Emma",
+  "age": 37,
+  "segment": "Young graduate looking for a first job (no regular income, helped by family)",
+  "income": 1000,
+  "behaviour": "Free-only",
+  "behaviour_how": "Never pays for apps or online services; uses free templates, Canva or ChatGPT.",
+  "objection": "I don't have money right now, even 500 FCFA counts",
+  "habit": "you top up 1,000 FCFA of internet data a few times a week"
+ },
+ {
+  "id": "P010",
+  "name": "Lucia",
+  "age": 22,
+  "segment": "Young graduate looking for a first job (no regular income, helped by family)",
+  "income": 1000,
+  "behaviour": "Invests in career",
+  "behaviour_how": "Pays for trainings, certificates and coaching when it can lead to a job.",
+  "objection": "Is this a scam? I don't know these people",
+  "habit": "you are in 4 WhatsApp groups that share job offers every day"
+ },
+ {
+  "id": "P011",
+  "name": "Oscar",
+  "age": 25,
+  "segment": "Young graduate looking for a first job (no regular income, helped by family)",
+  "income": 1000,
+  "behaviour": "Careful with online payments",
+  "behaviour_how": "Has been scammed or knows someone who was; needs proof before paying even a small amount.",
+  "objection": "I'll try the free part and see",
+  "habit": "you applied to more than ten offers this year without an answer"
+ },
+ {
+  "id": "P012",
+  "name": "Aria",
+  "age": 26,
+  "segment": "Professional preparing an application abroad (Canada, France)",
+  "income": 9000,
+  "behaviour": "Does everything on WhatsApp",
+  "behaviour_how": "Gets job offers forwarded in WhatsApp groups, sends CVs as PDF from the phone.",
+  "objection": "ChatGPT or Canva already does this for free",
+  "habit": "you top up 1,000 FCFA of internet data a few times a week"
+ },
+ {
+  "id": "P013",
+  "name": "Sienna",
+  "age": 27,
+  "segment": "Worker in an informal or small job who wants a better position",
+  "income": 2000,
+  "behaviour": "Careful with online payments",
+  "behaviour_how": "Has been scammed or knows someone who was; needs proof before paying even a small amount.",
+  "objection": "A CV alone does not get you a job here, it is relationships",
+  "habit": "your phone has little storage left and you hate installing apps"
+ },
+ {
+  "id": "P014",
+  "name": "Hamza",
+  "age": 20,
+  "segment": "Employee or civil-service candidate (concours) with a stable salary",
+  "income": 7000,
+  "behaviour": "Does everything on WhatsApp",
+  "behaviour_how": "Gets job offers forwarded in WhatsApp groups, sends CVs as PDF from the phone.",
+  "objection": "I'll try the free part and see",
+  "habit": "you applied to more than ten offers this year without an answer"
+ },
+ {
+  "id": "P015",
+  "name": "Talia",
+  "age": 40,
+  "segment": "Worker in an informal or small job who wants a better position",
+  "income": 2000,
+  "behaviour": "Asks a friend or relative",
+  "behaviour_how": "Copies the CV of a cousin or asks someone 'who knows' to fix it.",
+  "objection": "Is this a scam? I don't know these people",
+  "habit": "your phone has little storage left and you hate installing apps"
+ },
+ {
+  "id": "P016",
+  "name": "Jonah",
+  "age": 31,
+  "segment": "Worker in an informal or small job who wants a better position",
+  "income": 3000,
+  "behaviour": "Cybercafé user",
+  "behaviour_how": "Goes to the cybercafé or a 'secrétariat' to type and print the CV, pays cash.",
+  "objection": "I don't have money right now, even 500 FCFA counts",
+  "habit": "you applied to more than ten offers this year without an answer"
+ },
+ {
+  "id": "P017",
+  "name": "Andre",
+  "age": 23,
+  "segment": "Professional preparing an application abroad (Canada, France)",
+  "income": 5000,
+  "behaviour": "Cybercafé user",
+  "behaviour_how": "Goes to the cybercafé or a 'secrétariat' to type and print the CV, pays cash.",
+  "objection": "The cybercafé guy already does my CV",
+  "habit": "you applied to more than ten offers this year without an answer"
+ },
+ {
+  "id": "P018",
+  "name": "Omar",
+  "age": 29,
+  "segment": "Young graduate looking for a first job (no regular income, helped by family)",
+  "income": 1000,
+  "behaviour": "Does everything on WhatsApp",
+  "behaviour_how": "Gets job offers forwarded in WhatsApp groups, sends CVs as PDF from the phone.",
+  "objection": "Is this a scam? I don't know these people",
+  "habit": "you are preparing a civil-service exam (concours) file"
+ },
+ {
+  "id": "P019",
+  "name": "Finn",
+  "age": 37,
+  "segment": "Employee or civil-service candidate (concours) with a stable salary",
+  "income": 3000,
+  "behaviour": "Free-only",
+  "behaviour_how": "Never pays for apps or online services; uses free templates, Canva or ChatGPT.",
+  "objection": "Is this a scam? I don't know these people",
+  "habit": "you are preparing a civil-service exam (concours) file"
+ },
+ {
+  "id": "P020",
+  "name": "Beatriz",
+  "age": 27,
+  "segment": "Employee or civil-service candidate (concours) with a stable salary",
+  "income": 5000,
+  "behaviour": "Asks a friend or relative",
+  "behaviour_how": "Copies the CV of a cousin or asks someone 'who knows' to fix it.",
+  "objection": "A CV alone does not get you a job here, it is relationships",
+  "habit": "your phone has little storage left and you hate installing apps"
+ }
+]
