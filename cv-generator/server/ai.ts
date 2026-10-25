@@ -3,7 +3,8 @@ import Anthropic from '@anthropic-ai/sdk';
 import { betaZodOutputFormat } from '@anthropic-ai/sdk/helpers/beta/zod';
 import type { z } from 'zod';
 import {
-  AdaptResult,
+  AdaptAiOutput,
+  type AdaptResult,
   CoverLetterResult,
   StructureResult,
   TranslateResult,
@@ -132,13 +133,14 @@ export function createAi(client: Anthropic, model = DEFAULT_MODEL) {
       return run(StructureResult, structureSystem(req.lang), content, 'medium');
     },
 
-    adapt(req: AdaptRequest): Promise<AdaptResult> {
+    async adapt(req: AdaptRequest): Promise<AdaptResult> {
       const content = [
         cvBlock('cv_candidat', req.cv),
         ...jobBlocks(req.job),
         { type: 'text', text: 'Adapte le CV à cette offre et analyse l’adéquation.' } as ContentBlock,
       ];
-      return run(AdaptResult, adaptSystem(req.lang), content, 'medium');
+      const { cv: { title, ...rest }, ...out } = await run(AdaptAiOutput, adaptSystem(req.lang), content, 'medium');
+      return { ...out, cv: { ...rest, personal: { ...req.cv.personal, title } } };
     },
 
     coverLetter(req: CoverLetterRequest): Promise<CoverLetterResult> {

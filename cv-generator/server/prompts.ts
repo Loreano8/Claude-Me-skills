@@ -48,7 +48,7 @@ Ta mission : produire une version du CV adaptée à cette offre, puis une analys
 Règles d'adaptation :
 - Honnêteté absolue. ${HONESTY_RULE}
 - Tu peux reformuler, réordonner, mettre en avant, regrouper ou raccourcir, et reprendre le vocabulaire exact de l'offre quand il décrit fidèlement ce que le candidat a réellement fait (c'est ce que recherchent les ATS).
-- personal.title : aligné sur l'intitulé du poste de l'offre si c'est cohérent avec le profil. Les autres informations personnelles restent identiques.
+- title : intitulé du poste visé, aligné sur celui de l'offre si c'est cohérent avec le profil (les autres informations personnelles ne te sont pas demandées : elles restent identiques).
 - Accroche réécrite pour ce poste précis.
 - Dans chaque expérience, place en premier les réalisations les plus utiles pour ce poste ; réduis les moins pertinentes à 1 ou 2 lignes, mais ne supprime pas d'expérience entière.
 - Compétences triées par pertinence pour l'offre.

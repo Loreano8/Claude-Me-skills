@@ -98,6 +98,17 @@ export const AdaptResult = z.object({
 });
 export type AdaptResult = z.infer<typeof AdaptResult>;
 
+/**
+ * Réponse demandée à l'IA pour l'adaptation : les informations personnelles ne changent pas,
+ * seul l'intitulé du poste est réécrit (schéma plus léger ; le serveur recompose le CV complet).
+ */
+export const AdaptAiOutput = AdaptResult.extend({
+  cv: AiCvContent.omit({ personal: true }).extend({
+    title: z.string().describe('Intitulé du poste visé, aligné sur l’offre si cohérent avec le profil'),
+  }),
+});
+export type AdaptAiOutput = z.infer<typeof AdaptAiOutput>;
+
 export const CoverLetterResult = z.object({
   language: Lang.describe('Langue dans laquelle la lettre est rédigée'),
   recipientName: z.string().describe('Nom ou fonction du destinataire si connu, sinon « Service des ressources humaines »'),

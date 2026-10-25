@@ -12,14 +12,19 @@ function fakeClient(response: Record<string, unknown>) {
 
 describe('appels à Claude', () => {
   it('envoie l’offre en PDF comme document et demande une sortie structurée', async () => {
-    const { client, parse } = fakeClient({ stop_reason: 'end_turn', parsed_output: sampleAdapt });
+    // L'IA ne renvoie que l'intitulé du poste : les informations personnelles sont reprises du CV d'origine.
+    const { personal: _p, ...adaptedCv } = sampleAdapt.cv;
+    const { client, parse } = fakeClient({ stop_reason: 'end_turn', parsed_output: { ...sampleAdapt, cv: { ...adaptedCv, title: 'Responsable comptable' } } });
     const ai = createAi(client);
+    const original = toAiContent(sampleCv());
     const res = await ai.adapt({
-      cv: toAiContent(sampleCv()),
+      cv: original,
       job: { text: 'Poste à Dakar', file: { name: 'offre.pdf', mediaType: 'application/pdf', data: 'JVBERi0=' } },
       lang: null,
     });
     expect(res.analysis.matchScore).toBe(72);
+    expect(res.cv.personal).toEqual({ ...original.personal, title: 'Responsable comptable' });
+    expect(res.cv.experiences).toEqual(sampleAdapt.cv.experiences);
     const req = (parse.mock.calls[0] as unknown[])[0] as Record<string, any>;
     expect(req.model).toBe('claude-opus-5-5');
     expect(req.fallbacks).toBe('default');
