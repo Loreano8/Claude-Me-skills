@@ -8,64 +8,9 @@ import { api } from '../lib/api.ts';
 import { checkCv } from '../lib/checks.ts';
 import { exportCvDocx, exportCvPdf } from '../export/exporters.ts';
 import { Preview } from '../components/Preview.tsx';
+import { TemplateGallery } from '../components/TemplateGallery.tsx';
+import { ReviseCard } from '../components/ReviseCard.tsx';
 import { Button, Card, cx, Notice, Select, Toggle } from '../components/ui.tsx';
-
-const TEMPLATES: { id: CvSettings['template']; name: string; description: string }[] = [
-  { id: 'moderne', name: 'Moderne', description: 'Colonne colorée avec photo. Convient à la plupart des métiers.' },
-  { id: 'classique', name: 'Classique (ATS)', description: 'Une colonne, sobre : le mieux lu par les logiciels de recrutement.' },
-  { id: 'elegant', name: 'Élégant', description: 'Bandeau de couleur et frise des dates, pour se démarquer.' },
-];
-
-function TemplateThumb({ id, accent }: { id: CvSettings['template']; accent: string }) {
-  const bar = 'h-1 rounded bg-slate-300';
-  if (id === 'moderne') {
-    return (
-      <div className="flex h-full">
-        <div className="w-1/3 space-y-1 p-1.5" style={{ backgroundColor: accent }}>
-          <div className="mx-auto size-4 rounded-full bg-white/70" />
-          <div className="h-0.5 rounded bg-white/60" />
-          <div className="h-0.5 rounded bg-white/60" />
-        </div>
-        <div className="flex-1 space-y-1 p-1.5">
-          <div className="h-1.5 w-3/4 rounded" style={{ backgroundColor: accent }} />
-          <div className={bar} />
-          <div className={bar} />
-          <div className={cx(bar, 'w-2/3')} />
-        </div>
-      </div>
-    );
-  }
-  if (id === 'classique') {
-    return (
-      <div className="space-y-1 p-2">
-        <div className="h-1.5 w-1/2 rounded" style={{ backgroundColor: accent }} />
-        <div className="h-0.5" style={{ backgroundColor: accent }} />
-        <div className={bar} />
-        <div className={bar} />
-        <div className="h-0.5" style={{ backgroundColor: accent }} />
-        <div className={cx(bar, 'w-3/4')} />
-      </div>
-    );
-  }
-  return (
-    <div>
-      <div className="flex items-center justify-between p-1.5" style={{ backgroundColor: accent }}>
-        <div className="h-1.5 w-1/2 rounded bg-white/80" />
-        <div className="size-3.5 rounded-full bg-white/70" />
-      </div>
-      <div className="space-y-1 p-1.5">
-        <div className="flex gap-1">
-          <div className="h-1 w-3 rounded" style={{ backgroundColor: accent }} />
-          <div className={cx(bar, 'flex-1')} />
-        </div>
-        <div className="flex gap-1">
-          <div className="h-1 w-3 rounded" style={{ backgroundColor: accent }} />
-          <div className={cx(bar, 'flex-1')} />
-        </div>
-      </div>
-    </div>
-  );
-}
 
 export function DesignPanel({ cv }: { cv: CvDocument }) {
   const updateCv = useStore((s) => s.updateCv);
@@ -74,23 +19,8 @@ export function DesignPanel({ cv }: { cv: CvDocument }) {
 
   return (
     <div className="space-y-4">
-      <Card title="Modèle">
-        <div className="grid grid-cols-3 gap-2">
-          {TEMPLATES.map((t) => (
-            <button
-              key={t.id}
-              type="button"
-              onClick={() => set({ template: t.id })}
-              className={cx('rounded-xl border-2 p-1.5 text-left transition', st.template === t.id ? 'border-brand-600 bg-brand-50' : 'border-slate-200 hover:border-slate-300')}
-            >
-              <div className="aspect-[1/1.2] overflow-hidden rounded-md bg-white ring-1 ring-slate-200">
-                <TemplateThumb id={t.id} accent={st.accent} />
-              </div>
-              <p className="mt-1.5 text-xs font-semibold text-slate-800 sm:text-sm">{t.name}</p>
-            </button>
-          ))}
-        </div>
-        <p className="mt-2 text-xs text-slate-500">{TEMPLATES.find((t) => t.id === st.template)?.description}</p>
+      <Card title="Modèle" subtitle="13 modèles pensés pour chaque métier et chaque pays, ou le style d’un CV que vous aimez.">
+        <TemplateGallery cv={cv} set={set} />
       </Card>
 
       <Card title="Couleur">
@@ -270,15 +200,20 @@ export function PreviewPage() {
   const cv = useActiveCv();
   return (
     // Sur téléphone : export, puis aperçu, puis réglages. Sur grand écran : réglages à gauche, aperçu à droite.
-    <div className="grid gap-4 lg:grid-cols-[360px_1fr] lg:grid-rows-[auto_auto_auto_1fr]">
+    <div className="grid gap-4 lg:grid-cols-[360px_1fr] lg:grid-rows-[auto_auto_auto_auto_1fr]">
       <Card title="Télécharger mon CV" className="lg:col-start-1">
         <ExportButtons cv={cv} />
       </Card>
-      <div className="lg:sticky lg:top-20 lg:col-start-2 lg:row-span-4 lg:row-start-1 lg:self-start">
+      <div className="lg:sticky lg:top-20 lg:col-start-2 lg:row-span-5 lg:row-start-1 lg:self-start">
         <div className="mx-auto max-w-[700px]">
           <Preview source={{ kind: 'cv', cv }} />
         </div>
       </div>
+      {!isCvEmpty(cv) && (
+        <div className="lg:col-start-1">
+          <ReviseCard />
+        </div>
+      )}
       <div className="lg:col-start-1">
         <DesignPanel cv={cv} />
       </div>

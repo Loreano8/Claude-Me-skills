@@ -2,7 +2,7 @@ import { Hono, type Context } from 'hono';
 import { cors } from 'hono/cors';
 import { bodyLimit } from 'hono/body-limit';
 import { z } from 'zod';
-import { AdaptRequest, CoverLetterRequest, InterviewRequest, StructureRequest, TranslateRequest } from '../shared/schema.ts';
+import { AdaptRequest, AnalyzeTemplateRequest, CoverLetterRequest, InterviewRequest, ReviseRequest, StructureRequest, TranslateRequest } from '../shared/schema.ts';
 import { AiError, type Ai } from './ai.ts';
 import { AccountError, type Accounts, type User } from './accounts.ts';
 import { signToken, verifyToken } from './auth.ts';
@@ -294,6 +294,20 @@ export function createApp({ ai, allowedOrigins, rateLimitPerHour, accounts = nul
     '/api/ai/interview',
     aiRoute('interview', InterviewRequest, (ai, body) => ai.interview(body), (body) =>
       !body.job.text.trim() && !body.job.file ? 'Collez le texte de l’offre ou joignez le fichier de l’annonce.' : null,
+    ),
+  );
+
+  app.post(
+    '/api/ai/revise',
+    aiRoute('revise', ReviseRequest, (ai, body) => ai.revise(body), (body) =>
+      !body.instructions.trim() ? 'Dites ou écrivez ce qu’il faut corriger.' : null,
+    ),
+  );
+
+  app.post(
+    '/api/ai/analyze-template',
+    aiRoute('analyze-template', AnalyzeTemplateRequest, (ai, body) => ai.analyzeTemplate(body), (body) =>
+      body.file.mediaType === 'text/plain' ? 'Importez une image ou un PDF du CV modèle.' : null,
     ),
   );
 

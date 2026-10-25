@@ -19,6 +19,7 @@ import {
 import type { CoverLetter, CvDocument } from '../types.ts';
 import { achievementsList, fullName } from '../lib/cv.ts';
 import { LABELS } from '../pdf/labels.ts';
+import { resolveStyle } from '../pdf/catalog.ts';
 import { letterParagraphs } from '../pdf/letterText.ts';
 import { contactItems, dateRange, signatureLine } from '../pdf/theme.ts';
 
@@ -110,9 +111,9 @@ function labelled(label: string, value: string): Paragraph {
   });
 }
 
-const docStyles = {
-  default: { document: { run: { font: FONT, size: 20 }, paragraph: { spacing: { line: 264, lineRule: LineRuleType.AUTO } } } },
-};
+const docStyles = (font = FONT) => ({
+  default: { document: { run: { font, size: 20 }, paragraph: { spacing: { line: 264, lineRule: LineRuleType.AUTO } } } },
+});
 
 const pageProps: ISectionOptions['properties'] = {
   page: { margin: { top: MARGIN, bottom: MARGIN, left: MARGIN, right: MARGIN } },
@@ -232,7 +233,7 @@ export function buildCvDocx(cv: CvDocument): Document {
   return new Document({
     creator: 'CV Studio',
     title: `CV – ${fullName(cv.personal)}`,
-    styles: docStyles,
+    styles: docStyles(resolveStyle(cv.settings)?.font === 'serif' ? 'Cambria' : FONT),
     sections: [{ properties: pageProps, children }],
   });
 }

@@ -1,6 +1,7 @@
-import type { AdaptResult, Attachment, InterviewResult, Lang, Market } from '../shared/schema.ts';
+import type { AdaptResult, Attachment, CatalogTemplateId, InterviewResult, Lang, Market, TemplateAnalysis, TemplateStyle } from '../shared/schema.ts';
 
-export type TemplateId = 'moderne' | 'classique' | 'elegant';
+/** Modèle du catalogue, ou « perso » : style repris d'un CV importé. */
+export type TemplateId = CatalogTemplateId | 'perso';
 
 export interface Personal {
   firstName: string;
@@ -64,6 +65,10 @@ export interface CvSettings {
   showSignature: boolean;
   signaturePlace: string;
   signatureDate: string;
+  /** Style repris d'un CV modèle importé (modèle « perso »). */
+  customStyle?: TemplateStyle;
+  /** Avis de l'IA sur ce CV modèle. */
+  customAnalysis?: Omit<TemplateAnalysis, 'style'>;
 }
 
 export interface CvDocument {

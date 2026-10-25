@@ -193,3 +193,74 @@ export const TranslateRequest = z.object({
   market: Market.default('international'),
 });
 export type TranslateRequest = z.output<typeof TranslateRequest>;
+
+// ---- Corrections dictées ou écrites ----------------------------------------
+
+export const ReviseRequest = z.object({
+  cv: AiCvContent,
+  instructions: z.string().max(10_000),
+  lang: Lang.default('fr'),
+});
+export type ReviseRequest = z.output<typeof ReviseRequest>;
+
+export const ReviseResult = z.object({
+  cv: AiCvContent,
+  changes: z.array(z.string()).describe('Chaque modification faite, en une phrase courte'),
+  notDone: z.array(z.string()).describe('Demandes non appliquées, avec la raison (ex. information à inventer, demande ambiguë)'),
+});
+export type ReviseResult = z.infer<typeof ReviseResult>;
+
+// ---- Modèles de CV ---------------------------------------------------------
+
+/** Modèles proposés par CV Studio ; « perso » = style repris d'un CV importé par l'utilisateur. */
+export const CatalogTemplateId = z.enum([
+  'moderne',
+  'classique',
+  'elegant',
+  'finance',
+  'ingenieur',
+  'creatif',
+  'canada',
+  'europass',
+  'concours',
+  'etudiant',
+  'executif',
+  'sante',
+  'minimal',
+]);
+export type CatalogTemplateId = z.infer<typeof CatalogTemplateId>;
+
+/** Fiche de style d'un modèle : le moteur de mise en page la transforme en PDF. */
+export const TemplateStyle = z.object({
+  layout: z
+    .enum(['sidebar-left', 'sidebar-right', 'single', 'banner', 'labels'])
+    .describe(
+      'sidebar-left/right : colonne latérale (contact, compétences, langues) ; single : une seule colonne ; banner : bandeau de couleur en haut puis une colonne ; labels : titres de sections dans une marge à gauche (style Europass)',
+    ),
+  sidebarTone: z.enum(['accent', 'light', 'dark']).describe('Fond de la colonne latérale : couleur principale, teinte claire ou foncé'),
+  font: z.enum(['sans', 'serif', 'mixed']).describe('mixed : titres avec empattement, texte sans empattement'),
+  headingStyle: z.enum(['underline', 'caps', 'bar', 'pill', 'plain']).describe('Style des titres de section : souligné, majuscules espacées, barre verticale, pastille colorée, simple'),
+  headerAlign: z.enum(['left', 'center']),
+  skillsStyle: z.enum(['list', 'tags', 'inline']).describe('Compétences en liste à puces, en étiquettes, ou sur une ligne séparées par des points'),
+  density: z.enum(['compact', 'normal', 'airy']),
+  educationFirst: z.boolean().describe('Formation avant expérience (profils étudiants)'),
+  accent: z.string().describe('Couleur principale au format #RRGGBB'),
+  photoShape: z.enum(['round', 'square']),
+});
+export type TemplateStyle = z.infer<typeof TemplateStyle>;
+
+export const AnalyzeTemplateRequest = z.object({ file: Attachment });
+export type AnalyzeTemplateRequest = z.output<typeof AnalyzeTemplateRequest>;
+
+export const TemplateAnalysis = z.object({
+  isCv: z.boolean().describe('Le document est-il bien un CV ?'),
+  verdict: z.enum(['recommande', 'acceptable', 'deconseille']),
+  score: z.number().describe('Professionnalisme du modèle, de 0 à 100'),
+  summary: z.string().describe('Avis en 1 ou 2 phrases'),
+  strengths: z.array(z.string()),
+  issues: z.array(z.string()).describe('Défauts de mise en page, corrigés automatiquement dans notre version'),
+  atsFriendly: z.boolean().describe('Le modèle d’origine est-il lisible par les logiciels de tri (ATS) ?'),
+  style: TemplateStyle,
+  closestTemplate: CatalogTemplateId.describe('Modèle CV Studio le plus proche'),
+});
+export type TemplateAnalysis = z.infer<typeof TemplateAnalysis>;

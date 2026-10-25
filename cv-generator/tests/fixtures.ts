@@ -1,4 +1,4 @@
-import type { AdaptResult, CoverLetterResult, InterviewResult, TranslateResult } from '../shared/schema.ts';
+import type { AdaptResult, CoverLetterResult, InterviewResult, TranslateResult, ReviseResult, TemplateAnalysis } from '../shared/schema.ts';
 import type { CvDocument } from '../src/types.ts';
 import { defaultSettings } from '../src/lib/cv.ts';
 
@@ -168,4 +168,33 @@ export const sampleInterview: InterviewResult = {
   weakPoints: [{ gap: 'Pas d’expérience de management', howToAddress: 'Mettre en avant la coordination avec les autres services et l’envie d’encadrer.' }],
   questionsToAsk: ['Comment est organisée l’équipe comptable ?'],
   tips: ['Apportez vos diplômes et attestations de travail.'],
+};
+
+export const sampleRevise: ReviseResult = {
+  cv: sampleAdapt.cv,
+  changes: ['Expérience chez Groupe Logistique Ouest placée en premier', 'Permis de conduire retiré'],
+  notDone: ['« Ajoute des chiffres » : précisez lesquels (montants, nombre de dossiers…), je ne peux pas les inventer.'],
+};
+
+export const sampleTemplateAnalysis: TemplateAnalysis = {
+  isCv: true,
+  verdict: 'acceptable',
+  score: 68,
+  summary: 'Mise en page claire et moderne, mais les jauges de compétences desservent le CV.',
+  strengths: ['Hiérarchie lisible', 'Couleur sobre et cohérente'],
+  issues: ['Jauges de compétences en pourcentage (remplacées par une liste)', 'Icônes à la place des intitulés de contact'],
+  atsFriendly: false,
+  style: {
+    layout: 'sidebar-right',
+    sidebarTone: 'light',
+    font: 'mixed',
+    headingStyle: 'bar',
+    headerAlign: 'left',
+    skillsStyle: 'tags',
+    density: 'normal',
+    educationFirst: false,
+    accent: '#7c3aed',
+    photoShape: 'round',
+  },
+  closestTemplate: 'ingenieur',
 };

@@ -32,4 +32,12 @@
     <!-- Permissions -->
 
     <uses-permission android:name="android.permission.INTERNET" />
+    <!-- Dictée vocale (« Raconter mon parcours », « Corriger mon CV en parlant ») -->
+    <uses-permission android:name="android.permission.RECORD_AUDIO" />
+    <!-- Android 11+ : permet de trouver le service de reconnaissance vocale du téléphone -->
+    <queries>
+        <intent>
+            <action android:name="android.speech.RecognitionService" />
+        </intent>
+    </queries>
 </manifest>

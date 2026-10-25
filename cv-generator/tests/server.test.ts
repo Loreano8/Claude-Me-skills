@@ -2,7 +2,7 @@ import { describe, expect, it, vi } from 'vitest';
 import { createApp } from '../server/app.ts';
 import { AiError, type Ai } from '../server/ai.ts';
 import { toAiContent } from '../src/lib/cv.ts';
-import { sampleAdapt, sampleCv, sampleInterview, sampleLetter, sampleTranslation } from './fixtures.ts';
+import { sampleAdapt, sampleCv, sampleInterview, sampleLetter, sampleRevise, sampleTemplateAnalysis, sampleTranslation } from './fixtures.ts';
 
 function fakeAi(overrides: Partial<Ai> = {}): Ai {
   return {
@@ -11,6 +11,8 @@ function fakeAi(overrides: Partial<Ai> = {}): Ai {
     coverLetter: vi.fn(async () => sampleLetter),
     translate: vi.fn(async () => sampleTranslation),
     interview: vi.fn(async () => sampleInterview),
+    revise: vi.fn(async () => sampleRevise),
+    analyzeTemplate: vi.fn(async () => sampleTemplateAnalysis),
     ...overrides,
   };
 }
@@ -174,5 +176,27 @@ describe('API avec comptes et crédits', async () => {
     expect((await authed(app, '/api/admin/credits', 'mauvais', { identifier: 'a@b.co', credits: 5 })).status).toBe(403);
     const res = await authed(app, '/api/admin/credits', 'adm', { identifier: 'a@b.co', credits: 5 });
     expect((await res.json()).credits).toBe(6);
+  });
+});
+
+describe('corrections et modèles', () => {
+  it('applique des corrections dictées', async () => {
+    const ai = fakeAi();
+    const app = createApp({ ai, allowedOrigins: [], rateLimitPerHour: 5 });
+    expect((await post(app, '/api/ai/revise', { cv: toAiContent(sampleCv()), instructions: '  ' })).status).toBe(400);
+    const res = await post(app, '/api/ai/revise', { cv: toAiContent(sampleCv()), instructions: 'enlève le permis' });
+    expect(res.status).toBe(200);
+    expect((await res.json()).changes).toHaveLength(2);
+    expect(ai.revise).toHaveBeenCalledWith(expect.objectContaining({ instructions: 'enlève le permis', lang: 'fr' }));
+  });
+
+  it('analyse un modèle importé (image ou PDF seulement)', async () => {
+    const ai = fakeAi();
+    const app = createApp({ ai, allowedOrigins: [], rateLimitPerHour: 5 });
+    const file = (mediaType: string) => ({ file: { name: 'modele', mediaType, data: 'aGVsbG8=' } });
+    expect((await post(app, '/api/ai/analyze-template', file('text/plain'))).status).toBe(400);
+    const res = await post(app, '/api/ai/analyze-template', file('image/png'));
+    expect(res.status).toBe(200);
+    expect((await res.json()).style.layout).toBe('sidebar-right');
   });
 });

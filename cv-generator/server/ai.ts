@@ -8,7 +8,11 @@ import {
   StructureResult,
   TranslateResult,
   InterviewResult,
+  ReviseResult,
+  TemplateAnalysis,
   type AdaptRequest,
+  type AnalyzeTemplateRequest,
+  type ReviseRequest,
   type Attachment,
   type CoverLetterRequest,
   type JobInput,
@@ -16,7 +20,7 @@ import {
   type TranslateRequest,
   type InterviewRequest,
 } from '../shared/schema.ts';
-import { adaptSystem, coverLetterSystem, interviewSystem, structureSystem, translateSystem } from './prompts.ts';
+import { adaptSystem, analyzeTemplateSystem, coverLetterSystem, interviewSystem, reviseSystem, structureSystem, translateSystem } from './prompts.ts';
 
 type ContentBlock = Anthropic.Beta.BetaContentBlockParam;
 type Effort = 'low' | 'medium' | 'high';
@@ -159,6 +163,19 @@ export function createAi(client: Anthropic, model = DEFAULT_MODEL) {
         { type: 'text', text: 'Prépare la fiche d’entretien pour cette offre.' },
       ];
       return run(InterviewResult, interviewSystem(req.lang), content, 'medium');
+    },
+
+    revise(req: ReviseRequest): Promise<ReviseResult> {
+      const content: ContentBlock[] = [
+        cvBlock('cv_actuel', req.cv),
+        { type: 'text', text: `<demandes_du_candidat>\n${req.instructions.trim()}\n</demandes_du_candidat>\n\nApplique ces corrections au CV.` },
+      ];
+      return run(ReviseResult, reviseSystem(req.lang), content, 'medium');
+    },
+
+    analyzeTemplate(req: AnalyzeTemplateRequest): Promise<TemplateAnalysis> {
+      const content: ContentBlock[] = [attachmentBlock(req.file), { type: 'text', text: 'Analyse ce modèle de CV.' }];
+      return run(TemplateAnalysis, analyzeTemplateSystem(), content, 'medium');
     },
 
     translate(req: TranslateRequest): Promise<TranslateResult> {

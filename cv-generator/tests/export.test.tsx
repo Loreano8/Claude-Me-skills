@@ -4,10 +4,11 @@ import { Font, renderToBuffer } from '@react-pdf/renderer';
 import { Packer } from 'docx';
 import { CvPdf } from '../src/pdf/CvPdf.tsx';
 import { LetterPdf } from '../src/pdf/LetterPdf.tsx';
-import { FONT } from '../src/pdf/theme.ts';
+import { FONT, SERIF } from '../src/pdf/theme.ts';
+import { CATALOG, settingsForTemplate } from '../src/pdf/catalog.ts';
 import { buildCvDocx, buildLetterDocx, imageSize } from '../src/export/docx.ts';
 import type { TemplateId } from '../src/types.ts';
-import { sampleCv, sampleLetter } from './fixtures.ts';
+import { sampleCv, sampleLetter, sampleTemplateAnalysis } from './fixtures.ts';
 import { emptyLetter } from '../src/lib/cv.ts';
 
 const PNG_1x1 = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII=';
@@ -27,6 +28,16 @@ beforeAll(() => {
       { src: file('700'), fontWeight: 700 },
     ],
   });
+  const serif = (w: string) => require.resolve(`@fontsource/source-serif-4/files/source-serif-4-latin-${w}-normal.woff`);
+  Font.register({
+    family: SERIF,
+    fonts: [
+      { src: serif('400'), fontWeight: 400 },
+      { src: serif('600'), fontWeight: 500 },
+      { src: serif('600'), fontWeight: 600 },
+      { src: serif('700'), fontWeight: 700 },
+    ],
+  });
 });
 
 function fullCv(template: TemplateId) {
@@ -38,13 +49,23 @@ function fullCv(template: TemplateId) {
 }
 
 describe('export PDF', () => {
-  for (const template of ['moderne', 'classique', 'elegant'] as const) {
-    it(`génère le modèle ${template}`, async () => {
-      const buf = await renderToBuffer(<CvPdf cv={fullCv(template)} />);
+  for (const entry of CATALOG) {
+    it(`génère le modèle ${entry.id}`, async () => {
+      const cv = fullCv(entry.id);
+      cv.settings = { ...cv.settings, ...settingsForTemplate(entry) };
+      const buf = await renderToBuffer(<CvPdf cv={cv} />);
       expect(buf.subarray(0, 5).toString()).toBe('%PDF-');
       expect(buf.length).toBeGreaterThan(5000);
     });
   }
+
+  it('génère un modèle « perso » à partir d’un style importé, en corrigeant une couleur invalide', async () => {
+    const cv = fullCv('perso');
+    cv.settings.customStyle = { ...sampleTemplateAnalysis.style, layout: 'labels', accent: 'violet' };
+    cv.settings.accent = 'pas une couleur';
+    const buf = await renderToBuffer(<CvPdf cv={cv} />);
+    expect(buf.subarray(0, 5).toString()).toBe('%PDF-');
+  });
 
   it('passe sur plusieurs pages quand le CV est long', async () => {
     const cv = fullCv('moderne');

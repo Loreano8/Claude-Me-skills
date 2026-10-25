@@ -2,6 +2,8 @@ import type { CvDocument } from '../types.ts';
 import type { Labels } from './labels.ts';
 
 export const FONT = 'Inter';
+/** Police à empattement des modèles classiques (finance, concours…). */
+export const SERIF = 'SourceSerif';
 
 /** Mélange une couleur avec du blanc (amount = 0 → couleur, 1 → blanc). */
 export function tint(hex: string, amount: number): string {

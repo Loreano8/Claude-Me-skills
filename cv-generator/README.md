@@ -7,8 +7,9 @@ Site web (et application Android) pour créer un CV aux normes actuelles, l’ad
 | Onglet | Fonction |
 | --- | --- |
 | **Mes infos** | Formulaire complet : identité, photo (recadrée automatiquement), accroche, expériences, formations, compétences, langues, certifications, centres d’intérêt, signature dessinée au doigt ou importée. |
-| | **Saisie rapide avec l’IA** : l’utilisateur écrit tout en vrac (ou dicte avec le micro du clavier), ou importe son ancien CV en PDF ou en photo. L’IA range les informations et les rédige proprement. |
-| **Aperçu & export** | 3 modèles (Moderne, Classique « ATS », Élégant), 8 couleurs + couleur libre, options (photo, date de naissance, nationalité, signature, titres en français ou en anglais). Aperçu fidèle, export PDF et Word. Conseils automatiques sur le CV. |
+| | **Saisie rapide avec l’IA** : l’utilisateur **raconte son parcours à voix haute** (bouton micro), l’écrit en vrac, ou importe son ancien CV en PDF ou en photo. L’IA range les informations et les rédige proprement. |
+| | **Corriger mon CV en parlant** : « mets MTN en premier », « enlève le permis »… dictées ou écrites, les corrections sont appliquées par l’IA (annulables). Ce qui demanderait d’inventer une information est signalé « à préciser ». |
+| **Aperçu & export** | **13 modèles** classés par usage (polyvalents, sobres, créatifs, international : finance, ingénieur, Canada/USA sans photo, Europe, concours, premier emploi, cadre dirigeant, santé…), **« Importer un modèle que j’aime »** (l’IA juge le CV importé, signale ses défauts et reproduit son style avec nos règles de mise en page), 8 couleurs + couleur libre, options (photo, date de naissance, nationalité, signature, titres en français ou en anglais). Aperçu fidèle, export PDF et Word. Conseils automatiques sur le CV. |
 | **Adapter à une offre** | L’utilisateur colle le texte de l’annonce ou importe le PDF / une capture d’écran. L’IA crée une **version du CV adaptée** à ce poste (le CV d’origine est conservé), donne un score d’adéquation avant → après adaptation, les points forts, les exigences manquantes et des conseils. |
 | | **Mon CV dans une autre langue** : l’IA traduit tout le CV (postes, diplômes, compétences…) et l’adapte au pays visé (anglais Royaume-Uni, États-Unis/Canada ou international ; français France ou Afrique). Une nouvelle version est créée, l’original est conservé. En anglais, photo, date de naissance, nationalité et signature sont masquées comme le veut l’usage. |
 | | **Fiche entretien** : questions probables pour ce poste avec réponses construites à partir du CV, points faibles et comment les aborder, questions à poser au recruteur, conseils. Copiable pour WhatsApp. |
@@ -38,7 +39,7 @@ cv-generator/
 ├── src/                 Site web (React + TypeScript + Tailwind)
 │   ├── pages/           Accueil et les 5 onglets
 │   ├── components/      Formulaires, photo, signature, aperçu PDF
-│   ├── pdf/             Modèles de CV et de lettre (PDF)
+│   ├── pdf/             Modèles de CV et de lettre (PDF), catalogue et moteur de modèles
 │   ├── export/          Export Word (.docx) et enregistrement des fichiers
 │   └── lib/             Données du CV, appels à l’API, conseils
 ├── server/              API Node.js (Hono) qui appelle Claude, l’IA d’Anthropic
@@ -48,10 +49,18 @@ cv-generator/
 └── tests/               Tests automatiques
 ```
 
+### Dictée vocale
+
+La reconnaissance vocale est celle de l’appareil, donc **gratuite** : Android (application, plugin `@capacitor-community/speech-recognition`), Chrome/Edge et Safari sur iPhone (site). Sans dictée disponible, le bouton explique comment utiliser le micro du clavier.
+
+### Moteur de modèles
+
+Les nouveaux modèles ne sont pas dessinés un par un : une **fiche de style** (`TemplateStyle` dans `shared/schema.ts` : disposition, police, titres, compétences, densité…) est mise en page par `src/pdf/templates/Studio.tsx`. Le catalogue est dans `src/pdf/catalog.ts` : ajouter un modèle = ajouter une fiche. L’analyse d’un CV importé produit la même fiche.
+
 ## Gratuit et payant
 
 - **Gratuit, sans compte** : remplir son CV, les 3 modèles, l’export PDF et Word, les conseils.
-- **IA** : il faut un compte (e-mail ou téléphone + mot de passe). **1 génération offerte** à l’inscription, puis **1 crédit par action** (générer, améliorer, adapter à une offre, lettre, fiche entretien, traduction).
+- **IA** : il faut un compte (e-mail ou téléphone + mot de passe). **1 génération offerte** à l’inscription, puis **1 crédit par action** (générer, améliorer, corriger, adapter à une offre, lettre, fiche entretien, traduction, analyse d’un modèle importé).
 - **Packs** (modifiables dans `server/payments.ts`) : 3 crédits = 500 FCFA, 10 crédits = 1 500 FCFA, 25 crédits = 3 000 FCFA.
 - **Paiement** par FedaPay (MTN MoMo, Moov Money, carte). Dès que FedaPay confirme le paiement, les crédits sont ajoutés automatiquement au compte : rien à faire à la main.
 - Les appels à l’IA passent par le serveur, avec la clé API du propriétaire du service : l’utilisateur ne voit jamais la clé, il paie des crédits.

@@ -33,10 +33,10 @@ export function checkCv(cv: CvDocument): Check[] {
   if (cv.skills.length > 15) tip('Plus de 15 compétences : gardez les plus pertinentes pour le poste.');
   if (cv.languages.length === 0) tip('Précisez les langues que vous parlez, avec un niveau (A1 à C2).');
 
-  if (cv.settings.template === 'classique' && cv.settings.showPhoto && cv.photo) {
+  if ((cv.settings.template === 'classique' || cv.settings.template === 'canada') && cv.settings.showPhoto && cv.photo) {
     tip('Pour une candidature en France, au Canada ou dans un pays anglophone, la photo est facultative, voire déconseillée.');
   }
-  if (cv.settings.showBirthDate) tip('La date de naissance n’est plus attendue dans beaucoup de pays : affichez-la seulement si l’offre la demande.');
+  if (cv.settings.showBirthDate && cv.settings.template !== 'concours') tip('La date de naissance n’est plus attendue dans beaucoup de pays : affichez-la seulement si l’offre la demande.');
 
   if (out.length === 0) out.push({ level: 'ok', text: 'Votre CV respecte les bonnes pratiques principales. Pensez à l’adapter à chaque offre.' });
   return out;

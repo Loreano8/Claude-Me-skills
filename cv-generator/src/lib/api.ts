@@ -10,6 +10,10 @@ import type {
   TranslateResult,
   InterviewRequest,
   InterviewResult,
+  ReviseRequest,
+  ReviseResult,
+  AnalyzeTemplateRequest,
+  TemplateAnalysis,
 } from '../../shared/schema.ts';
 import { useAccount, type AccountUser, type Pack } from './account.ts';
 import { deviceId } from './device.ts';
@@ -68,6 +72,8 @@ export const api = {
   coverLetter: (req: CoverLetterRequest) => post<CoverLetterResult>('/api/ai/cover-letter', req),
   translate: (req: TranslateRequest) => post<TranslateResult>('/api/ai/translate', req),
   interview: (req: InterviewRequest) => post<InterviewResult>('/api/ai/interview', req),
+  revise: (req: ReviseRequest) => post<ReviseResult>('/api/ai/revise', req),
+  analyzeTemplate: (req: AnalyzeTemplateRequest) => post<TemplateAnalysis>('/api/ai/analyze-template', req),
 
   register: (identifier: string, password: string, name: string) => post<Session>('/api/auth/register', { identifier, password, name }),
   login: (identifier: string, password: string) => post<Session>('/api/auth/login', { identifier, password }),

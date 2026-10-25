@@ -26,6 +26,8 @@ import { api } from '../lib/api.ts';
 import { applyAiContent, isCvEmpty, toAiContent, uid } from '../lib/cv.ts';
 import { ACCEPTED_DOCS, fileToAttachment } from '../lib/files.ts';
 import { PhotoInput } from '../components/PhotoInput.tsx';
+import { appendSpoken, MicButton } from '../components/MicButton.tsx';
+import { ReviseCard } from '../components/ReviseCard.tsx';
 import { SignaturePad } from '../components/SignaturePad.tsx';
 import { TagInput } from '../components/TagInput.tsx';
 import { Button, Card, Field, Notice, Section, Select, TextArea, Toggle } from '../components/ui.tsx';
@@ -98,10 +100,17 @@ function QuickFill() {
           <Sparkles className="size-5 text-violet-600" /> Saisie rapide avec l’IA
         </span>
       }
-      subtitle="Écrivez vos informations en vrac ou importez votre ancien CV : l’IA les range et les rédige aux normes actuelles."
+      subtitle="Racontez votre parcours à voix haute, écrivez-le en vrac ou importez votre ancien CV : l’IA range tout et le rédige aux normes actuelles."
     >
+      <div className="mb-3">
+        <MicButton
+          onText={(t) => setText((cur) => appendSpoken(cur, t))}
+          lang={cv.settings.headingLang}
+          label="Raconter mon parcours"
+          hint="Parlez de vos études, vos emplois, vos compétences… dans le désordre."
+        />
+      </div>
       <TextArea value={text} onChange={setText} rows={6} placeholder={QUICK_PLACEHOLDER} />
-      <p className="mt-1.5 text-xs text-slate-500">Astuce : sur téléphone, utilisez la dictée vocale de votre clavier (icône micro) pour parler au lieu d’écrire.</p>
 
       <div className="mt-3 flex flex-wrap items-center gap-2">
         <input ref={fileInput} type="file" accept={ACCEPTED_DOCS} className="hidden" onChange={(e) => onFile(e.target.files?.[0])} />
@@ -507,6 +516,7 @@ export function EditorPage() {
         </Notice>
       )}
       <QuickFill />
+      {!isCvEmpty(cv) && <ReviseCard />}
       <PersonalSection cv={cv} update={update} />
       <PhotoSection cv={cv} update={update} />
       <SummarySection cv={cv} update={update} />
