@@ -4,6 +4,7 @@ import { serve } from '@hono/node-server';
 import { createApp } from '../server/app.ts';
 import { createAccounts } from '../server/accounts.ts';
 import { createPayments } from '../server/payments.ts';
+import { createTestimonials } from '../server/testimonials.ts';
 import { testDb } from './pglite.ts';
 import { sampleAdapt, sampleInterview, sampleLetter, sampleTranslation } from './fixtures.ts';
 const db = await testDb();
@@ -21,7 +22,7 @@ const ai = {
   translate: async () => sampleTranslation,
   interview: async () => sampleInterview,
 };
-const app = createApp({ ai, accounts, payments, sessionSecret: 'dev', adminToken: 'demo', publicUrl: 'http://localhost:5173', allowedOrigins: [], rateLimitPerHour: 100 });
+const app = createApp({ ai, accounts, payments, testimonials: createTestimonials(db), sessionSecret: 'dev', adminToken: 'demo', publicUrl: 'http://localhost:5173', allowedOrigins: [], rateLimitPerHour: 100 });
 // Fausse page de paiement : « payer » puis revenir comme le ferait FedaPay.
 app.get('/fake-pay', (c) => { paid.add(c.req.query('id')!); return c.redirect(`/api/payments/return?id=${c.req.query('id')}&status=approved`); });
 serve({ fetch: app.fetch, port: 8787 }, () => console.log('e2e server ready'));

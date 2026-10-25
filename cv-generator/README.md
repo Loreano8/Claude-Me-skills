@@ -14,6 +14,7 @@ Site web (et application Android) pour créer un CV aux normes actuelles, l’ad
 | | **Fiche entretien** : questions probables pour ce poste avec réponses construites à partir du CV, points faibles et comment les aborder, questions à poser au recruteur, conseils. Copiable pour WhatsApp. |
 | **Lettre de motivation** | Rédaction par l’IA à partir du CV et de l’offre (ou candidature spontanée), ton et longueur au choix, modifiable, signée, export PDF et Word. |
 | **Mes candidatures** | Suivi de chaque offre (en préparation, envoyée, entretien, acceptée, refusée), avec le CV adapté, le score et la fiche entretien. Créé automatiquement à chaque adaptation. |
+| | **« J’ai décroché le poste ! »** : quand une candidature passe à « Acceptée », l’utilisateur peut envoyer un témoignage (prénom, poste, entreprise, ville, message) avec une case d’accord obligatoire. Il peut le retirer lui-même à tout moment. |
 | **Accueil** | Page de présentation (fonctionnalités, tarifs en FCFA, questions fréquentes), affichée à la première visite ou en touchant le logo. |
 
 Les données restent sur le téléphone ou l’ordinateur de l’utilisateur (stockage local du navigateur). Seules les demandes à l’IA passent par le serveur.
@@ -58,6 +59,14 @@ cv-generator/
 - Ajouter des crédits à la main (ex. paiement reçu directement) :
   `curl -X POST https://clgmqhyzyiswnekmoygw.supabase.co/functions/v1/api/admin/credits -H "Authorization: Bearer <ADMIN_TOKEN>" -H "Content-Type: application/json" -d '{"identifier":"+22997000000","credits":10}'`
   (`ADMIN_TOKEN` se trouve dans la table `cvstudio.settings` de Supabase).
+
+## Témoignages
+
+Les témoignages arrivent « en attente » et n’apparaissent sur la page d’accueil (« Ils ont décroché un poste ») qu’une fois validés. La section reste cachée tant qu’il n’y en a aucun.
+
+- Voir les témoignages reçus : `curl https://clgmqhyzyiswnekmoygw.supabase.co/functions/v1/api/admin/testimonials -H "Authorization: Bearer <ADMIN_TOKEN>"`
+- Publier (ou refuser) : `curl -X POST https://clgmqhyzyiswnekmoygw.supabase.co/functions/v1/api/admin/testimonials/<id> -H "Authorization: Bearer <ADMIN_TOKEN>" -H "Content-Type: application/json" -d '{"status":"approved"}'` (`"rejected"` pour refuser)
+- Ou dans l’éditeur SQL de Supabase : `select * from cvstudio.testimonials;` puis `update cvstudio.testimonials set status = 'approved' where id = …;`
 
 ## Mise en ligne
 

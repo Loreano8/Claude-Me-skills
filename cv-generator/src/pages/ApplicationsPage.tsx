@@ -1,9 +1,10 @@
 import { useState } from 'react';
-import { ClipboardList, Eye, MessagesSquare, Plus, Trash2 } from 'lucide-react';
-import { useStore } from '../store.ts';
+import { ClipboardList, Eye, MessagesSquare, PartyPopper, Plus, Trash2 } from 'lucide-react';
+import { useActiveCv, useStore } from '../store.ts';
+import { api, ApiError } from '../lib/api.ts';
 import type { Application, ApplicationStatus } from '../types.ts';
 import { InterviewSheet } from '../components/InterviewSheet.tsx';
-import { Button, Card, cx, Field, Notice, TextArea } from '../components/ui.tsx';
+import { Button, Card, cx, Field, Notice, TextArea, Toggle } from '../components/ui.tsx';
 import type { Tab } from '../App.tsx';
 
 export const STATUSES: { id: ApplicationStatus; label: string; tone: string }[] = [
@@ -13,6 +14,117 @@ export const STATUSES: { id: ApplicationStatus; label: string; tone: string }[] 
   { id: 'offre', label: 'Acceptée', tone: 'bg-emerald-100 text-emerald-800' },
   { id: 'refus', label: 'Refusée', tone: 'bg-rose-100 text-rose-800' },
 ];
+
+/** Candidature acceptée : on félicite, et on propose (sans insister) de témoigner sur le site. */
+function HiredPanel({ app }: { app: Application }) {
+  const { updateApplication } = useStore.getState();
+  const cv = useActiveCv();
+  const linkedCv = useStore((s) => s.cvs.find((c) => c.id === app.cvId));
+  const [form, setForm] = useState({
+    firstName: (linkedCv ?? cv).personal.firstName,
+    jobTitle: app.title === 'Nouvelle candidature' ? '' : app.title,
+    company: app.company,
+    city: app.location,
+    message: '',
+  });
+  const [consent, setConsent] = useState(false);
+  const [open, setOpen] = useState(false);
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const set = (k: keyof typeof form) => (v: string) => setForm({ ...form, [k]: v });
+
+  if (app.testimonial === 'declined') return null;
+
+  if (app.testimonial) {
+    const { id, secret } = app.testimonial;
+    return (
+      <div className="mt-3 rounded-xl bg-emerald-50 p-3 text-sm text-emerald-900">
+        Merci pour votre témoignage ! Il apparaîtra sur le site après vérification.{' '}
+        <button
+          type="button"
+          className="font-semibold underline"
+          disabled={busy}
+          onClick={async () => {
+            if (!window.confirm('Retirer votre témoignage du site ?')) return;
+            setBusy(true);
+            try {
+              await api.withdrawTestimonial(id, secret);
+            } catch (e) {
+              // Déjà retiré ou refusé : il n'est de toute façon pas en ligne.
+              if (!(e instanceof ApiError && /introuvable/.test(e.message))) {
+                window.alert(e instanceof Error ? e.message : 'Erreur inattendue.');
+                setBusy(false);
+                return;
+              }
+            }
+            updateApplication(app.id, { testimonial: 'declined' });
+          }}
+        >
+          Le retirer
+        </button>
+      </div>
+    );
+  }
+
+  const submit = async () => {
+    setError(null);
+    setBusy(true);
+    try {
+      const res = await api.submitTestimonial({ ...form, consent: true });
+      updateApplication(app.id, { testimonial: res });
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'Erreur inattendue.');
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  return (
+    <div className="mt-3 rounded-xl border border-emerald-200 bg-emerald-50 p-4">
+      <p className="flex items-center gap-2 font-semibold text-emerald-900">
+        <PartyPopper className="size-5" /> Félicitations pour ce poste !
+      </p>
+      {!open ? (
+        <>
+          <p className="mt-1 text-sm text-emerald-900">Votre réussite peut motiver d’autres candidats. Acceptez-vous de la partager sur le site CV Studio ?</p>
+          <div className="mt-3 flex flex-wrap gap-2">
+            <Button size="sm" onClick={() => setOpen(true)}>
+              Oui, je témoigne
+            </Button>
+            <Button size="sm" variant="ghost" onClick={() => updateApplication(app.id, { testimonial: 'declined' })}>
+              Non merci
+            </Button>
+          </div>
+        </>
+      ) : (
+        <div className="mt-3 space-y-3">
+          <div className="grid gap-3 sm:grid-cols-2">
+            <Field label="Prénom" value={form.firstName} onChange={set('firstName')} />
+            <Field label="Poste obtenu" value={form.jobTitle} onChange={set('jobTitle')} />
+            <Field label="Entreprise" value={form.company} onChange={set('company')} />
+            <Field label="Ville" value={form.city} onChange={set('city')} />
+          </div>
+          <TextArea label="Un mot sur votre expérience (facultatif)" value={form.message} onChange={set('message')} rows={2} placeholder="Ex. Le CV adapté m’a permis d’obtenir l’entretien en une semaine." />
+          <Toggle
+            label="J’accepte que mon prénom, mon poste, l’entreprise, la ville et mon message apparaissent sur le site CV Studio."
+            hint="Seul votre prénom est affiché, jamais votre nom ni vos coordonnées. Vous pourrez retirer votre témoignage à tout moment depuis cette page."
+            checked={consent}
+            onChange={setConsent}
+          />
+          {error && <Notice tone="error">{error}</Notice>}
+          <div className="flex flex-wrap gap-2">
+            <Button size="sm" loading={busy} disabled={!consent || !form.firstName.trim() || !form.jobTitle.trim() || !form.company.trim()} onClick={submit}>
+              Envoyer mon témoignage
+            </Button>
+            <Button size="sm" variant="ghost" onClick={() => setOpen(false)}>
+              Annuler
+            </Button>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
 
 function ApplicationCard({ app, onNavigate }: { app: Application; onNavigate: (t: Tab) => void }) {
   const { updateApplication, deleteApplication, setActive } = useStore.getState();
@@ -46,6 +158,8 @@ function ApplicationCard({ app, onNavigate }: { app: Application; onNavigate: (t
           </button>
         ))}
       </div>
+
+      {app.status === 'offre' && <HiredPanel app={app} />}
 
       {app.score && (
         <p className="mt-3 text-sm text-slate-600">

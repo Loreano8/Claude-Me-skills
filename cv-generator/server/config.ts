@@ -4,6 +4,7 @@ import { createApp } from './app.ts';
 import { createAccounts } from './accounts.ts';
 import { createPgDb, migrate, type Db } from './db.ts';
 import { createPayments, fedapay } from './payments.ts';
+import { createTestimonials } from './testimonials.ts';
 
 export type Settings = Record<string, string | undefined>;
 
@@ -24,11 +25,13 @@ export async function createServer(env: Settings, opts: { db?: Db; migrate?: boo
   // Comptes et crédits : actifs dès qu'une base de données est configurée.
   let accounts = null;
   let payments = null;
+  let testimonials = null;
   if (hasDb) {
     if (!env.SESSION_SECRET) throw new Error('SESSION_SECRET est obligatoire avec une base de données.');
     // DATABASE_SSL=true pour une base externe (Supabase…) ; inutile pour la base interne de Render.
     const db = opts.db ?? createPgDb(env.DATABASE_URL!, env.DATABASE_SSL === 'true');
     if (opts.migrate !== false) await migrate(db);
+    testimonials = createTestimonials(db);
     accounts = createAccounts(db, {
       freeCredits: Number(env.FREE_CREDITS ?? 1),
       freeIpCooldownDays: Number(env.FREE_IP_COOLDOWN_DAYS ?? 30),
@@ -42,6 +45,7 @@ export async function createServer(env: Settings, opts: { db?: Db; migrate?: boo
     ai,
     accounts,
     payments,
+    testimonials,
     sessionSecret: env.SESSION_SECRET ?? '',
     publicUrl: env.PUBLIC_URL ?? '',
     apiPublicUrl: env.API_PUBLIC_URL ?? '',

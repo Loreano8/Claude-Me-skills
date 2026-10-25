@@ -45,6 +45,20 @@ create table if not exists payments (
   updated_at timestamptz not null default now(),
   unique (provider, provider_ref)
 );
+
+-- Témoignages (« J'ai décroché le poste ! »), publiés seulement après validation (status = 'approved').
+create table if not exists testimonials (
+  id serial primary key,
+  first_name text not null,
+  job_title text not null,
+  company text not null,
+  city text not null default '',
+  message text not null default '',
+  status text not null default 'pending' check (status in ('pending', 'approved', 'rejected')),
+  secret_hash text not null,
+  device text not null default '',
+  created_at timestamptz not null default now()
+);
 `;
 
 /**

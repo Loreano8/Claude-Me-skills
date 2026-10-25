@@ -128,4 +128,6 @@ export interface Application {
   cvId?: string;
   score?: { before: number; after: number };
   interview?: InterviewResult;
+  /** Témoignage « J'ai décroché le poste ! » : envoyé (avec de quoi le retirer) ou refusé. */
+  testimonial?: { id: number; secret: string } | 'declined';
 }

@@ -75,7 +75,19 @@ export const api = {
   health: () => request<{ ai: boolean; accounts: boolean; payments: boolean }>('GET', '/api/health'),
   packs: () => request<{ packs: Pack[]; payments: boolean }>('GET', '/api/packs'),
   checkout: (packId: string) => post<{ url: string }>('/api/payments/checkout', { packId }),
+
+  testimonials: () => request<{ testimonials: PublicTestimonial[] }>('GET', '/api/testimonials'),
+  submitTestimonial: (t: PublicTestimonial & { consent: true }) => post<{ id: number; secret: string }>('/api/testimonials', t),
+  withdrawTestimonial: (id: number, secret: string) => post<{ ok: true }>(`/api/testimonials/${id}/withdraw`, { secret }),
 };
+
+export interface PublicTestimonial {
+  firstName: string;
+  jobTitle: string;
+  company: string;
+  city: string;
+  message: string;
+}
 
 /** Met à jour le solde depuis le serveur (au démarrage, au retour d'un paiement…). */
 export async function refreshAccount(): Promise<void> {

@@ -1,8 +1,9 @@
-import type { ReactNode } from 'react';
-import { ArrowRight, Check, ClipboardList, FileDown, Globe2, Languages, MessagesSquare, PenLine, ShieldCheck, Sparkles, Target } from 'lucide-react';
+import { useEffect, useState, type ReactNode } from 'react';
+import { ArrowRight, BadgeCheck, Check, ClipboardList, FileDown, Globe2, Languages, MessagesSquare, PenLine, ShieldCheck, Sparkles, Target } from 'lucide-react';
 import { PACKS } from '../../server/payments.ts';
 import type { Tab } from '../App.tsx';
 import { Button } from '../components/ui.tsx';
+import { api, type PublicTestimonial } from '../lib/api.ts';
 
 const fcfa = (n: number) => `${n.toLocaleString('fr-FR')} FCFA`;
 
@@ -63,6 +64,55 @@ function SectionTitle({ eyebrow, title }: { eyebrow: string; title: string }) {
   );
 }
 
+/** Témoignages réels (validés à la main) : la section n'apparaît que s'il y en a. */
+function Testimonials() {
+  const [items, setItems] = useState<PublicTestimonial[]>([]);
+  useEffect(() => {
+    api.testimonials().then((r) => setItems(r.testimonials), () => {});
+  }, []);
+  if (items.length === 0) return null;
+
+  const hires = items.map((t) => `${t.firstName} · ${t.jobTitle} chez ${t.company}`);
+  const quotes = items.filter((t) => t.message).slice(0, 6);
+  return (
+    <section className="mx-auto max-w-5xl px-4 pt-12">
+      <SectionTitle eyebrow="Ils ont décroché un poste" title="Nos utilisateurs embauchés" />
+      {hires.length >= 3 ? (
+        <Marquee items={hires} duration={`${Math.max(30, hires.length * 6)}s`} />
+      ) : (
+        <ul className="flex flex-wrap justify-center gap-3">
+          {hires.map((h) => (
+            <li key={h} className="rounded-full border border-slate-200 bg-white px-4 py-2 text-sm font-medium text-slate-700 shadow-sm">
+              {h}
+            </li>
+          ))}
+        </ul>
+      )}
+      {quotes.length > 0 && (
+        <div className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          {quotes.map((t, i) => (
+            <figure key={i} className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+              <blockquote className="text-sm leading-relaxed text-slate-700">« {t.message} »</blockquote>
+              <figcaption className="mt-3 flex items-center gap-2 text-sm">
+                <BadgeCheck className="size-4 shrink-0 text-emerald-600" />
+                <span>
+                  <strong className="text-slate-900">{t.firstName}</strong>
+                  <span className="text-slate-500">
+                    {' '}
+                    · {t.jobTitle} chez {t.company}
+                    {t.city && `, ${t.city}`}
+                  </span>
+                </span>
+              </figcaption>
+            </figure>
+          ))}
+        </div>
+      )}
+      <p className="mt-3 text-center text-xs text-slate-400">Témoignages envoyés par nos utilisateurs, publiés avec leur accord.</p>
+    </section>
+  );
+}
+
 export function LandingPage({ onNavigate }: { onNavigate: (t: Tab) => void }) {
   const start = () => onNavigate('infos');
 
@@ -95,6 +145,8 @@ export function LandingPage({ onNavigate }: { onNavigate: (t: Tab) => void }) {
         <Marquee items={JOBS} duration="55s" />
         <Marquee items={PLACES} reverse duration="45s" />
       </section>
+
+      <Testimonials />
 
       <section className="mx-auto max-w-5xl px-4 py-12">
         <SectionTitle eyebrow="Comment ça marche" title="Trois étapes, c’est tout" />

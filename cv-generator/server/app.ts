@@ -7,6 +7,7 @@ import { AiError, type Ai } from './ai.ts';
 import { AccountError, type Accounts, type User } from './accounts.ts';
 import { signToken, verifyToken } from './auth.ts';
 import { PACKS, PaymentError, type Payments } from './payments.ts';
+import { TestimonialInput, type Testimonials } from './testimonials.ts';
 
 export interface AppOptions {
   ai: Ai | null;
@@ -15,6 +16,8 @@ export interface AppOptions {
   /** Comptes et crédits. Sans base de données (développement local), l'IA est en accès libre. */
   accounts?: Accounts | null;
   payments?: Payments | null;
+  /** Témoignages des utilisateurs embauchés (validés à la main avant publication). */
+  testimonials?: Testimonials | null;
   sessionSecret?: string;
   /** Adresse publique du site, pour revenir après un paiement. */
   publicUrl?: string;
@@ -50,7 +53,7 @@ const Credentials = z.object({
   name: z.string().max(80).optional(),
 });
 
-export function createApp({ ai, allowedOrigins, rateLimitPerHour, accounts = null, payments = null, sessionSecret = '', publicUrl = '', apiPublicUrl = '', adminToken = '' }: AppOptions) {
+export function createApp({ ai, allowedOrigins, rateLimitPerHour, accounts = null, payments = null, testimonials = null, sessionSecret = '', publicUrl = '', apiPublicUrl = '', adminToken = '' }: AppOptions) {
   const app = new Hono();
   const allow = createRateLimiter(rateLimitPerHour);
   const allowAuth = createRateLimiter(20);
@@ -179,6 +182,41 @@ export function createApp({ ai, allowedOrigins, rateLimitPerHour, accounts = nul
     } catch (error) {
       return accountError(c, error);
     }
+  });
+
+  // ---- Témoignages -----------------------------------------------------------
+
+  app.get('/api/testimonials', async (c) => c.json({ testimonials: testimonials ? await testimonials.listApproved() : [] }));
+
+  app.post('/api/testimonials', async (c) => {
+    if (!testimonials) return c.json({ error: 'Les témoignages ne sont pas activés sur ce serveur.' }, 503);
+    if (!allowAuth(clientKey(c))) return c.json({ error: 'Trop de tentatives. Réessayez plus tard.' }, 429);
+    const parsed = TestimonialInput.safeParse(await c.req.json().catch(() => null));
+    if (!parsed.success) return c.json({ error: 'Remplissez le prénom, le poste et l’entreprise, et cochez la case d’accord.' }, 400);
+    return c.json(await testimonials.submit(parsed.data, c.req.header('x-device-id') ?? ''));
+  });
+
+  app.post('/api/testimonials/:id/withdraw', async (c) => {
+    if (!testimonials) return c.json({ error: 'Les témoignages ne sont pas activés sur ce serveur.' }, 503);
+    const body = (await c.req.json().catch(() => null)) as { secret?: unknown } | null;
+    const ok = await testimonials.withdraw(Number(c.req.param('id')), String(body?.secret ?? ''));
+    return ok ? c.json({ ok: true }) : c.json({ error: 'Témoignage introuvable ou déjà retiré.' }, 404);
+  });
+
+  const isAdmin = (c: Context) => Boolean(adminToken) && c.req.header('authorization') === `Bearer ${adminToken}`;
+
+  app.get('/api/admin/testimonials', async (c) => {
+    if (!testimonials || !isAdmin(c)) return c.json({ error: 'Accès refusé.' }, 403);
+    return c.json({ testimonials: await testimonials.listAll() });
+  });
+
+  app.post('/api/admin/testimonials/:id', async (c) => {
+    if (!testimonials || !isAdmin(c)) return c.json({ error: 'Accès refusé.' }, 403);
+    const body = (await c.req.json().catch(() => null)) as { status?: unknown } | null;
+    const status = body?.status;
+    if (status !== 'approved' && status !== 'rejected' && status !== 'pending') return c.json({ error: 'Statut invalide.' }, 400);
+    const ok = await testimonials.setStatus(Number(c.req.param('id')), status);
+    return ok ? c.json({ ok: true }) : c.json({ error: 'Témoignage introuvable.' }, 404);
   });
 
   // ---- IA (1 crédit par action) ----------------------------------------------
