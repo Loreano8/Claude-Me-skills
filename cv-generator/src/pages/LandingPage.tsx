@@ -21,6 +21,30 @@ const FEATURES: { icon: typeof Target; title: string; text: string }[] = [
   { icon: Globe2, title: 'Pensé pour l’Afrique francophone', text: 'Normes locales (photo, date de naissance si attendues), paiement mobile money, prix en FCFA.' },
 ];
 
+const JOBS = [
+  'Comptable', 'Infirmier·e', 'Commercial·e', 'Développeur·se', 'Enseignant·e', 'Assistant·e de direction', 'Agent de banque',
+  'Logisticien·ne', 'Juriste', 'Chargé·e de communication', 'Technicien·ne de maintenance', 'Ingénieur·e BTP', 'Caissier·e',
+  'Community manager', 'Pharmacien·ne', 'Chauffeur-livreur', 'Responsable RH', 'Agent de saisie',
+];
+const PLACES = [
+  'Cotonou', 'Lomé', 'Dakar', 'Abidjan', 'Douala', 'Ouagadougou', 'Bamako', 'Niamey', 'Libreville', 'Kinshasa',
+  'Paris', 'Montréal', 'Bruxelles', 'Londres', 'New York', 'Genève',
+];
+
+function Marquee({ items, reverse = false, duration }: { items: string[]; reverse?: boolean; duration: string }) {
+  return (
+    <div className="marquee flex overflow-hidden [mask-image:linear-gradient(to_right,transparent,black_8%,black_92%,transparent)]">
+      <ul className={reverse ? 'marquee-track reverse flex shrink-0 gap-3 pr-3' : 'marquee-track flex shrink-0 gap-3 pr-3'} style={{ ['--marquee-duration' as string]: duration }}>
+        {[...items, ...items].map((x, i) => (
+          <li key={i} aria-hidden={i >= items.length} className="shrink-0 rounded-full border border-slate-200 bg-white px-4 py-2 text-sm font-medium whitespace-nowrap text-slate-700 shadow-sm">
+            {x}
+          </li>
+        ))}
+      </ul>
+    </div>
+  );
+}
+
 const FAQ: { q: string; a: ReactNode }[] = [
   { q: 'Est-ce vraiment gratuit ?', a: 'Oui : créer son CV, choisir parmi les 3 modèles et télécharger en PDF ou Word est gratuit et sans compte. Seules les fonctions IA utilisent des crédits, et la première est offerte.' },
   { q: 'Faut-il un abonnement ?', a: 'Non. Vous achetez un pack de crédits une fois, quand vous en avez besoin. Rien n’est prélevé automatiquement ensuite.' },
@@ -64,6 +88,12 @@ export function LandingPage({ onNavigate }: { onNavigate: (t: Tab) => void }) {
           </Button>
         </div>
         <p className="mt-3 text-sm text-slate-500">Sans compte pour créer et télécharger son CV · 1re action IA offerte</p>
+      </section>
+
+      <section className="space-y-3 border-y border-slate-200 bg-slate-50 py-6" aria-label="Métiers et villes">
+        <p className="px-4 text-center text-sm font-semibold text-slate-600">Un CV adapté à votre métier, pour postuler où vous voulez</p>
+        <Marquee items={JOBS} duration="55s" />
+        <Marquee items={PLACES} reverse duration="45s" />
       </section>
 
       <section className="mx-auto max-w-5xl px-4 py-12">
