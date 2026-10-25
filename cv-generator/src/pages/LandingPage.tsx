@@ -228,6 +228,14 @@ export function LandingPage({ onNavigate }: { onNavigate: (t: Tab) => void }) {
         </div>
       </section>
 
+      <p className="px-4 pt-8 text-center text-sm text-slate-600">
+        Une autre question ?{' '}
+        <button type="button" className="font-semibold text-brand-700 underline" onClick={() => onNavigate('contact')}>
+          Écrivez-nous
+        </button>
+        , nous répondons dans l’appli.
+      </p>
+
       <section className="px-4 py-14 text-center">
         <ShieldCheck className="mx-auto size-8 text-brand-600" />
         <h2 className="mt-3 text-2xl font-bold tracking-tight text-slate-900">Prêt à postuler ?</h2>

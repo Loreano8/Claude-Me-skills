@@ -109,3 +109,40 @@ describe('santé du serveur', () => {
     expect(await (await app.request('/api/health')).json()).toMatchObject({ ok: true, accounts: true, db: true });
   });
 });
+
+describe('parrainage', () => {
+  it('récompense le filleul et le parrain une seule fois, au premier achat du filleul', async () => {
+    const db = await testDb();
+    const accounts = createAccounts(db, opts);
+    let n = 0;
+    const provider: PaymentProvider = {
+      name: 'fake',
+      createCheckout: async () => ({ ref: `tx-${++n}`, url: 'https://pay.example' }),
+      fetchStatus: async () => 'approved',
+    };
+    const payments = createPayments(db, accounts, provider);
+    const parrain = await accounts.register({ identifier: 'p@x.co', password: 'secret12', ip: '1.1.1.1', device: dev() });
+    const { code } = await accounts.referral(parrain.id);
+    expect(code).toMatch(/^[A-Z2-9]{6}$/);
+    expect((await accounts.referral(parrain.id)).code).toBe(code); // le code ne change pas
+
+    const filleul = await accounts.register({ identifier: 'f@x.co', password: 'secret12', ip: '2.2.2.2', device: dev(), referralCode: code.toLowerCase() });
+    expect(await accounts.referral(parrain.id)).toMatchObject({ invited: 1, rewarded: 0 });
+
+    await payments.checkout(filleul, 'essentiel', 'x');
+    expect((await payments.confirm('tx-1')).credits).toBe(1 + 3 + 1); // offert + pack + bonus parrainage
+    expect((await accounts.get(parrain.id))!.credits).toBe(1 + 1);
+    expect(await accounts.referral(parrain.id)).toMatchObject({ invited: 1, rewarded: 1 });
+
+    await payments.checkout(filleul, 'essentiel', 'x');
+    await payments.confirm('tx-2');
+    expect((await accounts.get(filleul.id))!.credits).toBe(5 + 3); // pas de second bonus
+    expect((await accounts.get(parrain.id))!.credits).toBe(2);
+  });
+
+  it('ignore un code inconnu', async () => {
+    const accounts = createAccounts(await testDb(), opts);
+    const u = await accounts.register({ identifier: 'z@x.co', password: 'secret12', ip: '3.3.3.3', device: dev(), referralCode: 'NOPE42' });
+    expect(u.credits).toBe(1);
+  });
+});

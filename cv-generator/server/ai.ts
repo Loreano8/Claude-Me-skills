@@ -69,6 +69,7 @@ function cvBlock(label: string, cv: unknown): ContentBlock {
 }
 
 export function createAi(client: Anthropic, model = DEFAULT_MODEL) {
+  const withFallback = !/haiku/.test(model);
   async function run<S extends z.ZodType>(
     schema: S,
     system: string,
@@ -80,9 +81,9 @@ export function createAi(client: Anthropic, model = DEFAULT_MODEL) {
       response = await client.beta.messages.parse({
         model,
         max_tokens: 16000,
-        // Si le modèle décline la requête, l'API la relance sur le modèle de repli recommandé.
-        betas: ['server-side-fallback-2026-07-01'],
-        fallbacks: 'default',
+        // Si le modèle décline la requête, l'API la relance sur le modèle de repli recommandé
+        // (option disponible sur Opus et Sonnet, pas sur Haiku).
+        ...(withFallback ? { betas: ['server-side-fallback-2026-07-01'], fallbacks: 'default' as const } : {}),
         output_config: { effort, format: betaZodOutputFormat(schema) },
         system,
         messages: [{ role: 'user', content }],

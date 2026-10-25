@@ -1,8 +1,9 @@
 import { useEffect, useState, type FormEvent, type ReactNode } from 'react';
 import { Capacitor } from '@capacitor/core';
-import { Check, LogOut, Sparkles, UserRound, X, Zap } from 'lucide-react';
+import { Check, Copy, Gift, LogOut, Share2, Sparkles, UserRound, X, Zap } from 'lucide-react';
 import { useAccount, type Pack } from '../lib/account.ts';
 import { api, refreshAccount } from '../lib/api.ts';
+import { clearReferral, pendingReferral, referralLink } from '../lib/referral.ts';
 import { Button, cx, Field, Notice } from './ui.tsx';
 
 function Modal({ title, onClose, children }: { title: string; onClose: () => void; children: ReactNode }) {
@@ -34,13 +35,15 @@ function AccountDialog() {
   const [password, setPassword] = useState('');
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const invitedBy = pendingReferral();
 
   async function submit(e: FormEvent) {
     e.preventDefault();
     setBusy(true);
     setError(null);
     try {
-      const session = mode === 'register' ? await api.register(identifier, password, name) : await api.login(identifier, password);
+      const session = mode === 'register' ? await api.register(identifier, password, name, invitedBy) : await api.login(identifier, password);
+      if (mode === 'register') clearReferral();
       setSession(session.token, session.user);
       close();
     } catch (err) {
@@ -60,6 +63,11 @@ function AccountDialog() {
       {mode === 'register' && (
         <div className="mb-4 flex items-center gap-2 rounded-xl bg-violet-50 px-3 py-2.5 text-sm text-violet-900">
           <Sparkles className="size-4 shrink-0" /> Gratuit : votre première génération par l’IA est offerte.
+        </div>
+      )}
+      {mode === 'register' && invitedBy && (
+        <div className="mb-4 flex items-center gap-2 rounded-xl bg-emerald-50 px-3 py-2.5 text-sm text-emerald-900">
+          <Gift className="size-4 shrink-0" /> Invité par un ami : 1 crédit en plus à votre premier achat.
         </div>
       )}
       <form onSubmit={submit} className="space-y-3">
@@ -90,6 +98,65 @@ function AccountDialog() {
 }
 
 const fcfa = (n: number) => `${n.toLocaleString('fr-FR')} FCFA`;
+
+/** « Invite tes amis » : lien personnel, partage WhatsApp, et résultats. */
+function ReferralCard() {
+  const [info, setInfo] = useState<{ code: string; invited: number; rewarded: number; bonus: number } | null>(null);
+  const [copied, setCopied] = useState(false);
+  useEffect(() => {
+    api.referral().then(setInfo, () => setInfo(null));
+  }, []);
+  if (!info) return null;
+  const link = referralLink(info.code);
+  const message = `J’ai fait mon CV avec CV Studio : il s’adapte à chaque offre d’emploi. Essaie gratuitement : ${link}`;
+
+  async function share() {
+    if (Capacitor.isNativePlatform()) {
+      const { Share } = await import('@capacitor/share');
+      await Share.share({ title: 'CV Studio', text: message });
+    } else if (navigator.share) {
+      await navigator.share({ title: 'CV Studio', text: message }).catch(() => {});
+    } else {
+      window.open(`https://wa.me/?text=${encodeURIComponent(message)}`, '_blank');
+    }
+  }
+
+  return (
+    <div className="mt-5 rounded-2xl border border-emerald-200 bg-emerald-50 p-4">
+      <p className="flex items-center gap-2 font-semibold text-emerald-900">
+        <Gift className="size-5" /> Invite tes amis, gagne des crédits
+      </p>
+      <p className="mt-1 text-sm text-emerald-900">
+        Quand un ami inscrit avec ton lien achète son premier pack, vous recevez chacun {info.bonus} crédit offert.
+      </p>
+      <div className="mt-3 flex items-center gap-2 rounded-xl bg-white px-3 py-2 ring-1 ring-emerald-200">
+        <span className="min-w-0 flex-1 truncate text-sm text-slate-700">{link}</span>
+        <button
+          type="button"
+          aria-label="Copier le lien"
+          className="shrink-0 rounded-lg p-1.5 text-emerald-700 hover:bg-emerald-50"
+          onClick={() => {
+            void navigator.clipboard?.writeText(link).then(() => {
+              setCopied(true);
+              setTimeout(() => setCopied(false), 2000);
+            });
+          }}
+        >
+          {copied ? <Check className="size-4" /> : <Copy className="size-4" />}
+        </button>
+      </div>
+      <div className="mt-3 flex flex-wrap items-center gap-2">
+        <Button size="sm" icon={<Share2 className="size-4" />} onClick={() => void share()}>
+          Partager (WhatsApp…)
+        </Button>
+        <span className="text-xs text-emerald-900">
+          Code <strong className="tracking-wider">{info.code}</strong> · {info.invited} ami{info.invited > 1 ? 's' : ''} inscrit{info.invited > 1 ? 's' : ''} ·{' '}
+          {info.rewarded} récompense{info.rewarded > 1 ? 's' : ''}
+        </span>
+      </div>
+    </div>
+  );
+}
 
 function CreditsDialog() {
   const { user, dialogReason, close, logout } = useAccount();
@@ -187,6 +254,7 @@ function CreditsDialog() {
           <Notice tone="error">{error}</Notice>
         </div>
       )}
+      {user && <ReferralCard />}
       {user && (
         <button
           type="button"

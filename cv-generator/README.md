@@ -69,6 +69,31 @@ Les nouveaux modèles ne sont pas dessinés un par un : une **fiche de style** (
   `curl -X POST https://clgmqhyzyiswnekmoygw.supabase.co/functions/v1/api/admin/credits -H "Authorization: Bearer <ADMIN_TOKEN>" -H "Content-Type: application/json" -d '{"identifier":"+22997000000","credits":10}'`
   (`ADMIN_TOKEN` se trouve dans la table `cvstudio.settings` de Supabase).
 
+## Parrainage
+
+Chaque compte a un lien personnel (`…/?ref=CODE`), affiché dans « Mes crédits » avec un bouton de partage (WhatsApp…). Quand un ami inscrit avec ce lien **achète son premier pack**, l'ami et son parrain reçoivent chacun **1 crédit** (`REFERRAL_BONUS` dans `server/accounts.ts`). La récompense n'est versée qu'une fois par filleul. Comme elle dépend d'un vrai paiement, créer de faux comptes ne rapporte rien.
+
+## Nous contacter (support)
+
+- **Côté client** : la bulle en haut de l'écran ouvre une conversation avec l'équipe. L'historique et les réponses y restent, et une pastille rouge signale une réponse non lue.
+  - Sans compte, la conversation est retrouvée grâce à un secret gardé sur l'appareil.
+  - Avec un compte, elle suit le client sur tous ses appareils.
+- **Côté propriétaire** : l'**espace administrateur** est sur `…/#admin`. On y entre une fois avec le jeton `ADMIN_TOKEN`, gardé sur l'appareil. Il permet de lire les conversations et d'y répondre, et de publier ou refuser les témoignages.
+- **Être prévenu d'un nouveau message** (facultatif, réglages dans `cvstudio.settings`) :
+  - **par e-mail** : `RESEND_API_KEY` (compte gratuit sur resend.com) et `SUPPORT_NOTIFY_EMAIL` ;
+  - **par WhatsApp** : `CALLMEBOT_PHONE` et `CALLMEBOT_APIKEY` (service gratuit CallMeBot : envoyer d'abord le message d'activation indiqué sur callmebot.com pour obtenir la clé) ;
+  - sans réglage, les messages attendent simplement dans l'espace administrateur.
+
+## Modèle d'IA
+
+Réglage `CLAUDE_MODEL` (actuellement `claude-sonnet-5-5`). Mesures du 25/10/2026 sur les 8 actions, avec les mêmes entrées :
+
+| Modèle | Coût par action | Durée | Remarque |
+| --- | --- | --- | --- |
+| Opus 5.5 | 15 à 43 FCFA | 9 à 29 s | Référence de qualité |
+| **Sonnet 5.5 (choisi)** | **7 à 18 FCFA** | 6 à 19 s | Qualité proche d'Opus, et refuse aussi d'inventer |
+| Haiku 5.5 | ~1 FCFA | 8 à 16 s | Prend de petites libertés (niveau de langue deviné, intitulé de poste enjolivé) : écarté pour l'instant |
+
 ## Témoignages
 
 Les témoignages arrivent « en attente » et n’apparaissent sur la page d’accueil (« Ils ont décroché un poste ») qu’une fois validés. La section reste cachée tant qu’il n’y en a aucun.

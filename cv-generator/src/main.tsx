@@ -7,7 +7,9 @@ import '@fontsource/inter/700.css';
 import './index.css';
 import App from './App.tsx';
 import { setupNative } from './native.ts';
+import { captureReferral } from './lib/referral.ts';
 
+captureReferral();
 void setupNative();
 
 createRoot(document.getElementById('root')!).render(

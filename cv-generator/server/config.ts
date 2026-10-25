@@ -5,6 +5,7 @@ import { createAccounts } from './accounts.ts';
 import { createPgDb, migrate, type Db } from './db.ts';
 import { createPayments, fedapay } from './payments.ts';
 import { createTestimonials } from './testimonials.ts';
+import { createSupport, notifier } from './support.ts';
 
 export type Settings = Record<string, string | undefined>;
 
@@ -26,12 +27,14 @@ export async function createServer(env: Settings, opts: { db?: Db; migrate?: boo
   let accounts = null;
   let payments = null;
   let testimonials = null;
+  let support = null;
   if (hasDb) {
     if (!env.SESSION_SECRET) throw new Error('SESSION_SECRET est obligatoire avec une base de données.');
     // DATABASE_SSL=true pour une base externe (Supabase…) ; inutile pour la base interne de Render.
     const db = opts.db ?? createPgDb(env.DATABASE_URL!, env.DATABASE_SSL === 'true');
     if (opts.migrate !== false) await migrate(db);
     testimonials = createTestimonials(db);
+    support = createSupport(db, notifier(env, `${(env.PUBLIC_URL ?? '').replace(/\/$/, '')}/#admin`));
     accounts = createAccounts(db, {
       freeCredits: Number(env.FREE_CREDITS ?? 1),
       freeIpCooldownDays: Number(env.FREE_IP_COOLDOWN_DAYS ?? 30),
@@ -46,6 +49,7 @@ export async function createServer(env: Settings, opts: { db?: Db; migrate?: boo
     accounts,
     payments,
     testimonials,
+    support,
     sessionSecret: env.SESSION_SECRET ?? '',
     publicUrl: env.PUBLIC_URL ?? '',
     apiPublicUrl: env.API_PUBLIC_URL ?? '',

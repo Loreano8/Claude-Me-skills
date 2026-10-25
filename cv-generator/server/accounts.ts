@@ -1,5 +1,21 @@
 import type { Db } from './db.ts';
+import { randomInt } from 'node:crypto';
 import { hashPassword, normalizeIdentifier, verifyPassword } from './auth.ts';
+
+/** Crédits offerts au parrain et au filleul quand le filleul fait son premier achat. */
+export const REFERRAL_BONUS = 1;
+
+// Sans 0/O ni 1/I/L : un code se lit et se dicte sans confusion.
+const CODE_ALPHABET = 'ABCDEFGHJKMNPQRSTUVWXYZ23456789';
+const newReferralCode = () => Array.from({ length: 6 }, () => CODE_ALPHABET[randomInt(CODE_ALPHABET.length)]).join('');
+
+export interface ReferralInfo {
+  code: string;
+  /** Amis inscrits avec ce code. */
+  invited: number;
+  /** Amis qui ont fait leur premier achat (récompense versée). */
+  rewarded: number;
+}
 
 export interface User {
   id: number;
@@ -47,7 +63,7 @@ export function createAccounts(db: Db, opts: AccountOptions) {
       return true;
     },
 
-    async register(input: { identifier: string; password: string; name?: string; ip: string; device: string }): Promise<User> {
+    async register(input: { identifier: string; password: string; name?: string; ip: string; device: string; referralCode?: string }): Promise<User> {
       const identifier = normalizeIdentifier(input.identifier);
       if (!identifier) throw new AccountError('Indiquez un e-mail ou un numéro de téléphone valide.', 400);
       if (input.password.length < 6) throw new AccountError('Le mot de passe doit faire au moins 6 caractères.', 400);
@@ -62,9 +78,11 @@ export function createAccounts(db: Db, opts: AccountOptions) {
              and (u.signup_device = $1 or (u.signup_ip = $2 and l.created_at > now() - make_interval(days => $3)))`,
           [device, input.ip, opts.freeIpCooldownDays],
         );
+        const code = (input.referralCode ?? '').trim().toUpperCase();
+        const [referrer] = code ? await tx.query<{ id: number }>('select id from users where referral_code = $1', [code]) : [];
         const [user] = await tx.query<User>(
-          `insert into users (identifier, name, password_hash, signup_ip, signup_device) values ($1, $2, $3, $4, $5) returning ${USER_COLUMNS}`,
-          [identifier, (input.name ?? '').trim().slice(0, 80), passwordHash, input.ip, device],
+          `insert into users (identifier, name, password_hash, signup_ip, signup_device, referred_by) values ($1, $2, $3, $4, $5, $6) returning ${USER_COLUMNS}`,
+          [identifier, (input.name ?? '').trim().slice(0, 80), passwordHash, input.ip, device, referrer?.id ?? null],
         );
         // Sans identifiant d'appareil (client trop ancien ou bricolé), pas de crédit offert.
         if (opts.freeCredits > 0 && device.length >= 8 && n === 0) {
@@ -96,6 +114,42 @@ export function createAccounts(db: Db, opts: AccountOptions) {
       if (!identifier) return null;
       const [user] = await db.query<User>(`select ${USER_COLUMNS} from users where identifier = $1`, [identifier]);
       return user ?? null;
+    },
+
+    /** Code de parrainage de l'utilisateur (créé à la première demande) et ses résultats. */
+    async referral(userId: number): Promise<ReferralInfo> {
+      const current = async () => (await db.query<{ referral_code: string | null }>('select referral_code from users where id = $1', [userId]))[0];
+      let row = await current();
+      if (!row) throw new AccountError('Compte introuvable.', 404);
+      for (let attempt = 0; !row.referral_code && attempt < 5; attempt++) {
+        try {
+          // « is null » : si deux demandes arrivent en même temps, la première gagne.
+          await db.query('update users set referral_code = $2 where id = $1 and referral_code is null', [userId, newReferralCode()]);
+        } catch {
+          // Code déjà attribué à quelqu'un d'autre (très rare) : on en tire un autre.
+        }
+        row = await current();
+      }
+      if (!row.referral_code) throw new AccountError('Impossible de créer votre code de parrainage. Réessayez.', 500);
+      const [{ invited, rewarded }] = await db.query<{ invited: number; rewarded: number }>(
+        'select count(*)::int as invited, count(*) filter (where referral_rewarded)::int as rewarded from users where referred_by = $1',
+        [userId],
+      );
+      return { code: row.referral_code!, invited, rewarded };
+    },
+
+    /**
+     * Après un achat confirmé (dans la même transaction) : si c'est le premier achat d'un filleul,
+     * le filleul et son parrain reçoivent chacun leur bonus, une seule fois.
+     */
+    async rewardReferralInTx(tx: Db, userId: number): Promise<void> {
+      const [row] = await tx.query<{ referred_by: number }>(
+        'update users set referral_rewarded = true where id = $1 and referred_by is not null and not referral_rewarded returning referred_by',
+        [userId],
+      );
+      if (!row) return;
+      await addCredits(tx, userId, REFERRAL_BONUS, 'referral-welcome');
+      await addCredits(tx, row.referred_by, REFERRAL_BONUS, 'referral', String(userId));
     },
 
     /** Retire un crédit avant un appel à l'IA ; lève une erreur 402 s'il n'en reste plus. */

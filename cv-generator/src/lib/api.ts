@@ -24,7 +24,7 @@ const API_BASE = (import.meta.env.VITE_API_URL as string | undefined)?.replace(/
 
 export class ApiError extends Error {}
 
-async function request<T>(method: 'GET' | 'POST', path: string, body?: unknown): Promise<T> {
+async function request<T>(method: 'GET' | 'POST', path: string, body?: unknown, extraHeaders: Record<string, string> = {}): Promise<T> {
   if (!API_BASE && Capacitor.isNativePlatform()) {
     throw new ApiError('Les fonctions en ligne ne sont pas encore activées dans cette version de l’application.');
   }
@@ -37,6 +37,7 @@ async function request<T>(method: 'GET' | 'POST', path: string, body?: unknown):
         'Content-Type': 'application/json',
         'X-Device-Id': await deviceId(),
         ...(account.token ? { Authorization: `Bearer ${account.token}` } : {}),
+        ...extraHeaders,
       },
       body: body === undefined ? undefined : JSON.stringify(body),
     });
@@ -75,17 +76,68 @@ export const api = {
   revise: (req: ReviseRequest) => post<ReviseResult>('/api/ai/revise', req),
   analyzeTemplate: (req: AnalyzeTemplateRequest) => post<TemplateAnalysis>('/api/ai/analyze-template', req),
 
-  register: (identifier: string, password: string, name: string) => post<Session>('/api/auth/register', { identifier, password, name }),
+  register: (identifier: string, password: string, name: string, referralCode?: string | null) =>
+    post<Session>('/api/auth/register', { identifier, password, name, ...(referralCode ? { referralCode } : {}) }),
+  referral: () => request<{ code: string; invited: number; rewarded: number; bonus: number }>('GET', '/api/referral'),
   login: (identifier: string, password: string) => post<Session>('/api/auth/login', { identifier, password }),
   me: () => request<{ user: AccountUser }>('GET', '/api/me'),
   health: () => request<{ ai: boolean; accounts: boolean; payments: boolean }>('GET', '/api/health'),
   packs: () => request<{ packs: Pack[]; payments: boolean }>('GET', '/api/packs'),
   checkout: (packId: string) => post<{ url: string }>('/api/payments/checkout', { packId }),
 
+  support: () => request<{ messages: SupportMessage[] }>('GET', '/api/support', undefined, supportHeaders()),
+  supportUnread: () => request<{ unread: number }>('GET', '/api/support/unread', undefined, supportHeaders()),
+  supportPost: (m: { body: string; name?: string; contact?: string }) =>
+    request<{ secret?: string; messages: SupportMessage[] }>('POST', '/api/support', m, supportHeaders()),
+
   testimonials: () => request<{ testimonials: PublicTestimonial[] }>('GET', '/api/testimonials'),
   submitTestimonial: (t: PublicTestimonial & { consent: true }) => post<{ id: number; secret: string }>('/api/testimonials', t),
   withdrawTestimonial: (id: number, secret: string) => post<{ ok: true }>(`/api/testimonials/${id}/withdraw`, { secret }),
 };
+
+export interface SupportMessage {
+  id: number;
+  author: 'user' | 'admin';
+  body: string;
+  createdAt: string;
+}
+
+const SUPPORT_KEY = 'cv-studio-support';
+
+/** Secret de la conversation « Nous contacter », gardé sur l'appareil (pour les visiteurs sans compte). */
+export function supportHeaders(): Record<string, string> {
+  try {
+    const secret = localStorage.getItem(SUPPORT_KEY);
+    return secret ? { 'X-Support-Secret': secret } : {};
+  } catch {
+    return {};
+  }
+}
+
+export function saveSupportSecret(secret: string): void {
+  try {
+    localStorage.setItem(SUPPORT_KEY, secret);
+  } catch {
+    // Stockage indisponible : la conversation restera liée au compte s'il y en a un.
+  }
+}
+
+/** Appels de l'espace administrateur, avec le jeton admin (jamais celui du compte client). */
+export async function adminRequest<T>(token: string, method: 'GET' | 'POST', path: string, body?: unknown): Promise<T> {
+  let res: Response;
+  try {
+    res = await fetch(`${API_BASE}${path}`, {
+      method,
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+      body: body === undefined ? undefined : JSON.stringify(body),
+    });
+  } catch {
+    throw new ApiError('Impossible de joindre le serveur. Vérifiez votre connexion internet.');
+  }
+  const data = (await res.json().catch(() => null)) as { error?: unknown } | null;
+  if (!res.ok) throw new ApiError(typeof data?.error === 'string' ? data.error : 'Erreur du serveur.');
+  return data as T;
+}
 
 export interface PublicTestimonial {
   firstName: string;

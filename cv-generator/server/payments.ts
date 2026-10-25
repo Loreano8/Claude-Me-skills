@@ -114,7 +114,9 @@ export function createPayments(db: Db, accounts: Accounts, provider: PaymentProv
         }
         await tx.query('update payments set status = $2, updated_at = now() where id = $1', [payment.id, status]);
         if (status !== 'approved') return { status, userId: payment.user_id };
-        const credits = await accounts.addCreditsInTx(tx, payment.user_id, payment.credits, 'purchase', `${provider.name}:${ref}`);
+        await accounts.addCreditsInTx(tx, payment.user_id, payment.credits, 'purchase', `${provider.name}:${ref}`);
+        await accounts.rewardReferralInTx(tx, payment.user_id);
+        const [{ credits }] = await tx.query<{ credits: number }>('select credits from users where id = $1', [payment.user_id]);
         return { status, credits, userId: payment.user_id };
       });
     },

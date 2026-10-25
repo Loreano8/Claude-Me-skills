@@ -4,10 +4,11 @@ import { bodyLimit } from 'hono/body-limit';
 import { z } from 'zod';
 import { AdaptRequest, AnalyzeTemplateRequest, CoverLetterRequest, InterviewRequest, ReviseRequest, StructureRequest, TranslateRequest } from '../shared/schema.ts';
 import { AiError, type Ai } from './ai.ts';
-import { AccountError, type Accounts, type User } from './accounts.ts';
+import { AccountError, REFERRAL_BONUS, type Accounts, type User } from './accounts.ts';
 import { signToken, verifyToken } from './auth.ts';
 import { PACKS, PaymentError, type Payments } from './payments.ts';
 import { TestimonialInput, type Testimonials } from './testimonials.ts';
+import { SupportError, SupportMessageInput, type Support } from './support.ts';
 
 export interface AppOptions {
   ai: Ai | null;
@@ -18,6 +19,8 @@ export interface AppOptions {
   payments?: Payments | null;
   /** Témoignages des utilisateurs embauchés (validés à la main avant publication). */
   testimonials?: Testimonials | null;
+  /** Messagerie « Nous contacter ». */
+  support?: Support | null;
   sessionSecret?: string;
   /** Adresse publique du site, pour revenir après un paiement. */
   publicUrl?: string;
@@ -51,9 +54,10 @@ const Credentials = z.object({
   identifier: z.string().max(120),
   password: z.string().max(200),
   name: z.string().max(80).optional(),
+  referralCode: z.string().max(20).optional(),
 });
 
-export function createApp({ ai, allowedOrigins, rateLimitPerHour, accounts = null, payments = null, testimonials = null, sessionSecret = '', publicUrl = '', apiPublicUrl = '', adminToken = '' }: AppOptions) {
+export function createApp({ ai, allowedOrigins, rateLimitPerHour, accounts = null, payments = null, testimonials = null, support = null, sessionSecret = '', publicUrl = '', apiPublicUrl = '', adminToken = '' }: AppOptions) {
   const app = new Hono();
   const allow = createRateLimiter(rateLimitPerHour);
   const allowAuth = createRateLimiter(20);
@@ -116,6 +120,12 @@ export function createApp({ ai, allowedOrigins, rateLimitPerHour, accounts = nul
     } catch (error) {
       return accountError(c, error);
     }
+  });
+
+  app.get('/api/referral', async (c) => {
+    const user = await currentUser(c);
+    if (!user || !accounts) return c.json({ error: 'Connectez-vous pour parrainer vos amis.' }, 401);
+    return c.json({ ...(await accounts.referral(user.id)), bonus: REFERRAL_BONUS });
   });
 
   app.get('/api/me', async (c) => {
@@ -221,6 +231,61 @@ export function createApp({ ai, allowedOrigins, rateLimitPerHour, accounts = nul
     if (status !== 'approved' && status !== 'rejected' && status !== 'pending') return c.json({ error: 'Statut invalide.' }, 400);
     const ok = await testimonials.setStatus(Number(c.req.param('id')), status);
     return ok ? c.json({ ok: true }) : c.json({ error: 'Témoignage introuvable.' }, 404);
+  });
+
+  // ---- Nous contacter ---------------------------------------------------------
+
+  const supportOff = (c: Context) => c.json({ error: 'La messagerie n’est pas activée sur ce serveur.' }, 503);
+  const supportIdentity = async (c: Context) => ({ userId: (await currentUser(c))?.id ?? null, secret: c.req.header('x-support-secret') ?? null });
+  const supportError = (c: Context, error: unknown) => {
+    if (error instanceof SupportError) return c.json({ error: error.message }, error.status as 400);
+    console.error(error);
+    return c.json({ error: 'Erreur interne du serveur.' }, 500);
+  };
+
+  app.get('/api/support', async (c) => {
+    if (!support) return supportOff(c);
+    return c.json({ messages: await support.thread(await supportIdentity(c)) });
+  });
+
+  app.get('/api/support/unread', async (c) => {
+    if (!support) return c.json({ unread: 0 });
+    return c.json({ unread: await support.unread(await supportIdentity(c)) });
+  });
+
+  app.post('/api/support', async (c) => {
+    if (!support) return supportOff(c);
+    if (!allowAuth(clientKey(c))) return c.json({ error: 'Trop de messages en peu de temps. Réessayez plus tard.' }, 429);
+    const parsed = SupportMessageInput.safeParse(await c.req.json().catch(() => null));
+    if (!parsed.success) return c.json({ error: 'Écrivez votre message (2 000 caractères maximum).' }, 400);
+    const who = await supportIdentity(c);
+    const res = await support.post(who, parsed.data);
+    return c.json({ ...res, messages: await support.thread({ ...who, secret: res.secret ?? who.secret }) });
+  });
+
+  app.get('/api/admin/support', async (c) => {
+    if (!support || !isAdmin(c)) return c.json({ error: 'Accès refusé.' }, 403);
+    return c.json({ threads: await support.adminList() });
+  });
+
+  app.get('/api/admin/support/:id', async (c) => {
+    if (!support || !isAdmin(c)) return c.json({ error: 'Accès refusé.' }, 403);
+    try {
+      return c.json({ messages: await support.adminThread(Number(c.req.param('id'))) });
+    } catch (error) {
+      return supportError(c, error);
+    }
+  });
+
+  app.post('/api/admin/support/:id', async (c) => {
+    if (!support || !isAdmin(c)) return c.json({ error: 'Accès refusé.' }, 403);
+    const body = (await c.req.json().catch(() => null)) as { body?: unknown } | null;
+    try {
+      await support.adminReply(Number(c.req.param('id')), String(body?.body ?? ''));
+      return c.json({ messages: await support.adminThread(Number(c.req.param('id'))) });
+    } catch (error) {
+      return supportError(c, error);
+    }
   });
 
   // ---- IA (1 crédit par action) ----------------------------------------------

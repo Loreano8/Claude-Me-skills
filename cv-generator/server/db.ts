@@ -21,6 +21,11 @@ create table if not exists users (
 -- Identifiant de l'appareil (téléphone ou navigateur) utilisé à l'inscription : sert à n'offrir le crédit gratuit qu'une fois par appareil.
 alter table users add column if not exists signup_device text not null default '';
 
+-- Parrainage : code personnel, parrain éventuel, et récompense déjà versée (une seule fois, au premier achat du filleul).
+alter table users add column if not exists referral_code text unique;
+alter table users add column if not exists referred_by integer references users(id);
+alter table users add column if not exists referral_rewarded boolean not null default false;
+
 -- Historique de chaque mouvement de crédits (offerts, achetés, dépensés, remboursés).
 create table if not exists credit_ledger (
   id serial primary key,
@@ -57,6 +62,27 @@ create table if not exists testimonials (
   status text not null default 'pending' check (status in ('pending', 'approved', 'rejected')),
   secret_hash text not null,
   device text not null default '',
+  created_at timestamptz not null default now()
+);
+
+-- « Nous contacter » : une conversation par client (retrouvée par son compte ou par un secret gardé sur l'appareil).
+create table if not exists support_threads (
+  id serial primary key,
+  user_id integer references users(id) on delete set null,
+  secret_hash text not null unique,
+  name text not null default '',
+  contact text not null default '',
+  unread_admin integer not null default 0,
+  unread_user integer not null default 0,
+  created_at timestamptz not null default now(),
+  last_message_at timestamptz not null default now()
+);
+
+create table if not exists support_messages (
+  id serial primary key,
+  thread_id integer not null references support_threads(id) on delete cascade,
+  author text not null check (author in ('user', 'admin')),
+  body text not null,
   created_at timestamptz not null default now()
 );
 `;

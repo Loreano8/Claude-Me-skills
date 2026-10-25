@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { ClipboardList, FileDown, FileUser, Mail, Target } from 'lucide-react';
+import { ClipboardList, FileDown, FileUser, Mail, MessageCircle, Target } from 'lucide-react';
 import { useActiveCv, useStore } from './store.ts';
 import { CvSwitcher } from './components/CvSwitcher.tsx';
 import { AccountButton, AccountDialogs } from './components/AccountDialogs.tsx';
@@ -13,8 +13,11 @@ import { LetterPage } from './pages/LetterPage.tsx';
 import { ExportButtons, PreviewPage } from './pages/PreviewPage.tsx';
 import { ApplicationsPage } from './pages/ApplicationsPage.tsx';
 import { LandingPage } from './pages/LandingPage.tsx';
+import { ContactPage } from './pages/ContactPage.tsx';
+import { AdminPage } from './pages/AdminPage.tsx';
+import { refreshSupportBadge, useSupportBadge } from './lib/supportBadge.ts';
 
-export type Tab = 'accueil' | 'infos' | 'apercu' | 'offre' | 'lettre' | 'suivi';
+export type Tab = 'accueil' | 'infos' | 'apercu' | 'offre' | 'lettre' | 'suivi' | 'contact' | 'admin';
 
 const TABS: { id: Tab; label: string; short: string; icon: typeof FileUser }[] = [
   { id: 'infos', label: 'Mes infos', short: 'Infos', icon: FileUser },
@@ -24,7 +27,9 @@ const TABS: { id: Tab; label: string; short: string; icon: typeof FileUser }[] =
   { id: 'suivi', label: 'Mes candidatures', short: 'Suivi', icon: ClipboardList },
 ];
 
-const isTab = (v: string): v is Tab => v === 'accueil' || TABS.some((t) => t.id === v);
+// Pages hors de la barre d'onglets : accueil, « Nous contacter » et l'espace administrateur.
+const EXTRA_PAGES: Tab[] = ['accueil', 'contact', 'admin'];
+const isTab = (v: string): v is Tab => EXTRA_PAGES.includes(v as Tab) || TABS.some((t) => t.id === v);
 
 // Première visite (CV encore vide, pas d'onglet demandé) : on présente le produit.
 function initialTab(): Tab {
@@ -47,6 +52,24 @@ function Logo({ onClick }: { onClick: () => void }) {
   );
 }
 
+function ContactButton({ active, onClick }: { active: boolean; onClick: () => void }) {
+  const unread = useSupportBadge((s) => s.unread);
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      aria-label={unread ? `Nous contacter (${unread} réponse${unread > 1 ? 's' : ''} non lue${unread > 1 ? 's' : ''})` : 'Nous contacter'}
+      title="Nous contacter"
+      className={cx('relative rounded-xl p-2 transition-colors', active ? 'bg-brand-50 text-brand-700' : 'text-slate-600 hover:bg-slate-100')}
+    >
+      <MessageCircle className="size-5" />
+      {unread > 0 && (
+        <span className="absolute -top-0.5 -right-0.5 flex size-4.5 items-center justify-center rounded-full bg-red-600 text-[10px] font-bold text-white">{unread}</span>
+      )}
+    </button>
+  );
+}
+
 function InfosLayout() {
   const cv = useActiveCv();
   return (
@@ -62,6 +85,18 @@ function InfosLayout() {
 
 export default function App() {
   const [tab, setTabState] = useState<Tab>(initialTab);
+
+  useEffect(() => {
+    void refreshSupportBadge();
+    const timer = setInterval(() => void refreshSupportBadge(), 120_000);
+    // Retour sur l'appli (autre onglet, autre appli, téléphone déverrouillé) : on revérifie tout de suite.
+    const onVisible = () => document.visibilityState === 'visible' && void refreshSupportBadge();
+    document.addEventListener('visibilitychange', onVisible);
+    return () => {
+      clearInterval(timer);
+      document.removeEventListener('visibilitychange', onVisible);
+    };
+  }, []);
 
   useEffect(() => {
     void refreshAccount();
@@ -115,6 +150,7 @@ export default function App() {
           </nav>
           <div className="flex min-w-0 items-center gap-2">
             <CvSwitcher />
+            <ContactButton active={tab === 'contact'} onClick={() => setTab('contact')} />
             <AccountButton />
           </div>
         </div>
@@ -128,6 +164,8 @@ export default function App() {
         {tab === 'offre' && <JobPage onNavigate={setTab} />}
         {tab === 'lettre' && <LetterPage onNavigate={setTab} />}
         {tab === 'suivi' && <ApplicationsPage onNavigate={setTab} />}
+        {tab === 'contact' && <ContactPage />}
+        {tab === 'admin' && <AdminPage />}
       </main>
 
       <nav className="fixed inset-x-0 bottom-0 z-20 grid grid-cols-5 border-t border-slate-200 bg-white pb-[env(safe-area-inset-bottom)] lg:hidden">
