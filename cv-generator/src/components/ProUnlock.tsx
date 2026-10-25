@@ -5,7 +5,10 @@ import type { CvDocument } from '../types.ts';
 import { api } from '../lib/api.ts';
 import { Button, Notice } from './ui.tsx';
 
-/** Passage d'un CV en version Pro : débite 1 crédit sur le serveur, puis marque le CV. */
+/** Prix de la version Pro, en crédits (doit suivre UNLOCK_COST dans server/accounts.ts). */
+export const UNLOCK_COST = 2;
+
+/** Passage d'un CV en version Pro : débite les crédits sur le serveur, puis marque le CV. */
 export function useUnlock(cv: CvDocument) {
   const unlockCv = useStore((s) => s.unlockCv);
   const [busy, setBusy] = useState(false);
@@ -55,8 +58,8 @@ export function ProOffer({
       <p className="flex items-start gap-2 text-sm text-amber-900">
         <Crown className="mt-0.5 size-4 shrink-0" />
         <span>
-          <strong>Version Pro, 1 crédit</strong> : sans la mention « Créé avec CV Studio », les 13 modèles, l’export Word, et la lettre de ce CV.
-          Définitif pour ce CV.
+          <strong>Version Pro, {UNLOCK_COST} crédits</strong> : sans la mention « Créé avec CV Studio », les 13 modèles, l’export Word, et la lettre de ce CV.
+          Acquis pour toujours sur ce CV : modifiez-le et retéléchargez-le autant de fois que vous voulez.
         </span>
       </p>
       <Button
@@ -68,7 +71,7 @@ export function ProOffer({
           if (await unlock()) onUnlocked?.();
         }}
       >
-        Passer en Pro (1 crédit)
+        Passer en Pro ({UNLOCK_COST} crédits)
       </Button>
       {error && (
         <div className="mt-2">

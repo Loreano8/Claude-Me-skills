@@ -47,7 +47,7 @@ function Marquee({ items, reverse = false, duration }: { items: string[]; revers
 }
 
 const FAQ: { q: string; a: ReactNode }[] = [
-  { q: 'Est-ce vraiment gratuit ?', a: 'Oui : créer son CV avec les 3 modèles de base et le télécharger en PDF est gratuit et sans compte (avec une petite mention « Créé avec CV Studio » en bas de page). La version Pro d’un CV (sans mention, 13 modèles, export Word) et les fonctions IA coûtent 1 crédit chacune ; la première action IA est offerte.' },
+  { q: 'Est-ce vraiment gratuit ?', a: 'Oui : créer son CV avec les 3 modèles de base et le télécharger en PDF est gratuit et sans compte (avec une petite mention « Créé avec CV Studio » en bas de page). Les fonctions IA coûtent 1 crédit chacune (la première est offerte) ; la version Pro d’un CV (sans mention, 13 modèles, export Word) coûte 2 crédits et reste acquise pour toujours sur ce CV.' },
   { q: 'Faut-il un abonnement ?', a: 'Non. Vous achetez un pack de crédits une fois, quand vous en avez besoin. Rien n’est prélevé automatiquement ensuite.' },
   { q: 'Comment payer ?', a: 'Par Mobile Money (MTN MoMo, Moov Money), via FedaPay. Les crédits arrivent sur votre compte dès que le paiement est confirmé.' },
   { q: 'L’IA peut-elle inventer des diplômes ou des expériences ?', a: 'Non. Elle a pour consigne stricte de ne rien inventer : elle reformule et met en valeur ce que vous avez réellement fait.' },
@@ -202,7 +202,7 @@ export function LandingPage({ onNavigate }: { onNavigate: (t: Tab) => void }) {
               <p className="mt-1 text-sm text-slate-600">
                 {p.credits} crédits · {fcfa(Math.round(p.price / p.credits))} l’action
               </p>
-              <p className="mt-3 text-xs text-slate-500">1 crédit = 1 CV adapté, 1 lettre, 1 fiche entretien, 1 traduction, ou 1 CV en version Pro.</p>
+              <p className="mt-3 text-xs text-slate-500">1 crédit = 1 CV adapté, 1 lettre, 1 fiche entretien, 1 traduction. 2 crédits = 1 CV en version Pro.</p>
             </div>
           ))}
         </div>

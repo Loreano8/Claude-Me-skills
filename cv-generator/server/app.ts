@@ -4,7 +4,7 @@ import { bodyLimit } from 'hono/body-limit';
 import { z } from 'zod';
 import { AdaptRequest, AnalyzeTemplateRequest, CoverLetterRequest, InterviewRequest, ReviseRequest, StructureRequest, TranslateRequest } from '../shared/schema.ts';
 import { AiError, type Ai } from './ai.ts';
-import { AccountError, REFERRAL_BONUS, type Accounts, type User } from './accounts.ts';
+import { AccountError, REFERRAL_BONUS, UNLOCK_COST, type Accounts, type User } from './accounts.ts';
 import { signToken, verifyToken } from './auth.ts';
 import { PACKS, PaymentError, type Payments } from './payments.ts';
 import { TestimonialInput, type Testimonials } from './testimonials.ts';
@@ -198,19 +198,19 @@ export function createApp({ ai, allowedOrigins, rateLimitPerHour, accounts = nul
     }
   });
 
-  // Version Pro d'un CV (1 crédit) : PDF sans mention, tous les modèles, export Word.
+  // Version Pro d'un CV (UNLOCK_COST crédits) : PDF sans mention, tous les modèles, export Word.
   // Le CV reste sur l'appareil : le serveur ne fait que débiter le crédit.
   app.post('/api/unlock', async (c) => {
     if (!accounts) return c.json({ credits: null });
     const user = await currentUser(c);
     if (!user) return c.json({ error: 'Créez un compte gratuit ou connectez-vous pour passer en version Pro.', code: 'auth' }, 401);
     try {
-      const credits = await accounts.spend(user.id, 'unlock');
+      const credits = await accounts.spend(user.id, 'unlock', UNLOCK_COST);
       c.header('X-Credits-Remaining', String(credits));
       return c.json({ credits });
     } catch (error) {
       if (error instanceof AccountError && error.status === 402) {
-        return c.json({ error: 'Vous n’avez plus de crédits. Rechargez pour continuer.', code: 'credits' }, 402);
+        return c.json({ error: `La version Pro coûte ${UNLOCK_COST} crédits. Rechargez pour continuer.`, code: 'credits' }, 402);
       }
       return accountError(c, error);
     }

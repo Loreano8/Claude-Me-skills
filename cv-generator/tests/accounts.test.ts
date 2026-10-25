@@ -148,7 +148,7 @@ describe('parrainage', () => {
 });
 
 describe('version Pro d’un CV', () => {
-  it('débite 1 crédit, exige un compte, et refuse sans crédit', async () => {
+  it('coûte 2 crédits : le crédit offert ne suffit pas', async () => {
     const { createApp } = await import('../server/app.ts');
     const { signToken } = await import('../server/auth.ts');
     const accounts = createAccounts(await testDb(), opts);
@@ -156,8 +156,10 @@ describe('version Pro d’un CV', () => {
     const user = await accounts.register({ identifier: 'pro@x.co', password: 'secret12', ip: '1.1.1.1', device: dev() });
     const unlock = (auth?: string) => app.request('/api/unlock', { method: 'POST', headers: auth ? { authorization: `Bearer ${auth}` } : {} });
     expect((await unlock()).status).toBe(401);
-    const res = await unlock(signToken(user.id, 's'));
-    expect(await res.json()).toEqual({ credits: 0 });
     expect((await unlock(signToken(user.id, 's'))).status).toBe(402);
+    expect((await accounts.get(user.id))?.credits).toBe(1);
+    await accounts.grant(user.id, 2, 'test');
+    const res = await unlock(signToken(user.id, 's'));
+    expect(await res.json()).toEqual({ credits: 1 });
   });
 });

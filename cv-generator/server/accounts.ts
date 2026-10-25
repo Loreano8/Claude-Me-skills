@@ -4,6 +4,8 @@ import { hashPassword, normalizeIdentifier, verifyPassword } from './auth.ts';
 
 /** Crédits offerts au parrain et au filleul quand le filleul fait son premier achat. */
 export const REFERRAL_BONUS = 1;
+/** Prix de la version Pro d'un CV. 2 crédits : le crédit offert à l'inscription ne suffit pas, il faut recharger. */
+export const UNLOCK_COST = 2;
 
 // Sans 0/O ni 1/I/L : un code se lit et se dicte sans confusion.
 const CODE_ALPHABET = 'ABCDEFGHJKMNPQRSTUVWXYZ23456789';
@@ -152,8 +154,8 @@ export function createAccounts(db: Db, opts: AccountOptions) {
       await addCredits(tx, row.referred_by, REFERRAL_BONUS, 'referral', String(userId));
     },
 
-    /** Retire un crédit avant un appel à l'IA ; lève une erreur 402 s'il n'en reste plus. */
-    spend: (userId: number, reason: string) => db.transaction((tx) => addCredits(tx, userId, -1, reason)),
+    /** Retire des crédits (1 par défaut, avant un appel à l'IA) ; lève une erreur 402 s'il n'y en a pas assez. */
+    spend: (userId: number, reason: string, amount = 1) => db.transaction((tx) => addCredits(tx, userId, -amount, reason)),
     /** Rend le crédit si l'appel à l'IA a échoué. */
     refund: (userId: number, reason: string) => db.transaction((tx) => addCredits(tx, userId, 1, `refund:${reason}`)),
     grant: (userId: number, credits: number, reason: string, ref = '') =>

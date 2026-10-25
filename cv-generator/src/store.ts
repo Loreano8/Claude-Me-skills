@@ -95,8 +95,7 @@ export const useStore = create<State>()(
         const where = [result.job.title, result.job.company].filter(Boolean).join(' – ');
         adapted.label = where ? `Adapté : ${where}` : 'CV adapté';
         adapted.adaptation = { job: result.job, analysis: result.analysis, createdAt: Date.now() };
-        // L'adaptation a déjà coûté un crédit : le CV adapté est livré en version Pro.
-        adapted.unlocked = { at: Date.now() };
+        // Le CV adapté garde le statut du CV de départ (Pro seulement si celui-ci l'était).
         if (result.language !== base.settings.headingLang) {
           adapted.settings = { ...adapted.settings, ...settingsForLang(result.language) };
         }
@@ -121,8 +120,7 @@ export const useStore = create<State>()(
 
       addTranslatedCv: (base, result, lang, market) => {
         const translated = applyAiContent({ ...structuredClone(base), id: uid() }, result.cv, { mode: 'keepContact' });
-        // La traduction a déjà coûté un crédit : la version traduite est livrée en version Pro.
-        translated.unlocked = { at: Date.now() };
+        // La version traduite garde le statut du CV de départ (Pro seulement si celui-ci l'était).
         translated.label = `${base.label} – ${MARKET_LABELS[market]}`;
         translated.settings = { ...translated.settings, ...settingsForLang(lang) };
         translated.translation = { lang, market, notes: result.notes, createdAt: Date.now() };

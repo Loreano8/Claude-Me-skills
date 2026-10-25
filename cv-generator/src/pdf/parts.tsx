@@ -48,7 +48,7 @@ export function SignatureBlock({ cv, L, align = 'right' }: { cv: CvDocument; L: 
 
 /**
  * Mention « Créé avec CV Studio » en bas de chaque page des documents gratuits.
- * La version Pro (1 crédit) la retire.
+ * La version Pro (2 crédits) la retire.
  */
 export function FreeMark({ cv }: { cv: CvDocument }) {
   if (cv.unlocked) return null;
