@@ -1,0 +1,28 @@
+# CV Studio : garde le serveur actif.
+# Le projet Supabase gratuit se met en pause après environ 7 jours sans activité ;
+# cette tâche appelle l'API une fois par jour (la route /api/health fait une petite requête à la base).
+# En cas d'échec, GitHub envoie un e-mail au propriétaire du dépôt : c'est aussi une alerte si le serveur tombe.
+name: CV Studio – réveil quotidien
+
+on:
+  schedule:
+    - cron: '17 6 * * *' # tous les jours vers 7 h 17 (heure du Bénin)
+  workflow_dispatch:
+
+permissions:
+  actions: write
+
+jobs:
+  reveil:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Appeler le serveur CV Studio
+        run: |
+          curl -fsS --retry 3 --retry-delay 20 --max-time 60 \
+            https://clgmqhyzyiswnekmoygw.supabase.co/functions/v1/api/health
+      # Dans un dépôt public, GitHub désactive les tâches planifiées après 60 jours sans commit :
+      # la tâche se réactive elle-même à chaque passage.
+      - name: Rester activée
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh api -X PUT "repos/${{ github.repository }}/actions/workflows/cv-studio-reveil.yml/enable"
