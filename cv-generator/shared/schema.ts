@@ -70,6 +70,7 @@ export type AiCvContent = z.infer<typeof AiCvContent>;
 export const StructureResult = z.object({
   cv: AiCvContent,
   suggestions: z.array(z.string()).describe('3 à 6 conseils concrets pour améliorer le CV'),
+  language: Lang.describe('Langue dans laquelle le CV est rédigé'),
 });
 export type StructureResult = z.infer<typeof StructureResult>;
 
@@ -169,8 +170,11 @@ export type JobInput = z.infer<typeof JobInput>;
 export const StructureRequest = z.object({
   text: z.string().max(60_000).default(''),
   file: Attachment.nullable().default(null),
+  /** Plusieurs documents d'un coup (ex. les pages d'un ancien CV prises en photo). */
+  files: z.array(Attachment).max(8).default([]),
   current: AiCvContent.nullable().default(null),
-  lang: Lang.default('fr'),
+  /** Langue du CV ; null = celle des informations fournies (nouveau CV). */
+  lang: Lang.nullable().default('fr'),
 });
 export type StructureRequest = z.output<typeof StructureRequest>;
 

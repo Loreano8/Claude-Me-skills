@@ -6,7 +6,7 @@ import { sampleAdapt, sampleCv, sampleInterview, sampleLetter, sampleRevise, sam
 
 function fakeAi(overrides: Partial<Ai> = {}): Ai {
   return {
-    structure: vi.fn(async () => ({ cv: sampleAdapt.cv, suggestions: ['ok'] })),
+    structure: vi.fn(async () => ({ cv: sampleAdapt.cv, suggestions: ['ok'], language: 'fr' as const })),
     adapt: vi.fn(async () => sampleAdapt),
     coverLetter: vi.fn(async () => sampleLetter),
     translate: vi.fn(async () => sampleTranslation),

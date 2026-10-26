@@ -43,7 +43,7 @@ export const MARKET_LABELS: Record<Market, string> = {
  * Réglages d'affichage selon la langue : un CV anglophone n'affiche ni photo,
  * ni date de naissance, ni nationalité, ni signature (règles anti-discrimination).
  */
-function settingsForLang(lang: Lang): Partial<CvDocument['settings']> {
+export function settingsForLang(lang: Lang): Partial<CvDocument['settings']> {
   return lang === 'en'
     ? { headingLang: 'en', showPhoto: false, showBirthDate: false, showNationality: false, showSignature: false }
     : { headingLang: 'fr' };

@@ -20,7 +20,7 @@ import {
   X,
 } from 'lucide-react';
 import type { Attachment } from '../../shared/schema.ts';
-import { useActiveCv, useStore } from '../store.ts';
+import { settingsForLang, useActiveCv, useStore } from '../store.ts';
 import type { Certification, CvDocument, Education, Experience, LanguageSkill } from '../types.ts';
 import { api } from '../lib/api.ts';
 import { applyAiContent, isCvEmpty, toAiContent, uid } from '../lib/cv.ts';
@@ -43,13 +43,17 @@ Awa Diallo, comptable, tél. 07 00 00 00 00, awa.diallo@email.com.
 Master en finance en 2020. Depuis 2021 comptable dans une société de transport : déclarations fiscales, paie de 120 salariés, j'ai réduit les retards de paiement de 30 %. Avant : stage de 6 mois dans un cabinet d'audit.
 Excel avancé, Sage. Français, anglais courant. J'aime le basket et le bénévolat.`;
 
+const MAX_QUICK_FILES = 8;
+/** Taille totale des documents (base64) : reste sous la limite d'envoi du serveur (15 Mo). */
+const MAX_QUICK_BYTES = 13 * 1024 * 1024;
+
 function QuickFill() {
   const cv = useActiveCv();
   const updateCv = useStore((s) => s.updateCv);
   const fileInput = useRef<HTMLInputElement>(null);
   const cameraInput = useRef<HTMLInputElement>(null);
   const [text, setText] = useState('');
-  const [file, setFile] = useState<Attachment | null>(null);
+  const [files, setFiles] = useState<Attachment[]>([]);
   const [merge, setMerge] = useState(true);
   const [busy, setBusy] = useState<'fill' | 'improve' | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -64,16 +68,21 @@ function QuickFill() {
       const before = structuredClone(cv);
       const res = await api.structure({
         text: mode === 'fill' ? text : '',
-        file: mode === 'fill' ? file : null,
+        file: null,
+        files: mode === 'fill' ? files : [],
         current: mode === 'improve' || (hasContent && merge) ? toAiContent(cv) : null,
-        lang: cv.settings.headingLang,
+        // Nouveau CV : l'IA le rédige dans la langue de la personne (anglais si elle parle anglais…).
+        lang: hasContent ? cv.settings.headingLang : null,
       });
-      updateCv((c) => applyAiContent(c, res.cv));
+      updateCv((c) => {
+        const next = applyAiContent(c, res.cv);
+        return res.language && res.language !== c.settings.headingLang ? { ...next, settings: { ...next.settings, ...settingsForLang(res.language) } } : next;
+      });
       setUndo(before);
       setSuggestions(res.suggestions);
       if (mode === 'fill') {
         setText('');
-        setFile(null);
+        setFiles([]);
       }
     } catch (e) {
       setError((e as Error).message);
@@ -82,12 +91,27 @@ function QuickFill() {
     }
   }
 
-  async function onFile(f: File | undefined) {
-    if (!f) return;
+  async function onFiles(list: FileList | null) {
+    if (!list?.length) return;
     setError(null);
     try {
-      const { size: _size, ...att } = await fileToAttachment(f);
-      setFile(att);
+      const added: Attachment[] = [];
+      for (const f of Array.from(list)) {
+        const { size: _size, ...att } = await fileToAttachment(f);
+        added.push(att);
+      }
+      setFiles((cur) => {
+        const next = [...cur, ...added];
+        if (next.length > MAX_QUICK_FILES) {
+          setError(`${MAX_QUICK_FILES} documents maximum à la fois.`);
+          return cur;
+        }
+        if (next.reduce((n, a) => n + a.data.length, 0) > MAX_QUICK_BYTES) {
+          setError('Ces documents sont trop lourds ensemble. Envoyez-en moins à la fois.');
+          return cur;
+        }
+        return next;
+      });
     } catch (e) {
       setError((e as Error).message);
     }
@@ -114,27 +138,52 @@ function QuickFill() {
       <TextArea value={text} onChange={setText} rows={6} placeholder={QUICK_PLACEHOLDER} />
 
       <div className="mt-3 flex flex-wrap items-center gap-2">
-        <input ref={fileInput} type="file" accept={ACCEPTED_DOCS} className="hidden" onChange={(e) => onFile(e.target.files?.[0])} />
-        {/* Ouvre directement l'appareil photo (téléphone) : ancien CV papier ou notes écrites à la main. */}
-        <input ref={cameraInput} type="file" accept="image/*" capture="environment" className="hidden" onChange={(e) => onFile(e.target.files?.[0])} />
-        {file ? (
-          <span className="inline-flex items-center gap-2 rounded-xl bg-white px-3 py-2 text-sm ring-1 ring-slate-200">
-            <Paperclip className="size-4 text-slate-500" /> {file.name}
-            <button type="button" onClick={() => setFile(null)} aria-label="Retirer le fichier" className="text-slate-400 hover:text-slate-700">
+        <input
+          ref={fileInput}
+          type="file"
+          multiple
+          accept={ACCEPTED_DOCS}
+          className="hidden"
+          onChange={(e) => {
+            void onFiles(e.target.files);
+            e.target.value = '';
+          }}
+        />
+        {/* Ouvre directement l'appareil photo (téléphone) : ancien CV papier ou notes écrites à la main.
+            Une photo par appui : on peut enchaîner les pages. */}
+        <input
+          ref={cameraInput}
+          type="file"
+          accept="image/*"
+          capture="environment"
+          className="hidden"
+          onChange={(e) => {
+            void onFiles(e.target.files);
+            e.target.value = '';
+          }}
+        />
+        {files.map((f, i) => (
+          <span key={i} className="inline-flex max-w-full items-center gap-2 rounded-xl bg-white px-3 py-2 text-sm ring-1 ring-slate-200">
+            <Paperclip className="size-4 shrink-0 text-slate-500" />
+            <span className="truncate">{f.mediaType.startsWith('image/') ? `Photo ${i + 1}` : f.name}</span>
+            <button type="button" onClick={() => setFiles((cur) => cur.filter((_, j) => j !== i))} aria-label="Retirer ce document" className="text-slate-400 hover:text-slate-700">
               <X className="size-4" />
             </button>
           </span>
-        ) : (
+        ))}
+        {files.length < MAX_QUICK_FILES && (
           <>
             <Button variant="secondary" size="sm" icon={<Camera className="size-4" />} onClick={() => cameraInput.current?.click()}>
-              Prendre en photo
+              {files.length ? 'Ajouter une photo' : 'Prendre en photo'}
             </Button>
             <Button variant="secondary" size="sm" icon={<Paperclip className="size-4" />} onClick={() => fileInput.current?.click()}>
-              Importer un fichier (PDF ou image)
+              {files.length ? 'Ajouter un fichier' : 'Importer des fichiers (PDF ou images)'}
             </Button>
-            <p className="w-full text-xs text-slate-500">Ancien CV papier, ou parcours écrit à la main sur une feuille : prenez la photo bien à plat, avec un bon éclairage.</p>
           </>
         )}
+        <p className="w-full text-xs text-slate-500">
+          Ancien CV papier ou parcours écrit à la main : prenez chaque page en photo, bien à plat et avec un bon éclairage ({MAX_QUICK_FILES} documents maximum).
+        </p>
       </div>
 
       {hasContent && (
@@ -149,7 +198,7 @@ function QuickFill() {
       )}
 
       <div className="mt-3 flex flex-wrap gap-2">
-        <Button variant="ai" icon={<Wand2 className="size-4" />} loading={busy === 'fill'} disabled={busy !== null || (!text.trim() && !file)} onClick={() => run('fill')}>
+        <Button variant="ai" icon={<Wand2 className="size-4" />} loading={busy === 'fill'} disabled={busy !== null || (!text.trim() && !files.length)} onClick={() => run('fill')}>
           Générer mon CV
         </Button>
         {hasContent && (

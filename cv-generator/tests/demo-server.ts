@@ -17,7 +17,7 @@ const payments = createPayments(db, accounts, {
   fetchStatus: async (ref) => (paid.has(ref) ? 'approved' : 'pending'),
 });
 const ai = {
-  structure: async () => ({ cv: sampleAdapt.cv, suggestions: ['Ajoutez un lien LinkedIn'] }),
+  structure: async () => ({ cv: sampleAdapt.cv, suggestions: ['Ajoutez un lien LinkedIn'], language: 'fr' as const }),
   adapt: async () => sampleAdapt,
   coverLetter: async () => sampleLetter,
   translate: async () => sampleTranslation,

@@ -38,7 +38,16 @@ describe('appels à Claude', () => {
 
   it('signale un refus du modèle', async () => {
     const { client } = fakeClient({ stop_reason: 'refusal', parsed_output: null });
-    await expect(createAi(client).structure({ text: 'x', file: null, current: null, lang: 'fr' })).rejects.toMatchObject({ status: 422, code: 'refusal' });
+    await expect(createAi(client).structure({ text: 'x', file: null, files: [], current: null, lang: 'fr' })).rejects.toMatchObject({ status: 422, code: 'refusal' });
+  });
+
+  it('lit plusieurs photos d’un coup et choisit la langue des informations pour un nouveau CV', async () => {
+    const { client, parse } = fakeClient({ stop_reason: 'end_turn', parsed_output: { cv: {}, suggestions: [], language: 'en' } });
+    const photo = { name: 'page.jpg', mediaType: 'image/jpeg' as const, data: 'AAAA' };
+    await createAi(client).structure({ text: '', file: null, files: [photo, { ...photo, name: 'page2.jpg' }], current: null, lang: null });
+    const req = (parse.mock.calls[0] as unknown[])[0] as Record<string, any>;
+    expect(req.messages[0].content.filter((b: any) => b.type === 'image')).toHaveLength(2);
+    expect(req.system).toContain('langue principale des informations fournies');
   });
 
   it('écrit une candidature spontanée quand il n’y a pas d’offre', async () => {

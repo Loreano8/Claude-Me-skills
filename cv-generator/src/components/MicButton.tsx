@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { Mic, Square } from 'lucide-react';
 import type { Lang } from '../../shared/schema.ts';
 import { useDictation } from '../lib/dictation.ts';
@@ -15,9 +16,11 @@ export function appendSpoken(current: string, spoken: string): string {
 /**
  * Gros bouton micro : la personne parle, le texte s'ajoute au champ au fur et à mesure.
  * Sans dictée disponible (vieux navigateur), on explique comment utiliser le micro du clavier.
+ * La reconnaissance vocale doit connaître la langue parlée : FR / EN à côté du bouton (langue du CV par défaut).
  */
 export function MicButton({ onText, lang = 'fr', label = 'Parler', hint }: { onText: (text: string) => void; lang?: Lang; label?: string; hint?: string }) {
-  const { supported, listening, interim, error, start, stop } = useDictation(onText, lang);
+  const [spoken, setSpoken] = useState<Lang>(lang);
+  const { supported, listening, interim, error, start, stop } = useDictation(onText, spoken);
 
   if (!supported) {
     return <p className="text-xs text-slate-500">Pour parler au lieu d’écrire, touchez l’icône micro de votre clavier.</p>;
@@ -39,6 +42,21 @@ export function MicButton({ onText, lang = 'fr', label = 'Parler', hint }: { onT
           {listening ? <Square className="relative size-4 fill-current" /> : <Mic className="relative size-5" />}
           <span className="relative">{listening ? 'Arrêter' : label}</span>
         </button>
+        <div role="group" aria-label="Langue parlée" className="inline-flex rounded-full bg-white p-0.5 text-xs font-semibold ring-1 ring-slate-200">
+          {(['fr', 'en'] as const).map((l) => (
+            <button
+              key={l}
+              type="button"
+              disabled={listening}
+              aria-pressed={spoken === l}
+              title={l === 'fr' ? 'Je parle en français' : 'I speak English'}
+              onClick={() => setSpoken(l)}
+              className={cx('rounded-full px-2.5 py-1 transition disabled:opacity-60', spoken === l ? 'bg-violet-600 text-white' : 'text-slate-600 hover:text-slate-900')}
+            >
+              {l.toUpperCase()}
+            </button>
+          ))}
+        </div>
         <span className="text-xs text-slate-500">{listening ? 'Je vous écoute… parlez naturellement, vous pouvez faire des pauses.' : hint}</span>
       </div>
       {interim && <p className="rounded-lg bg-white/70 px-3 py-2 text-sm text-slate-400 italic ring-1 ring-slate-100">{interim}…</p>}

@@ -123,7 +123,7 @@ export function createAi(client: Anthropic, model = DEFAULT_MODEL) {
   return {
     structure(req: StructureRequest): Promise<StructureResult> {
       const content: ContentBlock[] = [];
-      if (req.file) content.push(attachmentBlock(req.file));
+      for (const f of [...(req.file ? [req.file] : []), ...(req.files ?? [])]) content.push(attachmentBlock(f));
       if (req.current) content.push(cvBlock('cv_actuel', req.current));
       content.push({
         type: 'text',
