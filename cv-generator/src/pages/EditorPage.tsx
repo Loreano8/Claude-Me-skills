@@ -47,6 +47,7 @@ function QuickFill() {
   const cv = useActiveCv();
   const updateCv = useStore((s) => s.updateCv);
   const fileInput = useRef<HTMLInputElement>(null);
+  const cameraInput = useRef<HTMLInputElement>(null);
   const [text, setText] = useState('');
   const [file, setFile] = useState<Attachment | null>(null);
   const [merge, setMerge] = useState(true);
@@ -114,6 +115,8 @@ function QuickFill() {
 
       <div className="mt-3 flex flex-wrap items-center gap-2">
         <input ref={fileInput} type="file" accept={ACCEPTED_DOCS} className="hidden" onChange={(e) => onFile(e.target.files?.[0])} />
+        {/* Ouvre directement l'appareil photo (téléphone) : ancien CV papier ou notes écrites à la main. */}
+        <input ref={cameraInput} type="file" accept="image/*" capture="environment" className="hidden" onChange={(e) => onFile(e.target.files?.[0])} />
         {file ? (
           <span className="inline-flex items-center gap-2 rounded-xl bg-white px-3 py-2 text-sm ring-1 ring-slate-200">
             <Paperclip className="size-4 text-slate-500" /> {file.name}
@@ -122,9 +125,15 @@ function QuickFill() {
             </button>
           </span>
         ) : (
-          <Button variant="secondary" size="sm" icon={<Paperclip className="size-4" />} onClick={() => fileInput.current?.click()}>
-            Importer un ancien CV (PDF ou photo)
-          </Button>
+          <>
+            <Button variant="secondary" size="sm" icon={<Camera className="size-4" />} onClick={() => cameraInput.current?.click()}>
+              Prendre en photo
+            </Button>
+            <Button variant="secondary" size="sm" icon={<Paperclip className="size-4" />} onClick={() => fileInput.current?.click()}>
+              Importer un fichier (PDF ou image)
+            </Button>
+            <p className="w-full text-xs text-slate-500">Ancien CV papier, ou parcours écrit à la main sur une feuille : prenez la photo bien à plat, avec un bon éclairage.</p>
+          </>
         )}
       </div>
 
