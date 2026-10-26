@@ -59,7 +59,7 @@ function Heading({ children, c, p, minPresenceAhead = 40 }: { children: string; 
   switch (c.st.headingStyle) {
     case 'caps':
       return (
-        <Text minPresenceAhead={minPresenceAhead} style={{ ...common, fontSize: 9.6, letterSpacing: 1.6, textTransform: 'uppercase', color: p.heading }}>
+        <Text minPresenceAhead={minPresenceAhead} style={{ ...common, fontSize: 9.6, letterSpacing: 0.6, textTransform: 'uppercase', color: p.heading }}>
           {children}
         </Text>
       );
@@ -77,7 +77,7 @@ function Heading({ children, c, p, minPresenceAhead = 40 }: { children: string; 
           <Text
             style={{
               fontSize: 9,
-              letterSpacing: 1,
+              letterSpacing: 0.5,
               textTransform: 'uppercase',
               color: onColor ? c.st.accent : '#ffffff',
               backgroundColor: onColor ? '#ffffff' : c.st.accent,
@@ -280,7 +280,7 @@ function NameBlock({ c, color, titleColor, center }: { c: Ctx; color: string; ti
     <View style={{ alignItems: center ? 'center' : 'flex-start' }}>
       <Text style={{ fontFamily: c.head, fontWeight: 700, fontSize: 24, lineHeight: 1.15, color, textAlign: center ? 'center' : 'left' }}>{fullName(c.cv.personal) || ' '}</Text>
       {c.cv.personal.title ? (
-        <Text style={{ fontSize: 10.5, fontWeight: 600, letterSpacing: 1, textTransform: 'uppercase', color: titleColor, marginTop: 4, textAlign: center ? 'center' : 'left' }}>
+        <Text style={{ fontSize: 10.5, fontWeight: 600, letterSpacing: 0.7, textTransform: 'uppercase', color: titleColor, marginTop: 4, textAlign: center ? 'center' : 'left' }}>
           {c.cv.personal.title}
         </Text>
       ) : null}
@@ -358,11 +358,12 @@ export function StudioTemplate({ cv, style }: { cv: CvDocument; style: TemplateS
   };
   const page: Style = { fontFamily: c.body, fontSize: d.font, color: '#1f2937', lineHeight: 1.4 };
   const p = pagePalette(st.accent);
+  const markInset = st.layout === 'sidebar-left' ? { left: SIDEBAR } : st.layout === 'sidebar-right' ? { right: SIDEBAR } : {};
   const doc = (children: ReactNode, pageStyle: Style) => (
     <Document title={`CV – ${fullName(cv.personal)}`} author={fullName(cv.personal)} creator="CV Studio">
       <Page size="A4" style={{ ...page, ...pageStyle }}>
         {children}
-        <FreeMark cv={cv} />
+        <FreeMark cv={cv} {...markInset} />
       </Page>
     </Document>
   );

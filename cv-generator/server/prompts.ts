@@ -17,7 +17,7 @@ const CV_NORMS = `Normes actuelles d'un bon CV :
 - Des réalisations plutôt que des tâches : chaque ligne commence par un verbe d'action (ex. « Piloter », « Réduire », « Concevoir », « Former ») et garde les chiffres fournis (montants, pourcentages, volumes, tailles d'équipe).
 - 3 à 6 réalisations par poste récent, 1 à 3 pour les postes anciens ou peu pertinents.
 - Compétences techniques (skills) et qualités personnelles (softSkills) séparées, courtes, sans doublons, 5 à 12 éléments chacune au maximum.
-- Langues avec un niveau clair, idéalement CECRL (ex. « Courant (C1) »).
+- Langues avec un niveau clair, idéalement CECRL (ex. « Courant (C1) »). Le nom de chaque langue est écrit dans la langue du CV (« Anglais », « Français » dans un CV en français ; « English », « French » dans un CV en anglais).
 - Dates au format MM/AAAA, ou AAAA si le mois est inconnu.`;
 
 export function structureSystem(lang: 'fr' | 'en'): string {

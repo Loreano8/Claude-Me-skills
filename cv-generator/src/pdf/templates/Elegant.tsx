@@ -12,7 +12,7 @@ const s = StyleSheet.create({
   page: { fontFamily: FONT, fontSize: 9.3, color: '#1f2937', lineHeight: 1.42, paddingTop: 32, paddingBottom: 32 },
   band: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 40, paddingVertical: 24, marginTop: -32 },
   name: { fontSize: 24, fontWeight: 700, color: '#ffffff', lineHeight: 1.15 },
-  title: { fontSize: 11, fontWeight: 500, letterSpacing: 1.4, textTransform: 'uppercase', marginTop: 5 },
+  title: { fontSize: 11, fontWeight: 500, letterSpacing: 0.7, textTransform: 'uppercase', marginTop: 5 },
   contacts: { flexDirection: 'row', flexWrap: 'wrap', paddingHorizontal: 40, paddingVertical: 9, fontSize: 8.6, color: '#374151' },
   body: { paddingHorizontal: 40 },
   heading: { fontSize: 11, fontWeight: 700, marginTop: 16, marginBottom: 7, letterSpacing: 0.4 },

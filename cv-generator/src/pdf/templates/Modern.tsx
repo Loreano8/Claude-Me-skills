@@ -13,8 +13,8 @@ const s = StyleSheet.create({
   sidebar: { width: SIDEBAR, paddingHorizontal: 18, color: '#ffffff' },
   main: { flex: 1, paddingLeft: 24, paddingRight: 28 },
   name: { fontSize: 23, fontWeight: 700, lineHeight: 1.15 },
-  title: { fontSize: 10.5, fontWeight: 500, letterSpacing: 1.2, textTransform: 'uppercase', color: '#4b5563', marginTop: 4 },
-  sideHeading: { fontSize: 9.5, fontWeight: 700, letterSpacing: 1, textTransform: 'uppercase', marginTop: 16, marginBottom: 6, paddingBottom: 3, borderBottomWidth: 1, borderBottomColor: 'rgba(255,255,255,0.35)' },
+  title: { fontSize: 10.5, fontWeight: 500, letterSpacing: 0.7, textTransform: 'uppercase', color: '#4b5563', marginTop: 4 },
+  sideHeading: { fontSize: 9.5, fontWeight: 700, letterSpacing: 0.6, textTransform: 'uppercase', marginTop: 16, marginBottom: 6, paddingBottom: 3, borderBottomWidth: 1, borderBottomColor: 'rgba(255,255,255,0.35)' },
   heading: { fontSize: 10.5, fontWeight: 700, letterSpacing: 0.9, textTransform: 'uppercase', marginTop: 16, marginBottom: 6, paddingBottom: 3, borderBottomWidth: 1 },
   itemTitle: { fontSize: 10.2, fontWeight: 700, flex: 1 },
   dates: { fontSize: 8.6, color: '#6b7280', marginLeft: 8 },
@@ -149,7 +149,7 @@ export function ModernTemplate({ cv }: { cv: CvDocument }) {
 
           <SignatureBlock cv={cv} L={L} />
         </View>
-        <FreeMark cv={cv} />
+        <FreeMark cv={cv} left={SIDEBAR} />
       </Page>
     </Document>
   );
