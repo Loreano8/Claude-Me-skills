@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
-import { ArrowLeft, Check, LogOut, MessageCircle, RefreshCw, Send, ShieldCheck, Star, X } from 'lucide-react';
+import { ArrowLeft, Check, Coins, LogOut, MessageCircle, RefreshCw, Send, ShieldCheck, Star, X } from 'lucide-react';
 import { adminRequest, type SupportMessage } from '../lib/api.ts';
 import { Button, Card, cx, Field, Notice, TextArea } from '../components/ui.tsx';
 
@@ -221,10 +221,52 @@ function Testimonials({ token }: { token: string }) {
   );
 }
 
+/** Offrir des crédits à un compte (testeur, geste commercial, remboursement…), sans achat. */
+function Credits({ token }: { token: string }) {
+  const [identifier, setIdentifier] = useState('');
+  const [amount, setAmount] = useState('10');
+  const [busy, setBusy] = useState(false);
+  const [result, setResult] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
+
+  async function grant() {
+    setBusy(true);
+    setError(null);
+    setResult(null);
+    try {
+      const r = await adminRequest<{ identifier: string; credits: number }>(token, 'POST', '/api/admin/credits', {
+        identifier: identifier.trim(),
+        credits: Number(amount),
+      });
+      setResult(`${r.identifier} a maintenant ${r.credits} crédit${r.credits > 1 ? 's' : ''}.`);
+    } catch (e) {
+      setError((e as Error).message);
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  const n = Number(amount);
+  return (
+    <div className="space-y-3">
+      <p className="text-sm text-slate-600">
+        Ajoute des crédits à un compte sans achat. Rien ne change pour la personne : ses documents restent normaux, sans aucune mention. Un nombre négatif retire des crédits.
+      </p>
+      <Field label="E-mail ou téléphone du compte" value={identifier} onChange={setIdentifier} />
+      <Field label="Nombre de crédits" type="number" value={amount} onChange={setAmount} />
+      {result && <Notice tone="success">{result}</Notice>}
+      {error && <Notice tone="error">{error}</Notice>}
+      <Button icon={<Coins className="size-4" />} loading={busy} disabled={busy || !identifier.trim() || !Number.isInteger(n) || n === 0} onClick={() => void grant()}>
+        {n < 0 ? 'Retirer' : 'Ajouter'} {Number.isInteger(n) && n !== 0 ? Math.abs(n) : ''} crédit{Math.abs(n) > 1 ? 's' : ''}
+      </Button>
+    </div>
+  );
+}
+
 export function AdminPage() {
   const [token, setToken] = useState(readToken);
   const [draft, setDraft] = useState('');
-  const [tab, setTab] = useState<'messages' | 'temoignages'>('messages');
+  const [tab, setTab] = useState<'messages' | 'temoignages' | 'credits'>('messages');
   const [error, setError] = useState<string | null>(null);
   const [checking, setChecking] = useState(false);
 
@@ -294,11 +336,12 @@ export function AdminPage() {
           </div>
         }
       >
-        <div className="mb-4 flex gap-2">
+        <div className="mb-4 flex flex-wrap gap-2">
           {(
             [
               ['messages', 'Messages', MessageCircle],
               ['temoignages', 'Témoignages', Star],
+              ['credits', 'Crédits', Coins],
             ] as const
           ).map(([id, label, Icon]) => (
             <button
@@ -311,7 +354,7 @@ export function AdminPage() {
             </button>
           ))}
         </div>
-        {tab === 'messages' ? <Messages token={token} /> : <Testimonials token={token} />}
+        {tab === 'messages' ? <Messages token={token} /> : tab === 'temoignages' ? <Testimonials token={token} /> : <Credits token={token} />}
       </Card>
     </div>
   );
