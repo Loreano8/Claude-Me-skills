@@ -2,15 +2,13 @@ import { useEffect, useState, type ReactNode } from 'react';
 import { ArrowRight, BadgeCheck, Check, ClipboardList, FileDown, FileStack, Globe2, Languages, MessagesSquare, PenLine, ShieldCheck, Sparkles, Target } from 'lucide-react';
 import { PACKS } from '../../server/payments.ts';
 import type { Tab } from '../App.tsx';
-import { useStore } from '../store.ts';
-import { isCvEmpty } from '../lib/cv.ts';
 import { Button } from '../components/ui.tsx';
 import { api, type PublicTestimonial } from '../lib/api.ts';
 
 const fcfa = (n: number) => `${n.toLocaleString('fr-FR')} FCFA`;
 
 const STEPS = [
-  { icon: PenLine, title: 'Écrivez comme vous parlez', text: 'Tapez ou dictez votre parcours en vrac, ou importez votre ancien CV (PDF ou photo). L’IA range et rédige tout proprement.' },
+  { icon: PenLine, title: 'Écrivez comme vous parlez', text: 'Tapez ou dictez votre parcours en vrac, ou importez votre ancien CV (PDF ou photo). CV Studio range tout et le met en forme proprement, avec vos vraies expériences.' },
   { icon: Target, title: 'Collez l’offre', text: 'Lien de l’annonce, texte copié, PDF ou capture d’écran : vous obtenez un CV adapté au poste et un score de compatibilité.' },
   { icon: FileDown, title: 'Téléchargez et postulez', text: 'PDF prêt pour les logiciels de tri des recruteurs (gratuit), ou version Pro sans mention avec le Word. Avec la lettre de motivation qui va avec.' },
 ];
@@ -50,12 +48,12 @@ function Marquee({ items, reverse = false, duration }: { items: string[]; revers
 }
 
 const FAQ: { q: string; a: ReactNode }[] = [
-  { q: 'Est-ce vraiment gratuit ?', a: 'Oui : créer son CV avec les 3 modèles de base et le télécharger en PDF est gratuit et sans compte (avec une petite mention « Créé avec CV Studio » en bas de page). Les fonctions IA coûtent 1 crédit chacune (la première est offerte) ; la version Pro d’un CV (sans mention, 13 modèles, export Word) coûte 2 crédits et reste acquise pour toujours sur ce CV.' },
+  { q: 'Est-ce vraiment gratuit ?', a: 'Oui : créer son CV avec les 3 modèles de base et le télécharger en PDF est gratuit et sans compte (avec une petite mention « Créé avec CV Studio » en bas de page). L’adaptation à une offre, la lettre, la fiche entretien ou la traduction coûtent 1 crédit chacune (la première est offerte) ; la version Pro d’un CV (sans mention, 13 modèles, export Word) coûte 2 crédits et reste acquise pour toujours sur ce CV.' },
   { q: 'Le scanner est-il gratuit ?', a: 'Oui jusqu’à 3 pages par PDF (et pour un dossier : CV, lettre et 2 pièces). Au-delà, 1 crédit pour le PDF, pages illimitées. Transformer un document écrit à la main en texte tapé coûte 1 crédit par page. Vos papiers restent sur votre téléphone, sauf pour la retranscription, le temps de la lecture.' },
   { q: 'Faut-il un abonnement ?', a: 'Non. Vous achetez un pack de crédits une fois, quand vous en avez besoin. Rien n’est prélevé automatiquement ensuite.' },
   { q: 'Comment payer ?', a: 'Par Mobile Money (MTN MoMo, Moov Money), via FedaPay. Les crédits arrivent sur votre compte dès que le paiement est confirmé.' },
-  { q: 'L’IA peut-elle inventer des diplômes ou des expériences ?', a: 'Non. Elle a pour consigne stricte de ne rien inventer : elle reformule et met en valeur ce que vous avez réellement fait.' },
-  { q: 'Où sont mes données ?', a: 'Votre CV reste sur votre téléphone ou votre ordinateur. Seul le texte nécessaire à une demande IA passe par notre serveur, le temps de la traiter.' },
+  { q: 'Mon CV va-t-il « faire IA » ?', a: 'Non. CV Studio part de vos vraies expériences, avec vos mots : il ne fait que les mettre en forme et en valeur, sans rien inventer. Vous relisez et modifiez tout avant de télécharger, et le CV reste le vôtre.' },
+  { q: 'Où sont mes données ?', a: 'Votre CV reste sur votre téléphone ou votre ordinateur. Seul le texte nécessaire à une adaptation ou à une lettre passe par notre serveur, le temps de la traiter.' },
   { q: 'Ça marche sur iPhone ?', a: 'Oui, depuis Safari. Touchez « Partager » puis « Sur l’écran d’accueil » pour l’utiliser comme une application. Sur Android, l’application est aussi disponible.' },
 ];
 
@@ -117,51 +115,31 @@ function Testimonials() {
   );
 }
 
-/** Le gain, montré tout de suite : le score de compatibilité avant et après adaptation. */
-function ScoreDemo() {
-  const ring = (value: number, color: string, label: string) => (
-    <div className="flex flex-col items-center">
-      <div className="flex size-20 items-center justify-center rounded-full" style={{ background: `conic-gradient(${color} ${value * 3.6}deg, #e2e8f0 0deg)` }}>
-        <div className="flex size-16 flex-col items-center justify-center rounded-full bg-white">
-          <span className="text-xl font-bold text-slate-900">{value}</span>
-          <span className="-mt-1 text-[10px] text-slate-500">/ 100</span>
-        </div>
-      </div>
-      <span className="mt-1 text-xs font-medium text-slate-600">{label}</span>
-    </div>
-  );
-  return (
-    <div className="mx-auto mt-6 flex max-w-xs items-center justify-center gap-3 rounded-2xl bg-white p-4 shadow-sm ring-1 ring-slate-200" aria-label="Exemple : compatibilité avec l’offre passée de 54 à 86 sur 100">
-      {ring(54, '#d97706', 'Votre CV')}
-      <ArrowRight className="size-6 text-slate-400" />
-      {ring(86, '#059669', 'CV adapté')}
-    </div>
-  );
-}
-
 export function LandingPage({ onNavigate }: { onNavigate: (t: Tab) => void }) {
   const start = () => onNavigate('infos');
-  const hasCv = useStore((s) => s.cvs.some((c) => !isCvEmpty(c)));
 
   return (
     <div className="-mx-4 -mt-4">
       <section className="bg-gradient-to-b from-brand-50 to-white px-4 pt-12 pb-14 text-center sm:pt-20">
         <p className="mx-auto inline-flex items-center gap-1.5 rounded-full bg-white px-3 py-1 text-xs font-semibold text-brand-700 shadow-sm ring-1 ring-brand-100">
-          <Sparkles className="size-3.5" /> Le CV qui colle à l’offre
+          <Sparkles className="size-3.5" /> CV, lettre de motivation et entretien
         </p>
         <h1 className="mx-auto mt-5 max-w-3xl text-3xl font-extrabold tracking-tight text-slate-900 sm:text-5xl">
-          Partagez une offre, recevez <span className="text-brand-600">votre CV adapté</span>
+          Un CV qui correspond <span className="text-brand-600">à chaque offre</span>, en quelques minutes
         </h1>
         <p className="mx-auto mt-4 max-w-2xl text-base text-slate-600 sm:text-lg">
-          Collez le lien ou le texte de l’annonce : l’IA réécrit votre CV avec les mots du poste, sans rien inventer, et vous montre le gain.
+          Écrivez votre parcours en vrac, collez l’annonce : CV Studio met en forme un CV aux normes actuelles, adapté au poste, avec la lettre de
+          motivation et la préparation de l’entretien.
         </p>
-        <ScoreDemo />
         <div className="mt-7 flex flex-col items-center justify-center gap-3 sm:flex-row">
-          <Button size="lg" onClick={() => onNavigate(hasCv ? 'offre' : 'infos')} icon={<ArrowRight className="size-5" />}>
-            {hasCv ? 'Adapter mon CV à une offre' : 'Commencer gratuitement'}
+          <Button size="lg" onClick={start} icon={<ArrowRight className="size-5" />}>
+            Créer mon CV gratuitement
+          </Button>
+          <Button size="lg" variant="secondary" onClick={() => onNavigate('offre')}>
+            J’ai déjà une offre
           </Button>
         </div>
-        <p className="mt-3 text-sm text-slate-500">CV gratuit, sans compte · 1re adaptation offerte à l’inscription · paiement MoMo</p>
+        <p className="mt-3 text-sm text-slate-500">Sans compte pour créer et télécharger son CV · 1re adaptation offerte</p>
       </section>
 
       <section className="space-y-3 border-y border-slate-200 bg-slate-50 py-6" aria-label="Métiers et villes">
@@ -212,7 +190,7 @@ export function LandingPage({ onNavigate }: { onNavigate: (t: Tab) => void }) {
             <h3 className="font-semibold text-slate-900">Gratuit</h3>
             <p className="mt-1 text-2xl font-bold text-slate-900">0 FCFA</p>
             <ul className="mt-3 space-y-1.5 text-sm text-slate-600">
-              {['CV complet, 3 modèles', 'Export PDF (avec mention CV Studio)', 'Photo et signature', '1 action IA offerte'].map((x) => (
+              {['CV complet, 3 modèles', 'Export PDF (avec mention CV Studio)', 'Photo et signature', '1re adaptation offerte'].map((x) => (
                 <li key={x} className="flex gap-2">
                   <Check className="mt-0.5 size-4 shrink-0 text-emerald-600" /> {x}
                 </li>
@@ -230,7 +208,7 @@ export function LandingPage({ onNavigate }: { onNavigate: (t: Tab) => void }) {
             </div>
           ))}
         </div>
-        <p className="mt-4 text-center text-sm text-slate-500">Sans abonnement · MTN MoMo ou Moov Money · Crédit rendu si l’IA échoue</p>
+        <p className="mt-4 text-center text-sm text-slate-500">Sans abonnement · MTN MoMo ou Moov Money · Crédit rendu en cas d’échec</p>
       </section>
 
       <section className="bg-white px-4 py-12">
