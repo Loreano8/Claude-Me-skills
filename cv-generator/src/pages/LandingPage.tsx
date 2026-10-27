@@ -1,5 +1,5 @@
 import { useEffect, useState, type ReactNode } from 'react';
-import { ArrowRight, BadgeCheck, Check, ClipboardList, FileDown, Globe2, Languages, MessagesSquare, PenLine, ShieldCheck, Sparkles, Target } from 'lucide-react';
+import { ArrowRight, BadgeCheck, Check, ClipboardList, FileDown, FileStack, Globe2, Languages, MessagesSquare, PenLine, ShieldCheck, Sparkles, Target } from 'lucide-react';
 import { PACKS } from '../../server/payments.ts';
 import type { Tab } from '../App.tsx';
 import { Button } from '../components/ui.tsx';
@@ -9,7 +9,7 @@ const fcfa = (n: number) => `${n.toLocaleString('fr-FR')} FCFA`;
 
 const STEPS = [
   { icon: PenLine, title: 'Écrivez comme vous parlez', text: 'Tapez ou dictez votre parcours en vrac, ou importez votre ancien CV (PDF ou photo). L’IA range et rédige tout proprement.' },
-  { icon: Target, title: 'Collez l’offre', text: 'Texte copié depuis WhatsApp, PDF ou capture d’écran de l’annonce : vous obtenez un CV adapté au poste et un score de compatibilité.' },
+  { icon: Target, title: 'Collez l’offre', text: 'Lien de l’annonce, texte copié, PDF ou capture d’écran : vous obtenez un CV adapté au poste et un score de compatibilité.' },
   { icon: FileDown, title: 'Téléchargez et postulez', text: 'PDF prêt pour les logiciels de tri des recruteurs (gratuit), ou version Pro sans mention avec le Word. Avec la lettre de motivation qui va avec.' },
 ];
 
@@ -17,6 +17,7 @@ const FEATURES: { icon: typeof Target; title: string; text: string }[] = [
   { icon: Target, title: 'CV adapté à chaque offre', text: 'Mots-clés du poste, points forts mis en avant, exigences manquantes signalées. Score avant → après pour voir le gain.' },
   { icon: Sparkles, title: 'Lettre de motivation', text: 'Courte, personnalisée, au ton choisi. Candidature spontanée possible.' },
   { icon: MessagesSquare, title: 'Fiche entretien', text: 'Les questions probables pour ce poste, des réponses construites à partir de votre parcours, et comment parler de vos points faibles.' },
+  { icon: FileStack, title: 'Dossier en un seul PDF', text: 'CV, lettre, pièce d’identité, diplômes : scannez vos papiers avec le téléphone et envoyez un seul fichier, dans le bon ordre.' },
   { icon: Languages, title: 'CV en anglais', text: 'Traduit et mis aux normes du pays visé : Canada, États-Unis, Royaume-Uni ou international.' },
   { icon: ClipboardList, title: 'Suivi des candidatures', text: 'Envoyée, entretien, réponse : toutes vos offres au même endroit, avec le bon CV pour chacune.' },
   { icon: Globe2, title: 'Pensé pour l’Afrique francophone', text: 'Normes locales (photo, date de naissance si attendues), paiement mobile money, prix en FCFA.' },

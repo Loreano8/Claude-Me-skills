@@ -12,6 +12,7 @@ import { TemplateGallery } from '../components/TemplateGallery.tsx';
 import { ProOffer } from '../components/ProUnlock.tsx';
 import { isProTemplate } from '../pdf/catalog.ts';
 import { ReviseCard } from '../components/ReviseCard.tsx';
+import { DossierLink } from './DossierPage.tsx';
 import { Button, Card, cx, Notice, Select, Toggle } from '../components/ui.tsx';
 
 export function DesignPanel({ cv }: { cv: CvDocument }) {
@@ -109,6 +110,7 @@ export function ExportButtons({ cv }: { cv: CvDocument }) {
       </p>
       <ProOffer cv={cv} reason={needPro?.reason} onUnlocked={() => needPro && void run(needPro.kind, true)} />
       {error && <Notice tone="error">{error}</Notice>}
+      <DossierLink />
     </div>
   );
 }

@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { FileDown, FileText, Lock, Mail, Wand2 } from 'lucide-react';
+import { DossierLink } from './DossierPage.tsx';
 import { useActiveCv, useStore } from '../store.ts';
 import type { CoverLetterRequest } from '../../shared/schema.ts';
 import { api } from '../lib/api.ts';
@@ -202,6 +203,9 @@ export function LetterPage({ onNavigate }: { onNavigate: (t: Tab) => void }) {
           </Button>
         </div>
         <ProOffer cv={cv} reason={needPro ? 'L’export Word fait partie de la version Pro.' : null} onUnlocked={() => needPro && void exportAs('docx', true)} />
+        <div className="mt-3">
+          <DossierLink />
+        </div>
         {error && <Notice tone="error">{error}</Notice>}
         <div className="mx-auto max-w-[700px]">
           <Preview source={{ kind: 'letter', letter, cv }} />
