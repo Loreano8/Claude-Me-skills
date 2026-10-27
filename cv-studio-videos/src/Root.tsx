@@ -97,32 +97,6 @@ export const RemotionRoot: React.FC = () => {
         }}
       />
       <Composition
-        id="Pub4-Canada"
-        component={AdVideo}
-        width={1080}
-        height={1920}
-        fps={FPS}
-        durationInFrames={durationFor(13.24)}
-        defaultProps={{
-          voice: "vo/v4.mp3",
-          voiceSeconds: 13.24,
-          hook: "Le Canada en vue ? 🇨🇦",
-          hookSub: "Là-bas : ni photo, ni date de naissance sur le CV.",
-          hookEnd: 4.45,
-          subtitles: [
-            { at: 0.54, text: "Le Canada en vue ?" },
-            { at: 1.8, text: "Là-bas, on ne met ni photo ni date de naissance sur un CV." },
-            { at: 4.45, text: "CV Studio traduit ton CV en anglais et le met aux normes canadiennes, en une minute." },
-            { at: 8.4, text: "Ton CV en français reste intact." },
-            { at: 11.25, text: "Essaie gratuitement sur CV Studio." },
-          ],
-          screens: [
-            { src: "shots/13-traduire.png", label: "Choisis : US / Canada", start: 4.45, end: 8.4, focus: 0.5 },
-            { src: "shots/14-cv-anglais.png", label: "Ton CV en anglais ✔", start: 8.4, end: 13.24, focus: 0.6 },
-          ],
-        }}
-      />
-      <Composition
         id="Demo-Application"
         component={DemoVideo}
         width={1080}
