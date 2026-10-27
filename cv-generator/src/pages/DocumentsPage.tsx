@@ -183,7 +183,7 @@ function VaultSetup() {
         Rangez ici votre pièce d’identité, vos diplômes, vos attestations… pour les retrouver, les envoyer ou les ajouter à un dossier en un toucher.
       </p>
       <Notice tone="info">
-        Vos documents restent sur ce téléphone, rien n’est envoyé sur internet. Avec un code, ils sont chiffrés : personne ne peut les lire sans le code.
+        Vos documents restent sur ce téléphone : ils ne sont jamais envoyés sur internet. Avec un code, ils sont chiffrés et personne ne peut les lire sans lui. Une copie de la clé est gardée avec votre compte, uniquement pour réinitialiser un code oublié : seule, elle ne donne accès à aucun document.
       </Notice>
       {withPin === null && (
         <div className="grid gap-2 sm:grid-cols-2">
@@ -526,7 +526,7 @@ function VaultOpen({ onNavigate }: { onNavigate: (t: Tab) => void }) {
       {error && <Notice tone="error">{error}</Notice>}
 
       <div className="space-y-2 border-t border-slate-100 pt-3 text-sm text-slate-600">
-        <p>Vos documents restent sur ce téléphone{pin ? ', chiffrés par votre code' : ''}. Si vous désinstallez l’appli ou changez de téléphone, faites d’abord une copie de secours.</p>
+        <p>Vos documents restent sur ce téléphone{pin ? ', chiffrés par votre code (une copie de la clé, gardée avec votre compte, sert seulement à réinitialiser un code oublié)' : ''}. Si vous désinstallez l’appli ou changez de téléphone, faites d’abord une copie de secours.</p>
         <div className="flex flex-wrap gap-2">
           <Button size="sm" variant="secondary" loading={busy === 'backup'} disabled={busy !== null || docs.length === 0} onClick={() => void backup()}>
             Copie de secours (un PDF)

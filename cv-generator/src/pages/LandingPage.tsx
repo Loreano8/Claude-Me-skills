@@ -2,6 +2,8 @@ import { useEffect, useState, type ReactNode } from 'react';
 import { ArrowRight, BadgeCheck, Check, ClipboardList, FileDown, FileStack, Globe2, Languages, MessagesSquare, PenLine, ShieldCheck, Sparkles, Target } from 'lucide-react';
 import { PACKS } from '../../server/payments.ts';
 import type { Tab } from '../App.tsx';
+import { useStore } from '../store.ts';
+import { isCvEmpty } from '../lib/cv.ts';
 import { Button } from '../components/ui.tsx';
 import { api, type PublicTestimonial } from '../lib/api.ts';
 
@@ -18,7 +20,7 @@ const FEATURES: { icon: typeof Target; title: string; text: string }[] = [
   { icon: Sparkles, title: 'Lettre de motivation', text: 'Courte, personnalisée, au ton choisi. Candidature spontanée possible.' },
   { icon: MessagesSquare, title: 'Fiche entretien', text: 'Les questions probables pour ce poste, des réponses construites à partir de votre parcours, et comment parler de vos points faibles.' },
   { icon: FileStack, title: 'Scanner et dossier PDF', text: 'Scannez vos papiers avec le téléphone : la page est redressée et nettoyée, gratuit jusqu’à 3 pages. Un document écrit à la main devient du texte tapé (PDF ou Word). Ou réunissez CV, lettre et pièces en un seul fichier.' },
-  { icon: Languages, title: 'CV en anglais', text: 'Traduit et mis aux normes du pays visé : Canada, États-Unis, Royaume-Uni ou international.' },
+  { icon: Languages, title: 'CV en anglais', text: 'Traduit et mis aux normes du pays visé, pour postuler dans une entreprise internationale ou à l’étranger.' },
   { icon: ClipboardList, title: 'Suivi des candidatures', text: 'Envoyée, entretien, réponse : toutes vos offres au même endroit, avec le bon CV pour chacune.' },
   { icon: Globe2, title: 'Pensé pour l’Afrique francophone', text: 'Normes locales (photo, date de naissance si attendues), paiement mobile money, prix en FCFA.' },
 ];
@@ -30,7 +32,7 @@ const JOBS = [
 ];
 const PLACES = [
   'Cotonou', 'Lomé', 'Dakar', 'Abidjan', 'Douala', 'Ouagadougou', 'Bamako', 'Niamey', 'Libreville', 'Kinshasa',
-  'Paris', 'Montréal', 'Bruxelles', 'Londres', 'New York', 'Genève',
+  'Paris', 'Bruxelles', 'Londres', 'New York', 'Genève',
 ];
 
 function Marquee({ items, reverse = false, duration }: { items: string[]; reverse?: boolean; duration: string }) {
@@ -115,31 +117,51 @@ function Testimonials() {
   );
 }
 
+/** Le gain, montré tout de suite : le score de compatibilité avant et après adaptation. */
+function ScoreDemo() {
+  const ring = (value: number, color: string, label: string) => (
+    <div className="flex flex-col items-center">
+      <div className="flex size-20 items-center justify-center rounded-full" style={{ background: `conic-gradient(${color} ${value * 3.6}deg, #e2e8f0 0deg)` }}>
+        <div className="flex size-16 flex-col items-center justify-center rounded-full bg-white">
+          <span className="text-xl font-bold text-slate-900">{value}</span>
+          <span className="-mt-1 text-[10px] text-slate-500">/ 100</span>
+        </div>
+      </div>
+      <span className="mt-1 text-xs font-medium text-slate-600">{label}</span>
+    </div>
+  );
+  return (
+    <div className="mx-auto mt-6 flex max-w-xs items-center justify-center gap-3 rounded-2xl bg-white p-4 shadow-sm ring-1 ring-slate-200" aria-label="Exemple : compatibilité avec l’offre passée de 54 à 86 sur 100">
+      {ring(54, '#d97706', 'Votre CV')}
+      <ArrowRight className="size-6 text-slate-400" />
+      {ring(86, '#059669', 'CV adapté')}
+    </div>
+  );
+}
+
 export function LandingPage({ onNavigate }: { onNavigate: (t: Tab) => void }) {
   const start = () => onNavigate('infos');
+  const hasCv = useStore((s) => s.cvs.some((c) => !isCvEmpty(c)));
 
   return (
     <div className="-mx-4 -mt-4">
       <section className="bg-gradient-to-b from-brand-50 to-white px-4 pt-12 pb-14 text-center sm:pt-20">
         <p className="mx-auto inline-flex items-center gap-1.5 rounded-full bg-white px-3 py-1 text-xs font-semibold text-brand-700 shadow-sm ring-1 ring-brand-100">
-          <Sparkles className="size-3.5" /> CV, lettre et entretien, avec l’IA
+          <Sparkles className="size-3.5" /> Le CV qui colle à l’offre
         </p>
         <h1 className="mx-auto mt-5 max-w-3xl text-3xl font-extrabold tracking-tight text-slate-900 sm:text-5xl">
-          Un CV qui correspond <span className="text-brand-600">à chaque offre</span>, en quelques minutes
+          Partagez une offre, recevez <span className="text-brand-600">votre CV adapté</span>
         </h1>
         <p className="mx-auto mt-4 max-w-2xl text-base text-slate-600 sm:text-lg">
-          Écrivez votre parcours en vrac, collez l’annonce : CV Studio rédige un CV aux normes actuelles, adapté au poste, avec la lettre de
-          motivation et la préparation de l’entretien.
+          Collez le lien ou le texte de l’annonce : l’IA réécrit votre CV avec les mots du poste, sans rien inventer, et vous montre le gain.
         </p>
+        <ScoreDemo />
         <div className="mt-7 flex flex-col items-center justify-center gap-3 sm:flex-row">
-          <Button size="lg" onClick={start} icon={<ArrowRight className="size-5" />}>
-            Créer mon CV gratuitement
-          </Button>
-          <Button size="lg" variant="secondary" onClick={() => onNavigate('offre')}>
-            J’ai déjà une offre
+          <Button size="lg" onClick={() => onNavigate(hasCv ? 'offre' : 'infos')} icon={<ArrowRight className="size-5" />}>
+            {hasCv ? 'Adapter mon CV à une offre' : 'Commencer gratuitement'}
           </Button>
         </div>
-        <p className="mt-3 text-sm text-slate-500">Sans compte pour créer et télécharger son CV · 1re action IA offerte</p>
+        <p className="mt-3 text-sm text-slate-500">CV gratuit, sans compte · 1re adaptation offerte à l’inscription · paiement MoMo</p>
       </section>
 
       <section className="space-y-3 border-y border-slate-200 bg-slate-50 py-6" aria-label="Métiers et villes">
