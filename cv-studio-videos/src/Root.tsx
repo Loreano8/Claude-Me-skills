@@ -1,5 +1,6 @@
 import { Composition, Folder } from "remotion";
 import { AdVideo, durationFor, FPS } from "./ad/AdVideo";
+import { DEMO_SECONDS, DemoVideo } from "./demo/DemoVideo";
 
 // Quatre pubs verticales (statuts WhatsApp, TikTok, Reels). Accroches tirées de founder/marketing.md.
 export const RemotionRoot: React.FC = () => {
@@ -120,6 +121,14 @@ export const RemotionRoot: React.FC = () => {
             { src: "shots/14-cv-anglais.png", label: "Ton CV en anglais ✔", start: 8.4, end: 13.24, focus: 0.6 },
           ],
         }}
+      />
+      <Composition
+        id="Demo-Application"
+        component={DemoVideo}
+        width={1080}
+        height={1920}
+        fps={FPS}
+        durationInFrames={Math.ceil(DEMO_SECONDS * FPS)}
       />
     </Folder>
   );

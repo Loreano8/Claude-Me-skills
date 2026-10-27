@@ -18,16 +18,18 @@ const payments = createPayments(db, accounts, {
   createCheckout: async () => ({ ref: 'tx42', url: 'http://localhost:8787/fake-pay?id=tx42' }),
   fetchStatus: async (ref) => (paid.has(ref) ? 'approved' : 'pending'),
 });
+// DEMO_DELAY_MS : simule le temps de réponse réel (vidéos de démonstration).
+const wait = () => new Promise((r) => setTimeout(r, Number(process.env.DEMO_DELAY_MS ?? 0)));
 const ai = {
-  structure: async () => ({ cv: sampleAdapt.cv, suggestions: ['Ajoutez un lien LinkedIn'], language: 'fr' as const }),
-  adapt: async () => sampleAdapt,
-  coverLetter: async () => sampleLetter,
-  translate: async () => sampleTranslation,
-  interview: async () => sampleInterview,
-  revise: async () => sampleRevise,
-  analyzeTemplate: async () => sampleTemplateAnalysis,
-  clarify: async () => sampleClarify,
-  transcribe: async () => sampleTranscript,
+  structure: async () => (await wait(), ({ cv: sampleAdapt.cv, suggestions: ['Ajoutez un lien LinkedIn'], language: 'fr' as const })),
+  adapt: async () => (await wait(), sampleAdapt),
+  coverLetter: async () => (await wait(), sampleLetter),
+  translate: async () => (await wait(), sampleTranslation),
+  interview: async () => (await wait(), sampleInterview),
+  revise: async () => (await wait(), sampleRevise),
+  analyzeTemplate: async () => (await wait(), sampleTemplateAnalysis),
+  clarify: async () => (await wait(), sampleClarify),
+  transcribe: async () => (await wait(), sampleTranscript),
 };
 // E-mails simulés : le code s'affiche dans la console du serveur de démo.
 const support = createSupport(db, async (t) => console.log('[notification]', t));
