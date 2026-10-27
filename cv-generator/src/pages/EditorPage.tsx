@@ -28,6 +28,8 @@ import { ACCEPTED_DOCS, fileToAttachment } from '../lib/files.ts';
 import { PhotoInput } from '../components/PhotoInput.tsx';
 import { appendSpoken, MicButton } from '../components/MicButton.tsx';
 import { ReviseCard } from '../components/ReviseCard.tsx';
+import { learnStyle, WriteLikeMe } from '../components/WriteLikeMe.tsx';
+import { useWritingStyle } from '../lib/writingStyle.ts';
 import { SignaturePad } from '../components/SignaturePad.tsx';
 import { TagInput } from '../components/TagInput.tsx';
 import { Button, Card, Field, Notice, Section, Select, TextArea, Toggle } from '../components/ui.tsx';
@@ -59,7 +61,25 @@ function QuickFill() {
   const [error, setError] = useState<string | null>(null);
   const [suggestions, setSuggestions] = useState<string[]>([]);
   const [undo, setUndo] = useState<CvDocument | null>(null);
+  /** Ancien CV importé : proposé ensuite pour « Écrire comme moi », si aucun style n'est encore retenu. */
+  const [styleOffer, setStyleOffer] = useState<Attachment[] | null>(null);
+  const [styleBusy, setStyleBusy] = useState(false);
+  const [styleNote, setStyleNote] = useState<string | null>(null);
+  const hasStyle = useWritingStyle((s) => s.style !== null);
   const hasContent = !isCvEmpty(cv);
+
+  async function keepStyle(docs: Attachment[]) {
+    setStyleBusy(true);
+    try {
+      const problem = await learnStyle(docs, '');
+      setStyleNote(problem ?? 'C’est noté : vos prochains CV et lettres reprendront votre façon d’écrire.');
+      setStyleOffer(null);
+    } catch (e) {
+      setStyleNote((e as Error).message);
+    } finally {
+      setStyleBusy(false);
+    }
+  }
 
   async function run(mode: 'fill' | 'improve') {
     setBusy(mode);
@@ -81,6 +101,7 @@ function QuickFill() {
       setUndo(before);
       setSuggestions(res.suggestions);
       if (mode === 'fill') {
+        if (files.length && !hasStyle) setStyleOffer(files);
         setText('');
         setFiles([]);
       }
@@ -237,6 +258,20 @@ function QuickFill() {
           </ul>
         </div>
       )}
+      {styleOffer && (
+        <div className="mt-3 rounded-xl bg-white p-3 text-sm text-slate-700 ring-1 ring-brand-100">
+          <p>Cet ancien CV, c’est vous qui l’avez écrit ? CV Studio peut retenir votre façon d’écrire pour vos prochains CV et lettres (gratuit).</p>
+          <div className="mt-2 flex flex-wrap gap-2">
+            <Button size="sm" icon={<PenLine className="size-4" />} loading={styleBusy} onClick={() => void keepStyle(styleOffer)}>
+              Oui, écrire comme moi
+            </Button>
+            <Button size="sm" variant="ghost" onClick={() => setStyleOffer(null)}>
+              Non merci
+            </Button>
+          </div>
+        </div>
+      )}
+      {styleNote && <p className="mt-3 text-sm text-brand-700">{styleNote}</p>}
     </Card>
   );
 }
@@ -574,6 +609,7 @@ export function EditorPage() {
         </Notice>
       )}
       <QuickFill />
+      <WriteLikeMe compact />
       {!isCvEmpty(cv) && <ReviseCard />}
       <PersonalSection cv={cv} update={update} />
       <PhotoSection cv={cv} update={update} />

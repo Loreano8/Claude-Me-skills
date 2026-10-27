@@ -19,8 +19,13 @@ import type {
   JobFetchResult,
   TranscribeRequest,
   TranscribeResult,
+  StyleRequest,
+  StyleResult,
+  LetterQuestionsRequest,
+  LetterQuestionsResult,
 } from '../../shared/schema.ts';
-import { useAccount, type AccountUser, type Pack } from './account.ts';
+import { styleForAi } from './writingStyle.ts';
+import { useAccount, type AccountUser, type Pack, type ReturnOffer } from './account.ts';
 import { deviceId } from './device.ts';
 
 // Sur le web, l'API est servie par le même domaine. Dans l'application Android,
@@ -72,13 +77,19 @@ const post = <T>(path: string, body: unknown) => request<T>('POST', path, body);
 
 type Session = { token: string; user: AccountUser };
 
+/** Ajoute le style « Écrire comme moi » aux demandes de rédaction. */
+type Styled<T> = Omit<T, 'style'>;
+const styled = <T extends object>(req: T) => ({ ...req, style: styleForAi() });
+
 export const api = {
-  structure: (req: StructureRequest) => post<StructureResult>('/api/ai/structure', req),
-  adapt: (req: AdaptRequest) => post<AdaptResult>('/api/ai/adapt', req),
-  coverLetter: (req: CoverLetterRequest) => post<CoverLetterResult>('/api/ai/cover-letter', req),
+  structure: (req: Styled<StructureRequest>) => post<StructureResult>('/api/ai/structure', styled(req)),
+  adapt: (req: Styled<AdaptRequest>) => post<AdaptResult>('/api/ai/adapt', styled(req)),
+  coverLetter: (req: Styled<CoverLetterRequest>) => post<CoverLetterResult>('/api/ai/cover-letter', styled(req)),
   translate: (req: TranslateRequest) => post<TranslateResult>('/api/ai/translate', req),
-  interview: (req: InterviewRequest) => post<InterviewResult>('/api/ai/interview', req),
-  revise: (req: ReviseRequest) => post<ReviseResult>('/api/ai/revise', req),
+  interview: (req: Styled<InterviewRequest>) => post<InterviewResult>('/api/ai/interview', styled(req)),
+  revise: (req: Styled<ReviseRequest>) => post<ReviseResult>('/api/ai/revise', styled(req)),
+  writingStyle: (req: StyleRequest) => post<StyleResult>('/api/ai/style', req),
+  letterQuestions: (req: LetterQuestionsRequest) => post<LetterQuestionsResult>('/api/ai/letter-questions', req),
   analyzeTemplate: (req: AnalyzeTemplateRequest) => post<TemplateAnalysis>('/api/ai/analyze-template', req),
   clarify: (req: ClarifyRequest) => post<ClarifyResult>('/api/ai/clarify', req),
   fetchJob: (url: string) => post<JobFetchResult>('/api/job/fetch', { url }),
@@ -109,6 +120,7 @@ export const api = {
   me: () => request<{ user: AccountUser }>('GET', '/api/me'),
   health: () => request<{ ai: boolean; accounts: boolean; payments: boolean; email?: boolean }>('GET', '/api/health'),
   packs: () => request<{ packs: Pack[]; payments: boolean }>('GET', '/api/packs'),
+  offer: () => request<ReturnOffer>('GET', '/api/offer'),
   unlock: () => post<{ credits: number | null }>('/api/unlock', {}),
   checkout: (packId: string) => post<{ url: string }>('/api/payments/checkout', { packId }),
 
@@ -183,6 +195,9 @@ export async function refreshAccount(): Promise<void> {
     if (!health.accounts || !state.token) return;
     const { user } = await api.me();
     useAccount.setState({ user });
+    // Ouvre l'offre de retour si la personne revient après une absence (sans bloquer le reste).
+    const offer = await api.offer().catch(() => null);
+    if (offer) useAccount.setState({ offer });
   } catch (error) {
     // Jeton expiré : on déconnecte. Hors ligne : on garde le dernier solde connu.
     if (error instanceof ApiError && /session/i.test(error.message)) state.logout();

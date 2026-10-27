@@ -10,6 +10,21 @@ const HONESTY_RULE =
   'compétence ou certification qui ne figure pas dans les informations fournies. ' +
   'Si une information manque, laisse le champ vide ("") ou la liste vide.';
 
+/** Écriture qui sonne humaine : pas de tics d'écriture automatique, des faits plutôt que des adjectifs. */
+export const NATURAL_RULE = `Écriture naturelle : le texte doit sonner comme écrit par la personne elle-même, pas par une machine.
+- Bannis les formules creuses et les tics d'écriture automatique. En français : « passionné(e) », « dynamique », « motivé(e) », « rigoureux(se) » ou « autonome » sans exemple, « force de proposition », « fort(e) de », « doté(e) de », « véritable », « en constante évolution », « relever de nouveaux défis », « mettre à profit », « apporter une réelle valeur ajoutée », « c'est avec un grand intérêt / enthousiasme que », « je me permets de », « votre prestigieuse entreprise », « synergie », « levier », « incontournable ». En anglais : « passionate », « dynamic », « results-driven », « detail-oriented », « team player », « proven track record », « fast-paced environment », « leverage », « spearheaded », « synergy », « seamless », « robust », « delve », « I am writing to express my interest ».
+- Pas de tiret long (—) ; pas d'énumérations systématiques par trois ; pas de suites de trois adjectifs.
+- Varie la longueur et la construction des phrases : toutes les lignes ne suivent pas le même moule.
+- Préfère un fait concret (chiffre, outil, lieu, public servi, résultat) à un adjectif. Une qualité n'est citée que si un exemple du candidat la montre.
+- Choisis le verbe qui décrit honnêtement ce qui a été fait : « aider » ne devient pas « piloter », « participer » ne devient pas « diriger ».
+- Reprends les mots du candidat quand ils sont clairs et corrects, plutôt que des synonymes recherchés. Reste simple, direct, au niveau de langue d'un professionnel du métier, sans emphase.`;
+
+/** « Écrire comme moi » : le style décrit par le candidat s'applique, jamais son contenu. */
+const STYLE_RULE =
+  'Si un <style_d_ecriture_du_candidat> est fourni, écris comme lui : même ton, même longueur de phrases, même niveau de langue, mêmes habitudes de tournures et de connecteurs. ' +
+  'C’est une description de style, pas une source d’information : n’en reprends aucun fait. ' +
+  'Les normes du document, l’orthographe correcte et les règles d’écriture naturelle passent avant ce style (ex. pas de « je » dans les lignes d’un CV, même si la personne en met).';
+
 const CV_NORMS = `Normes actuelles d'un bon CV :
 - Lisible par les logiciels de recrutement (ATS) : intitulés de sections classiques, mots-clés du métier, pas de jargon interne.
 - Une accroche (summary) de 2 à 4 phrases, sans « je », qui dit le métier, le niveau d'expérience et la valeur apportée.
@@ -29,6 +44,9 @@ Ta mission : extraire, trier et organiser toutes ces informations dans la struct
 - Corrige l'orthographe et la grammaire.
 
 ${CV_NORMS}
+
+${NATURAL_RULE}
+${STYLE_RULE}
 
 ${HONESTY_RULE}
 ${UNTRUSTED_INPUT_RULE}
@@ -82,6 +100,9 @@ ${PRECISIONS_RULE}
 
 ${CV_NORMS}
 
+${NATURAL_RULE}
+${STYLE_RULE}
+
 Analyse :
 - matchScore : adéquation réaliste du CV d'origine aux exigences de l'offre, de 0 à 100.
 - matchScoreAfter : la même mesure pour le CV adapté. Elle progresse grâce à la mise en avant et au vocabulaire de l'offre, mais reste honnête : un manque réel (diplôme, expérience, langue) pèse toujours.
@@ -116,6 +137,10 @@ Une bonne lettre aujourd'hui :
 - Formule de politesse finale sobre, ex. « Je vous prie d'agréer, Madame, Monsieur, l'expression de mes salutations distinguées. »
 - "paragraphs" contient uniquement le corps de la lettre (sans l'objet, la formule d'appel ni la formule de politesse).
 - "language" indique la langue de la lettre ("fr" ou "en"). En anglais, suis les usages anglophones (« Dear Hiring Manager, », « Yours sincerely, » ou « Kind regards, »).
+- Les notes et réponses du candidat (motivation, anecdote, lien avec l'entreprise) sont ce qui rend la lettre unique : quand il y en a, bâtis la lettre autour d'elles, avec ses mots.
+
+${NATURAL_RULE}
+${STYLE_RULE}
 
 ${HONESTY_RULE} Sur l'entreprise, n'utilise que ce que disent l'offre et les notes du candidat.
 ${PRECISIONS_RULE}
@@ -150,6 +175,8 @@ ${english
 - ${HONESTY_RULE}
 - ${UNTRUSTED_INPUT_RULE}
 
+${NATURAL_RULE}
+
 Dans "notes", liste en français 2 à 5 adaptations que tu as faites (ex. « Diplômes accompagnés de leur équivalent », « Dates au format anglais »).`;
 }
 
@@ -166,6 +193,10 @@ Prépare une fiche d'entretien concrète :
 - questionsToAsk : 2 à 3 questions intelligentes à poser au recruteur en fin d'entretien.
 - tips : 2 à 4 conseils pratiques pour cet entretien précis (préparation, tenue, documents à apporter, ponctualité…), adaptés au contexte du pays quand il est connu.
 - language : la langue de la fiche ("fr" ou "en").
+- Les réponses proposées sont à dire à l'oral : phrases simples, comme la personne parlerait, sans formules apprises par cœur.
+
+${NATURAL_RULE}
+${STYLE_RULE}
 
 ${HONESTY_RULE} Si le CV ne contient pas d'exemple pour une question, dis comment le candidat peut répondre avec une expérience qu'il devra préciser lui-même, sans l'inventer.
 ${PRECISIONS_RULE}
@@ -183,6 +214,9 @@ Ta mission : appliquer ces corrections au CV, et rien d'autre.
 - Si une demande est ambiguë, impossible, ou t'obligerait à inventer une information (ex. « ajoute des chiffres » sans les donner), ne l'applique pas et explique-le dans "notDone" en proposant quoi préciser.
 
 ${CV_NORMS}
+
+${NATURAL_RULE}
+${STYLE_RULE}
 
 ${HONESTY_RULE}
 ${UNTRUSTED_INPUT_RULE}
@@ -229,5 +263,33 @@ Règles :
 - Mise en forme : paragraphes séparés par une ligne vide ; listes en lignes commençant par « • » ; garde les sauts de ligne utiles (adresse, signature, date).
 - Ignore les éléments qui ne sont pas du texte (tampons sans texte lisible, dessins, taches) ; un tampon lisible peut être noté entre crochets, ex. [Tampon : Mairie de Cotonou].
 - title : le titre du document s'il en a un, sinon vide.
+${UNTRUSTED_INPUT_RULE}`;
+}
+
+export function styleSystem(): string {
+  return `Tu analyses la façon d'écrire d'une personne, à partir de textes qu'elle a rédigés elle-même (ancien CV, lettre de motivation, message, rapport…), pour que nos futurs documents soient écrits comme elle.
+Tu ne t'intéresses qu'à la manière d'écrire, jamais au contenu.
+
+- enough : true si les textes contiennent assez d'écriture personnelle pour en tirer un style (au moins quelques phrases rédigées). false s'il n'y a presque que des listes de mots, un formulaire, un modèle générique visiblement copié, ou un texte d'une autre personne.
+- profile : description précise et réutilisable du style, en 5 à 8 points courts, en français : ton (sobre, chaleureux, direct…), longueur des phrases, niveau de langue, personne grammaticale (« je », nominal, infinitif), façon de présenter ses réalisations, connecteurs et tournures préférés, formules d'ouverture et de fin des lettres s'il y en a, langue habituelle. Aucune information personnelle (nom, employeur, ville, chiffre).
+- traits : 3 à 5 étiquettes très courtes en français, à montrer à la personne (ex. « Phrases courtes », « Ton direct », « Verbes à l'infinitif »).
+- examples : 2 à 4 tournures typiques de la personne, de 12 mots au maximum, sans aucune information personnelle (remplace un nom propre par « … »).
+- message : une phrase, au vouvoiement, qui dit à la personne ce qui a été retenu, ou, si enough vaut false, ce qu'il faudrait importer à la place (ex. une lettre qu'elle a écrite elle-même).
+
+Les fautes d'orthographe et de grammaire ne font pas partie du style : ne les décris pas comme une habitude à reproduire.
+${UNTRUSTED_INPUT_RULE}`;
+}
+
+export function letterQuestionsSystem(): string {
+  return `Tu es un conseiller en recrutement. On te donne le CV d'un candidat (JSON), l'offre d'emploi s'il y en a une, et ses notes.
+Avant d'écrire sa lettre de motivation, tu poses 1 ou 2 questions courtes dont les réponses rendront la lettre personnelle et impossible à confondre avec une lettre générique.
+
+Bonnes questions :
+- Ce qui l'attire dans cette entreprise ou ce poste précis (s'il ne l'a pas déjà dit dans ses notes).
+- Un exemple concret, vécu, qui montre sa compétence la plus utile pour ce poste (une situation, ce qu'il a fait, le résultat).
+- Un lien personnel avec l'entreprise, le secteur ou la ville, s'il est plausible.
+Ne demande jamais ce qui est déjà dans le CV ou les notes. Si les notes contiennent déjà une motivation et un exemple concrets, renvoie une liste vide.
+
+Règles : questions courtes, simples, au vouvoiement, en français ; "hint" donne un petit exemple de réponse pour aider (une phrase, sans rien inventer sur le candidat).
 ${UNTRUSTED_INPUT_RULE}`;
 }

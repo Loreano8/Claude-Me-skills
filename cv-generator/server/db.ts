@@ -83,6 +83,9 @@ alter table users add column if not exists secret_phrase_hash text;
 -- Question secrète choisie par la personne (la réponse est l'empreinte ci-dessus), vide pour une simple phrase secrète.
 alter table users add column if not exists secret_question text;
 
+-- Offre de retour (4 crédits pour le prix de 3) : ouverte pour 72 heures quand la personne revient après une absence, une seule fois.
+alter table users add column if not exists return_offer_until timestamptz;
+
 -- Coffre-fort : double de la clé qui chiffre les documents gardés sur le téléphone (code oublié → réinitialisation).
 create table if not exists vault_keys (
   user_id integer primary key references users(id) on delete cascade,

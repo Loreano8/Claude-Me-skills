@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { reminderDates, shouldShowBanner } from '../src/lib/reminder.ts';
+import { offerAt, reminderDates, shouldShowBanner } from '../src/lib/reminder.ts';
 
 const H = 3_600_000;
 
@@ -17,5 +17,13 @@ describe('rappel « Une nouvelle offre ? »', () => {
     expect(a.getHours()).toBe(10);
     expect(Math.round((a.getTime() - now) / (24 * H))).toBe(4);
     expect(Math.round((b.getTime() - now) / (24 * H))).toBe(11);
+  });
+
+  it('n’annonce l’offre de retour que si le serveur pourra l’ouvrir à cette date', () => {
+    const at = new Date(now + 11 * 24 * H);
+    expect(offerAt({ active: null, possible: true, notBefore: null }, at)).toBe(true);
+    expect(offerAt({ active: null, possible: false, notBefore: null }, at)).toBe(false);
+    expect(offerAt({ active: null, possible: true, notBefore: new Date(now + 20 * 24 * H).toISOString() }, at)).toBe(false);
+    expect(offerAt(null, at)).toBe(false);
   });
 });

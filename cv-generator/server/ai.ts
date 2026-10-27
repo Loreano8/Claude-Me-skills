@@ -24,8 +24,12 @@ import {
   type StructureRequest,
   type TranslateRequest,
   type InterviewRequest,
+  LetterQuestionsResult,
+  type LetterQuestionsRequest,
+  StyleResult,
+  type StyleRequest,
 } from '../shared/schema.ts';
-import { adaptSystem, analyzeTemplateSystem, clarifySystem, transcribeSystem, coverLetterSystem, interviewSystem, reviseSystem, structureSystem, translateSystem } from './prompts.ts';
+import { adaptSystem, analyzeTemplateSystem, clarifySystem, letterQuestionsSystem, styleSystem, transcribeSystem, coverLetterSystem, interviewSystem, reviseSystem, structureSystem, translateSystem } from './prompts.ts';
 
 type ContentBlock = Anthropic.Beta.BetaContentBlockParam;
 type Effort = 'low' | 'medium' | 'high';
@@ -69,6 +73,11 @@ function jobBlocks(job: JobInput): ContentBlock[] {
     blocks.push({ type: 'text', text: `<precisions_du_candidat>\n${job.answers.trim()}\n</precisions_du_candidat>` });
   }
   return blocks;
+}
+
+/** Style d'écriture du candidat (« Écrire comme moi »), placé avant la consigne finale. */
+function styleBlocks(style: string): ContentBlock[] {
+  return style.trim() ? [{ type: 'text', text: `<style_d_ecriture_du_candidat>\n${style.trim()}\n</style_d_ecriture_du_candidat>` }] : [];
 }
 
 function cvBlock(label: string, cv: unknown): ContentBlock {
@@ -132,6 +141,7 @@ export function createAi(client: Anthropic, model = DEFAULT_MODEL) {
       const content: ContentBlock[] = [];
       for (const f of [...(req.file ? [req.file] : []), ...(req.files ?? [])]) content.push(attachmentBlock(f));
       if (req.current) content.push(cvBlock('cv_actuel', req.current));
+      content.push(...styleBlocks(req.style));
       content.push({
         type: 'text',
         text: req.text.trim()
@@ -145,6 +155,7 @@ export function createAi(client: Anthropic, model = DEFAULT_MODEL) {
       const content = [
         cvBlock('cv_candidat', req.cv),
         ...jobBlocks(req.job),
+        ...styleBlocks(req.style),
         { type: 'text', text: 'Adapte le CV à cette offre et analyse l’adéquation.' } as ContentBlock,
       ];
       const { cv: { title, ...rest }, ...out } = await run(AdaptAiOutput, adaptSystem(req.lang), content, 'medium');
@@ -173,6 +184,7 @@ export function createAi(client: Anthropic, model = DEFAULT_MODEL) {
       if (req.notes.trim()) {
         content.push({ type: 'text', text: `<notes_du_candidat>\n${req.notes.trim()}\n</notes_du_candidat>` });
       }
+      content.push(...styleBlocks(req.style));
       content.push({
         type: 'text',
         text:
@@ -187,6 +199,7 @@ export function createAi(client: Anthropic, model = DEFAULT_MODEL) {
       const content: ContentBlock[] = [
         cvBlock('cv_candidat', req.cv),
         ...jobBlocks(req.job),
+        ...styleBlocks(req.style),
         { type: 'text', text: 'Prépare la fiche d’entretien pour cette offre.' },
       ];
       return run(InterviewResult, interviewSystem(req.lang), content, 'medium');
@@ -195,6 +208,7 @@ export function createAi(client: Anthropic, model = DEFAULT_MODEL) {
     revise(req: ReviseRequest): Promise<ReviseResult> {
       const content: ContentBlock[] = [
         cvBlock('cv_actuel', req.cv),
+        ...styleBlocks(req.style),
         { type: 'text', text: `<demandes_du_candidat>\n${req.instructions.trim()}\n</demandes_du_candidat>\n\nApplique ces corrections au CV.` },
       ];
       return run(ReviseResult, reviseSystem(req.lang), content, 'medium');
@@ -203,6 +217,20 @@ export function createAi(client: Anthropic, model = DEFAULT_MODEL) {
     analyzeTemplate(req: AnalyzeTemplateRequest): Promise<TemplateAnalysis> {
       const content: ContentBlock[] = [attachmentBlock(req.file), { type: 'text', text: 'Analyse ce modèle de CV.' }];
       return run(TemplateAnalysis, analyzeTemplateSystem(), content, 'medium');
+    },
+
+    style(req: StyleRequest): Promise<StyleResult> {
+      const content: ContentBlock[] = [...req.files.map(attachmentBlock)];
+      if (req.text.trim()) content.push({ type: 'text', text: `<texte_ecrit_par_la_personne>\n${req.text.trim()}\n</texte_ecrit_par_la_personne>` });
+      content.push({ type: 'text', text: 'Décris la façon d’écrire de cette personne.' });
+      return run(StyleResult, styleSystem(), content, 'low');
+    },
+
+    letterQuestions(req: LetterQuestionsRequest): Promise<LetterQuestionsResult> {
+      const content: ContentBlock[] = [cvBlock('cv_candidat', req.cv), ...jobBlocks(req.job)];
+      if (req.notes.trim()) content.push({ type: 'text', text: `<notes_du_candidat>\n${req.notes.trim()}\n</notes_du_candidat>` });
+      content.push({ type: 'text', text: 'Quelles questions poser au candidat avant d’écrire sa lettre ?' });
+      return run(LetterQuestionsResult, letterQuestionsSystem(), content, 'low');
     },
 
     translate(req: TranslateRequest): Promise<TranslateResult> {

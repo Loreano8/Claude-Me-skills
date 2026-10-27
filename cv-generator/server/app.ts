@@ -2,7 +2,7 @@ import { Hono, type Context } from 'hono';
 import { cors } from 'hono/cors';
 import { bodyLimit } from 'hono/body-limit';
 import { z } from 'zod';
-import { AdaptRequest, AnalyzeTemplateRequest, ClarifyRequest, TranscribeRequest, CoverLetterRequest, JobFetchRequest, InterviewRequest, ReviseRequest, StructureRequest, TranslateRequest } from '../shared/schema.ts';
+import { AdaptRequest, AnalyzeTemplateRequest, ClarifyRequest, LetterQuestionsRequest, StyleRequest, TranscribeRequest, CoverLetterRequest, JobFetchRequest, InterviewRequest, ReviseRequest, StructureRequest, TranslateRequest } from '../shared/schema.ts';
 import { AiError, type Ai } from './ai.ts';
 import { AccountError, DOSSIER_COST, REFERRAL_BONUS, UNLOCK_COST, type Accounts, type User } from './accounts.ts';
 import { signToken, verifyToken } from './auth.ts';
@@ -149,6 +149,14 @@ export function createApp({ fetchPage = fetchJobPage, ai, allowedOrigins, rateLi
   // ---- Crédits et paiement ------------------------------------------------
 
   app.get('/api/packs', (c) => c.json({ packs: PACKS, payments: payments !== null }));
+
+  // Offre de retour : consultée à chaque ouverture de l'appli (c'est ce qui l'ouvre au retour).
+  app.get('/api/offer', async (c) => {
+    const user = await currentUser(c);
+    if (!user) return c.json({ error: 'Session expirée. Reconnectez-vous.' }, 401);
+    if (!payments) return c.json({ active: null, possible: false, notBefore: null });
+    return c.json(await payments.returnOffer(user));
+  });
 
   app.post('/api/payments/checkout', async (c) => {
     const user = await currentUser(c);
@@ -540,7 +548,7 @@ export function createApp({ fetchPage = fetchJobPage, ai, allowedOrigins, rateLi
   app.post(
     '/api/ai/structure',
     aiRoute('structure', StructureRequest, (ai, body) => ai.structure(body), (body) =>
-      !body.text.trim() && !body.file && !body.current ? 'Écrivez quelques informations ou joignez un ancien CV.' : null,
+      !body.text.trim() && !body.file && !body.files.length && !body.current ? 'Écrivez quelques informations ou joignez un ancien CV.' : null,
     ),
   );
 
@@ -615,6 +623,21 @@ export function createApp({ fetchPage = fetchJobPage, ai, allowedOrigins, rateLi
       body.file.mediaType === 'text/plain' ? 'Importez une image ou un PDF du CV modèle.' : null,
     ),
   );
+
+  // « Écrire comme moi » : analyse du style d'écriture, gratuite.
+  app.post(
+    '/api/ai/style',
+    aiRoute(
+      'style',
+      StyleRequest,
+      (ai, body) => ai.style(body),
+      (body) => (!body.text.trim() && !body.files.length ? 'Importez un document que vous avez écrit, ou collez un texte.' : null),
+      true,
+    ),
+  );
+
+  // Questions avant la lettre (motivation, exemple vécu) : gratuites.
+  app.post('/api/ai/letter-questions', aiRoute('letter-questions', LetterQuestionsRequest, (ai, body) => ai.letterQuestions(body), undefined, true));
 
   app.post(
     '/api/ai/translate',

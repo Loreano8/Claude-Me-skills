@@ -1,6 +1,7 @@
 import { Capacitor } from '@capacitor/core';
 import { useState } from 'react';
 import { useStore } from '../store.ts';
+import { useAccount, type ReturnOffer } from './account.ts';
 import type { CvDocument } from '../types.ts';
 
 // Rappel « Une nouvelle offre ? » pour faire revenir la personne à chaque candidature :
@@ -8,6 +9,8 @@ import type { CvDocument } from '../types.ts';
 
 export const REMINDER_TITLE = 'Une nouvelle offre d’emploi ?';
 export const REMINDER_TEXT = 'Adaptez votre CV à l’annonce en 1 crédit, et la lettre suit si besoin.';
+export const OFFER_TITLE = 'Une offre pour votre retour';
+export const OFFER_TEXT = '4 crédits pour 500 F au lieu de 3, pendant 3 jours. Une seule fois.';
 
 const LAST_VISIT_KEY = 'cv-studio-last-visit';
 const SNOOZE_KEY = 'cv-studio-reminder-snooze';
@@ -81,6 +84,11 @@ export function reminderDates(now: number): Date[] {
   });
 }
 
+/** La 2ᵉ notification annonce l'offre de retour si le serveur pourra l'ouvrir à cette date. */
+export function offerAt(offer: ReturnOffer | null, at: Date): boolean {
+  return Boolean(offer?.possible && !offer.active && (!offer.notBefore || new Date(offer.notBefore) <= at));
+}
+
 /**
  * Android : reprogramme les notifications à chaque ouverture ou retour dans l'appli.
  * Elles ne sonnent donc que si la personne n'est pas revenue depuis 4 (puis 11) jours.
@@ -99,30 +107,35 @@ export async function scheduleReturnReminder(): Promise<void> {
       ({ display } = await LocalNotifications.requestPermissions());
       if (display !== 'granted') return;
     }
+    const { offer, token } = useAccount.getState();
     await LocalNotifications.schedule({
-      notifications: reminderDates(Date.now()).map((at, i) => ({
-        id: NOTIFY_IDS[i],
-        title: REMINDER_TITLE,
-        body: REMINDER_TEXT,
-        schedule: { at, allowWhileIdle: true },
-        smallIcon: 'ic_stat_cvstudio',
-        iconColor: '#2549eb',
-        extra: { tab: 'offre' },
-      })),
+      notifications: reminderDates(Date.now()).map((at, i) => {
+        const promo = i === 1 && Boolean(token) && offerAt(offer, at);
+        return {
+          id: NOTIFY_IDS[i],
+          title: promo ? OFFER_TITLE : REMINDER_TITLE,
+          body: promo ? OFFER_TEXT : REMINDER_TEXT,
+          schedule: { at, allowWhileIdle: true },
+          smallIcon: 'ic_stat_cvstudio',
+          iconColor: '#2549eb',
+          extra: promo ? { credits: true } : { tab: 'offre' },
+        };
+      }),
     });
   } catch {
     // Pas de notification possible (plugin absent, refus) : la bannière reste le rappel.
   }
 }
 
-/** Toucher la notification ouvre la page « Offre ». */
+/** Toucher la notification ouvre la page « Offre », ou la fenêtre des crédits pour l'offre de retour. */
 export async function listenReminderTap(): Promise<void> {
   if (!Capacitor.isNativePlatform()) return;
   try {
     const { LocalNotifications } = await import('@capacitor/local-notifications');
     await LocalNotifications.addListener('localNotificationActionPerformed', (action) => {
-      const tab = (action.notification.extra as { tab?: string } | undefined)?.tab;
-      if (tab) window.location.hash = tab;
+      const extra = action.notification.extra as { tab?: string; credits?: boolean } | undefined;
+      if (extra?.credits) useAccount.getState().open('credits');
+      else if (extra?.tab) window.location.hash = extra.tab;
     });
   } catch {
     // Rien à faire.

@@ -209,3 +209,18 @@ export const sampleTranscript: TranscribeResult = {
   text: 'Je soussigné, Kofi Mensah, directeur de la société Sahel Transport, atteste que Awa Diallo a effectué un stage du 01/02/2024 au 31/07/2024.\n\n• Tenue de la comptabilité fournisseurs\n• Rapprochements bancaires\n\nFait à Cotonou, le [illisible] 2024.',
   language: 'fr',
 };
+
+export const sampleStyle = {
+  enough: true,
+  profile: '- Ton sobre et direct\n- Phrases courtes, souvent sans verbe conjugué\n- Réalisations à l’infinitif, avec un chiffre quand il existe\n- Peu d’adjectifs, aucun superlatif\n- Lettres ouvertes par le poste visé, closes par une demande de rendez-vous simple',
+  traits: ['Ton direct', 'Phrases courtes', 'Verbes à l’infinitif'],
+  examples: ['Suivi des paiements clients chaque semaine', 'Je reste disponible pour un échange'],
+  message: 'Nous avons retenu votre ton direct et vos phrases courtes : vos prochains documents seront écrits ainsi.',
+};
+
+export const sampleLetterQuestions = {
+  questions: [
+    { question: 'Qu’est-ce qui vous attire dans cette entreprise ?', hint: 'Par exemple : un produit que vous utilisez, sa réputation dans votre ville.' },
+    { question: 'Racontez une situation où vous avez fait gagner du temps ou de l’argent à votre employeur.', hint: 'Ce que vous avez fait, et le résultat.' },
+  ],
+};

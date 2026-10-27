@@ -82,6 +82,57 @@ describe('paiements', () => {
     await expect(createPayments(db, accounts, fakeProvider('pending')).checkout(user, 'gratuit', 'x')).rejects.toMatchObject({ status: 400 });
   });
 
+  it('ouvre l’offre de retour une seule fois, après 10 jours d’absence, pour 72 heures', async () => {
+    const db = await testDb();
+    const accounts = createAccounts(db, opts);
+    const provider = fakeProvider('pending');
+    const payments = createPayments(db, accounts, provider);
+    const user = await accounts.register({ identifier: 'r@b.co', password: 'secret12', ip: '1.1.1.1', device: dev() });
+    const day = 86_400_000;
+    const now = Date.now();
+
+    // Personne active : pas d'offre, mais elle reste possible plus tard.
+    expect(await payments.returnOffer(user, new Date(now))).toEqual({ active: null, possible: true, notBefore: null });
+    await expect(payments.checkout(user, 'retour', 'x')).rejects.toMatchObject({ status: 410 });
+
+    // Retour après 11 jours : l'offre s'ouvre pour 72 heures, au prix du pack de 3.
+    const back = await payments.returnOffer(user, new Date(now + 11 * day));
+    expect(back.active?.pack).toMatchObject({ credits: 4, price: 500 });
+    expect(new Date(back.active!.expiresAt).getTime()).toBe(now + 11 * day + 72 * 3_600_000);
+    expect((await payments.returnOffer(user, new Date(now + 12 * day))).active).not.toBeNull();
+
+    // Achetée : 4 crédits ajoutés, puis plus jamais proposée.
+    expect(back.notBefore).toBeNull();
+    await db.query('update users set return_offer_until = $2 where id = $1', [user.id, new Date(Date.now() + 3_600_000).toISOString()]);
+    await payments.checkout(user, 'retour', 'x');
+    provider.statusRef.value = 'approved';
+    expect((await payments.confirm('tx-1')).credits).toBe(5);
+    expect(await payments.returnOffer(user, new Date(now + 60 * day))).toEqual({ active: null, possible: false, notBefore: null });
+  });
+
+  it('attend 30 jours après un achat avant de proposer l’offre de retour', async () => {
+    const db = await testDb();
+    const accounts = createAccounts(db, opts);
+    const provider = fakeProvider('approved');
+    const payments = createPayments(db, accounts, provider);
+    const user = await accounts.register({ identifier: 'p@b.co', password: 'secret12', ip: '1.1.1.1', device: dev() });
+    await payments.checkout(user, 'essentiel', 'x');
+    await payments.confirm('tx-1');
+    const offer = await payments.returnOffer(user, new Date(Date.now() + 15 * 86_400_000));
+    expect(offer.active).toBeNull();
+    expect(new Date(offer.notBefore!).getTime()).toBeGreaterThan(Date.now() + 29 * 86_400_000);
+  });
+
+  it('ne rouvre pas une offre de retour expirée', async () => {
+    const db = await testDb();
+    const accounts = createAccounts(db, opts);
+    const payments = createPayments(db, accounts, fakeProvider('pending'));
+    const user = await accounts.register({ identifier: 'x@b.co', password: 'secret12', ip: '1.1.1.1', device: dev() });
+    const later = Date.now() + 11 * 86_400_000;
+    await payments.returnOffer(user, new Date(later));
+    expect(await payments.returnOffer(user, new Date(later + 4 * 86_400_000))).toEqual({ active: null, possible: false, notBefore: null });
+  });
+
   it('appelle l’API FedaPay pour créer le paiement et lire son statut', async () => {
     const calls: { url: string; init: RequestInit }[] = [];
     const fetchImpl = vi.fn(async (url: string, init: RequestInit) => {

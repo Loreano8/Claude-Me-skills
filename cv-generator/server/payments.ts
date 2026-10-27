@@ -16,6 +16,22 @@ export const PACKS: Pack[] = [
   { id: 'pro', name: 'Recherche intensive', credits: 25, price: 3000 },
 ];
 
+/** Offre de retour : 4 crédits au prix du pack de 3, une seule fois, pour qui revient après une absence. */
+export const RETURN_PACK: Pack = { id: 'retour', name: 'Offre de retour', credits: 4, price: 500 };
+/** Absence minimale (aucun mouvement de crédits) et pas d'achat récent pour ouvrir l'offre. */
+export const RETURN_AFTER_DAYS = 10;
+export const RETURN_NO_PURCHASE_DAYS = 30;
+export const RETURN_OFFER_HOURS = 72;
+
+export interface ReturnOffer {
+  /** Offre ouverte en ce moment (sinon null). */
+  active: { pack: Pack; expiresAt: string } | null;
+  /** L'offre peut encore être proposée à cette personne un jour (sert au texte de la notification). */
+  possible: boolean;
+  /** Achat récent : l'offre ne pourra pas s'ouvrir avant cette date. */
+  notBefore: string | null;
+}
+
 export type PaymentStatus = 'pending' | 'approved' | 'declined' | 'canceled' | 'refunded' | 'transferred';
 
 /** Prestataire de paiement (FedaPay aujourd'hui ; Google Play Billing s'ajoutera pour l'appli du Play Store). */
@@ -78,12 +94,45 @@ export function fedapay(secretKey: string, env: 'sandbox' | 'live', fetchImpl: t
 }
 
 export function createPayments(db: Db, accounts: Accounts, provider: PaymentProvider | null) {
+  /**
+   * Offre de retour : ouverte (72 h) au moment où la personne revient après au moins 10 jours
+   * sans mouvement de crédits, si elle n'a rien acheté depuis 30 jours. Une seule fois par compte.
+   */
+  async function returnOffer(user: User, now = new Date()): Promise<ReturnOffer> {
+    const [row] = await db.query<{ until: Date | string | null; used: boolean; last_purchase: Date | string | null; last_activity: Date | string | null }>(
+      `select u.return_offer_until as until,
+         exists (select 1 from payments p where p.user_id = u.id and p.pack_id = $2 and p.status = 'approved') as used,
+         (select max(p.created_at) from payments p where p.user_id = u.id and p.status = 'approved') as last_purchase,
+         (select max(l.created_at) from credit_ledger l where l.user_id = u.id) as last_activity
+       from users u where u.id = $1`,
+      [user.id, RETURN_PACK.id],
+    );
+    const none = { active: null, possible: false, notBefore: null };
+    if (!row || row.used) return none;
+    const until = row.until ? new Date(row.until) : null;
+    if (until && until > now) return { active: { pack: RETURN_PACK, expiresAt: until.toISOString() }, possible: true, notBefore: null };
+    if (until) return none;
+    const purchaseEnd = row.last_purchase ? new Date(new Date(row.last_purchase).getTime() + RETURN_NO_PURCHASE_DAYS * 86_400_000) : null;
+    if (purchaseEnd && purchaseEnd > now) return { active: null, possible: true, notBefore: purchaseEnd.toISOString() };
+    const last = row.last_activity ? new Date(row.last_activity) : null;
+    if (last && now.getTime() - last.getTime() < RETURN_AFTER_DAYS * 86_400_000) return { active: null, possible: true, notBefore: null };
+    const expiresAt = new Date(now.getTime() + RETURN_OFFER_HOURS * 3_600_000);
+    await db.query('update users set return_offer_until = $2 where id = $1 and return_offer_until is null', [user.id, expiresAt.toISOString()]);
+    return { active: { pack: RETURN_PACK, expiresAt: expiresAt.toISOString() }, possible: true, notBefore: null };
+  }
+
   return {
     packs: PACKS,
+    returnOffer,
 
     async checkout(user: User, packId: string, returnUrl: string): Promise<string> {
       if (!provider) throw new PaymentError('Le paiement en ligne n’est pas encore activé.', 503);
-      const pack = PACKS.find((p) => p.id === packId);
+      let pack = PACKS.find((p) => p.id === packId);
+      if (!pack && packId === RETURN_PACK.id) {
+        const { active } = await returnOffer(user);
+        if (!active) throw new PaymentError('Cette offre n’est plus disponible.', 410);
+        pack = RETURN_PACK;
+      }
       if (!pack) throw new PaymentError('Pack inconnu.', 400);
       const { ref, url } = await provider.createCheckout({ user, pack, returnUrl });
       await db.query(

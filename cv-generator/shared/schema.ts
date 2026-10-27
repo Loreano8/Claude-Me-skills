@@ -177,6 +177,8 @@ export const StructureRequest = z.object({
   current: AiCvContent.nullable().default(null),
   /** Langue du CV ; null = celle des informations fournies (nouveau CV). */
   lang: Lang.nullable().default('fr'),
+  /** « Écrire comme moi » : description du style d'écriture du candidat (vide = style par défaut). */
+  style: z.string().max(2_000).default(''),
 });
 export type StructureRequest = z.output<typeof StructureRequest>;
 
@@ -222,6 +224,8 @@ export const AdaptRequest = z.object({
   cv: AiCvContent,
   job: JobInput,
   lang: Lang.nullable().default(null),
+  /** « Écrire comme moi » : description du style d'écriture du candidat (vide = style par défaut). */
+  style: z.string().max(2_000).default(''),
 });
 export type AdaptRequest = z.output<typeof AdaptRequest>;
 
@@ -232,6 +236,8 @@ export const CoverLetterRequest = z.object({
   tone: z.enum(['formel', 'dynamique', 'chaleureux']).default('formel'),
   length: z.enum(['courte', 'standard']).default('standard'),
   lang: Lang.nullable().default(null),
+  /** « Écrire comme moi » : description du style d'écriture du candidat (vide = style par défaut). */
+  style: z.string().max(2_000).default(''),
 });
 export type CoverLetterRequest = z.output<typeof CoverLetterRequest>;
 
@@ -239,6 +245,8 @@ export const InterviewRequest = z.object({
   cv: AiCvContent,
   job: JobInput,
   lang: Lang.nullable().default(null),
+  /** « Écrire comme moi » : description du style d'écriture du candidat (vide = style par défaut). */
+  style: z.string().max(2_000).default(''),
 });
 export type InterviewRequest = z.output<typeof InterviewRequest>;
 
@@ -255,6 +263,8 @@ export const ReviseRequest = z.object({
   cv: AiCvContent,
   instructions: z.string().max(10_000),
   lang: Lang.default('fr'),
+  /** « Écrire comme moi » : description du style d'écriture du candidat (vide = style par défaut). */
+  style: z.string().max(2_000).default(''),
 });
 export type ReviseRequest = z.output<typeof ReviseRequest>;
 
@@ -319,3 +329,41 @@ export const TemplateAnalysis = z.object({
   closestTemplate: CatalogTemplateId.describe('Modèle CV Studio le plus proche'),
 });
 export type TemplateAnalysis = z.infer<typeof TemplateAnalysis>;
+
+// ---- « Écrire comme moi » et questions avant la lettre ----------------------
+
+export const StyleRequest = z.object({
+  /** Texte écrit par la personne (copié-collé). */
+  text: z.string().max(20_000).default(''),
+  /** Ou des documents qu'elle a rédigés (ancien CV, lettre…). */
+  files: z.array(Attachment).max(4).default([]),
+});
+export type StyleRequest = z.output<typeof StyleRequest>;
+
+export const StyleResult = z.object({
+  enough: z.boolean().describe('Assez d’écriture personnelle pour en tirer un style'),
+  profile: z.string().describe('Description du style en 5 à 8 points courts, sans information personnelle'),
+  traits: z.array(z.string()).describe('3 à 5 étiquettes très courtes à montrer à la personne'),
+  examples: z.array(z.string()).describe('2 à 4 tournures typiques, 12 mots maximum, sans information personnelle'),
+  message: z.string().describe('Une phrase pour la personne, au vouvoiement'),
+});
+export type StyleResult = z.infer<typeof StyleResult>;
+
+export const LetterQuestionsRequest = z.object({
+  cv: AiCvContent,
+  job: JobInput,
+  notes: z.string().max(5_000).default(''),
+});
+export type LetterQuestionsRequest = z.output<typeof LetterQuestionsRequest>;
+
+export const LetterQuestionsResult = z.object({
+  questions: z
+    .array(
+      z.object({
+        question: z.string().describe('Question courte, au vouvoiement'),
+        hint: z.string().describe('Petit exemple de réponse pour aider'),
+      }),
+    )
+    .describe('1 ou 2 questions ; liste vide si les notes suffisent déjà'),
+});
+export type LetterQuestionsResult = z.infer<typeof LetterQuestionsResult>;

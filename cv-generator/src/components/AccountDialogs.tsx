@@ -517,6 +517,12 @@ function ReferralCard() {
   );
 }
 
+/** « jeudi 30 octobre à 14 h » */
+export function offerEnd(iso: string): string {
+  const d = new Date(iso);
+  return `${d.toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long' })} à ${d.getHours()} h`;
+}
+
 function CreditsDialog() {
   const { user, dialogReason, close, logout } = useAccount();
   const [packs, setPacks] = useState<Pack[] | null>(null);
@@ -557,6 +563,8 @@ function CreditsDialog() {
   }
 
   const best = packs?.[1]?.id;
+  const offer = useAccount((s) => s.offer?.active ?? null);
+  const offerOpen = offer && new Date(offer.expiresAt).getTime() > Date.now() ? offer : null;
 
   return (
     <Modal title="Mes crédits" onClose={close}>
@@ -582,6 +590,19 @@ function CreditsDialog() {
         1 crédit = 1 action de l’IA (générer ou corriger le CV, l’adapter à une offre, lettre, fiche entretien, traduction). 2 crédits = 1 CV en version Pro, acquise pour toujours sur ce CV (sans mention « Créé avec CV Studio », 13 modèles, export Word). Scanner : 1 crédit le PDF au-delà de 2 pages, 1 crédit par page manuscrite tapée. Remplir le CV et le télécharger en PDF reste gratuit.
       </p>
       <div className="space-y-2">
+        {offerOpen && (
+          <div className="flex items-center gap-3 rounded-2xl border-2 border-amber-400 bg-amber-50 p-3">
+            <div className="flex-1">
+              <p className="font-semibold text-slate-900">
+                {offerOpen.pack.credits} crédits <span className="ml-1 rounded-full bg-amber-200 px-2 py-0.5 text-xs font-semibold text-amber-900">Offre de retour</span>
+              </p>
+              <p className="text-sm text-slate-600">1 crédit offert en plus, jusqu’au {offerEnd(offerOpen.expiresAt)}. Une seule fois.</p>
+            </div>
+            <Button size="sm" loading={busy === offerOpen.pack.id} disabled={!paymentsOn || busy !== null} onClick={() => buy(offerOpen.pack)}>
+              {fcfa(offerOpen.pack.price)}
+            </Button>
+          </div>
+        )}
         {packs?.map((p) => (
           <div key={p.id} className={cx('flex items-center gap-3 rounded-2xl border-2 p-3', p.id === best ? 'border-brand-500' : 'border-slate-200')}>
             <div className="flex-1">

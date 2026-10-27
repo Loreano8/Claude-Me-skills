@@ -9,7 +9,7 @@ import { createPayments } from '../server/payments.ts';
 import { createTestimonials } from '../server/testimonials.ts';
 import { createSupport } from '../server/support.ts';
 import { testDb } from './pglite.ts';
-import { sampleAdapt, sampleInterview, sampleLetter, sampleRevise, sampleTemplateAnalysis, sampleTranslation, sampleClarify, sampleTranscript } from './fixtures.ts';
+import { sampleAdapt, sampleInterview, sampleLetter, sampleRevise, sampleTemplateAnalysis, sampleTranslation, sampleClarify, sampleTranscript, sampleStyle, sampleLetterQuestions } from './fixtures.ts';
 const db = await testDb();
 const accounts = createAccounts(db, { freeCredits: 1, freeIpCooldownDays: 0 });
 const paid = new Set<string>();
@@ -30,6 +30,8 @@ const ai = {
   analyzeTemplate: async () => (await wait(), sampleTemplateAnalysis),
   clarify: async () => (await wait(), sampleClarify),
   transcribe: async () => (await wait(), sampleTranscript),
+  style: async () => (await wait(), sampleStyle),
+  letterQuestions: async () => (await wait(), sampleLetterQuestions),
 };
 // E-mails simulés : le code s'affiche dans la console du serveur de démo.
 const support = createSupport(db, async (t) => console.log('[notification]', t));

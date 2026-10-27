@@ -6,6 +6,8 @@ import type { CvDocument, CvSettings } from '../types.ts';
 import { ACCENTS, isCvEmpty, toAiContent } from '../lib/cv.ts';
 import { api } from '../lib/api.ts';
 import { checkCv } from '../lib/checks.ts';
+import { cvCliches } from '../lib/naturalCheck.ts';
+import { NaturalReview } from '../components/NaturalReview.tsx';
 import { isRecommended, recommendedDisplay } from '../lib/recommended.ts';
 import { exportCvDocx, exportCvPdf } from '../export/exporters.ts';
 import { Preview } from '../components/Preview.tsx';
@@ -257,8 +259,9 @@ export function PreviewPage() {
       <div className="lg:col-start-1">
         <TranslateCard cv={cv} />
       </div>
-      <div className="lg:col-start-1">
+      <div className="space-y-4 lg:col-start-1">
         <ChecksCard cv={cv} />
+        {!isCvEmpty(cv) && <NaturalReview hits={cvCliches(cv)} edit="Corrigez directement dans « Mes infos », ou dites-la dans « Corriger mon CV en parlant »." />}
       </div>
     </div>
   );

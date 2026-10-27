@@ -1,12 +1,16 @@
 import { useState } from 'react';
-import { FileDown, FileText, Lock, Mail, Wand2 } from 'lucide-react';
+import { FileDown, FileText, Lock, Mail, MessageCircleQuestion, Wand2 } from 'lucide-react';
 import { DossierLink } from './DossierPage.tsx';
 import { useActiveCv, useStore } from '../store.ts';
-import type { CoverLetterRequest } from '../../shared/schema.ts';
+import type { CoverLetterRequest, LetterQuestionsResult } from '../../shared/schema.ts';
 import { api } from '../lib/api.ts';
 import { isCvEmpty, toAiContent } from '../lib/cv.ts';
 import { exportLetterDocx, exportLetterPdf } from '../export/exporters.ts';
 import { Preview } from '../components/Preview.tsx';
+import { WriteLikeMe } from '../components/WriteLikeMe.tsx';
+import { NaturalReview } from '../components/NaturalReview.tsx';
+import { letterCliches } from '../lib/naturalCheck.ts';
+import { appendSpoken, MicButton } from '../components/MicButton.tsx';
 import { ProOffer } from '../components/ProUnlock.tsx';
 import { Button, Card, Field, Notice, Select, TextArea, Toggle } from '../components/ui.tsx';
 import type { Tab } from '../App.tsx';
@@ -23,20 +27,51 @@ function GenerateCard({ onNavigate }: { onNavigate: (t: Tab) => void }) {
   const [error, setError] = useState<string | null>(null);
   const hasJob = !!job.text.trim() || !!job.file;
 
-  async function generate() {
+  /** Questions posées avant d'écrire (motivation, exemple vécu) et réponses de la personne. */
+  const [questions, setQuestions] = useState<LetterQuestionsResult['questions'] | null>(null);
+  const [answers, setAnswers] = useState<string[]>([]);
+  const [asking, setAsking] = useState(false);
+
+  const jobInput = () => ({ text: job.text, file: job.file ? { name: job.file.name, mediaType: job.file.mediaType, data: job.file.data } : null, answers: '' });
+
+  /** Avant la première lettre : 1 ou 2 questions gratuites pour la rendre personnelle. */
+  async function start() {
+    setAsking(true);
+    setError(null);
+    try {
+      const res = await api.letterQuestions({ cv: toAiContent(cv), job: jobInput(), notes });
+      if (res.questions.length) {
+        setQuestions(res.questions);
+        setAnswers(res.questions.map(() => ''));
+        return;
+      }
+    } catch {
+      // Questions indisponibles : on écrit directement la lettre.
+    } finally {
+      setAsking(false);
+    }
+    await generate([]);
+  }
+
+  async function generate(withAnswers: string[]) {
     setBusy(true);
     setError(null);
+    const personal = (questions ?? [])
+      .map((q, i) => (withAnswers[i]?.trim() ? `${q.question}\n${withAnswers[i].trim()}` : ''))
+      .filter(Boolean)
+      .join('\n\n');
     try {
       const res = await api.coverLetter({
         cv: toAiContent(cv),
-        job: { text: job.text, file: job.file ? { name: job.file.name, mediaType: job.file.mediaType, data: job.file.data } : null, answers: '' },
-        notes,
+        job: jobInput(),
+        notes: [notes.trim(), personal].filter(Boolean).join('\n\n'),
         tone,
         length,
         // « Automatique » : la langue de l'offre, sinon celle du CV.
         lang: lang === 'auto' ? (hasJob ? null : cv.settings.headingLang) : lang,
       });
       applyLetter(res, cv);
+      setQuestions(null);
     } catch (e) {
       setError((e as Error).message);
     } finally {
@@ -110,12 +145,43 @@ function GenerateCard({ onNavigate }: { onNavigate: (t: Tab) => void }) {
           <Notice tone="warn">Remplissez d’abord votre CV : la lettre s’appuie sur vos expériences.</Notice>
         </div>
       )}
-      <div className="mt-3">
-        <Button variant="ai" icon={<Wand2 className="size-4" />} loading={busy} disabled={isCvEmpty(cv) || (!hasJob && !notes.trim())} onClick={generate}>
-          Générer la lettre
-        </Button>
-        {!hasJob && !notes.trim() && <p className="mt-1.5 text-xs text-slate-500">Pour une candidature spontanée, indiquez au moins l’entreprise ou le poste visé.</p>}
-      </div>
+      {questions ? (
+        <div className="mt-4 space-y-3 rounded-xl bg-white p-3.5 ring-1 ring-violet-100">
+          <p className="flex items-center gap-2 text-sm font-semibold text-slate-800">
+            <MessageCircleQuestion className="size-4 text-violet-600" /> Pour une lettre qui vous ressemble (facultatif, gratuit)
+          </p>
+          {questions.map((q, i) => (
+            <div key={i}>
+              <TextArea
+                label={q.question}
+                value={answers[i] ?? ''}
+                onChange={(v) => setAnswers((cur) => cur.map((a, j) => (j === i ? v : a)))}
+                rows={3}
+                placeholder={q.hint}
+              />
+              <div className="mt-1.5">
+                <MicButton onText={(t) => setAnswers((cur) => cur.map((a, j) => (j === i ? appendSpoken(a, t) : a)))} lang={cv.settings.headingLang} label="Répondre en parlant" />
+              </div>
+            </div>
+          ))}
+          <div className="flex flex-wrap gap-2">
+            <Button variant="ai" icon={<Wand2 className="size-4" />} loading={busy} onClick={() => void generate(answers)}>
+              Générer la lettre
+            </Button>
+            <Button variant="ghost" disabled={busy} onClick={() => void generate([])}>
+              Passer
+            </Button>
+          </div>
+        </div>
+      ) : (
+        <div className="mt-3">
+          <Button variant="ai" icon={<Wand2 className="size-4" />} loading={busy || asking} disabled={isCvEmpty(cv) || (!hasJob && !notes.trim())} onClick={() => void start()}>
+            Générer la lettre
+          </Button>
+          {!hasJob && !notes.trim() && <p className="mt-1.5 text-xs text-slate-500">Pour une candidature spontanée, indiquez au moins l’entreprise ou le poste visé.</p>}
+        </div>
+      )}
+      {asking && <p className="mt-3 text-sm text-violet-700">Préparation de vos questions…</p>}
       {busy && <p className="mt-3 text-sm text-violet-700">Rédaction en cours…</p>}
       {error && (
         <div className="mt-3">
@@ -154,6 +220,7 @@ export function LetterPage({ onNavigate }: { onNavigate: (t: Tab) => void }) {
   return (
     <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
       <div className="space-y-4">
+        <WriteLikeMe compact />
         <GenerateCard onNavigate={onNavigate} />
 
         <Card
@@ -191,6 +258,7 @@ export function LetterPage({ onNavigate }: { onNavigate: (t: Tab) => void }) {
             />
           </div>
         </Card>
+        {letter.body.trim() && <NaturalReview hits={letterCliches(letter)} edit="Corrigez directement dans « Corps de la lettre » ci-dessus." />}
       </div>
 
       <div className="space-y-3 lg:sticky lg:top-20 lg:self-start">
