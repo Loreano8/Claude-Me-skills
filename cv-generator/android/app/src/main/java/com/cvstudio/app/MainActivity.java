@@ -9,6 +9,7 @@ public class MainActivity extends BridgeActivity {
     @Override
     public void onCreate(Bundle savedInstanceState) {
         registerPlugin(ShareInboxPlugin.class);
+        registerPlugin(FileSaverPlugin.class);
         // BridgeActivity transmet l'intention de démarrage à onNewIntent() : le partage y est lu.
         super.onCreate(savedInstanceState);
     }

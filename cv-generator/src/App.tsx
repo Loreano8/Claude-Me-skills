@@ -4,6 +4,7 @@ import { ClipboardList, FileDown, FileUser, Mail, MessageCircle, Target } from '
 import { useActiveCv, useStore } from './store.ts';
 import { CvSwitcher } from './components/CvSwitcher.tsx';
 import { AccountButton, AccountDialogs } from './components/AccountDialogs.tsx';
+import { SaveDialog } from './components/SaveDialog.tsx';
 import { refreshAccount } from './lib/api.ts';
 import { useAccount } from './lib/account.ts';
 import { Preview } from './components/Preview.tsx';
@@ -167,6 +168,7 @@ export default function App() {
         </div>
       </header>
       <AccountDialogs />
+      <SaveDialog />
 
       <main className="mx-auto max-w-7xl px-4 pt-4 pb-28 lg:pb-10">
         {tab === 'accueil' && <LandingPage onNavigate={setTab} />}
