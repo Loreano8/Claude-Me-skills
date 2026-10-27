@@ -67,15 +67,17 @@ export function WriteLikeMe({ compact = false }: { compact?: boolean }) {
 
   if (compact && !open) {
     return (
-      <div className="flex flex-wrap items-center gap-x-3 gap-y-1 rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm">
-        <PenLine className="size-4 text-brand-600" />
-        <span className="font-semibold text-slate-800">Écrire comme moi</span>
-        <span className="min-w-0 flex-1 text-slate-600">
-          {style ? (enabled ? `activé : ${style.traits.slice(0, 3).join(' · ')}` : 'désactivé') : 'vos lettres écrites avec vos mots à vous'}
-        </span>
-        <button type="button" className="font-medium text-brand-700 underline" onClick={() => setOpen(true)}>
-          {style ? 'Modifier' : 'Configurer'}
-        </button>
+      <div className="rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm">
+        <div className="flex items-center gap-2">
+          <PenLine className="size-4 shrink-0 text-brand-600" />
+          <span className="font-semibold text-slate-800">Écrire comme moi</span>
+          <button type="button" className="ml-auto font-medium text-brand-700 underline" onClick={() => setOpen(true)}>
+            {style ? 'Modifier' : 'Configurer'}
+          </button>
+        </div>
+        <p className="mt-0.5 pl-6 text-slate-600">
+          {style ? (enabled ? `Activé : ${style.traits.slice(0, 3).join(' · ')}` : 'Désactivé') : 'Vos CV et lettres écrits avec vos mots à vous.'}
+        </p>
       </div>
     );
   }

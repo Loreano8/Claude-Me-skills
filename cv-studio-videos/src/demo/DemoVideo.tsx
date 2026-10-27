@@ -43,14 +43,22 @@ export const SCENES: Scene[] = [
     ],
   },
   {
-    clip: "demo/03-apercu.mp4", clipSeconds: 8.60, voice: "demo/p3.mp3", seconds: 8.0, label: "2. Votre modèle",
+    clip: "demo/02b-style.mp4", clipSeconds: 14.70, voice: "demo/p2b.mp3", seconds: 10.8, label: "2. Écrit comme vous",
+    captions: [
+      { at: 0.5, text: "Vous avez déjà écrit un CV ou une lettre ? Montrez-le." },
+      { at: 4.3, text: "CV Studio retient votre façon d’écrire : votre ton, vos tournures." },
+      { at: 8.45, text: "Vos prochains documents vous ressemblent." },
+    ],
+  },
+  {
+    clip: "demo/03-apercu.mp4", clipSeconds: 8.60, voice: "demo/p3.mp3", seconds: 8.0, label: "3. Votre modèle",
     captions: [
       { at: 0.4, text: "Choisissez votre modèle." },
       { at: 2.5, text: "Le bouton « Recommandé » règle la photo et les détails selon l’usage." },
     ],
   },
   {
-    clip: "demo/04-offre.mp4", clipSeconds: 15.27, voice: "demo/p4.mp3", seconds: 12.2, label: "3. Adapté à chaque offre",
+    clip: "demo/04-offre.mp4", clipSeconds: 15.27, voice: "demo/p4.mp3", seconds: 12.2, label: "4. Adapté à chaque offre",
     captions: [
       { at: 0.5, text: "Une offre vous intéresse ? Collez l’annonce." },
       { at: 3.5, text: "CV Studio vous pose une question si besoin," },
@@ -59,11 +67,16 @@ export const SCENES: Scene[] = [
     ],
   },
   {
-    clip: "demo/05-lettre.mp4", clipSeconds: 11.23, voice: "demo/p5.mp3", seconds: 7.0, label: "4. La lettre de motivation",
-    captions: [{ at: 0.45, text: "Votre lettre de motivation suit, écrite pour cette offre précise." }],
+    clip: "demo/05-lettre.mp4", clipSeconds: 18.65, voice: "demo/p5.mp3", seconds: 13.2, label: "5. Une lettre qui vous ressemble",
+    captions: [
+      { at: 0.45, text: "Pour la lettre de motivation," },
+      { at: 2.85, text: "CV Studio vous pose une ou deux questions," },
+      { at: 6.35, text: "pour qu’elle parle vraiment de vous." },
+      { at: 9.2, text: "Puis la relecture repère les formules toutes faites." },
+    ],
   },
   {
-    clip: "demo/06-scanner.mp4", clipSeconds: 18.10, voice: "demo/p6.mp3", seconds: 11.3, label: "5. Vos papiers, scannés",
+    clip: "demo/06-scanner.mp4", clipSeconds: 18.10, voice: "demo/p6.mp3", seconds: 11.3, label: "6. Vos papiers, scannés",
     captions: [
       { at: 0.55, text: "Il faut joindre vos diplômes ? Prenez-les en photo :" },
       { at: 4.3, text: "la page est redressée et nettoyée," },
@@ -71,7 +84,7 @@ export const SCENES: Scene[] = [
     ],
   },
   {
-    clip: "demo/07-documents.mp4", clipSeconds: 11.70, voice: "demo/p7.mp3", seconds: 8.9, label: "6. Tout est rangé",
+    clip: "demo/07-documents.mp4", clipSeconds: 11.70, voice: "demo/p7.mp3", seconds: 8.9, label: "7. Tout est rangé",
     captions: [
       { at: 0.1, text: "Tous vos CV et vos lettres vous attendent dans « Mes documents »." },
       { at: 4.3, text: "Vos papiers sont rangés dans le coffre-fort, protégé par votre code." },
