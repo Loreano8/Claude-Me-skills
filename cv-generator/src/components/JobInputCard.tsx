@@ -60,7 +60,8 @@ export function JobInputCard() {
     const url = firstUrl(shared);
     // Nouvelle offre partagée : l'ancienne ne doit pas rester affichée si la lecture échoue.
     setJob({ text: '', file: null });
-    if (url) {
+    // Un message partagé qui contient déjà l'offre (texte long) se suffit à lui-même.
+    if (url && shared.replace(URL_RE, '').trim().length < 200) {
       setLink(url);
       void readLink(url, shared);
     } else {
@@ -74,7 +75,7 @@ export function JobInputCard() {
   const pastedLink = !link && job.text.trim().length < 400 ? firstUrl(job.text) : null;
 
   return (
-    <Card title="L’offre d’emploi" subtitle="Collez le lien de l’annonce (LinkedIn, site d’emploi…), son texte, ou importez-la en PDF ou en capture d’écran.">
+    <Card title="L’offre d’emploi" subtitle="Collez le lien de l’annonce, son texte, ou importez-la en PDF ou en capture d’écran.">
       <div className="flex flex-col gap-2 sm:flex-row">
         <label className="flex min-w-0 flex-1 items-center gap-2 rounded-xl bg-white px-3 ring-1 ring-slate-300 focus-within:ring-2 focus-within:ring-brand-500">
           <Link2 className="size-4 shrink-0 text-slate-400" />
@@ -143,7 +144,7 @@ export function JobInputCard() {
           </Button>
         )}
       </div>
-      <p className="mt-2 text-xs text-slate-500">Astuce : dans LinkedIn ou WhatsApp, touchez « Partager » sur l’offre puis choisissez CV Studio.</p>
+      <p className="mt-2 text-xs text-slate-500">Astuce : depuis la page d’une offre, touchez « Partager » puis choisissez CV Studio.</p>
       {error && (
         <div className="mt-3">
           <Notice tone="error">{error}</Notice>

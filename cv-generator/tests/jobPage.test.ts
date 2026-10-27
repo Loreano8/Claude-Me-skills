@@ -104,3 +104,13 @@ describe('pages LinkedIn', () => {
     await expect(fetchJobPage('https://www.linkedin.com/feed/update/urn:li:activity:1/', signup as unknown as typeof fetch)).rejects.toMatchObject({ status: 422 });
   });
 });
+
+describe('liens WhatsApp', () => {
+  it('explique de copier le texte du message au lieu de lire la page', async () => {
+    const never = vi.fn();
+    for (const u of ['https://whatsapp.com/channel/0029Val4LD696H4LE4lwYh2F/120', 'https://chat.whatsapp.com/AbCdEf', 'https://wa.me/22900000000']) {
+      await expect(fetchJobPage(u, never as unknown as typeof fetch)).rejects.toThrow(/Copiez le texte/);
+    }
+    expect(never).not.toHaveBeenCalled();
+  });
+});

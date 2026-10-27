@@ -145,9 +145,15 @@ export function extractJob(html: string, url: string): JobPage {
   return { url, title, text };
 }
 
+const WHATSAPP =
+  'Un lien WhatsApp ne montre pas le contenu du message. Copiez le texte de l’offre (appui long sur le message, puis « Copier ») ' +
+  'et collez-le ici, ou envoyez une capture d’écran.';
+
 /** Télécharge la page (redirections vérifiées une à une) et renvoie le texte de l'offre. */
 export async function fetchJobPage(raw: string, fetchImpl: typeof fetch = fetch): Promise<JobPage> {
   let url = checkPublicUrl(raw);
+  // Chaînes et groupes WhatsApp : la page publique ne donne que le nom de la chaîne, jamais la publication.
+  if (/(^|\.)(whatsapp\.com|wa\.me)$/i.test(url.hostname)) throw new JobPageError(WHATSAPP, 422);
   let res: Response | null = null;
   const signal = AbortSignal.timeout(TIMEOUT_MS);
   try {
