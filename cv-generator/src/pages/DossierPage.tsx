@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { ArrowDown, ArrowUp, Camera, FileStack, FileText, FileUser, Mail, Paperclip, RotateCw, Trash2 } from 'lucide-react';
+import { ArrowDown, ArrowUp, Camera, FileStack, FileText, FileUser, Mail, Paperclip, RotateCw, ScanLine, Trash2 } from 'lucide-react';
 import { useActiveCv, useStore } from '../store.ts';
 import { cvFileName, isCvEmpty } from '../lib/cv.ts';
 import { buildDossier, formatSize, pdfPageCount, processPhoto, type DossierPart, type ScanMode } from '../lib/dossier.ts';
@@ -34,17 +34,40 @@ export function DossierLink() {
   );
 }
 
-/** « Mon dossier en 1 PDF » : CV, lettre, pièces d'identité, diplômes… réunis et scannés sur le téléphone. */
-export function DossierPage({ onNavigate }: { onNavigate: (t: Tab) => void }) {
+/** Bouton d'en-tête : scanner des papiers en PDF, accessible de partout. */
+export function ScannerButton({ active, onClick }: { active: boolean; onClick: () => void }) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      aria-label="Scanner un document en PDF"
+      title="Scanner en PDF"
+      className={cx('rounded-xl p-2 transition-colors', active ? 'bg-brand-50 text-brand-700' : 'text-slate-600 hover:bg-slate-100')}
+    >
+      <ScanLine className="size-5" />
+    </button>
+  );
+}
+
+/**
+ * « Mon dossier en 1 PDF » : CV, lettre, pièces d'identité, diplômes… réunis et scannés sur le téléphone.
+ * En mode « scanner », la même page sert simplement à transformer des papiers photographiés en PDF.
+ */
+export function DossierPage({ onNavigate, mode = 'dossier' }: { onNavigate: (t: Tab) => void; mode?: 'dossier' | 'scanner' }) {
+  const scanner = mode === 'scanner';
   const cv = useActiveCv();
   const letter = useStore((s) => s.letter);
   const hasLetter = !!letter.body.trim();
   const cvBlocked = isProTemplate(cv.settings.template) && !cv.unlocked;
-  const [items, setItems] = useState<Item[]>(() => [
-    ...(isCvEmpty(cv) || cvBlocked ? [] : [{ id: 'cv', kind: 'cv' as const }]),
-    ...(hasLetter ? [{ id: 'letter', kind: 'letter' as const }] : []),
-  ]);
-  const [fileName, setFileName] = useState(() => cvFileName(cv, 'pdf', 'Dossier').replace(/\.pdf$/, ''));
+  const [items, setItems] = useState<Item[]>(() =>
+    scanner
+      ? []
+      : [
+          ...(isCvEmpty(cv) || cvBlocked ? [] : [{ id: 'cv', kind: 'cv' as const }]),
+          ...(hasLetter ? [{ id: 'letter', kind: 'letter' as const }] : []),
+        ],
+  );
+  const [fileName, setFileName] = useState(() => (scanner ? 'Document_scanne' : cvFileName(cv, 'pdf', 'Dossier').replace(/\.pdf$/, '')));
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [done, setDone] = useState<string | null>(null);
@@ -81,7 +104,7 @@ export function DossierPage({ onNavigate }: { onNavigate: (t: Tab) => void }) {
           void pdfPageCount(bytes).then((pages) => setItems((l) => l.map((x) => (x.id === id && x.kind === 'pdf' ? { ...x, pages } : x))));
         } else if (f.type.startsWith('image/')) {
           // Photo prise avec l'appareil : rendu « scan » par défaut ; image de la galerie : couleur.
-          const base = { id: newId(), kind: 'photo' as const, name: fromCamera ? 'Document scanné' : f.name, original: f as Blob, mode: (fromCamera ? 'scan' : 'couleur') as ScanMode, rotation: 0 as const, processed: null, url: null };
+          const base = { id: newId(), kind: 'photo' as const, name: fromCamera ? 'Page scannée' : f.name, original: f as Blob, mode: (fromCamera ? 'scan' : 'couleur') as ScanMode, rotation: 0 as const, processed: null, url: null };
           setItems((l) => [...l, base]);
           const ready = await render(base);
           replace(base.id, ready);
@@ -145,10 +168,15 @@ export function DossierPage({ onNavigate }: { onNavigate: (t: Tab) => void }) {
       <Card
         title={
           <span className="flex items-center gap-2">
-            <FileStack className="size-5 text-brand-600" /> Mon dossier en un seul PDF
+            {scanner ? <ScanLine className="size-5 text-brand-600" /> : <FileStack className="size-5 text-brand-600" />}
+            {scanner ? 'Scanner en PDF' : 'Mon dossier en un seul PDF'}
           </span>
         }
-        subtitle="CV, lettre, pièce d’identité, diplômes, attestations… réunis dans un seul fichier, dans l’ordre voulu. Les documents restent sur votre appareil."
+        subtitle={
+          scanner
+            ? 'Prenez vos papiers en photo (document écrit à la main, attestation, pièce d’identité…) : ils deviennent un PDF propre, comme passé au scanner. Une photo par page.'
+            : 'CV, lettre, pièce d’identité, diplômes, attestations… réunis dans un seul fichier, dans l’ordre voulu. Les documents restent sur votre appareil.'
+        }
       >
         <div className="flex flex-wrap gap-2">
           <Button icon={<Camera className="size-4" />} onClick={() => camera.current?.click()}>
@@ -157,12 +185,12 @@ export function DossierPage({ onNavigate }: { onNavigate: (t: Tab) => void }) {
           <Button variant="secondary" icon={<Paperclip className="size-4" />} onClick={() => files.current?.click()}>
             Ajouter des fichiers (PDF, photos)
           </Button>
-          {!has('cv') && !isCvEmpty(cv) && !cvBlocked && (
+          {!scanner && !has('cv') && !isCvEmpty(cv) && !cvBlocked && (
             <Button variant="secondary" icon={<FileUser className="size-4" />} onClick={() => setItems((l) => [{ id: 'cv', kind: 'cv' }, ...l])}>
               Ajouter mon CV
             </Button>
           )}
-          {!has('letter') && hasLetter && (
+          {!scanner && !has('letter') && hasLetter && (
             <Button variant="secondary" icon={<Mail className="size-4" />} onClick={() => setItems((l) => [...l.filter((x) => x.kind === 'cv'), { id: 'letter', kind: 'letter' }, ...l.filter((x) => x.kind !== 'cv')])}>
               Ajouter ma lettre
             </Button>
@@ -173,7 +201,7 @@ export function DossierPage({ onNavigate }: { onNavigate: (t: Tab) => void }) {
         <p className="mt-2 text-xs text-slate-500">
           Pour scanner : posez la feuille à plat sur une surface sombre, bien éclairée, et cadrez au plus près. Une photo par page.
         </p>
-        {cvBlocked && (
+        {!scanner && cvBlocked && (
           <div className="mt-3">
             <Notice tone="warn">
               Votre CV utilise un modèle Pro : passez-le en Pro ou choisissez un modèle gratuit dans{' '}
@@ -187,7 +215,10 @@ export function DossierPage({ onNavigate }: { onNavigate: (t: Tab) => void }) {
       </Card>
 
       {items.length > 0 && (
-        <Card title="Contenu du dossier" subtitle="Dans l’ordre où il sera assemblé. Utilisez les flèches pour changer l’ordre.">
+        <Card
+          title={scanner ? 'Pages scannées' : 'Contenu du dossier'}
+          subtitle={scanner ? 'Dans l’ordre du PDF. Utilisez les flèches pour changer l’ordre.' : 'Dans l’ordre où il sera assemblé. Utilisez les flèches pour changer l’ordre.'}
+        >
           <ol className="space-y-2">
             {items.map((it, i) => (
               <li key={it.id} className="flex items-center gap-3 rounded-xl border border-slate-200 p-2">
@@ -218,7 +249,7 @@ export function DossierPage({ onNavigate }: { onNavigate: (t: Tab) => void }) {
                             type="button"
                             aria-pressed={it.mode === m}
                             onClick={() => it.mode !== m && void update(it, { mode: m })}
-                            className={cx('rounded-full px-2.5 py-1', it.mode === m ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-600')}
+                            className={cx('rounded-full px-2.5 py-1 whitespace-nowrap', it.mode === m ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-600')}
                           >
                             {m === 'scan' ? 'Scan N&B' : 'Couleur'}
                           </button>

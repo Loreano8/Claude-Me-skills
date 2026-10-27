@@ -17,7 +17,7 @@ const FEATURES: { icon: typeof Target; title: string; text: string }[] = [
   { icon: Target, title: 'CV adapté à chaque offre', text: 'Mots-clés du poste, points forts mis en avant, exigences manquantes signalées. Score avant → après pour voir le gain.' },
   { icon: Sparkles, title: 'Lettre de motivation', text: 'Courte, personnalisée, au ton choisi. Candidature spontanée possible.' },
   { icon: MessagesSquare, title: 'Fiche entretien', text: 'Les questions probables pour ce poste, des réponses construites à partir de votre parcours, et comment parler de vos points faibles.' },
-  { icon: FileStack, title: 'Dossier en un seul PDF', text: 'CV, lettre, pièce d’identité, diplômes : scannez vos papiers avec le téléphone et envoyez un seul fichier, dans le bon ordre.' },
+  { icon: FileStack, title: 'Scanner et dossier PDF', text: 'Scannez vos papiers avec le téléphone (même écrits à la main) en PDF propre. Ou réunissez CV, lettre, pièce d’identité et diplômes dans un seul fichier.' },
   { icon: Languages, title: 'CV en anglais', text: 'Traduit et mis aux normes du pays visé : Canada, États-Unis, Royaume-Uni ou international.' },
   { icon: ClipboardList, title: 'Suivi des candidatures', text: 'Envoyée, entretien, réponse : toutes vos offres au même endroit, avec le bon CV pour chacune.' },
   { icon: Globe2, title: 'Pensé pour l’Afrique francophone', text: 'Normes locales (photo, date de naissance si attendues), paiement mobile money, prix en FCFA.' },
