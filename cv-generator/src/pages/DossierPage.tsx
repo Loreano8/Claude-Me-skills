@@ -1,20 +1,29 @@
 import { useEffect, useRef, useState } from 'react';
-import { ArrowDown, ArrowUp, Camera, FileStack, FileText, FileUser, Mail, Paperclip, RotateCw, ScanLine, Trash2 } from 'lucide-react';
+import { ArrowDown, ArrowUp, Camera, Crop, FileStack, FileText, FileUser, Mail, Paperclip, PenLine, RotateCw, ScanLine, Trash2 } from 'lucide-react';
+import type { TranscribeResult } from '../../shared/schema.ts';
+import { api } from '../lib/api.ts';
+import { readAsDataUrl } from '../lib/files.ts';
+import { CropEditor } from '../components/CropEditor.tsx';
 import { useActiveCv, useStore } from '../store.ts';
 import { cvFileName, isCvEmpty } from '../lib/cv.ts';
-import { buildDossier, formatSize, pdfPageCount, processPhoto, type DossierPart, type ScanMode } from '../lib/dossier.ts';
+import { buildDossier, formatSize, FULL_QUAD, orientedPhoto, pdfPageCount, processPhoto, type DossierPart, type Quad, type ScanMode } from '../lib/dossier.ts';
 import { isProTemplate } from '../pdf/catalog.ts';
 import { saveFile } from '../export/save.ts';
-import { Button, Card, cx, Field, Notice } from '../components/ui.tsx';
+import { Button, Card, cx, Field, Notice, TextArea } from '../components/ui.tsx';
 import type { Tab } from '../App.tsx';
 
 type Item =
   | { id: string; kind: 'cv' }
   | { id: string; kind: 'letter' }
   | { id: string; kind: 'pdf'; name: string; bytes: ArrayBuffer; pages: number | null }
-  | { id: string; kind: 'photo'; name: string; original: Blob; mode: ScanMode; rotation: 0 | 90 | 180 | 270; processed: Blob | null; url: string | null };
+  | { id: string; kind: 'photo'; name: string; original: Blob; mode: ScanMode; rotation: 0 | 90 | 180 | 270; quad: Quad; processed: Blob | null; url: string | null };
+type Photo = Extract<Item, { kind: 'photo' }>;
 
 const MAX_FILE = 25 * 1024 * 1024;
+/** Gratuit : 3 pages scannées par PDF, ou 2 pièces en plus du CV et de la lettre. Au-delà : 1 crédit le PDF. */
+const FREE_SCAN_PAGES = 3;
+const FREE_DOSSIER_PIECES = 2;
+const MAX_TRANSCRIBE_PAGES = 8;
 let seq = 0;
 const newId = () => `p${Date.now().toString(36)}${++seq}`;
 
@@ -78,8 +87,14 @@ export function DossierPage({ onNavigate, mode = 'dossier' }: { onNavigate: (t: 
   const urls = useRef<string[]>([]);
   useEffect(() => () => urls.current.forEach((u) => URL.revokeObjectURL(u)), []);
 
-  async function render(item: Extract<Item, { kind: 'photo' }>): Promise<Item> {
-    const processed = await processPhoto(item.original, item.mode, item.rotation);
+  const [paid, setPaid] = useState(false);
+  const [cropping, setCropping] = useState<{ item: Photo; src: string } | null>(null);
+  const [transcript, setTranscript] = useState<TranscribeResult | null>(null);
+  const [transcribing, setTranscribing] = useState(false);
+  const [exporting, setExporting] = useState<'pdf' | 'docx' | null>(null);
+
+  async function render(item: Photo): Promise<Item> {
+    const processed = await processPhoto(item.original, item.mode, item.rotation, item.quad);
     const url = URL.createObjectURL(processed);
     urls.current.push(url);
     return { ...item, processed, url };
@@ -104,7 +119,7 @@ export function DossierPage({ onNavigate, mode = 'dossier' }: { onNavigate: (t: 
           void pdfPageCount(bytes).then((pages) => setItems((l) => l.map((x) => (x.id === id && x.kind === 'pdf' ? { ...x, pages } : x))));
         } else if (f.type.startsWith('image/')) {
           // Photo prise avec l'appareil : rendu « scan » par défaut ; image de la galerie : couleur.
-          const base = { id: newId(), kind: 'photo' as const, name: fromCamera ? 'Page scannée' : f.name, original: f as Blob, mode: (fromCamera ? 'scan' : 'couleur') as ScanMode, rotation: 0 as const, processed: null, url: null };
+          const base = { id: newId(), kind: 'photo' as const, name: fromCamera ? 'Page scannée' : f.name, original: f as Blob, mode: (fromCamera ? 'scan' : 'couleur') as ScanMode, rotation: 0 as const, quad: FULL_QUAD, processed: null, url: null };
           setItems((l) => [...l, base]);
           const ready = await render(base);
           replace(base.id, ready);
@@ -117,8 +132,9 @@ export function DossierPage({ onNavigate, mode = 'dossier' }: { onNavigate: (t: 
     }
   }
 
-  async function update(item: Extract<Item, { kind: 'photo' }>, patch: Partial<Pick<typeof item, 'mode' | 'rotation'>>) {
-    const next = { ...item, ...patch, processed: null };
+  async function update(item: Photo, patch: Partial<Pick<Photo, 'mode' | 'rotation' | 'quad'>>) {
+    // Les coins sont placés sur la photo tournée : un nouveau quart de tour les remet à zéro.
+    const next = { ...item, ...patch, ...(patch.rotation !== undefined ? { quad: FULL_QUAD } : {}), processed: null };
     replace(item.id, { ...next, url: item.url });
     try {
       replace(item.id, await render(next));
@@ -136,11 +152,72 @@ export function DossierPage({ onNavigate, mode = 'dossier' }: { onNavigate: (t: 
       return copy;
     });
 
+  async function openCrop(item: Photo) {
+    try {
+      const src = URL.createObjectURL(await orientedPhoto(item.original, item.rotation));
+      urls.current.push(src);
+      setCropping({ item, src });
+    } catch (e) {
+      setError((e as Error).message);
+    }
+  }
+
+  // Limite gratuite : pages scannées (scanner) ou pièces ajoutées au CV et à la lettre (dossier).
+  const scanPages = items.reduce((n, it) => n + (it.kind === 'photo' ? 1 : it.kind === 'pdf' ? (it.pages ?? 1) : 0), 0);
+  const pieces = items.filter((it) => it.kind === 'photo' || it.kind === 'pdf').length;
+  const needsCredit = scanner ? scanPages > FREE_SCAN_PAGES : pieces > FREE_DOSSIER_PIECES;
+
+  const photos = items.filter((it): it is Photo => it.kind === 'photo');
+
+  async function transcribe() {
+    setTranscribing(true);
+    setError(null);
+    try {
+      const pages = photos.slice(0, MAX_TRANSCRIBE_PAGES);
+      if (pages.some((p) => !p.processed)) throw new Error('Une photo est encore en préparation, patientez une seconde.');
+      const files = await Promise.all(
+        pages.map(async (p, i) => {
+          const url = await readAsDataUrl(p.processed!);
+          return { name: `page-${i + 1}.jpg`, mediaType: 'image/jpeg' as const, data: url.slice(url.indexOf(',') + 1) };
+        }),
+      );
+      setTranscript(await api.transcribe({ files }));
+    } catch (e) {
+      setError((e as Error).message);
+    } finally {
+      setTranscribing(false);
+    }
+  }
+
+  async function exportTranscript(kind: 'pdf' | 'docx') {
+    if (!transcript) return;
+    setExporting(kind);
+    setError(null);
+    try {
+      const base = (fileName.trim() || 'Document').replace(/[\\/:*?"<>|]+/g, '_') + '_texte';
+      if (kind === 'pdf') {
+        const { renderTranscriptPdf } = await import('../pdf/render.tsx');
+        await saveFile(await renderTranscriptPdf(transcript.title, transcript.text), `${base}.pdf`);
+      } else {
+        const { buildTranscriptDocx, docxBlob } = await import('../export/docx.ts');
+        await saveFile(await docxBlob(buildTranscriptDocx(transcript.title, transcript.text)), `${base}.docx`);
+      }
+    } catch (e) {
+      setError((e as Error).message);
+    } finally {
+      setExporting(null);
+    }
+  }
+
   async function create() {
     setBusy(true);
     setError(null);
     setDone(null);
     try {
+      if (needsCredit && !paid) {
+        await api.dossierUnlock();
+        setPaid(true);
+      }
       const { renderCvPdf, renderLetterPdf } = await import('../pdf/render.tsx');
       const parts: DossierPart[] = [];
       for (const it of items) {
@@ -199,7 +276,10 @@ export function DossierPage({ onNavigate, mode = 'dossier' }: { onNavigate: (t: 
         <input ref={camera} type="file" accept="image/*" capture="environment" className="hidden" onChange={(e) => { void addFiles(e.target.files, true); e.target.value = ''; }} />
         <input ref={files} type="file" multiple accept="application/pdf,image/*" className="hidden" onChange={(e) => { void addFiles(e.target.files, false); e.target.value = ''; }} />
         <p className="mt-2 text-xs text-slate-500">
-          Pour scanner : posez la feuille à plat sur une surface sombre, bien éclairée, et cadrez au plus près. Une photo par page.
+          Pour scanner : posez la feuille à plat sur une surface sombre, bien éclairée. Une photo par page, puis ajustez les coins avec <Crop className="inline size-3.5" /> si besoin.
+        </p>
+        <p className="mt-1.5">
+          <span className="inline-flex items-center gap-1 rounded-full bg-slate-100 px-2 py-0.5 text-[11px] font-medium text-slate-500">Recadrage automatique · bientôt</span>
         </p>
         {!scanner && cvBlocked && (
           <div className="mt-3">
@@ -264,6 +344,15 @@ export function DossierPage({ onNavigate, mode = 'dossier' }: { onNavigate: (t: 
                       >
                         <RotateCw className="size-4" />
                       </button>
+                      <button
+                        type="button"
+                        onClick={() => void openCrop(it)}
+                        className={cx('rounded-full p-1.5 hover:bg-slate-100', it.quad !== FULL_QUAD ? 'text-brand-600' : 'text-slate-600')}
+                        aria-label="Recadrer la page"
+                        title="Recadrer"
+                      >
+                        <Crop className="size-4" />
+                      </button>
                     </div>
                   )}
                 </div>
@@ -285,8 +374,14 @@ export function DossierPage({ onNavigate, mode = 'dossier' }: { onNavigate: (t: 
           <div className="mt-4">
             <Field label="Nom du fichier" value={fileName} onChange={setFileName} hint="Exemple : Dossier_Awa_Diallo_Comptable" />
           </div>
-          <Button className="mt-3" size="lg" icon={<FileStack className="size-5" />} loading={busy} disabled={busy} onClick={() => void create()}>
-            Créer le PDF ({items.length} document{items.length > 1 ? 's' : ''})
+          <p className={cx('mt-3 text-xs', needsCredit && !paid ? 'text-amber-800' : 'text-slate-500')}>
+            {scanner
+              ? `Gratuit jusqu’à ${FREE_SCAN_PAGES} pages. Au-delà : 1 crédit pour ce PDF, pages illimitées.`
+              : `Gratuit avec le CV, la lettre et ${FREE_DOSSIER_PIECES} pièces. Au-delà : 1 crédit pour ce dossier, pièces illimitées.`}
+            {paid && ' Réglé : vous pouvez le recréer autant de fois que nécessaire.'}
+          </p>
+          <Button className="mt-2" size="lg" icon={<FileStack className="size-5" />} loading={busy} disabled={busy} onClick={() => void create()}>
+            Créer le PDF{needsCredit && !paid ? ' (1 crédit)' : ` (${items.length} document${items.length > 1 ? 's' : ''})`}
           </Button>
           {done && (
             <div className="mt-3">
@@ -296,7 +391,57 @@ export function DossierPage({ onNavigate, mode = 'dossier' }: { onNavigate: (t: 
         </Card>
       )}
 
+      {scanner && photos.length > 0 && (
+        <Card
+          title={
+            <span className="flex items-center gap-2">
+              <PenLine className="size-5 text-violet-600" /> Texte tapé
+            </span>
+          }
+          subtitle="Document écrit à la main ou difficile à lire ? L’IA le retranscrit en texte tapé propre, modifiable, en PDF ou en Word."
+        >
+          {!transcript ? (
+            <>
+              <Button variant="ai" icon={<PenLine className="size-4" />} loading={transcribing} disabled={transcribing} onClick={() => void transcribe()}>
+                Transformer en texte tapé ({Math.min(photos.length, MAX_TRANSCRIBE_PAGES)} crédit{Math.min(photos.length, MAX_TRANSCRIBE_PAGES) > 1 ? 's' : ''})
+              </Button>
+              <p className="mt-2 text-xs text-slate-500">
+                1 crédit par page{photos.length > MAX_TRANSCRIBE_PAGES ? ` (les ${MAX_TRANSCRIBE_PAGES} premières pages)` : ''}. Les photos sont envoyées à l’IA uniquement pour la lecture.
+              </p>
+              {transcribing && <p className="mt-2 text-sm text-violet-700">L’IA lit votre document… (jusqu’à une minute)</p>}
+            </>
+          ) : (
+            <div className="space-y-3">
+              {/\[illisible\]/.test(transcript.text) && <Notice tone="warn">Certains passages sont marqués [illisible] : complétez-les avant d’enregistrer.</Notice>}
+              <Field label="Titre" value={transcript.title} onChange={(title) => setTranscript({ ...transcript, title })} />
+              <TextArea value={transcript.text} onChange={(text) => setTranscript({ ...transcript, text })} rows={14} />
+              <div className="flex flex-wrap gap-2">
+                <Button icon={<FileText className="size-4" />} loading={exporting === 'pdf'} disabled={exporting !== null} onClick={() => void exportTranscript('pdf')}>
+                  Enregistrer en PDF
+                </Button>
+                <Button variant="secondary" icon={<FileText className="size-4" />} loading={exporting === 'docx'} disabled={exporting !== null} onClick={() => void exportTranscript('docx')}>
+                  Enregistrer en Word
+                </Button>
+              </div>
+            </div>
+          )}
+        </Card>
+      )}
+
       {error && <Notice tone="error">{error}</Notice>}
+
+      {cropping && (
+        <CropEditor
+          src={cropping.src}
+          quad={cropping.item.quad}
+          onCancel={() => setCropping(null)}
+          onDone={(quad) => {
+            const item = items.find((x): x is Photo => x.id === cropping.item.id && x.kind === 'photo');
+            setCropping(null);
+            if (item) void update(item, { quad });
+          }}
+        />
+      )}
     </div>
   );
 }

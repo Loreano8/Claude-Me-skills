@@ -2,9 +2,9 @@ import { Hono, type Context } from 'hono';
 import { cors } from 'hono/cors';
 import { bodyLimit } from 'hono/body-limit';
 import { z } from 'zod';
-import { AdaptRequest, AnalyzeTemplateRequest, ClarifyRequest, CoverLetterRequest, JobFetchRequest, InterviewRequest, ReviseRequest, StructureRequest, TranslateRequest } from '../shared/schema.ts';
+import { AdaptRequest, AnalyzeTemplateRequest, ClarifyRequest, TranscribeRequest, CoverLetterRequest, JobFetchRequest, InterviewRequest, ReviseRequest, StructureRequest, TranslateRequest } from '../shared/schema.ts';
 import { AiError, type Ai } from './ai.ts';
-import { AccountError, REFERRAL_BONUS, UNLOCK_COST, type Accounts, type User } from './accounts.ts';
+import { AccountError, DOSSIER_COST, REFERRAL_BONUS, UNLOCK_COST, type Accounts, type User } from './accounts.ts';
 import { signToken, verifyToken } from './auth.ts';
 import { PACKS, PaymentError, type Payments } from './payments.ts';
 import { TestimonialInput, type Testimonials } from './testimonials.ts';
@@ -204,21 +204,28 @@ export function createApp({ fetchPage = fetchJobPage, ai, allowedOrigins, rateLi
 
   // Version Pro d'un CV (UNLOCK_COST crédits) : PDF sans mention, tous les modèles, export Word.
   // Le CV reste sur l'appareil : le serveur ne fait que débiter le crédit.
-  app.post('/api/unlock', async (c) => {
-    if (!accounts) return c.json({ credits: null });
-    const user = await currentUser(c);
-    if (!user) return c.json({ error: 'Créez un compte gratuit ou connectez-vous pour passer en version Pro.', code: 'auth' }, 401);
-    try {
-      const credits = await accounts.spend(user.id, 'unlock', UNLOCK_COST);
-      c.header('X-Credits-Remaining', String(credits));
-      return c.json({ credits });
-    } catch (error) {
-      if (error instanceof AccountError && error.status === 402) {
-        return c.json({ error: `La version Pro coûte ${UNLOCK_COST} crédits. Rechargez pour continuer.`, code: 'credits' }, 402);
+  /** Débite un service sans IA (le document reste sur l'appareil : le serveur ne fait que débiter). */
+  function spendRoute(reason: string, cost: number, what: string, authMessage: string) {
+    return async (c: Context) => {
+      if (!accounts) return c.json({ credits: null });
+      const user = await currentUser(c);
+      if (!user) return c.json({ error: authMessage, code: 'auth' }, 401);
+      try {
+        const credits = await accounts.spend(user.id, reason, cost);
+        c.header('X-Credits-Remaining', String(credits));
+        return c.json({ credits });
+      } catch (error) {
+        if (error instanceof AccountError && error.status === 402) {
+          return c.json({ error: `${what} coûte ${cost} crédit${cost > 1 ? 's' : ''}. Rechargez pour continuer.`, code: 'credits' }, 402);
+        }
+        return accountError(c, error);
       }
-      return accountError(c, error);
-    }
-  });
+    };
+  }
+
+  app.post('/api/unlock', spendRoute('unlock', UNLOCK_COST, 'La version Pro', 'Créez un compte gratuit ou connectez-vous pour passer en version Pro.'));
+  // Dossier ou scan au-delà de la limite gratuite.
+  app.post('/api/dossier/unlock', spendRoute('dossier', DOSSIER_COST, 'Ce dossier', 'Créez un compte gratuit ou connectez-vous pour créer ce dossier.'));
 
   // ---- Témoignages -----------------------------------------------------------
 
@@ -319,6 +326,8 @@ export function createApp({ fetchPage = fetchJobPage, ai, allowedOrigins, rateLi
     check?: (body: z.output<S>) => string | null,
     /** Action gratuite (compte exigé, aucun crédit débité), avec sa propre limite. */
     free = false,
+    /** Nombre de crédits de l'action (1 par défaut). */
+    cost: (body: z.output<S>) => number = () => 1,
   ) {
     return async (c: Context) => {
       if (!ai) {
@@ -340,11 +349,13 @@ export function createApp({ fetchPage = fetchJobPage, ai, allowedOrigins, rateLi
         if (!user) return c.json({ error: 'Créez un compte gratuit ou connectez-vous pour utiliser l’IA.', code: 'auth' }, 401);
         if (!free) {
           try {
-            const remaining = await accounts.spend(user.id, action);
+            const remaining = await accounts.spend(user.id, action, cost(parsed.data));
             c.header('X-Credits-Remaining', String(remaining));
           } catch (error) {
             if (error instanceof AccountError && error.status === 402) {
-              return c.json({ error: 'Vous n’avez plus de crédits. Rechargez pour continuer.', code: 'credits' }, 402);
+              const n = cost(parsed.data);
+              const message = n > 1 ? `Cette action coûte ${n} crédits. Rechargez pour continuer.` : 'Vous n’avez plus de crédits. Rechargez pour continuer.';
+              return c.json({ error: message, code: 'credits' }, 402);
             }
             return accountError(c, error);
           }
@@ -354,7 +365,7 @@ export function createApp({ fetchPage = fetchJobPage, ai, allowedOrigins, rateLi
         return c.json(await handler(ai, parsed.data));
       } catch (error) {
         if (user && accounts && !free) {
-          const credits = await accounts.refund(user.id, action).catch(() => null);
+          const credits = await accounts.refund(user.id, action, cost(parsed.data)).catch(() => null);
           if (credits !== null) c.header('X-Credits-Remaining', String(credits));
         }
         if (error instanceof AiError) {
@@ -396,6 +407,19 @@ export function createApp({ fetchPage = fetchJobPage, ai, allowedOrigins, rateLi
       (ai, body) => ai.clarify(body),
       (body) => (!body.job.text.trim() && !body.job.file ? 'Collez le texte de l’offre ou joignez le fichier de l’annonce.' : null),
       true,
+    ),
+  );
+
+  // Document manuscrit (ou imprimé) photographié → texte tapé : 1 crédit par page.
+  app.post(
+    '/api/ai/transcribe',
+    aiRoute(
+      'transcribe',
+      TranscribeRequest,
+      (ai, body) => ai.transcribe(body),
+      (body) => (body.files.some((f) => f.mediaType === 'text/plain') ? 'Envoyez des photos ou des PDF du document.' : null),
+      false,
+      (body) => body.files.length,
     ),
   );
 

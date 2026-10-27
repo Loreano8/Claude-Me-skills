@@ -1,4 +1,4 @@
-import type { AdaptResult, ClarifyResult, CoverLetterResult, InterviewResult, TranslateResult, ReviseResult, TemplateAnalysis } from '../shared/schema.ts';
+import type { AdaptResult, ClarifyResult, TranscribeResult, CoverLetterResult, InterviewResult, TranslateResult, ReviseResult, TemplateAnalysis } from '../shared/schema.ts';
 import type { CvDocument } from '../src/types.ts';
 import { defaultSettings } from '../src/lib/cv.ts';
 
@@ -202,4 +202,10 @@ export const sampleTemplateAnalysis: TemplateAnalysis = {
 export const sampleClarify: ClarifyResult = {
   job: { title: '', company: 'Groupe Sahel' },
   questions: [{ question: 'La publication propose deux postes : lequel vous intéresse ?', options: ['Comptable', 'Contrôleur de gestion'] }],
+};
+
+export const sampleTranscript: TranscribeResult = {
+  title: 'Attestation de stage',
+  text: 'Je soussigné, Kofi Mensah, directeur de la société Sahel Transport, atteste que Awa Diallo a effectué un stage du 01/02/2024 au 31/07/2024.\n\n• Tenue de la comptabilité fournisseurs\n• Rapprochements bancaires\n\nFait à Cotonou, le [illisible] 2024.',
+  language: 'fr',
 };

@@ -114,3 +114,34 @@ describe('liens WhatsApp', () => {
     expect(never).not.toHaveBeenCalled();
   });
 });
+
+describe('services payants du scanner', () => {
+  it('la retranscription coûte 1 crédit par page, remboursé en cas d’échec ; le dossier coûte 1 crédit', async () => {
+    const { sampleTranscript } = await import('./fixtures.ts');
+    const accounts = createAccounts(await testDb(), { freeCredits: 1, freeIpCooldownDays: 30 });
+    const user = await accounts.register({ identifier: 'scan@x.co', password: 'secret12', ip: '8.8.8.8', device: 'device-scan-000001' });
+    await accounts.grant(user.id, 4, 'test'); // 5 crédits
+    let fail = false;
+    const transcribe = vi.fn(async () => {
+      if (fail) throw new Error('panne');
+      return sampleTranscript;
+    });
+    const app = createApp({ ai: { transcribe } as unknown as Ai, accounts, sessionSecret: 's', allowedOrigins: [], rateLimitPerHour: 50 });
+    const auth = { 'content-type': 'application/json', authorization: `Bearer ${signToken(user.id, 's')}` };
+    const page = { name: 'p.jpg', mediaType: 'image/jpeg', data: 'AAAA' };
+    const send = (n: number) => app.request('/api/ai/transcribe', { method: 'POST', headers: auth, body: JSON.stringify({ files: Array.from({ length: n }, () => page) }) });
+
+    expect((await send(2)).status).toBe(200);
+    expect((await accounts.get(user.id))?.credits).toBe(3);
+    fail = true;
+    expect((await send(2)).status).toBe(500);
+    expect((await accounts.get(user.id))?.credits).toBe(3);
+    fail = false;
+    const tooMany = await send(4);
+    expect(tooMany.status).toBe(402);
+    expect((await tooMany.json()).error).toContain('4 crédits');
+
+    const unlock = await app.request('/api/dossier/unlock', { method: 'POST', headers: auth });
+    expect(await unlock.json()).toEqual({ credits: 2 });
+  });
+});

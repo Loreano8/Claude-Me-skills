@@ -17,6 +17,8 @@ import type {
   ClarifyRequest,
   ClarifyResult,
   JobFetchResult,
+  TranscribeRequest,
+  TranscribeResult,
 } from '../../shared/schema.ts';
 import { useAccount, type AccountUser, type Pack } from './account.ts';
 import { deviceId } from './device.ts';
@@ -56,7 +58,7 @@ async function request<T>(method: 'GET' | 'POST', path: string, body?: unknown, 
     const message = typeof data?.error === 'string' ? data.error : null;
     // Pas de réponse de notre API : site publié sans serveur (ex. version de démonstration).
     if (!message) throw new ApiError('Les fonctions IA ne sont pas encore activées sur ce site.');
-    if (res.status === 401 && (path.startsWith('/api/ai/') || path === '/api/unlock')) {
+    if (res.status === 401 && (path.startsWith('/api/ai/') || path === '/api/unlock' || path === '/api/dossier/unlock')) {
       account.logout();
       account.open('account', message);
     }
@@ -80,6 +82,8 @@ export const api = {
   analyzeTemplate: (req: AnalyzeTemplateRequest) => post<TemplateAnalysis>('/api/ai/analyze-template', req),
   clarify: (req: ClarifyRequest) => post<ClarifyResult>('/api/ai/clarify', req),
   fetchJob: (url: string) => post<JobFetchResult>('/api/job/fetch', { url }),
+  transcribe: (req: TranscribeRequest) => post<TranscribeResult>('/api/ai/transcribe', req),
+  dossierUnlock: () => post<{ credits: number | null }>('/api/dossier/unlock', {}),
 
   register: (identifier: string, password: string, name: string, referralCode?: string | null) =>
     post<Session>('/api/auth/register', { identifier, password, name, ...(referralCode ? { referralCode } : {}) }),

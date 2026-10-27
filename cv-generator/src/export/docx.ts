@@ -21,6 +21,7 @@ import { achievementsList, fullName } from '../lib/cv.ts';
 import { LABELS } from '../pdf/labels.ts';
 import { resolveStyle } from '../pdf/catalog.ts';
 import { letterParagraphs } from '../pdf/letterText.ts';
+import { transcriptBlocks } from '../pdf/transcriptText.ts';
 import { contactItems, dateRange, signatureLine } from '../pdf/theme.ts';
 
 const FONT = 'Calibri';
@@ -283,6 +284,25 @@ export function buildLetterDocx(letter: CoverLetter, cv: CvDocument): Document {
     title: `Lettre de motivation – ${name}`,
     styles: { default: { document: { run: { font: FONT, size: 21 }, paragraph: { spacing: { line: 276, lineRule: LineRuleType.AUTO } } } } },
     sections: [{ properties: { page: { margin: { top: 1300, bottom: 1300, left: 1300, right: 1300 } } }, children }],
+  });
+}
+
+/** Document manuscrit retranscrit, en Word modifiable. */
+export function buildTranscriptDocx(title: string, text: string): Document {
+  const children: Paragraph[] = [];
+  if (title) children.push(new Paragraph({ alignment: AlignmentType.CENTER, spacing: { after: 360 }, children: [new TextRun({ text: title, bold: true, size: 30 })] }));
+  for (const b of transcriptBlocks(text)) {
+    if (b.kind === 'li') children.push(new Paragraph({ bullet: { level: 0 }, spacing: { after: 80 }, text: b.text }));
+    else {
+      const lines = b.text.split('\n');
+      children.push(new Paragraph({ spacing: { after: 200 }, children: lines.map((l, i) => new TextRun({ text: l, break: i ? 1 : 0 })) }));
+    }
+  }
+  return new Document({
+    creator: 'CV Studio',
+    title: title || 'Document retranscrit',
+    styles: { default: { document: { run: { font: FONT, size: 22 }, paragraph: { spacing: { line: 288, lineRule: LineRuleType.AUTO } } } } },
+    sections: [{ properties: { page: { margin: { top: MARGIN, bottom: MARGIN, left: MARGIN, right: MARGIN } } }, children }],
   });
 }
 

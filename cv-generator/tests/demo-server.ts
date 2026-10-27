@@ -7,7 +7,7 @@ import { createPayments } from '../server/payments.ts';
 import { createTestimonials } from '../server/testimonials.ts';
 import { createSupport } from '../server/support.ts';
 import { testDb } from './pglite.ts';
-import { sampleAdapt, sampleInterview, sampleLetter, sampleRevise, sampleTemplateAnalysis, sampleTranslation, sampleClarify } from './fixtures.ts';
+import { sampleAdapt, sampleInterview, sampleLetter, sampleRevise, sampleTemplateAnalysis, sampleTranslation, sampleClarify, sampleTranscript } from './fixtures.ts';
 const db = await testDb();
 const accounts = createAccounts(db, { freeCredits: 1, freeIpCooldownDays: 0 });
 const paid = new Set<string>();
@@ -25,6 +25,7 @@ const ai = {
   revise: async () => sampleRevise,
   analyzeTemplate: async () => sampleTemplateAnalysis,
   clarify: async () => sampleClarify,
+  transcribe: async () => sampleTranscript,
 };
 const app = createApp({ ai, accounts, payments, testimonials: createTestimonials(db), support: createSupport(db, async (t) => console.log('[notification]', t)), sessionSecret: 'dev', adminToken: 'demo', publicUrl: 'http://localhost:5173', allowedOrigins: [], rateLimitPerHour: 100 });
 // Fausse page de paiement : « payer » puis revenir comme le ferait FedaPay.

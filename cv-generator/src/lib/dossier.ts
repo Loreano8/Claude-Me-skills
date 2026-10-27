@@ -5,6 +5,20 @@
 export type ScanMode = 'scan' | 'couleur';
 
 const MAX_SIDE = 1800;
+
+/** Coins de la feuille sur la photo (déjà tournée), en fractions de la largeur et de la hauteur. */
+export interface Point {
+  x: number;
+  y: number;
+}
+export type Quad = [Point, Point, Point, Point]; // haut-gauche, haut-droit, bas-droit, bas-gauche
+export const FULL_QUAD: Quad = [
+  { x: 0, y: 0 },
+  { x: 1, y: 0 },
+  { x: 1, y: 1 },
+  { x: 0, y: 1 },
+];
+const isFull = (q: Quad) => q.every((p, i) => Math.abs(p.x - FULL_QUAD[i].x) < 0.002 && Math.abs(p.y - FULL_QUAD[i].y) < 0.002);
 const A4 = { w: 595.28, h: 841.89 };
 const MARGIN = 24;
 
@@ -16,7 +30,29 @@ function loadBitmap(file: Blob): Promise<ImageBitmap> {
  * Prépare une photo de document : redressée d'un quart de tour si demandé, réduite,
  * puis « scannée » (ombres et fond gris éclaircis, texte foncé et net) ou simplement éclaircie en couleur.
  */
-export async function processPhoto(file: Blob, mode: ScanMode, rotation: 0 | 90 | 180 | 270): Promise<Blob> {
+export async function processPhoto(file: Blob, mode: ScanMode, rotation: 0 | 90 | 180 | 270, quad: Quad = FULL_QUAD): Promise<Blob> {
+  let canvas = await orientedCanvas(file, rotation);
+  if (!isFull(quad)) canvas = warp(canvas, quad);
+  const ctx = canvas.getContext('2d', { willReadFrequently: true })!;
+  const img = ctx.getImageData(0, 0, canvas.width, canvas.height);
+  if (mode === 'scan') whiten(img, canvas);
+  else brighten(img);
+  ctx.putImageData(img, 0, 0);
+
+  const blob = await new Promise<Blob | null>((resolve) => canvas.toBlob(resolve, 'image/jpeg', mode === 'scan' ? 0.82 : 0.86));
+  if (!blob) throw new Error('Impossible de traiter cette photo.');
+  return blob;
+}
+
+/** Photo réduite et tournée, sans autre retouche (sert aussi d'image de fond pour placer les coins). */
+export async function orientedPhoto(file: Blob, rotation: 0 | 90 | 180 | 270): Promise<Blob> {
+  const canvas = await orientedCanvas(file, rotation);
+  const blob = await new Promise<Blob | null>((resolve) => canvas.toBlob(resolve, 'image/jpeg', 0.85));
+  if (!blob) throw new Error('Impossible de lire cette photo.');
+  return blob;
+}
+
+async function orientedCanvas(file: Blob, rotation: 0 | 90 | 180 | 270): Promise<HTMLCanvasElement> {
   const bitmap = await loadBitmap(file);
   const scale = Math.min(1, MAX_SIDE / Math.max(bitmap.width, bitmap.height));
   const w = Math.round(bitmap.width * scale);
@@ -34,15 +70,90 @@ export async function processPhoto(file: Blob, mode: ScanMode, rotation: 0 | 90 
   ctx.drawImage(bitmap, -w / 2, -h / 2, w, h);
   ctx.setTransform(1, 0, 0, 1, 0, 0);
   bitmap.close();
+  return canvas;
+}
 
-  const img = ctx.getImageData(0, 0, canvas.width, canvas.height);
-  if (mode === 'scan') whiten(img, canvas);
-  else brighten(img);
-  ctx.putImageData(img, 0, 0);
+/** Résout le système 8×8 de l'homographie qui envoie le rectangle de sortie sur les 4 coins de la photo. */
+function homography(w: number, h: number, q: Point[]): number[] {
+  const src = [
+    [0, 0],
+    [w, 0],
+    [w, h],
+    [0, h],
+  ];
+  const A: number[][] = [];
+  const b: number[] = [];
+  for (let i = 0; i < 4; i++) {
+    const [x, y] = src[i];
+    const { x: u, y: v } = q[i];
+    A.push([x, y, 1, 0, 0, 0, -u * x, -u * y]);
+    b.push(u);
+    A.push([0, 0, 0, x, y, 1, -v * x, -v * y]);
+    b.push(v);
+  }
+  // Élimination de Gauss avec pivot partiel.
+  for (let c = 0; c < 8; c++) {
+    let p = c;
+    for (let r = c + 1; r < 8; r++) if (Math.abs(A[r][c]) > Math.abs(A[p][c])) p = r;
+    [A[c], A[p]] = [A[p], A[c]];
+    [b[c], b[p]] = [b[p], b[c]];
+    for (let r = c + 1; r < 8; r++) {
+      const f = A[r][c] / A[c][c];
+      for (let k = c; k < 8; k++) A[r][k] -= f * A[c][k];
+      b[r] -= f * b[c];
+    }
+  }
+  const x = new Array<number>(8).fill(0);
+  for (let r = 7; r >= 0; r--) {
+    let s = b[r];
+    for (let k = r + 1; k < 8; k++) s -= A[r][k] * x[k];
+    x[r] = s / A[r][r];
+  }
+  return [...x, 1];
+}
 
-  const blob = await new Promise<Blob | null>((resolve) => canvas.toBlob(resolve, 'image/jpeg', mode === 'scan' ? 0.82 : 0.86));
-  if (!blob) throw new Error('Impossible de traiter cette photo.');
-  return blob;
+/** Redresse la feuille délimitée par les 4 coins : elle remplit toute l'image, comme vue de face. */
+export function warp(source: HTMLCanvasElement, quad: Quad): HTMLCanvasElement {
+  const W = source.width;
+  const H = source.height;
+  const q = quad.map((p) => ({ x: p.x * W, y: p.y * H }));
+  const dist = (a: Point, b: Point) => Math.hypot(a.x - b.x, a.y - b.y);
+  const outW = Math.max(1, Math.round(Math.max(dist(q[0], q[1]), dist(q[3], q[2]))));
+  const outH = Math.max(1, Math.round(Math.max(dist(q[0], q[3]), dist(q[1], q[2]))));
+  const m = homography(outW, outH, q);
+
+  const src = source.getContext('2d', { willReadFrequently: true })!.getImageData(0, 0, W, H).data;
+  const out = document.createElement('canvas');
+  out.width = outW;
+  out.height = outH;
+  const octx = out.getContext('2d', { willReadFrequently: true })!;
+  const img = octx.createImageData(outW, outH);
+  const d = img.data;
+  for (let y = 0; y < outH; y++) {
+    for (let x = 0; x < outW; x++) {
+      const z = m[6] * x + m[7] * y + m[8];
+      const u = (m[0] * x + m[1] * y + m[2]) / z;
+      const v = (m[3] * x + m[4] * y + m[5]) / z;
+      // Interpolation bilinéaire : bords des lettres nets, sans escaliers.
+      const x0 = Math.max(0, Math.min(W - 2, Math.floor(u)));
+      const y0 = Math.max(0, Math.min(H - 2, Math.floor(v)));
+      const fx = Math.max(0, Math.min(1, u - x0));
+      const fy = Math.max(0, Math.min(1, v - y0));
+      const i00 = (y0 * W + x0) * 4;
+      const i10 = i00 + 4;
+      const i01 = i00 + W * 4;
+      const i11 = i01 + 4;
+      const o = (y * outW + x) * 4;
+      for (let c = 0; c < 3; c++) {
+        const top = src[i00 + c] * (1 - fx) + src[i10 + c] * fx;
+        const bottom = src[i01 + c] * (1 - fx) + src[i11 + c] * fx;
+        d[o + c] = top * (1 - fy) + bottom * fy;
+      }
+      d[o + 3] = 255;
+    }
+  }
+  octx.putImageData(img, 0, 0);
+  return out;
 }
 
 /**

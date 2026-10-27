@@ -180,6 +180,21 @@ export const StructureRequest = z.object({
 });
 export type StructureRequest = z.output<typeof StructureRequest>;
 
+export const TranscribeRequest = z.object({
+  /** Pages photographiées ou scannées, dans l'ordre (1 crédit par page). */
+  files: z.array(Attachment).min(1).max(8),
+});
+export type TranscribeRequest = z.output<typeof TranscribeRequest>;
+
+export const TranscribeResult = z.object({
+  title: z.string().describe('Titre du document s’il en a un (ex. « Attestation de stage »), sinon vide'),
+  text: z
+    .string()
+    .describe('Texte complet retranscrit, paragraphes séparés par une ligne vide, listes en lignes commençant par « • », mots illisibles remplacés par [illisible]'),
+  language: Lang.describe('Langue principale du document'),
+});
+export type TranscribeResult = z.infer<typeof TranscribeResult>;
+
 export const ClarifyRequest = z.object({
   cv: AiCvContent,
   job: JobInput,

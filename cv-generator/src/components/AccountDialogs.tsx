@@ -220,7 +220,7 @@ function CreditsDialog() {
         </div>
       )}
       <p className="mb-3 text-sm text-slate-600">
-        1 crédit = 1 action de l’IA (générer ou corriger le CV, l’adapter à une offre, lettre, fiche entretien, traduction). 2 crédits = 1 CV en version Pro, acquise pour toujours sur ce CV (sans mention « Créé avec CV Studio », 13 modèles, export Word). Remplir le CV et le télécharger en PDF reste gratuit.
+        1 crédit = 1 action de l’IA (générer ou corriger le CV, l’adapter à une offre, lettre, fiche entretien, traduction). 2 crédits = 1 CV en version Pro, acquise pour toujours sur ce CV (sans mention « Créé avec CV Studio », 13 modèles, export Word). Scanner : 1 crédit le PDF au-delà de 3 pages, 1 crédit par page manuscrite tapée. Remplir le CV et le télécharger en PDF reste gratuit.
       </p>
       <div className="space-y-2">
         {packs?.map((p) => (

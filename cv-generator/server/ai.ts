@@ -7,6 +7,8 @@ import {
   type AdaptResult,
   ClarifyResult,
   type ClarifyRequest,
+  TranscribeResult,
+  type TranscribeRequest,
   CoverLetterResult,
   StructureResult,
   TranslateResult,
@@ -23,7 +25,7 @@ import {
   type TranslateRequest,
   type InterviewRequest,
 } from '../shared/schema.ts';
-import { adaptSystem, analyzeTemplateSystem, clarifySystem, coverLetterSystem, interviewSystem, reviseSystem, structureSystem, translateSystem } from './prompts.ts';
+import { adaptSystem, analyzeTemplateSystem, clarifySystem, transcribeSystem, coverLetterSystem, interviewSystem, reviseSystem, structureSystem, translateSystem } from './prompts.ts';
 
 type ContentBlock = Anthropic.Beta.BetaContentBlockParam;
 type Effort = 'low' | 'medium' | 'high';
@@ -147,6 +149,14 @@ export function createAi(client: Anthropic, model = DEFAULT_MODEL) {
       ];
       const { cv: { title, ...rest }, ...out } = await run(AdaptAiOutput, adaptSystem(req.lang), content, 'medium');
       return { ...out, cv: { ...rest, personal: { ...req.cv.personal, title } } };
+    },
+
+    transcribe(req: TranscribeRequest): Promise<TranscribeResult> {
+      const content: ContentBlock[] = [
+        ...req.files.map(attachmentBlock),
+        { type: 'text', text: `Retranscris ce document (${req.files.length} page${req.files.length > 1 ? 's' : ''}).` },
+      ];
+      return run(TranscribeResult, transcribeSystem(), content, 'medium');
     },
 
     clarify(req: ClarifyRequest): Promise<ClarifyResult> {

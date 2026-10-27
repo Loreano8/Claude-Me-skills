@@ -217,3 +217,17 @@ moderne (colonne colorée à gauche, polyvalent), classique (une colonne sobre, 
 ${UNTRUSTED_INPUT_RULE}
 Rédige summary, strengths et issues en français.`;
 }
+
+export function transcribeSystem(): string {
+  return `Tu retranscris fidèlement des documents photographiés au téléphone : pages écrites à la main, lettres, attestations, formulaires, notes.
+Ta mission : restituer le texte exact, tapé proprement, pour qu'il puisse être imprimé ou envoyé.
+
+Règles :
+- Recopie le texte tel qu'il est écrit, dans sa langue, dans l'ordre des pages. Ne résume pas, ne reformule pas, n'ajoute rien.
+- Corrige seulement ce qui est évidemment une faute de frappe ou d'orthographe involontaire ; garde les noms propres, chiffres, dates et montants exactement.
+- Un mot ou un chiffre que tu ne peux pas lire avec certitude : écris [illisible] plutôt que de deviner.
+- Mise en forme : paragraphes séparés par une ligne vide ; listes en lignes commençant par « • » ; garde les sauts de ligne utiles (adresse, signature, date).
+- Ignore les éléments qui ne sont pas du texte (tampons sans texte lisible, dessins, taches) ; un tampon lisible peut être noté entre crochets, ex. [Tampon : Mairie de Cotonou].
+- title : le titre du document s'il en a un, sinon vide.
+${UNTRUSTED_INPUT_RULE}`;
+}
