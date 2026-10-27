@@ -31,8 +31,9 @@ export function CvSwitcher() {
         <span className="truncate">{active.label}</span>
         <ChevronDown className="size-4 shrink-0 text-slate-400" />
       </button>
+      {/* Téléphone : menu calé sur la largeur de l'écran (il débordait à gauche) ; ordinateur : sous le bouton. */}
       {open && (
-        <div className="absolute right-0 z-30 mt-2 w-72 rounded-2xl border border-slate-200 bg-white p-2 shadow-xl">
+        <div className="fixed inset-x-3 top-[calc(env(safe-area-inset-top)+3.75rem)] z-30 rounded-2xl border border-slate-200 bg-white p-2 shadow-xl sm:absolute sm:inset-x-auto sm:top-auto sm:right-0 sm:mt-2 sm:w-72">
           <p className="px-3 pt-1 pb-1.5 text-xs font-semibold tracking-wide text-slate-400 uppercase">Mes CV</p>
           <div className="max-h-64 overflow-y-auto">
             {cvs.map((c) => (
