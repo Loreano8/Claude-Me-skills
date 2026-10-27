@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useSharedOffer } from './lib/shareInbox.ts';
-import { ClipboardList, FileDown, FileUser, Mail, MessageCircle, Target } from 'lucide-react';
+import { ClipboardList, FileDown, FileUser, FolderOpen, Mail, MessageCircle, Target } from 'lucide-react';
 import { useActiveCv, useStore } from './store.ts';
 import { CvSwitcher } from './components/CvSwitcher.tsx';
 import { AccountButton, AccountDialogs } from './components/AccountDialogs.tsx';
@@ -18,9 +18,10 @@ import { LandingPage } from './pages/LandingPage.tsx';
 import { ContactPage } from './pages/ContactPage.tsx';
 import { AdminPage } from './pages/AdminPage.tsx';
 import { DossierPage, ScannerButton } from './pages/DossierPage.tsx';
+import { DocumentsPage } from './pages/DocumentsPage.tsx';
 import { refreshSupportBadge, useSupportBadge } from './lib/supportBadge.ts';
 
-export type Tab = 'accueil' | 'infos' | 'apercu' | 'offre' | 'lettre' | 'suivi' | 'dossier' | 'scanner' | 'contact' | 'admin';
+export type Tab = 'accueil' | 'infos' | 'apercu' | 'offre' | 'lettre' | 'suivi' | 'documents' | 'dossier' | 'scanner' | 'contact' | 'admin';
 
 const TABS: { id: Tab; label: string; short: string; icon: typeof FileUser }[] = [
   { id: 'infos', label: 'Mes infos', short: 'Infos', icon: FileUser },
@@ -28,6 +29,7 @@ const TABS: { id: Tab; label: string; short: string; icon: typeof FileUser }[] =
   { id: 'offre', label: 'Adapter à une offre', short: 'Offre', icon: Target },
   { id: 'lettre', label: 'Lettre de motivation', short: 'Lettre', icon: Mail },
   { id: 'suivi', label: 'Mes candidatures', short: 'Suivi', icon: ClipboardList },
+  { id: 'documents', label: 'Mes documents', short: 'Docs', icon: FolderOpen },
 ];
 
 // Pages hors de la barre d'onglets : accueil, dossier en un PDF, scanner, « Nous contacter » et l'espace administrateur.
@@ -177,13 +179,14 @@ export default function App() {
         {tab === 'offre' && <JobPage onNavigate={setTab} />}
         {tab === 'lettre' && <LetterPage onNavigate={setTab} />}
         {tab === 'suivi' && <ApplicationsPage onNavigate={setTab} />}
+        {tab === 'documents' && <DocumentsPage onNavigate={setTab} />}
         {tab === 'dossier' && <DossierPage key="dossier" onNavigate={setTab} />}
         {tab === 'scanner' && <DossierPage key="scanner" mode="scanner" onNavigate={setTab} />}
         {tab === 'contact' && <ContactPage />}
         {tab === 'admin' && <AdminPage />}
       </main>
 
-      <nav className="fixed inset-x-0 bottom-0 z-20 grid grid-cols-5 border-t border-slate-200 bg-white pb-[env(safe-area-inset-bottom)] lg:hidden">
+      <nav className="fixed inset-x-0 bottom-0 z-20 grid grid-cols-6 border-t border-slate-200 bg-white pb-[env(safe-area-inset-bottom)] lg:hidden">
         {TABS.map((t) => (
           <button
             key={t.id}

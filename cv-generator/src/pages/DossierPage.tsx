@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
+import { create } from 'zustand';
 import { ArrowDown, ArrowUp, Camera, Crop, FileStack, FileText, FileUser, Mail, Paperclip, PenLine, RotateCw, ScanLine, Trash2 } from 'lucide-react';
 import type { TranscribeResult } from '../../shared/schema.ts';
 import { api } from '../lib/api.ts';
@@ -26,6 +27,17 @@ const FREE_DOSSIER_PIECES = 2;
 const MAX_TRANSCRIBE_PAGES = 8;
 let seq = 0;
 const newId = () => `p${Date.now().toString(36)}${++seq}`;
+
+/** Documents envoyés depuis le coffre-fort, ajoutés au dossier à son ouverture. */
+export const useDossierInbox = create<{ pending: File[]; add: (f: File) => void; take: () => File[] }>((set, get) => ({
+  pending: [],
+  add: (f) => set((s) => ({ pending: [...s.pending, f] })),
+  take: () => {
+    const files = get().pending;
+    set({ pending: [] });
+    return files;
+  },
+}));
 
 /** Raccourci vers le dossier depuis les pages d'export. */
 export function DossierLink() {
@@ -86,6 +98,16 @@ export function DossierPage({ onNavigate, mode = 'dossier' }: { onNavigate: (t: 
   // Libère les aperçus des photos en quittant la page.
   const urls = useRef<string[]>([]);
   useEffect(() => () => urls.current.forEach((u) => URL.revokeObjectURL(u)), []);
+
+  // Pièces envoyées depuis le coffre-fort (« Ajouter au dossier »).
+  useEffect(() => {
+    const files = useDossierInbox.getState().take();
+    if (!files.length) return;
+    const list = new DataTransfer();
+    files.forEach((f) => list.items.add(f));
+    void addFiles(list.files, false);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const [paid, setPaid] = useState(false);
   const [cropping, setCropping] = useState<{ item: Photo; src: string } | null>(null);

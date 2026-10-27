@@ -78,6 +78,24 @@ create table if not exists support_threads (
   last_message_at timestamptz not null default now()
 );
 
+-- Coffre-fort : double de la clé qui chiffre les documents gardés sur le téléphone (code oublié → réinitialisation).
+create table if not exists vault_keys (
+  user_id integer primary key references users(id) on delete cascade,
+  key text not null,
+  updated_at timestamptz not null default now()
+);
+
+-- Codes à 6 chiffres envoyés par e-mail (code du coffre ou mot de passe oubliés). Seule l'empreinte est gardée.
+create table if not exists email_codes (
+  id serial primary key,
+  user_id integer not null references users(id) on delete cascade,
+  purpose text not null,
+  code_hash text not null,
+  expires_at timestamptz not null,
+  attempts integer not null default 0,
+  used boolean not null default false
+);
+
 create table if not exists support_messages (
   id serial primary key,
   thread_id integer not null references support_threads(id) on delete cascade,

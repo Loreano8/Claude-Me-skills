@@ -108,6 +108,10 @@ export function createAccounts(db: Db, opts: AccountOptions) {
       return user;
     },
 
+    async setPassword(userId: number, password: string): Promise<void> {
+      await db.query('update users set password_hash = $2 where id = $1', [userId, await hashPassword(password)]);
+    },
+
     async get(userId: number): Promise<User | null> {
       const [user] = await db.query<User>(`select ${USER_COLUMNS} from users where id = $1`, [userId]);
       return user ?? null;

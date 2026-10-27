@@ -27,9 +27,78 @@ export function Modal({ title, onClose, children }: { title: string; onClose: ()
   );
 }
 
+/** Mot de passe oublié : code reçu à l'e-mail du compte, puis nouveau mot de passe. */
+function ForgotPassword({ initial, onBack }: { initial: string; onBack: () => void }) {
+  const { close, setSession } = useAccount();
+  const [identifier, setIdentifier] = useState(initial);
+  const [sent, setSent] = useState(false);
+  const [code, setCode] = useState('');
+  const [password, setPassword] = useState('');
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  async function send() {
+    setBusy(true);
+    setError(null);
+    try {
+      await api.forgotPassword(identifier);
+      setSent(true);
+    } catch (e) {
+      setError((e as Error).message);
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function reset() {
+    setBusy(true);
+    setError(null);
+    try {
+      const session = await api.resetPassword(identifier, code, password);
+      setSession(session.token, session.user);
+      close();
+    } catch (e) {
+      setError((e as Error).message);
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  return (
+    <div className="space-y-3">
+      {!sent ? (
+        <>
+          <p className="text-sm text-slate-600">Indiquez l’e-mail de votre compte : nous vous envoyons un code pour choisir un nouveau mot de passe.</p>
+          <Field label="E-mail du compte" value={identifier} onChange={setIdentifier} autoComplete="username" />
+          <Button className="w-full" loading={busy} disabled={busy || !identifier.includes('@')} onClick={() => void send()}>
+            M’envoyer un code
+          </Button>
+        </>
+      ) : (
+        <>
+          <Notice tone="info">Si un compte existe avec cette adresse, un code vient d’y être envoyé (pensez aux spams).</Notice>
+          <Field label="Code reçu (6 chiffres)" value={code} onChange={(v) => setCode(v.replace(/\D/g, '').slice(0, 6))} />
+          <Field label="Nouveau mot de passe" type="password" value={password} onChange={setPassword} autoComplete="new-password" hint="6 caractères minimum." />
+          <Button className="w-full" loading={busy} disabled={busy || code.length !== 6 || password.length < 6} onClick={() => void reset()}>
+            Changer mon mot de passe
+          </Button>
+        </>
+      )}
+      {error && <Notice tone="error">{error}</Notice>}
+      <button type="button" className="w-full text-center text-sm font-semibold text-brand-700" onClick={onBack}>
+        Retour à la connexion
+      </button>
+    </div>
+  );
+}
+
 function AccountDialog() {
   const { dialogReason, close, setSession } = useAccount();
-  const [mode, setMode] = useState<'register' | 'login'>('register');
+  const [mode, setMode] = useState<'register' | 'login' | 'forgot'>('register');
+  const [emailOn, setEmailOn] = useState(false);
+  useEffect(() => {
+    void api.health().then((h) => setEmailOn(!!h.email), () => {});
+  }, []);
   const [name, setName] = useState('');
   const [identifier, setIdentifier] = useState('');
   const [password, setPassword] = useState('');
@@ -51,6 +120,14 @@ function AccountDialog() {
     } finally {
       setBusy(false);
     }
+  }
+
+  if (mode === 'forgot') {
+    return (
+      <Modal title="Mot de passe oublié" onClose={close}>
+        <ForgotPassword initial={identifier} onBack={() => setMode('login')} />
+      </Modal>
+    );
   }
 
   return (
@@ -81,6 +158,11 @@ function AccountDialog() {
           autoComplete={mode === 'register' ? 'new-password' : 'current-password'}
           hint={mode === 'register' ? '6 caractères minimum.' : undefined}
         />
+        {mode === 'login' && emailOn && (
+          <button type="button" className="text-sm font-medium text-brand-700" onClick={() => (setMode('forgot'), setError(null))}>
+            Mot de passe oublié ?
+          </button>
+        )}
         {error && <Notice tone="error">{error}</Notice>}
         <Button type="submit" size="lg" className="w-full" loading={busy} disabled={!identifier.trim() || !password}>
           {mode === 'register' ? 'Créer mon compte' : 'Me connecter'}

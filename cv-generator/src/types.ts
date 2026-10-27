@@ -95,6 +95,16 @@ export interface CvDocument {
   translation?: { lang: Lang; market: Market; notes: string[]; createdAt: number };
 }
 
+/** Lettre conservée dans « Mes documents » (chaque lettre générée est gardée). */
+export interface SavedLetter {
+  id: string;
+  /** CV à partir duquel la lettre a été écrite. */
+  cvId: string;
+  createdAt: number;
+  updatedAt: number;
+  letter: CoverLetter;
+}
+
 export interface CoverLetter {
   recipientName: string;
   recipientCompany: string;

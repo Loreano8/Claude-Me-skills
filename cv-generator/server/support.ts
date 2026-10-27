@@ -164,7 +164,7 @@ export function notifier(env: Record<string, string | undefined>, adminUrl: stri
           method: 'POST',
           headers: { Authorization: `Bearer ${env.RESEND_API_KEY}`, 'Content-Type': 'application/json' },
           body: JSON.stringify({
-            from: env.SUPPORT_FROM_EMAIL || 'CV Studio <onboarding@resend.dev>',
+            from: env.SUPPORT_FROM_EMAIL || env.EMAIL_FROM || 'CV Studio <onboarding@resend.dev>',
             to: env.SUPPORT_NOTIFY_EMAIL,
             subject: 'Nouveau message sur CV Studio',
             text: full,

@@ -1,13 +1,17 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import type { AdaptResult, CoverLetterResult, InterviewResult, Lang, Market, TranslateResult } from '../shared/schema.ts';
-import type { Application, CoverLetter, CvDocument, JobPostingDraft } from './types.ts';
+import type { Application, CoverLetter, CvDocument, JobPostingDraft, SavedLetter } from './types.ts';
 import { applyAiContent, emptyCv, emptyLetter, letterDate, uid } from './lib/cv.ts';
 
 interface State {
   cvs: CvDocument[];
   activeId: string;
+  /** Lettre en cours d'édition (page « Lettre »). */
   letter: CoverLetter;
+  /** Toutes les lettres conservées ; la lettre en cours est celle d'identifiant activeLetterId. */
+  letters: SavedLetter[];
+  activeLetterId: string | null;
   job: JobPostingDraft;
   applications: Application[];
 
@@ -28,6 +32,9 @@ interface State {
   /** Range la fiche d'entretien dans la candidature correspondante (créée si besoin). */
   saveInterview: (applicationId: string | null, title: string, interview: InterviewResult) => string;
   updateLetter: (patch: Partial<CoverLetter>) => void;
+  /** Reprend une lettre conservée dans la page « Lettre ». */
+  openLetter: (id: string) => void;
+  deleteLetter: (id: string) => void;
   applyLetter: (result: CoverLetterResult, cv: CvDocument) => void;
 }
 
@@ -57,6 +64,8 @@ export const useStore = create<State>()(
       cvs: [first],
       activeId: first.id,
       letter: emptyLetter(),
+      letters: [],
+      activeLetterId: null,
       job: { text: '', file: null },
       applications: [],
 
@@ -161,11 +170,28 @@ export const useStore = create<State>()(
         return get().addApplication({ title, interview });
       },
 
-      updateLetter: (patch) => set((s) => ({ letter: { ...s.letter, ...patch } })),
+      updateLetter: (patch) =>
+        set((s) => {
+          const letter = { ...s.letter, ...patch };
+          return { letter, letters: s.letters.map((l) => (l.id === s.activeLetterId ? { ...l, letter, updatedAt: Date.now() } : l)) };
+        }),
 
-      applyLetter: (result, cv) =>
+      openLetter: (id) =>
+        set((s) => {
+          const saved = s.letters.find((l) => l.id === id);
+          return saved ? { letter: saved.letter, activeLetterId: id } : {};
+        }),
+
+      deleteLetter: (id) =>
         set((s) => ({
-          letter: {
+          letters: s.letters.filter((l) => l.id !== id),
+          ...(s.activeLetterId === id ? { activeLetterId: null, letter: emptyLetter() } : {}),
+        })),
+
+      // Chaque lettre générée est conservée (« Mes documents ») au lieu de remplacer la précédente.
+      applyLetter: (result, cv) =>
+        set((s) => {
+          const letter: CoverLetter = {
             ...s.letter,
             lang: result.language,
             date: result.language === (s.letter.lang ?? 'fr') ? s.letter.date : letterDate(result.language),
@@ -178,17 +204,34 @@ export const useStore = create<State>()(
             closing: result.closing,
             place: s.letter.place || cv.personal.city,
             accent: cv.settings.accent,
-          },
-        })),
+          };
+          const now = Date.now();
+          const saved: SavedLetter = { id: uid(), cvId: cv.id, createdAt: now, updatedAt: now, letter };
+          return { letter, letters: [saved, ...s.letters], activeLetterId: saved.id };
+        }),
     }),
     {
       name: 'cv-studio',
-      version: 1,
+      version: 2,
+      // Version 2 : historique des lettres. La lettre déjà écrite devient la première lettre conservée.
+      migrate: (persisted, version) => {
+        const s = persisted as Partial<State> & { job: { text: string; file: null } };
+        if (version < 2 && !s.letters) {
+          const now = Date.now();
+          const hasLetter = !!s.letter?.body?.trim();
+          const id = uid();
+          s.letters = hasLetter ? [{ id, cvId: s.activeId ?? '', createdAt: now, updatedAt: now, letter: s.letter! }] : [];
+          s.activeLetterId = hasLetter ? id : null;
+        }
+        return s as never;
+      },
       // Le fichier joint à l'offre peut être lourd : on ne le garde pas dans le stockage local.
       partialize: (s) => ({
         cvs: s.cvs,
         activeId: s.activeId,
         letter: s.letter,
+        letters: s.letters,
+        activeLetterId: s.activeLetterId,
         job: { text: s.job.text, file: null },
         applications: s.applications,
       }),

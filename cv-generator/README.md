@@ -15,6 +15,7 @@ Site web (et application Android) pour créer un CV aux normes actuelles, l’ad
 | | **Fiche entretien** : questions probables pour ce poste avec réponses construites à partir du CV, points faibles et comment les aborder, questions à poser au recruteur, conseils. Copiable pour WhatsApp. |
 | **Lettre de motivation** | Rédaction par l’IA à partir du CV et de l’offre (ou candidature spontanée), ton et longueur au choix, modifiable, signée, export PDF et Word. |
 | **Dossier en un seul PDF** | CV, lettre, pièce d’identité, diplômes, attestations… réunis dans un seul PDF, dans l’ordre choisi (`src/pages/DossierPage.tsx`, assemblage `pdf-lib`). Les papiers se **scannent avec l’appareil photo** : ombres et fond gris effacés (rendu « Scan N&B »), ou rendu couleur pour une pièce d’identité, avec rotation. Recadrage précis par les 4 coins (la page est redressée, `warp()` dans `src/lib/dossier.ts`) ; recadrage automatique annoncé « bientôt ». Tout se fait sur l’appareil. **Gratuit jusqu’à 3 pages scannées** (ou CV + lettre + 2 pièces), puis **1 crédit** le PDF (`DOSSIER_COST`, route `/api/dossier/unlock`). **Manuscrit → texte tapé** : l’IA retranscrit les pages (`/api/ai/transcribe`, **1 crédit par page**), texte modifiable puis export PDF ou Word. |
+| **Mes documents** | Onglet « Docs » : tous les CV (adaptés, traduits) et **toutes les lettres** (chaque lettre générée est conservée), triés par date, avec filtre et recherche. **Coffre-fort** (`src/lib/vault.ts`) : pièce d’identité, diplômes, attestations… gardés **sur le téléphone** (IndexedDB), chiffrés AES-GCM ; avec un code (4 à 6 chiffres), la clé est elle-même chiffrée par le code (PBKDF2). Un double de la clé est gardé sur le serveur, rattaché au compte (`vault_keys`) : **code oublié** → mot de passe du compte ou code reçu par e-mail. Envoi, ajout au dossier en un toucher, copie de secours en un PDF. Sauvegarde en ligne annoncée « bientôt ». |
 | **Mes candidatures** | Suivi de chaque offre (en préparation, envoyée, entretien, acceptée, refusée), avec le CV adapté, le score et la fiche entretien. Créé automatiquement à chaque adaptation. |
 | | **« J’ai décroché le poste ! »** : quand une candidature passe à « Acceptée », l’utilisateur peut envoyer un témoignage (prénom, poste, entreprise, ville, message) avec une case d’accord obligatoire. Il peut le retirer lui-même à tout moment. |
 | **Accueil** | Page de présentation (fonctionnalités, tarifs en FCFA, questions fréquentes), affichée à la première visite ou en touchant le logo. |
@@ -70,6 +71,10 @@ Les nouveaux modèles ne sont pas dessinés un par un : une **fiche de style** (
 - Ajouter des crédits à la main (ex. paiement reçu directement) :
   `curl -X POST https://clgmqhyzyiswnekmoygw.supabase.co/functions/v1/api/admin/credits -H "Authorization: Bearer <ADMIN_TOKEN>" -H "Content-Type: application/json" -d '{"identifier":"+22997000000","credits":10}'`
   (`ADMIN_TOKEN` se trouve dans la table `cvstudio.settings` de Supabase).
+
+## E-mails (code du coffre-fort, mot de passe oublié)
+
+Avec `RESEND_API_KEY` et `EMAIL_FROM` (ex. `CV Studio <no-reply@mondomaine.com>`, adresse d'un **domaine vérifié** chez Resend) dans `cvstudio.settings`, le serveur envoie des codes à 6 chiffres (valables 15 minutes, 5 essais) : réinitialisation du code du coffre-fort et « Mot de passe oublié ? ». Sans ces réglages, `/api/health` renvoie `email: false` et l'appli n'affiche pas ces options (la réinitialisation du coffre par mot de passe du compte reste disponible).
 
 ## Parrainage
 

@@ -58,7 +58,7 @@ async function request<T>(method: 'GET' | 'POST', path: string, body?: unknown, 
     const message = typeof data?.error === 'string' ? data.error : null;
     // Pas de réponse de notre API : site publié sans serveur (ex. version de démonstration).
     if (!message) throw new ApiError('Les fonctions IA ne sont pas encore activées sur ce site.');
-    if (res.status === 401 && (path.startsWith('/api/ai/') || path === '/api/unlock' || path === '/api/dossier/unlock')) {
+    if (res.status === 401 && (path.startsWith('/api/ai/') || path.startsWith('/api/vault/') || path === '/api/unlock' || path === '/api/dossier/unlock')) {
       account.logout();
       account.open('account', message);
     }
@@ -85,12 +85,18 @@ export const api = {
   transcribe: (req: TranscribeRequest) => post<TranscribeResult>('/api/ai/transcribe', req),
   dossierUnlock: () => post<{ credits: number | null }>('/api/dossier/unlock', {}),
 
+  vaultSaveKey: (key: string) => post<{ ok: true }>('/api/vault/key', { key }),
+  vaultRecover: (proof: { password: string } | { code: string }) => post<{ key: string }>('/api/vault/recover', proof),
+  vaultSendCode: () => post<{ to: string }>('/api/vault/recover/email', {}),
+  forgotPassword: (identifier: string) => post<{ ok: true; to: string | null }>('/api/auth/forgot', { identifier }),
+  resetPassword: (identifier: string, code: string, password: string) => post<Session>('/api/auth/reset', { identifier, code, password }),
+
   register: (identifier: string, password: string, name: string, referralCode?: string | null) =>
     post<Session>('/api/auth/register', { identifier, password, name, ...(referralCode ? { referralCode } : {}) }),
   referral: () => request<{ code: string; invited: number; rewarded: number; bonus: number }>('GET', '/api/referral'),
   login: (identifier: string, password: string) => post<Session>('/api/auth/login', { identifier, password }),
   me: () => request<{ user: AccountUser }>('GET', '/api/me'),
-  health: () => request<{ ai: boolean; accounts: boolean; payments: boolean }>('GET', '/api/health'),
+  health: () => request<{ ai: boolean; accounts: boolean; payments: boolean; email?: boolean }>('GET', '/api/health'),
   packs: () => request<{ packs: Pack[]; payments: boolean }>('GET', '/api/packs'),
   unlock: () => post<{ credits: number | null }>('/api/unlock', {}),
   checkout: (packId: string) => post<{ url: string }>('/api/payments/checkout', { packId }),

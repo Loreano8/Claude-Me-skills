@@ -10,6 +10,7 @@ import { PACKS, PaymentError, type Payments } from './payments.ts';
 import { TestimonialInput, type Testimonials } from './testimonials.ts';
 import { SupportError, SupportMessageInput, type Support } from './support.ts';
 import { fetchJobPage, JobPageError } from './jobPage.ts';
+import type { Vault } from './vault.ts';
 
 export interface AppOptions {
   /** Téléchargement des pages d'offres (remplaçable dans les tests). */
@@ -24,6 +25,8 @@ export interface AppOptions {
   testimonials?: Testimonials | null;
   /** Messagerie « Nous contacter ». */
   support?: Support | null;
+  /** Coffre-fort (double de la clé) et codes envoyés par e-mail. */
+  vault?: Vault | null;
   sessionSecret?: string;
   /** Adresse publique du site, pour revenir après un paiement. */
   publicUrl?: string;
@@ -60,7 +63,7 @@ const Credentials = z.object({
   referralCode: z.string().max(20).optional(),
 });
 
-export function createApp({ fetchPage = fetchJobPage, ai, allowedOrigins, rateLimitPerHour, accounts = null, payments = null, testimonials = null, support = null, sessionSecret = '', publicUrl = '', apiPublicUrl = '', adminToken = '' }: AppOptions) {
+export function createApp({ fetchPage = fetchJobPage, ai, allowedOrigins, rateLimitPerHour, accounts = null, payments = null, testimonials = null, support = null, vault = null, sessionSecret = '', publicUrl = '', apiPublicUrl = '', adminToken = '' }: AppOptions) {
   const app = new Hono();
   const allow = createRateLimiter(rateLimitPerHour);
   const allowAuth = createRateLimiter(20);
@@ -78,7 +81,10 @@ export function createApp({ fetchPage = fetchJobPage, ai, allowedOrigins, rateLi
   app.get('/api/health', async (c) => {
     // Appelée chaque jour par une tâche automatique : la requête à la base empêche la mise en veille du projet.
     const db = accounts ? await accounts.ping().catch(() => false) : null;
-    return c.json({ ok: db !== false, ai: ai !== null, accounts: accounts !== null, payments: payments !== null, db }, db === false ? 503 : 200);
+    return c.json(
+      { ok: db !== false, ai: ai !== null, accounts: accounts !== null, payments: payments !== null, email: vault?.emailEnabled ?? false, db },
+      db === false ? 503 : 200,
+    );
   });
 
   async function currentUser(c: Context): Promise<User | null> {
@@ -226,6 +232,78 @@ export function createApp({ fetchPage = fetchJobPage, ai, allowedOrigins, rateLi
   app.post('/api/unlock', spendRoute('unlock', UNLOCK_COST, 'La version Pro', 'Créez un compte gratuit ou connectez-vous pour passer en version Pro.'));
   // Dossier ou scan au-delà de la limite gratuite.
   app.post('/api/dossier/unlock', spendRoute('dossier', DOSSIER_COST, 'Ce dossier', 'Créez un compte gratuit ou connectez-vous pour créer ce dossier.'));
+
+  // ---- Coffre-fort et codes par e-mail ----------------------------------------
+
+  const vaultError = (c: Context, error: unknown) => {
+    if (error instanceof AccountError) return c.json({ error: error.message }, error.status as 400);
+    console.error(error);
+    return c.json({ error: 'Envoi impossible pour le moment. Réessayez plus tard.' }, 502);
+  };
+  const body = async (c: Context) => ((await c.req.json().catch(() => null)) ?? {}) as Record<string, unknown>;
+
+  app.post('/api/vault/key', async (c) => {
+    if (!vault) return c.json({ error: 'Coffre-fort indisponible.' }, 503);
+    const user = await currentUser(c);
+    if (!user) return c.json({ error: 'Connectez-vous pour protéger votre coffre-fort.', code: 'auth' }, 401);
+    try {
+      await vault.saveKey(user.id, String((await body(c)).key ?? ''));
+      return c.json({ ok: true });
+    } catch (error) {
+      return vaultError(c, error);
+    }
+  });
+
+  app.post('/api/vault/recover', async (c) => {
+    if (!vault) return c.json({ error: 'Coffre-fort indisponible.' }, 503);
+    if (!allowAuth(clientKey(c))) return c.json({ error: 'Trop de tentatives. Réessayez plus tard.' }, 429);
+    const user = await currentUser(c);
+    if (!user) return c.json({ error: 'Connectez-vous à votre compte pour réinitialiser le code.', code: 'auth' }, 401);
+    const b = await body(c);
+    try {
+      const key = b.code ? await vault.recoverWithCode(user, String(b.code)) : await vault.recoverWithPassword(user, String(b.password ?? ''));
+      return c.json({ key });
+    } catch (error) {
+      if (error instanceof AccountError && error.status === 401) return c.json({ error: 'Mot de passe incorrect.' }, 400);
+      return vaultError(c, error);
+    }
+  });
+
+  app.post('/api/vault/recover/email', async (c) => {
+    if (!vault) return c.json({ error: 'Coffre-fort indisponible.' }, 503);
+    if (!allowAuth(clientKey(c))) return c.json({ error: 'Trop de demandes. Réessayez plus tard.' }, 429);
+    const user = await currentUser(c);
+    if (!user) return c.json({ error: 'Connectez-vous à votre compte pour réinitialiser le code.', code: 'auth' }, 401);
+    try {
+      return c.json(await vault.sendVaultCode(user));
+    } catch (error) {
+      return vaultError(c, error);
+    }
+  });
+
+  // Mot de passe du compte oublié : code envoyé à l'e-mail du compte, puis nouveau mot de passe.
+  app.post('/api/auth/forgot', async (c) => {
+    if (!vault) return c.json({ error: 'Indisponible.' }, 503);
+    if (!allowAuth(clientKey(c))) return c.json({ error: 'Trop de demandes. Réessayez plus tard.' }, 429);
+    try {
+      const sent = await vault.sendPasswordCode(String((await body(c)).identifier ?? ''));
+      return c.json({ ok: true, to: sent?.to ?? null });
+    } catch (error) {
+      return vaultError(c, error);
+    }
+  });
+
+  app.post('/api/auth/reset', async (c) => {
+    if (!vault || !accounts) return c.json({ error: 'Indisponible.' }, 503);
+    if (!allowAuth(clientKey(c))) return c.json({ error: 'Trop de tentatives. Réessayez plus tard.' }, 429);
+    const b = await body(c);
+    try {
+      const user = await vault.resetPassword(String(b.identifier ?? ''), String(b.code ?? ''), String(b.password ?? ''));
+      return c.json({ token: signToken(user.id, sessionSecret), user: publicUser(user) });
+    } catch (error) {
+      return vaultError(c, error);
+    }
+  });
 
   // ---- Témoignages -----------------------------------------------------------
 

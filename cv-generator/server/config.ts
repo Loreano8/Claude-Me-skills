@@ -6,6 +6,7 @@ import { createPgDb, migrate, type Db } from './db.ts';
 import { createPayments, fedapay } from './payments.ts';
 import { createTestimonials } from './testimonials.ts';
 import { createSupport, notifier } from './support.ts';
+import { createVault, resendMailer } from './vault.ts';
 
 export type Settings = Record<string, string | undefined>;
 
@@ -28,6 +29,7 @@ export async function createServer(env: Settings, opts: { db?: Db; migrate?: boo
   let payments = null;
   let testimonials = null;
   let support = null;
+  let vault = null;
   if (hasDb) {
     if (!env.SESSION_SECRET) throw new Error('SESSION_SECRET est obligatoire avec une base de données.');
     // DATABASE_SSL=true pour une base externe (Supabase…) ; inutile pour la base interne de Render.
@@ -39,6 +41,7 @@ export async function createServer(env: Settings, opts: { db?: Db; migrate?: boo
       freeCredits: Number(env.FREE_CREDITS ?? 1),
       freeIpCooldownDays: Number(env.FREE_IP_COOLDOWN_DAYS ?? 30),
     });
+    vault = createVault(db, accounts, resendMailer(env));
     if (env.FEDAPAY_SECRET_KEY) {
       payments = createPayments(db, accounts, fedapay(env.FEDAPAY_SECRET_KEY, env.FEDAPAY_ENV === 'live' ? 'live' : 'sandbox'));
     }
@@ -50,6 +53,7 @@ export async function createServer(env: Settings, opts: { db?: Db; migrate?: boo
     payments,
     testimonials,
     support,
+    vault,
     sessionSecret: env.SESSION_SECRET ?? '',
     publicUrl: env.PUBLIC_URL ?? '',
     apiPublicUrl: env.API_PUBLIC_URL ?? '',
