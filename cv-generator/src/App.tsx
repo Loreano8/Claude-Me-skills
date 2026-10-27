@@ -19,9 +19,10 @@ import { ContactPage } from './pages/ContactPage.tsx';
 import { AdminPage } from './pages/AdminPage.tsx';
 import { DossierPage, ScannerButton } from './pages/DossierPage.tsx';
 import { DocumentsPage } from './pages/DocumentsPage.tsx';
+import { PrivacyPage } from './pages/PrivacyPage.tsx';
 import { refreshSupportBadge, useSupportBadge } from './lib/supportBadge.ts';
 
-export type Tab = 'accueil' | 'infos' | 'apercu' | 'offre' | 'lettre' | 'suivi' | 'documents' | 'dossier' | 'scanner' | 'contact' | 'admin';
+export type Tab = 'accueil' | 'infos' | 'apercu' | 'offre' | 'lettre' | 'suivi' | 'documents' | 'dossier' | 'scanner' | 'confidentialite' | 'contact' | 'admin';
 
 const TABS: { id: Tab; label: string; short: string; icon: typeof FileUser }[] = [
   { id: 'infos', label: 'Mes infos', short: 'Infos', icon: FileUser },
@@ -33,7 +34,7 @@ const TABS: { id: Tab; label: string; short: string; icon: typeof FileUser }[] =
 ];
 
 // Pages hors de la barre d'onglets : accueil, dossier en un PDF, scanner, « Nous contacter » et l'espace administrateur.
-const EXTRA_PAGES: Tab[] = ['accueil', 'dossier', 'scanner', 'contact', 'admin'];
+const EXTRA_PAGES: Tab[] = ['accueil', 'dossier', 'scanner', 'confidentialite', 'contact', 'admin'];
 const isTab = (v: string): v is Tab => EXTRA_PAGES.includes(v as Tab) || TABS.some((t) => t.id === v);
 
 // Première visite (CV encore vide, pas d'onglet demandé) : on présente le produit.
@@ -182,6 +183,7 @@ export default function App() {
         {tab === 'documents' && <DocumentsPage onNavigate={setTab} />}
         {tab === 'dossier' && <DossierPage key="dossier" onNavigate={setTab} />}
         {tab === 'scanner' && <DossierPage key="scanner" mode="scanner" onNavigate={setTab} />}
+        {tab === 'confidentialite' && <PrivacyPage />}
         {tab === 'contact' && <ContactPage />}
         {tab === 'admin' && <AdminPage />}
       </main>

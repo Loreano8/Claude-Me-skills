@@ -246,6 +246,12 @@ export function LandingPage({ onNavigate }: { onNavigate: (t: Tab) => void }) {
           Créer mon CV gratuitement
         </Button>
       </section>
+
+      <footer className="px-4 pb-8 text-center text-xs text-slate-400">
+        <button type="button" className="underline" onClick={() => onNavigate('confidentialite')}>
+          Confidentialité
+        </button>
+      </footer>
     </div>
   );
 }
