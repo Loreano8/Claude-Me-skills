@@ -1,27 +1,42 @@
 # Lentille Monopoly
-Score: 4/10 | Vote: FUND IF
+Note : 4/10 | Vote : FUND IF
 
-## Ce qui est fort
-- **Un petit marché qu'on peut viser précisément.** Chercheurs d'emploi francophones au Bénin, sur mobile, qui paient en Mobile Money. Le concurrent international repéré (CVMove, ~29,90 USD/mois, abonnement, carte) ne s'adresse pas à cet acheteur. Le prix en micro-packs (3 crédits = 500 FCFA, sans abonnement) correspond à la façon dont ce marché paie vraiment.
-- **Le moment est le bon.** Mobile Money branché en production (FedaPay, frais observé : 9 FCFA sur 500), API d'IA payées à l'usage, hébergement à 0 $/mois. Tout cela permet à un fondateur seul de servir un marché local que les acteurs mondiaux ignorent.
-- **Un savoir local qui peut devenir le « secret ».** Les dossiers de concours de la fonction publique, les normes des recruteurs béninois et le passage d'un CV ouest-africain aux normes Canada/France sont des savoirs fins. Un acteur global ne les fera pas bien.
-- **Des choix produit qui construisent la confiance.** La règle d'honnêteté (l'IA n'invente rien), le crédit remboursé si l'IA échoue, le CV qui reste sur l'appareil. Ce sont des briques possibles d'une marque.
+## Ce qui a changé depuis le premier examen
 
-## Ce qui pourrait le tuer (les 3 principaux, le plus dangereux d'abord)
-1. **Aucune barrière contre la copie.** Le cœur du produit est un appel à une API d'IA du marché, que n'importe quel concurrent peut appeler aussi. Les assistants d'IA généralistes gratuits rédigent déjà des CV et des lettres. S'y ajoutent Word/Canva, les cybercafés et les amis. Aujourd'hui, rien n'est dix fois meilleur, et il n'y a ni effet de réseau, ni économie d'échelle, ni marque. Qu'est-ce qui empêche un copieur au sixième mois ?
-2. **La distribution n'existe pas encore.** Un seul achat réel, celui du fondateur, et aucun marketing fait. WhatsApp, TikTok et Facebook ne sont que des intentions. Le budget pub n'est pas fixé et le coût d'acquisition client est inconnu. Pour cette lentille, un produit sans canal n'est pas encore une entreprise.
-3. **L'économie par unité n'est pas prouvée.** Un crédit rapporte environ 120 à 167 FCFA, mais le coût réel d'IA par action est inconnu (question ouverte). La conversion du gratuit au payant est inconnue, et Google prend 15 % sur un achat fait dans l'appli Play Store. La dépendance à un seul fournisseur d'IA et à des offres gratuites d'hébergement rend la marge fragile.
+**Résolu : la marge.** Le coût IA a été mesuré (7 à 18 FCFA par action) et le crédit se vend 120 à 167 FCFA. Chaque vente rapporte donc nettement plus qu'elle ne coûte. Une vraie preuve, et c'était la première condition.
+
+**Toujours là : la distribution.** Un seul client payant, et c'est le fondateur. Aucune publicité lancée, aucun coût par client mesuré, aucun témoignage vérifié. Les 4 vidéos existent mais n'ont pas été diffusées. Pour la lentille Monopoly, c'est la moitié du problème, et elle n'a pas bougé.
+
+**Toujours là : rien n'empêche la copie.** Le cœur du produit reste un modèle d'IA accessible à tous, plus des modèles de CV. Un concurrent bien financé, ou un développeur local, peut refaire l'essentiel en quelques semaines.
+
+**Aggravé : le manque de focus.** Le premier examen demandait une seule promesse. Depuis, le produit a ajouté un scanner, un dossier de candidature, un coffre-fort, la transcription manuscrite et un historique. Le produit est plus riche, mais il est plus dur à dire en une phrase. On s'éloigne de « dominer un petit marché ».
+
+## Ce qui est solide
+
+- **Un petit marché à prendre existe vraiment** : les demandeurs d'emploi francophones au Bénin, sur mobile, qui paient en Mobile Money. CVMove facture ~29,90 USD par mois et ne vise pas ce paiement. C'est là qu'on peut avoir une grande part d'un petit marché.
+- **L'offre est taillée pour le terrain local** : paiement MoMo en direct, pas d'abonnement, dictée vocale, photo d'un vieux CV papier, et la question des documents papier (pièce d'identité, diplômes) qu'un outil international ignore. C'est une vraie connaissance du terrain.
+- **Le dossier de candidature et le coffre-fort** sont les premiers éléments qui créent une raison de revenir : on garde ses documents dans l'app pour chaque nouvelle candidature. C'est un début de coût de départ, encore faible.
+- **Coûts fixes quasi nuls** : on peut tenir longtemps sans brûler d'argent.
+
+## Ce qui pourrait tuer le projet (les 3 plus dangereux d'abord)
+
+1. **Aucun canal pour atteindre les clients.** Sans moyen répétable d'amener les 100 premiers acheteurs, avec un coût connu, il n'y a pas d'entreprise, seulement un bon produit. Les assistants IA gratuits et le cybercafé du quartier sont déjà dans la poche du client.
+2. **Aucun avantage durable.** Ni technologie dix fois meilleure, ni effet de réseau, ni marque. Le parrainage (+1 crédit) est trop faible pour créer un effet de réseau. Le seul avantage possible à court terme, c'est le savoir local (règles des concours, normes par pays) et une marque bâtie sur des témoignages. Les deux restent à construire.
+3. **Une surface trop large pour un fondateur seul.** Chaque nouvelle fonction, c'est de la maintenance et du support. Nouveaux risques précis : la lecture des pages d'offres (LinkedIn notamment) peut cesser de marcher du jour au lendemain si le site change ou bloque l'accès ; la copie de la clé du coffre sur le serveur doit être expliquée honnêtement aux utilisateurs, sinon la promesse « vos documents sont en sécurité » peut se retourner contre la marque ; le site sans nom de domaine propre, sur des offres gratuites, affaiblit la confiance au moment même où l'on demande de payer.
 
 ## Les questions que je poserais au fondateur
-- Quel est le plus petit marché que vous pouvez dominer dans les 12 mois ? Par exemple, les candidats à un concours précis au Bénin, ou les dossiers pour le Canada. Combien de personnes y a-t-il ?
-- Qu'est-ce que vous savez sur ces candidats que personne d'autre ne sait ? Pouvez-vous l'intégrer dans le produit (formats de concours, règles par pays) d'une façon difficile à copier ?
-- Comment arrivent les 100 premiers clients payants, par quel canal, et combien coûte chacun ?
-- Quel est le coût réel d'IA par action, mesuré sur vos propres appels ?
-- Qu'est-ce qui pourrait créer un effet de réseau ou une marque ? Témoignages « j'ai eu le poste », partenariats avec des écoles, des cybercafés ou des recruteurs ?
-- Dans dix ans, qu'est-ce qui vous protège si un acteur mobile money ou un assistant d'IA généraliste ajoute un « CV » gratuit ?
+
+- Quel est le petit marché que vous voulez dominer en premier, en une phrase ? Les diplômés de Cotonou ? Les candidats aux concours béninois ? Les dossiers pour le Canada ?
+- Comment arrivent les 20 premiers acheteurs qui ne vous connaissent pas, et combien coûte chacun ?
+- Que savez-vous que les autres ne savent pas ? Par exemple les pièces exactes demandées pour chaque concours, ou ce que les recruteurs béninois rejettent ?
+- Qu'est-ce qui empêche un concurrent de copier tout cela en six mois ?
+- Quelles fonctions accepteriez-vous de cacher pour que la promesse principale soit évidente dès l'accueil ?
+- Combien d'utilisateurs ont rangé des documents dans le coffre et les ont réutilisés ? C'est votre premier signe de fidélité.
 
 ## Si FUND IF : les conditions
-1. **Choisir une niche et la posséder.** Nommer un segment (par exemple un concours ou le dossier Canada) et y obtenir une part dominante et visible avant d'étendre à d'autres pays ou segments.
-2. **Prouver la distribution.** Atteindre 100 clients payants hors fondateur via un canal reproductible, avec un coût d'acquisition mesuré.
-3. **Mesurer la marge.** Montrer le coût d'IA par action et prouver que chaque pack reste rentable après les frais de paiement (et après les 15 % de Google si le Play Store est utilisé).
-4. **Commencer un actif défendable.** Lancer au moins un élément qui se renforce avec l'usage : base de règles locales de concours et de pays, réseau de partenaires prescripteurs, ou marque fondée sur des témoignages vérifiés.
+
+1. **Choisir un seul segment de départ** et le dire partout (accueil, vidéos) : par exemple « le dossier de concours complet » ou « le CV adapté à l'offre, avec le score avant→après ». Les autres fonctions restent, mais au second plan.
+2. **Prouver un canal** : 20 à 30 acheteurs réels hors entourage, puis 100 via un canal répétable (statuts WhatsApp, vidéos, écoles ou cybercafés partenaires), avec un coût par client mesuré.
+3. **Commencer l'avantage durable** : une base écrite des règles des concours et des normes par pays, tenue à jour, que les outils internationaux n'ont pas ; et au moins 5 témoignages vérifiés.
+4. **Arrêter d'ajouter des fonctions** tant que les points 2 et 3 ne sont pas atteints.
+5. **Fermer les failles de confiance** : acheter le nom de domaine, expliquer clairement comment marche la clé du coffre, et prévoir une solution quand la lecture d'une offre échoue.
