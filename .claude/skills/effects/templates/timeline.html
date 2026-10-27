@@ -1,0 +1,117 @@
+<!doctype html>
+<html lang="en" data-resolution="portrait">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=1080, height=1920" />
+    <script src="assets/vendor/gsap.min.js"></script>
+    <style>
+      * { margin: 0; padding: 0; box-sizing: border-box; }
+      html, body { margin: 0; width: 1080px; height: 1920px; overflow: hidden; background: #17171b; }
+      #root { position: relative; width: 100%; height: 100%; overflow: hidden; background: #17171b; }
+      .mono { font-family: "JetBrains Mono", monospace; }
+      .ui { font-family: "Inter", sans-serif; }
+      #topbar { position: absolute; left: 0; right: 0; top: 0; height: 92px; padding: 0 28px; background: #0f0f12; border-bottom: 2px solid #2a2a31; display: flex; align-items: center; gap: 22px; opacity: 0; }
+      .dot { width: 18px; height: 18px; border-radius: 50%; }
+      #app { font-weight: 800; font-size: 30px; color: #f2f2f5; white-space: nowrap; }
+      #proj { font-size: 24px; color: #a6a6b0; white-space: nowrap; }
+      #tc { margin-left: auto; font-size: 30px; font-weight: 700; color: #ff6b5a; white-space: nowrap; }
+      .panel { position: absolute; background: #1f1f25; border: 2px solid #2c2c34; border-radius: 18px; padding: 18px; opacity: 0; will-change: transform; }
+      .ph { font-size: 22px; font-weight: 700; letter-spacing: 0.14em; color: #a6a6b0; margin-bottom: 16px; }
+      #bin { left: 16px; top: 110px; width: 226px; height: 1010px; }
+      .tile { height: 150px; border-radius: 12px; margin-bottom: 18px; display: flex; align-items: flex-end; padding: 12px; font-size: 22px; font-weight: 700; color: #fff; text-shadow: 0 2px 8px rgba(0,0,0,0.8); }
+      #insp { left: 838px; top: 110px; width: 226px; height: 1010px; }
+      .sl { margin-bottom: 40px; }
+      .sll { display: flex; justify-content: space-between; font-size: 22px; color: #d6d6dc; }
+      .slt { position: relative; margin-top: 14px; height: 8px; border-radius: 4px; background: #34343d; }
+      .slf { position: absolute; left: 0; top: 0; bottom: 0; width: 100%; border-radius: 4px; background: #7c6cff; transform-origin: 0 50%; }
+      .slk { position: absolute; top: -10px; left: -14px; width: 28px; height: 28px; border-radius: 50%; background: #fff; }
+      #monitor { position: absolute; left: 252px; top: 106px; width: 576px; height: 1018px; border: 4px solid #2c2c34; border-radius: 10px; opacity: 0; }
+      #cam { position: absolute; left: 0; top: 0; width: 1080px; height: 1920px; transform-origin: 0 0; will-change: transform; }
+      #base { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+      #tline { position: absolute; left: 0; right: 0; top: 1140px; bottom: 0; background: #121216; border-top: 2px solid #2a2a31; opacity: 0; }
+      #ruler { position: absolute; left: 130px; right: 20px; top: 0; height: 48px; border-bottom: 2px solid #2a2a31; }
+      .tick { position: absolute; top: 0; width: 2px; height: 16px; background: #4a4a55; }
+      .tl { position: absolute; top: 16px; font-size: 20px; color: #9a9aa5; white-space: nowrap; }
+      .track { position: absolute; left: 0; right: 20px; height: 150px; }
+      .th { position: absolute; left: 20px; top: 0; width: 96px; height: 150px; border-radius: 10px; background: #1f1f25; display: flex; align-items: center; justify-content: center; font-size: 28px; font-weight: 700; color: #d6d6dc; }
+      .clip-b { position: absolute; top: 10px; height: 130px; border-radius: 12px; overflow: hidden; transform-origin: 0 50%; padding: 10px 14px; font-size: 22px; font-weight: 700; color: #fff; white-space: nowrap; }
+      .wave { position: absolute; left: 10px; right: 10px; top: 40px; bottom: 10px; display: flex; align-items: center; gap: 3px; }
+      .wb { flex: 1; border-radius: 2px; background: rgba(255,255,255,0.85); }
+      #head { position: absolute; top: 1140px; bottom: 0; width: 4px; margin-left: -2px; background: #ff4b3e; opacity: 0; }
+      #head::before { content: ""; position: absolute; left: -12px; top: 0; border: 14px solid transparent; border-top: 18px solid #ff4b3e; }
+    </style>
+  </head>
+  <body>
+    <!-- /effects timeline: an editing app assembles around the speaker; the playhead runs with the clip. -->
+    <div id="root" data-composition-id="main" data-start="0" data-duration="{{DURATION}}" data-width="1080" data-height="1920">
+      <div id="topbar" class="ui"><div class="dot" style="background:#ff5f57"></div><div class="dot" style="background:#febc2e"></div><div class="dot" style="background:#28c840"></div><div id="app"></div><div id="proj" class="mono"></div><div id="tc" class="mono">00:00:00</div></div>
+      <div class="panel ui" id="bin"><div class="ph">MEDIA</div><div id="tiles"></div></div>
+      <div class="panel ui" id="insp"><div class="ph">COLOR</div><div id="sliders"></div></div>
+      <div id="tline" class="ui"><div id="ruler" class="mono"></div><div id="tracks"></div></div>
+      <div id="monitor"></div>
+      <div id="cam" data-layout-allow-overflow>
+        <video id="base" class="clip" src="assets/video/source.mp4" data-start="0" data-duration="{{DURATION}}" data-track-index="0" muted playsinline></video>
+      </div>
+      <div id="head"></div>
+      {{AUDIO}}
+    </div>
+    <script>
+      const CFG = {{CONFIG}};
+      const D = {{DURATION}};
+      const $ = (id) => document.getElementById(id);
+      $("app").textContent = CFG.app;
+      $("proj").textContent = CFG.project;
+      const tileColors = ["linear-gradient(135deg,#c2410c,#9f1239)", "linear-gradient(135deg,#1d4ed8,#1e3a8a)", "linear-gradient(135deg,#047857,#065f46)", "linear-gradient(135deg,#6d28d9,#4c1d95)"];
+      CFG.bin.forEach((name, i) => { const t = document.createElement("div"); t.className = "tile"; t.id = "tile-" + i; t.style.background = tileColors[i % 4]; t.textContent = name; $("tiles").appendChild(t); });
+      CFG.sliders.forEach((s, i) => {
+        const el = document.createElement("div");
+        el.className = "sl";
+        el.innerHTML = `<div class="sll"><span></span><span class="mono" id="slv-${i}">0</span></div><div class="slt"><div class="slf" id="slf-${i}"></div><div class="slk" id="slk-${i}"></div></div>`;
+        el.querySelector("span").textContent = s.label;
+        $("sliders").appendChild(el);
+      });
+      // Ruler: one tick per second (every 2 s past 16 s)
+      const X0 = 130, XW = 930, every = D > 16 ? 2 : 1;
+      for (let s = 0; s <= D - every * 0.6; s += every) {
+        const x = (s / D) * XW;
+        $("ruler").insertAdjacentHTML("beforeend", `<div class="tick" style="left:${x}px"></div><div class="tl" style="left:${x + 6}px">${s}s</div>`);
+      }
+      const tracks = [
+        { n: "T1", label: CFG.title_clip, color: "#7c6cff", from: 0.08, to: 0.5 },
+        { n: "V1", label: CFG.video_clip, color: "#e8743b", from: 0, to: 1, film: true },
+        { n: "A1", label: CFG.voice_clip, color: "#1e9e6a", from: 0, to: 1, wave: CFG.wave },
+        { n: "A2", label: CFG.music_clip, color: "#3a5bd9", from: 0, to: 1, wave: (CFG.wave || []).map((v, i) => 0.35 + 0.25 * Math.abs(Math.sin(i * 0.7))) },
+      ];
+      tracks.forEach((t, i) => {
+        const top = 64 + i * 166;
+        let inner = "";
+        if (t.film) inner = `<div style="position:absolute;inset:40px 0 0 0;background:repeating-linear-gradient(90deg,rgba(0,0,0,0.25) 0 6px,rgba(255,255,255,0.12) 6px 110px)"></div>`;
+        if (t.wave) inner = `<div class="wave">${t.wave.map((v) => `<div class="wb" style="height:${Math.round(v * 100)}%"></div>`).join("")}</div>`;
+        $("tracks").insertAdjacentHTML("beforeend", `<div class="track" style="top:${top}px"><div class="th">${t.n}</div><div class="clip-b" id="clip-${i}" style="left:${X0 + t.from * XW}px;width:${(t.to - t.from) * XW}px;background:${t.color}"><span></span>${inner}</div></div>`);
+        $("clip-" + i).querySelector("span").textContent = t.label;
+      });
+
+      const tl = gsap.timeline({ paused: true });
+      // The clip starts full screen, then the editor assembles around it
+      tl.fromTo("#cam", { x: 0, y: 0, scale: 1 }, { x: 256, y: 110, scale: 568 / 1080, duration: 0.8, ease: "expo.inOut" }, 0.3);
+      tl.fromTo("#monitor", { opacity: 0 }, { opacity: 1, duration: 0.3 }, 0.9);
+      tl.fromTo("#topbar", { opacity: 0, y: -60 }, { opacity: 1, y: 0, duration: 0.5, ease: "expo.out" }, 0.7);
+      tl.fromTo("#bin", { opacity: 0, x: -120 }, { opacity: 1, x: 0, duration: 0.5, ease: "expo.out" }, 0.8);
+      tl.fromTo("#insp", { opacity: 0, x: 120 }, { opacity: 1, x: 0, duration: 0.5, ease: "expo.out" }, 0.8);
+      tl.fromTo("#tline", { opacity: 0, y: 200 }, { opacity: 1, y: 0, duration: 0.6, ease: "expo.out" }, 0.75);
+      tracks.forEach((t, i) => tl.fromTo("#clip-" + i, { scaleX: 0 }, { scaleX: 1, duration: 0.5, ease: "power3.out" }, 1.0 + i * 0.1));
+      CFG.bin.forEach((n, i) => tl.fromTo("#tile-" + i, { opacity: 0, y: 30 }, { opacity: 1, y: 0, duration: 0.3, ease: "expo.out" }, 1.0 + i * 0.08));
+      CFG.sliders.forEach((s, i) => {
+        tl.fromTo("#slf-" + i, { scaleX: 0 }, { scaleX: s.value, duration: 0.9, ease: "power2.inOut" }, 1.2 + i * 0.2);
+        tl.fromTo("#slk-" + i, { x: 0 }, { x: s.value * 190, duration: 0.9, ease: "power2.inOut" }, 1.2 + i * 0.2);
+        for (let k = 0; k <= 10; k++) tl.set("#slv-" + i, { textContent: Math.round(s.value * 100 * k / 10) }, 1.2 + i * 0.2 + k * 0.09);
+      });
+      // Playhead and timecode run with the clip
+      tl.fromTo("#head", { opacity: 0 }, { opacity: 1, duration: 0.2, immediateRender: false }, 1.0);
+      tl.fromTo("#head", { x: X0 }, { x: X0 + XW, duration: D, ease: "none" }, 0);
+      const pad = (n) => String(n).padStart(2, "0");
+      for (let t = 0; t <= D; t += 0.125) tl.set("#tc", { textContent: `00:${pad(Math.floor(t))}:${pad(Math.floor((t % 1) * 24))}` }, t);
+      window.__timelines["main"] = tl;
+    </script>
+  </body>
+</html>

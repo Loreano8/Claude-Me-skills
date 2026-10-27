@@ -1,0 +1,84 @@
+<!doctype html>
+<html lang="en" data-resolution="portrait">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=1080, height=1920" />
+    <script src="assets/vendor/gsap.min.js"></script>
+    <style>
+      * { margin: 0; padding: 0; box-sizing: border-box; }
+      html, body { margin: 0; width: 1080px; height: 1920px; overflow: hidden; background: #0c0b09; }
+      #root { position: relative; width: 100%; height: 100%; overflow: hidden; background: #0c0b09; }
+      #base, #cutout { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+      .layer { position: absolute; inset: 0; }
+      .card { position: absolute; left: 0; top: 0; width: 300px; height: 360px; border-radius: 30px; overflow: hidden; background: rgba(250, 247, 240, 0.94); box-shadow: 0 30px 70px rgba(0,0,0,0.45); display: flex; flex-direction: column; justify-content: flex-end; padding: 30px; opacity: 0; will-change: transform; }
+      .card img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+      .card.has-img::after { content: ""; position: absolute; inset: 0; background: linear-gradient(to top, rgba(0,0,0,0.75), rgba(0,0,0,0) 55%); }
+      .card .ct { position: relative; z-index: 1; font-family: "Archivo Black", sans-serif; font-size: 84px; line-height: 1; letter-spacing: -0.04em; color: #14120e; }
+      .card .cs { position: relative; z-index: 1; margin-top: 12px; font-family: "JetBrains Mono", monospace; font-weight: 700; font-size: 28px; letter-spacing: 0.08em; color: #5a4a1a; }
+      .card .acc { position: absolute; left: 30px; top: 30px; width: 70px; height: 10px; border-radius: 6px; }
+      .card.has-img .ct, .card.has-img .cs { color: #fff; }
+    </style>
+  </head>
+  <body>
+    <!-- /effects orbit: cards circle the speaker and pass behind them (cutout layer). -->
+    <div id="root" data-composition-id="main" data-start="0" data-duration="{{DURATION}}" data-width="1080" data-height="1920">
+      <video id="base" class="clip" src="assets/video/source.mp4" data-start="0" data-duration="{{DURATION}}" data-track-index="0" muted playsinline></video>
+      <div class="layer" id="back" data-layout-allow-overflow></div>
+      {{CUTOUT}}
+      <div class="layer" id="front" data-layout-allow-overflow></div>
+      {{AUDIO}}
+    </div>
+    <script>
+      const CFG = {{CONFIG}};
+      const D = {{DURATION}};
+      const CUT = {{HAS_CUTOUT}};
+      const N = CFG.cards.length;
+      function makeCard(c, i, layer) {
+        const el = document.createElement("div");
+        el.className = "card" + (c.image ? " has-img" : "");
+        el.id = `card-${layer}-${i}`;
+        el.setAttribute("data-layout-allow-overflow", "");
+
+        if (c.image) { const im = document.createElement("img"); im.src = c.image; im.alt = c.title || "card"; el.appendChild(im); }
+        else { const a = document.createElement("div"); a.className = "acc"; a.style.background = CFG.accent; el.appendChild(a); }
+        const t = document.createElement("div"); t.className = "ct"; t.textContent = c.title || ""; el.appendChild(t);
+        const s = document.createElement("div"); s.className = "cs"; s.textContent = c.sub || ""; el.appendChild(s);
+        if (layer === "back") [el, t, s].forEach((n) => n.setAttribute("data-layout-allow-occlusion", ""));
+        document.getElementById(layer).appendChild(el);
+      }
+      CFG.cards.forEach((c, i) => { makeCard(c, i, "back"); makeCard(c, i, "front"); });
+
+      const tl = gsap.timeline({ paused: true });
+      const CX = 540, CY = CFG.center_y, RX = 420, RY = 150, W = 300, H = 360;
+      const omega = (2 * Math.PI) / CFG.seconds_per_turn;
+      const dt = 1 / 10;
+      function pose(i, t) {
+        const th = (2 * Math.PI * i) / N + omega * t + Math.PI / 2;
+        const depth = Math.sin(th); // +1 in front of the speaker, -1 behind
+        const intro = Math.min(1, Math.max(0, (t - 0.15 - i * 0.12) / 0.6));
+        const k = 1 - Math.pow(1 - intro, 3);
+        const s = (0.62 + 0.38 * (depth + 1) / 2) * (0.2 + 0.8 * k);
+        return { x: CX + RX * Math.cos(th) * k - W / 2, y: CY + RY * depth - H / 2, scale: s, rotationY: -Math.cos(th) * 28, depth, k };
+      }
+      // Pre-computed keyframes keep the orbit deterministic and seek-safe.
+      for (let i = 0; i < N; i++) {
+        const f = `#card-front-${i}`, b = `#card-back-${i}`;
+        const p0 = pose(i, 0);
+        tl.set([f, b], { x: p0.x, y: p0.y, scale: p0.scale, rotationY: p0.rotationY, transformPerspective: 900 }, 0);
+        let front = null;
+        for (let t = 0; t < D; t += dt) {
+          const p = pose(i, t + dt);
+          tl.to([f, b], { x: p.x, y: p.y, scale: p.scale, rotationY: p.rotationY, duration: dt, ease: "none" }, t);
+          const isFront = !CUT || p.depth >= 0;
+          const a = p.k > 0 ? 1 : 0;
+          if (isFront !== front || t === 0 || p.k < 1) {
+            tl.set(f, { opacity: isFront ? a : 0 }, t);
+            tl.set(b, { opacity: isFront ? 0 : a * 0.92 }, t);
+            front = isFront;
+          }
+        }
+      }
+      window.__timelines["main"] = tl;
+    </script>
+  </body>
+</html>

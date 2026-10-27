@@ -1,0 +1,13 @@
+{
+  "header": "Claude is editing your clip",
+  "items": [
+    { "label": "Found your face", "meta": "every frame" },
+    { "label": "Cut you out of the room", "meta": "AI mask" },
+    { "label": "Put the text behind you", "meta": "depth" },
+    { "label": "Graded the colour", "meta": "warm" },
+    { "label": "Rendered in 4K", "meta": "2160p" }
+  ],
+  "headline": "EDITED",
+  "headline_at": 2,
+  "accent": "#3ddc84"
+}

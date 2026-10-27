@@ -1,0 +1,12 @@
+{
+  "cards": [
+    { "title": "197K", "sub": "views" },
+    { "title": "+36", "sub": "effects" },
+    { "title": "4K", "sub": "render" },
+    { "title": "4.9★", "sub": "rating" },
+    { "title": "24/7", "sub": "with Claude" }
+  ],
+  "accent": "#f0b90b",
+  "center_y": 980,
+  "seconds_per_turn": 7
+}

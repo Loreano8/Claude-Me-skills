@@ -1,0 +1,91 @@
+<!doctype html>
+<html lang="en" data-resolution="portrait">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=1080, height=1920" />
+    <script src="assets/vendor/gsap.min.js"></script>
+    <style>
+      * { margin: 0; padding: 0; box-sizing: border-box; }
+      html, body { margin: 0; width: 1080px; height: 1920px; overflow: hidden; background: #000; }
+      #root { position: relative; width: 100%; height: 100%; overflow: hidden; background: #000; }
+      #cam { position: absolute; inset: 0; will-change: transform; }
+      #base { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; filter: grayscale(1) contrast(1.25) brightness(0.92); }
+      #tint { position: absolute; inset: 0; mix-blend-mode: screen; opacity: 0; }
+      #vig { position: absolute; inset: 0; background: radial-gradient(ellipse 75% 60% at 50% 45%, rgba(0,0,0,0) 40%, rgba(0,0,0,0.75) 100%); }
+      #grain { position: absolute; inset: -40px; background-image: url("assets/img/grain.png"); background-size: 540px 960px; opacity: 0.16; mix-blend-mode: overlay; }
+      .bar { position: absolute; left: 0; right: 0; height: 210px; background: #000; transform-origin: 50% 0%; }
+      #bar-t { top: 0; }
+      #bar-b { bottom: 0; transform-origin: 50% 100%; }
+      #stamp { position: absolute; left: 70px; top: 120px; font-family: "JetBrains Mono", monospace; font-weight: 700; font-size: 30px; letter-spacing: 0.22em; color: #e8e2d6; white-space: nowrap; }
+      #stamp .c { opacity: 0; }
+      #tc { position: absolute; right: 70px; bottom: 90px; font-family: "JetBrains Mono", monospace; font-size: 28px; letter-spacing: 0.12em; color: #bdb6a8; opacity: 0; }
+      #lower { position: absolute; left: 70px; bottom: 290px; opacity: 0; }
+      #lower-rule { width: 110px; height: 8px; transform-origin: 0 50%; }
+      #lower-name { margin-top: 22px; font-family: "Inter", sans-serif; font-weight: 800; font-size: 64px; letter-spacing: 0.02em; text-transform: uppercase; color: #fff; text-shadow: 0 4px 24px rgba(0,0,0,0.6); white-space: nowrap; }
+      #lower-role { margin-top: 8px; font-family: "JetBrains Mono", monospace; font-size: 32px; letter-spacing: 0.1em; color: #e8e2d6; text-shadow: 0 2px 12px rgba(0,0,0,0.8); white-space: nowrap; }
+      #intro { position: absolute; inset: 0; background: #000; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; }
+      #intro-ch { font-family: "JetBrains Mono", monospace; font-weight: 700; font-size: 32px; letter-spacing: 0.4em; color: #bdb6a8; opacity: 0; }
+      #intro-ti { margin-top: 30px; padding: 0 80px; font-family: "Playfair Display", serif; font-style: italic; font-weight: 700; font-size: 124px; line-height: 1.05; color: #f4efe6; opacity: 0; }
+    </style>
+  </head>
+  <body>
+    <!-- /effects documentary: the clip becomes a black-and-white documentary piece. -->
+    <div id="root" data-composition-id="main" data-start="0" data-duration="{{DURATION}}" data-width="1080" data-height="1920">
+      <div id="cam" data-layout-allow-overflow>
+        <video id="base" class="clip" src="assets/video/source.mp4" data-start="0" data-duration="{{DURATION}}" data-track-index="0" muted playsinline></video>
+      </div>
+      <div id="tint"></div>
+      <div id="vig"></div>
+      <div id="grain" data-layout-allow-overflow></div>
+      <div class="bar" id="bar-t"></div>
+      <div class="bar" id="bar-b"></div>
+      <div id="stamp"></div>
+      <div id="tc">00:00:00:00</div>
+      <div id="lower"><div id="lower-rule"></div><div id="lower-name"></div><div id="lower-role"></div></div>
+      <div id="intro"><div id="intro-ch"></div><div id="intro-ti"></div></div>
+      {{AUDIO}}
+    </div>
+    <script>
+      const CFG = {{CONFIG}};
+      const D = {{DURATION}};
+      const $ = (id) => document.getElementById(id);
+      $("tint").style.background = `radial-gradient(ellipse 70% 55% at 50% 45%, rgba(0,0,0,0) 35%, ${CFG.tint} 120%)`;
+      $("lower-rule").style.background = CFG.tint;
+      $("lower-name").textContent = CFG.name;
+      $("lower-role").textContent = CFG.role;
+      $("intro-ch").textContent = CFG.chapter;
+      $("intro-ti").textContent = CFG.title;
+      [...CFG.stamp].forEach((ch) => { const s = document.createElement("span"); s.className = "c"; s.textContent = ch === " " ? " " : ch; $("stamp").appendChild(s); });
+
+      const tl = gsap.timeline({ paused: true });
+      const intro = Math.min(1.8, D * 0.25);
+      // Title card, then the film opens
+      tl.fromTo("#intro-ch", { opacity: 0, y: 20 }, { opacity: 1, y: 0, duration: 0.4, ease: "power2.out" }, 0.1);
+      tl.fromTo("#intro-ti", { opacity: 0, y: 30 }, { opacity: 1, y: 0, duration: 0.6, ease: "power2.out" }, 0.3);
+      tl.to("#intro", { opacity: 0, duration: 0.45, ease: "power2.inOut" }, intro);
+      tl.fromTo("#cam", { scale: 1.12 }, { scale: 1.0, duration: D, ease: "none" }, 0);
+      tl.fromTo("#tint", { opacity: 0 }, { opacity: 0.32, duration: 1.2, ease: "power1.out" }, intro);
+      tl.fromTo("#bar-t, #bar-b", { scaleY: 2.2 }, { scaleY: 1, duration: 0.7, ease: "expo.out" }, intro);
+      // Typewriter stamp and running timecode
+      gsap.utils.toArray("#stamp .c").forEach((el, i) => tl.set(el, { opacity: 1 }, intro + 0.3 + i * 0.05));
+      tl.fromTo("#tc", { opacity: 0 }, { opacity: 1, duration: 0.3 }, intro + 0.3);
+      const pad = (n) => String(n).padStart(2, "0");
+      for (let t = 0; t <= D; t += 0.125) {
+        const f = Math.floor((t % 1) * 24);
+        tl.set("#tc", { textContent: `00:00:${pad(Math.floor(t))}:${pad(f)}` }, t);
+      }
+      // Film grain jitters on every twelfth of a second
+      for (let i = 0, t = 0; t < D; i++, t += 1 / 12) {
+        tl.set("#grain", { backgroundPosition: `${(i * 137) % 540}px ${(i * 263) % 960}px` }, t);
+      }
+      // Lower third
+      const lt = intro + 0.8, hold = Math.min(4.5, D - lt - 0.6);
+      tl.fromTo("#lower", { opacity: 0 }, { opacity: 1, duration: 0.01 }, lt);
+      tl.fromTo("#lower-rule", { scaleX: 0 }, { scaleX: 1, duration: 0.5, ease: "expo.out" }, lt);
+      tl.fromTo("#lower-name", { opacity: 0, x: -30 }, { opacity: 1, x: 0, duration: 0.5, ease: "expo.out" }, lt + 0.15);
+      tl.fromTo("#lower-role", { opacity: 0, x: -30 }, { opacity: 1, x: 0, duration: 0.5, ease: "expo.out" }, lt + 0.3);
+      if (hold > 1) tl.to("#lower", { opacity: 0, duration: 0.4, ease: "power2.in" }, lt + hold);
+      window.__timelines["main"] = tl;
+    </script>
+  </body>
+</html>

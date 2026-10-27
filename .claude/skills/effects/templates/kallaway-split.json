@@ -1,0 +1,17 @@
+{
+  "headline": "Views after editing with Claude",
+  "stat": "+340%",
+  "chart": "bars",
+  "data": [
+    { "label": "Jan", "value": 12 },
+    { "label": "Feb", "value": 18 },
+    { "label": "Mar", "value": 26 },
+    { "label": "Apr", "value": 41 },
+    { "label": "May", "value": 63 },
+    { "label": "Jun", "value": 97 }
+  ],
+  "unit": "K",
+  "source": "Illustrative data",
+  "accent": "#f0b90b",
+  "focus": "50% 30%"
+}

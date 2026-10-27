@@ -1,0 +1,14 @@
+{
+  "app": "Claude Studio",
+  "project": "my-video.hf",
+  "title_clip": "TITLE",
+  "video_clip": "A-ROLL",
+  "voice_clip": "VOICE",
+  "music_clip": "MUSIC",
+  "bin": ["A-ROLL", "B-ROLL", "MUSIC", "TITLES"],
+  "sliders": [
+    { "label": "Exposure", "value": 0.62 },
+    { "label": "Contrast", "value": 0.74 },
+    { "label": "Warmth", "value": 0.58 }
+  ]
+}
