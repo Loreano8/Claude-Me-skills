@@ -1,11 +1,12 @@
 import { useState } from 'react';
-import { AlertTriangle, CheckCircle2, FileDown, FileText, Languages, Lightbulb, Lock } from 'lucide-react';
+import { AlertTriangle, CheckCircle2, FileDown, FileText, Languages, Lightbulb, Lock, Wand2 } from 'lucide-react';
 import type { Market } from '../../shared/schema.ts';
 import { MARKET_LABELS, useActiveCv, useStore } from '../store.ts';
 import type { CvDocument, CvSettings } from '../types.ts';
 import { ACCENTS, isCvEmpty, toAiContent } from '../lib/cv.ts';
 import { api } from '../lib/api.ts';
 import { checkCv } from '../lib/checks.ts';
+import { isRecommended, recommendedDisplay } from '../lib/recommended.ts';
 import { exportCvDocx, exportCvPdf } from '../export/exporters.ts';
 import { Preview } from '../components/Preview.tsx';
 import { TemplateGallery } from '../components/TemplateGallery.tsx';
@@ -19,6 +20,9 @@ export function DesignPanel({ cv }: { cv: CvDocument }) {
   const updateCv = useStore((s) => s.updateCv);
   const set = (patch: Partial<CvSettings>) => updateCv((c) => ({ ...c, settings: { ...c.settings, ...patch } }));
   const st = cv.settings;
+
+  const advice = recommendedDisplay(cv);
+  const recommended = isRecommended(cv);
 
   return (
     <div className="space-y-4">
@@ -44,7 +48,21 @@ export function DesignPanel({ cv }: { cv: CvDocument }) {
         </div>
       </Card>
 
-      <Card title="Options d’affichage">
+      <Card
+        title="Options d’affichage"
+        actions={
+          recommended ? (
+            <span className="flex items-center gap-1 text-xs font-medium text-emerald-700">
+              <CheckCircle2 className="size-4" /> Recommandé
+            </span>
+          ) : (
+            <Button size="sm" variant="secondary" icon={<Wand2 className="size-4" />} onClick={() => set(advice.settings)}>
+              Recommandé
+            </Button>
+          )
+        }
+      >
+        <p className="mb-2 text-xs text-slate-500">{recommended ? advice.reason : `Pas sûr de quoi afficher ? « Recommandé » règle tout selon l’usage. ${advice.reason}`}</p>
         <Toggle label="Photo" checked={st.showPhoto} onChange={(showPhoto) => set({ showPhoto })} hint={cv.photo ? undefined : 'Ajoutez une photo dans « Mes infos ».'} />
         <Toggle label="Date de naissance" checked={st.showBirthDate} onChange={(showBirthDate) => set({ showBirthDate })} />
         <Toggle label="Nationalité" checked={st.showNationality} onChange={(showNationality) => set({ showNationality })} />
