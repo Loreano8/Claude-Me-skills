@@ -2,7 +2,7 @@ import { describe, expect, it, vi } from 'vitest';
 import { createApp } from '../server/app.ts';
 import { AiError, type Ai } from '../server/ai.ts';
 import { toAiContent } from '../src/lib/cv.ts';
-import { sampleAdapt, sampleCv, sampleInterview, sampleLetter, sampleRevise, sampleTemplateAnalysis, sampleTranslation } from './fixtures.ts';
+import { sampleAdapt, sampleCv, sampleInterview, sampleLetter, sampleRevise, sampleTemplateAnalysis, sampleTranslation, sampleClarify } from './fixtures.ts';
 
 function fakeAi(overrides: Partial<Ai> = {}): Ai {
   return {
@@ -13,6 +13,7 @@ function fakeAi(overrides: Partial<Ai> = {}): Ai {
     interview: vi.fn(async () => sampleInterview),
     revise: vi.fn(async () => sampleRevise),
     analyzeTemplate: vi.fn(async () => sampleTemplateAnalysis),
+    clarify: vi.fn(async () => sampleClarify),
     ...overrides,
   };
 }

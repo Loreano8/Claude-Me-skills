@@ -19,7 +19,7 @@ describe('appels à Claude', () => {
     const original = toAiContent(sampleCv());
     const res = await ai.adapt({
       cv: original,
-      job: { text: 'Poste à Dakar', file: { name: 'offre.pdf', mediaType: 'application/pdf', data: 'JVBERi0=' } },
+      job: { text: 'Poste à Dakar', file: { name: 'offre.pdf', mediaType: 'application/pdf', data: 'JVBERi0=' }, answers: '' },
       lang: null,
     });
     expect(res.analysis.matchScore).toBe(72);
@@ -52,7 +52,7 @@ describe('appels à Claude', () => {
 
   it('écrit une candidature spontanée quand il n’y a pas d’offre', async () => {
     const { client, parse } = fakeClient({ stop_reason: 'end_turn', parsed_output: { paragraphs: [] } });
-    await createAi(client).coverLetter({ cv: toAiContent(sampleCv()), job: { text: '', file: null }, notes: 'Entreprise X', tone: 'formel', length: 'courte', lang: 'fr' });
+    await createAi(client).coverLetter({ cv: toAiContent(sampleCv()), job: { text: '', file: null, answers: '' }, notes: 'Entreprise X', tone: 'formel', length: 'courte', lang: 'fr' });
     const req = (parse.mock.calls[0] as unknown[])[0] as Record<string, any>;
     const text = req.messages[0].content.map((b: any) => b.text ?? '').join('\n');
     expect(text).toContain('candidature spontanée');

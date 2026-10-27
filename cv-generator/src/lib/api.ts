@@ -14,6 +14,9 @@ import type {
   ReviseResult,
   AnalyzeTemplateRequest,
   TemplateAnalysis,
+  ClarifyRequest,
+  ClarifyResult,
+  JobFetchResult,
 } from '../../shared/schema.ts';
 import { useAccount, type AccountUser, type Pack } from './account.ts';
 import { deviceId } from './device.ts';
@@ -75,6 +78,8 @@ export const api = {
   interview: (req: InterviewRequest) => post<InterviewResult>('/api/ai/interview', req),
   revise: (req: ReviseRequest) => post<ReviseResult>('/api/ai/revise', req),
   analyzeTemplate: (req: AnalyzeTemplateRequest) => post<TemplateAnalysis>('/api/ai/analyze-template', req),
+  clarify: (req: ClarifyRequest) => post<ClarifyResult>('/api/ai/clarify', req),
+  fetchJob: (url: string) => post<JobFetchResult>('/api/job/fetch', { url }),
 
   register: (identifier: string, password: string, name: string, referralCode?: string | null) =>
     post<Session>('/api/auth/register', { identifier, password, name, ...(referralCode ? { referralCode } : {}) }),

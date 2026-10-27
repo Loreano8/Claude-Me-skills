@@ -2,15 +2,18 @@ import { Hono, type Context } from 'hono';
 import { cors } from 'hono/cors';
 import { bodyLimit } from 'hono/body-limit';
 import { z } from 'zod';
-import { AdaptRequest, AnalyzeTemplateRequest, CoverLetterRequest, InterviewRequest, ReviseRequest, StructureRequest, TranslateRequest } from '../shared/schema.ts';
+import { AdaptRequest, AnalyzeTemplateRequest, ClarifyRequest, CoverLetterRequest, JobFetchRequest, InterviewRequest, ReviseRequest, StructureRequest, TranslateRequest } from '../shared/schema.ts';
 import { AiError, type Ai } from './ai.ts';
 import { AccountError, REFERRAL_BONUS, UNLOCK_COST, type Accounts, type User } from './accounts.ts';
 import { signToken, verifyToken } from './auth.ts';
 import { PACKS, PaymentError, type Payments } from './payments.ts';
 import { TestimonialInput, type Testimonials } from './testimonials.ts';
 import { SupportError, SupportMessageInput, type Support } from './support.ts';
+import { fetchJobPage, JobPageError } from './jobPage.ts';
 
 export interface AppOptions {
+  /** Téléchargement des pages d'offres (remplaçable dans les tests). */
+  fetchPage?: typeof fetchJobPage;
   ai: Ai | null;
   allowedOrigins: string[];
   rateLimitPerHour: number;
@@ -57,10 +60,11 @@ const Credentials = z.object({
   referralCode: z.string().max(20).optional(),
 });
 
-export function createApp({ ai, allowedOrigins, rateLimitPerHour, accounts = null, payments = null, testimonials = null, support = null, sessionSecret = '', publicUrl = '', apiPublicUrl = '', adminToken = '' }: AppOptions) {
+export function createApp({ fetchPage = fetchJobPage, ai, allowedOrigins, rateLimitPerHour, accounts = null, payments = null, testimonials = null, support = null, sessionSecret = '', publicUrl = '', apiPublicUrl = '', adminToken = '' }: AppOptions) {
   const app = new Hono();
   const allow = createRateLimiter(rateLimitPerHour);
   const allowAuth = createRateLimiter(20);
+  const allowFree = createRateLimiter(30);
 
   app.use('/api/*', cors({ origin: allowedOrigins, allowMethods: ['GET', 'POST'], exposeHeaders: ['X-Credits-Remaining'] }));
   app.use(
@@ -313,12 +317,14 @@ export function createApp({ ai, allowedOrigins, rateLimitPerHour, accounts = nul
     schema: S,
     handler: (ai: Ai, body: z.output<S>) => Promise<R>,
     check?: (body: z.output<S>) => string | null,
+    /** Action gratuite (compte exigé, aucun crédit débité), avec sa propre limite. */
+    free = false,
   ) {
     return async (c: Context) => {
       if (!ai) {
         return c.json({ error: 'Les fonctions IA ne sont pas configurées sur ce serveur (ANTHROPIC_API_KEY manquante).' }, 503);
       }
-      if (!allow(clientKey(c))) {
+      if (!(free ? allowFree : allow)(clientKey(c))) {
         return c.json({ error: 'Trop de demandes en peu de temps. Réessayez dans une heure.' }, 429);
       }
       const parsed = schema.safeParse(await c.req.json().catch(() => null));
@@ -332,20 +338,22 @@ export function createApp({ ai, allowedOrigins, rateLimitPerHour, accounts = nul
       if (accounts) {
         user = await currentUser(c);
         if (!user) return c.json({ error: 'Créez un compte gratuit ou connectez-vous pour utiliser l’IA.', code: 'auth' }, 401);
-        try {
-          const remaining = await accounts.spend(user.id, action);
-          c.header('X-Credits-Remaining', String(remaining));
-        } catch (error) {
-          if (error instanceof AccountError && error.status === 402) {
-            return c.json({ error: 'Vous n’avez plus de crédits. Rechargez pour continuer.', code: 'credits' }, 402);
+        if (!free) {
+          try {
+            const remaining = await accounts.spend(user.id, action);
+            c.header('X-Credits-Remaining', String(remaining));
+          } catch (error) {
+            if (error instanceof AccountError && error.status === 402) {
+              return c.json({ error: 'Vous n’avez plus de crédits. Rechargez pour continuer.', code: 'credits' }, 402);
+            }
+            return accountError(c, error);
           }
-          return accountError(c, error);
         }
       }
       try {
         return c.json(await handler(ai, parsed.data));
       } catch (error) {
-        if (user && accounts) {
+        if (user && accounts && !free) {
           const credits = await accounts.refund(user.id, action).catch(() => null);
           if (credits !== null) c.header('X-Credits-Remaining', String(credits));
         }
@@ -362,6 +370,32 @@ export function createApp({ ai, allowedOrigins, rateLimitPerHour, accounts = nul
     '/api/ai/structure',
     aiRoute('structure', StructureRequest, (ai, body) => ai.structure(body), (body) =>
       !body.text.trim() && !body.file && !body.current ? 'Écrivez quelques informations ou joignez un ancien CV.' : null,
+    ),
+  );
+
+  // Lecture d'une offre à partir de son lien : gratuite, sans compte.
+  app.post('/api/job/fetch', async (c) => {
+    if (!allowFree(clientKey(c))) return c.json({ error: 'Trop de demandes en peu de temps. Réessayez plus tard.' }, 429);
+    const parsed = JobFetchRequest.safeParse(await c.req.json().catch(() => null));
+    if (!parsed.success) return c.json({ error: 'Lien invalide.' }, 400);
+    try {
+      return c.json(await fetchPage(parsed.data.url));
+    } catch (error) {
+      if (error instanceof JobPageError) return c.json({ error: error.message }, error.status as 400);
+      console.error(error);
+      return c.json({ error: 'Impossible de lire ce lien. Copiez le texte de l’annonce.' }, 502);
+    }
+  });
+
+  // Questions sur l'offre avant l'adaptation (poste à choisir, exigence absente du CV…) : gratuites.
+  app.post(
+    '/api/ai/clarify',
+    aiRoute(
+      'clarify',
+      ClarifyRequest,
+      (ai, body) => ai.clarify(body),
+      (body) => (!body.job.text.trim() && !body.job.file ? 'Collez le texte de l’offre ou joignez le fichier de l’annonce.' : null),
+      true,
     ),
   );
 

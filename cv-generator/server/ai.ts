@@ -5,6 +5,8 @@ import type { z } from 'zod';
 import {
   AdaptAiOutput,
   type AdaptResult,
+  ClarifyResult,
+  type ClarifyRequest,
   CoverLetterResult,
   StructureResult,
   TranslateResult,
@@ -21,7 +23,7 @@ import {
   type TranslateRequest,
   type InterviewRequest,
 } from '../shared/schema.ts';
-import { adaptSystem, analyzeTemplateSystem, coverLetterSystem, interviewSystem, reviseSystem, structureSystem, translateSystem } from './prompts.ts';
+import { adaptSystem, analyzeTemplateSystem, clarifySystem, coverLetterSystem, interviewSystem, reviseSystem, structureSystem, translateSystem } from './prompts.ts';
 
 type ContentBlock = Anthropic.Beta.BetaContentBlockParam;
 type Effort = 'low' | 'medium' | 'high';
@@ -61,6 +63,9 @@ function jobBlocks(job: JobInput): ContentBlock[] {
   const blocks: ContentBlock[] = [];
   if (job.file) blocks.push(attachmentBlock(job.file));
   if (job.text.trim()) blocks.push({ type: 'text', text: `<offre_emploi>\n${job.text.trim()}\n</offre_emploi>` });
+  if (job.answers?.trim()) {
+    blocks.push({ type: 'text', text: `<precisions_du_candidat>\n${job.answers.trim()}\n</precisions_du_candidat>` });
+  }
   return blocks;
 }
 
@@ -142,6 +147,15 @@ export function createAi(client: Anthropic, model = DEFAULT_MODEL) {
       ];
       const { cv: { title, ...rest }, ...out } = await run(AdaptAiOutput, adaptSystem(req.lang), content, 'medium');
       return { ...out, cv: { ...rest, personal: { ...req.cv.personal, title } } };
+    },
+
+    clarify(req: ClarifyRequest): Promise<ClarifyResult> {
+      const content = [
+        cvBlock('cv_candidat', req.cv),
+        ...jobBlocks(req.job),
+        { type: 'text', text: 'Quelles questions poser au candidat avant d’adapter son CV à cette offre ?' } as ContentBlock,
+      ];
+      return run(ClarifyResult, clarifySystem(), content, 'low');
     },
 
     coverLetter(req: CoverLetterRequest): Promise<CoverLetterResult> {

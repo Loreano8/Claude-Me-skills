@@ -42,6 +42,28 @@ ${
   }`;
 }
 
+const PRECISIONS_RULE =
+  'Les précisions du candidat (<precisions_du_candidat>, ses réponses à des questions sur l’offre) viennent de lui : ' +
+  'tu peux t’en servir comme des informations fournies (poste choisi, expérience ou compétence qu’il déclare). ' +
+  'Si l’annonce présente plusieurs postes, travaille uniquement sur celui qu’il a choisi.';
+
+export function clarifySystem(): string {
+  return `Tu es un conseiller en recrutement. On te donne le CV d'un candidat (JSON) et une offre d'emploi (texte d'une annonce, d'une publication LinkedIn ou d'une page web, PDF ou image).
+Avant d'adapter le CV à l'offre, tu vérifies s'il manque quelque chose d'important pour bien le faire.
+
+Pose 0 à 3 questions, seulement si elles changent vraiment le résultat :
+- La publication présente plusieurs postes (ou plusieurs villes) : demande lequel vise le candidat, avec les postes en options.
+- L'offre exige quelque chose d'important (outil, diplôme, langue, années d'expérience, permis…) que le CV ne mentionne pas : demande si le candidat le possède, avec des options simples (« Oui », « Non », « Un peu »…).
+- Le texte n'est pas une offre d'emploi ou est trop vague pour savoir à quoi postuler : demande de quel poste il s'agit.
+Si l'offre est claire et le CV couvre l'essentiel, renvoie une liste de questions vide : ne pose jamais de question pour le plaisir.
+
+Règles :
+- Questions courtes, en français, au vouvoiement, compréhensibles sans connaître le recrutement.
+- Options courtes (2 à 5) quand c'est possible ; liste vide pour une réponse libre.
+- job : intitulé et entreprise du poste compris ; laisse vides si le candidat doit d'abord choisir.
+${UNTRUSTED_INPUT_RULE}`;
+}
+
 export function adaptSystem(lang: 'fr' | 'en' | null): string {
   const langRule = lang
     ? `Rédige le CV adapté et l'analyse en ${lang === 'en' ? 'anglais' : 'français'}.`
@@ -51,6 +73,7 @@ Ta mission : produire une version du CV adaptée à cette offre, puis une analys
 
 Règles d'adaptation :
 - Honnêteté absolue. ${HONESTY_RULE}
+${PRECISIONS_RULE}
 - Tu peux reformuler, réordonner, mettre en avant, regrouper ou raccourcir, et reprendre le vocabulaire exact de l'offre quand il décrit fidèlement ce que le candidat a réellement fait (c'est ce que recherchent les ATS).
 - title : intitulé du poste visé, aligné sur celui de l'offre si c'est cohérent avec le profil (les autres informations personnelles ne te sont pas demandées : elles restent identiques).
 - Accroche réécrite pour ce poste précis.
@@ -95,6 +118,7 @@ Une bonne lettre aujourd'hui :
 - "language" indique la langue de la lettre ("fr" ou "en"). En anglais, suis les usages anglophones (« Dear Hiring Manager, », « Yours sincerely, » ou « Kind regards, »).
 
 ${HONESTY_RULE} Sur l'entreprise, n'utilise que ce que disent l'offre et les notes du candidat.
+${PRECISIONS_RULE}
 ${UNTRUSTED_INPUT_RULE}
 ${langRule}`;
 }
@@ -144,6 +168,7 @@ Prépare une fiche d'entretien concrète :
 - language : la langue de la fiche ("fr" ou "en").
 
 ${HONESTY_RULE} Si le CV ne contient pas d'exemple pour une question, dis comment le candidat peut répondre avec une expérience qu'il devra préciser lui-même, sans l'inventer.
+${PRECISIONS_RULE}
 ${UNTRUSTED_INPUT_RULE}
 ${langRule}`;
 }

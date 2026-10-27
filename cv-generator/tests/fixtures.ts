@@ -1,4 +1,4 @@
-import type { AdaptResult, CoverLetterResult, InterviewResult, TranslateResult, ReviseResult, TemplateAnalysis } from '../shared/schema.ts';
+import type { AdaptResult, ClarifyResult, CoverLetterResult, InterviewResult, TranslateResult, ReviseResult, TemplateAnalysis } from '../shared/schema.ts';
 import type { CvDocument } from '../src/types.ts';
 import { defaultSettings } from '../src/lib/cv.ts';
 
@@ -197,4 +197,9 @@ export const sampleTemplateAnalysis: TemplateAnalysis = {
     photoShape: 'round',
   },
   closestTemplate: 'ingenieur',
+};
+
+export const sampleClarify: ClarifyResult = {
+  job: { title: '', company: 'Groupe Sahel' },
+  questions: [{ question: 'La publication propose deux postes : lequel vous intéresse ?', options: ['Comptable', 'Contrôleur de gestion'] }],
 };

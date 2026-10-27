@@ -8,8 +8,10 @@ import './index.css';
 import App from './App.tsx';
 import { setupNative } from './native.ts';
 import { captureReferral } from './lib/referral.ts';
+import { setupShareInbox } from './lib/shareInbox.ts';
 
 captureReferral();
+setupShareInbox();
 void setupNative();
 
 createRoot(document.getElementById('root')!).render(

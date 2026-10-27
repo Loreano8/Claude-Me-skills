@@ -1,8 +1,9 @@
-import { useState } from 'react';
-import { ArrowRight, CheckCircle2, ClipboardList, Eye, Mail, MessagesSquare, PencilLine, Target, Wand2 } from 'lucide-react';
-import type { AdaptResult, InterviewResult } from '../../shared/schema.ts';
+import { useEffect, useRef, useState } from 'react';
+import { ArrowRight, CheckCircle2, ClipboardList, Eye, HelpCircle, Mail, MessagesSquare, PencilLine, Target, Wand2 } from 'lucide-react';
+import type { AdaptResult, ClarifyResult, InterviewResult } from '../../shared/schema.ts';
 import { useActiveCv, useStore } from '../store.ts';
 import { api } from '../lib/api.ts';
+import { useAccount } from '../lib/account.ts';
 import { isCvEmpty, toAiContent } from '../lib/cv.ts';
 import { JobInputCard } from '../components/JobInputCard.tsx';
 import { InterviewSheet } from '../components/InterviewSheet.tsx';
@@ -112,6 +113,81 @@ export function AnalysisCard({ result, onNavigate }: { result: Pick<AdaptResult,
   );
 }
 
+type Question = ClarifyResult['questions'][number];
+
+/** Questions de l'IA avant l'adaptation : poste à choisir, exigence absente du CV… */
+function ClarifyCard({ questions, busy, onDone, onSkip }: { questions: Question[]; busy: boolean; onDone: (answers: string) => void; onSkip: () => void }) {
+  const [picked, setPicked] = useState<string[]>(() => questions.map(() => ''));
+  const [notes, setNotes] = useState<string[]>(() => questions.map(() => ''));
+  const box = useRef<HTMLDivElement>(null);
+  // Les questions apparaissent sous le bouton : on les amène à l'écran.
+  useEffect(() => box.current?.scrollIntoView({ behavior: 'smooth', block: 'start' }), []);
+  const set = (list: string[], i: number, v: string) => list.map((x, j) => (j === i ? v : x));
+  const answers = questions
+    .map((q, i) => {
+      const a = [picked[i], notes[i].trim()].filter(Boolean).join('. ');
+      return a ? `Question : ${q.question}\nRéponse : ${a}` : '';
+    })
+    .filter(Boolean)
+    .join('\n\n');
+
+  return (
+    <div ref={box} className="scroll-mt-20">
+      <Card
+        className="border-violet-200"
+        title={
+          <span className="flex items-center gap-2">
+            <HelpCircle className="size-5 text-violet-600" /> Avant d’adapter votre CV
+          </span>
+        }
+        subtitle="Quelques précisions pour viser juste. Répondez à ce que vous savez, le reste est facultatif."
+      >
+        <div className="space-y-4">
+          {questions.map((q, i) => (
+            <div key={i}>
+              <p className="text-sm font-semibold text-slate-900">{q.question}</p>
+              {q.options.length > 0 && (
+                <div className="mt-2 flex flex-wrap gap-2">
+                  {q.options.map((o) => (
+                    <button
+                      key={o}
+                      type="button"
+                      aria-pressed={picked[i] === o}
+                      onClick={() => setPicked((p) => set(p, i, p[i] === o ? '' : o))}
+                      className={
+                        picked[i] === o
+                          ? 'rounded-full bg-violet-600 px-3 py-1.5 text-sm font-medium text-white'
+                          : 'rounded-full bg-white px-3 py-1.5 text-sm font-medium text-slate-700 ring-1 ring-slate-300 hover:bg-slate-50'
+                      }
+                    >
+                      {o}
+                    </button>
+                  ))}
+                </div>
+              )}
+              <input
+                value={notes[i]}
+                onChange={(e) => setNotes((n) => set(n, i, e.target.value))}
+                placeholder={q.options.length ? 'Précisez si besoin (facultatif)' : 'Votre réponse'}
+                aria-label={`Réponse : ${q.question}`}
+                className="mt-2 w-full rounded-xl px-3 py-2 text-sm ring-1 ring-slate-300 outline-none focus:ring-2 focus:ring-violet-500"
+              />
+            </div>
+          ))}
+        </div>
+        <div className="mt-4 flex flex-wrap gap-2">
+          <Button variant="ai" icon={<Wand2 className="size-4" />} loading={busy} disabled={busy} onClick={() => onDone(answers)}>
+            Adapter mon CV (1 crédit)
+          </Button>
+          <Button variant="ghost" disabled={busy} onClick={onSkip}>
+            Passer les questions
+          </Button>
+        </div>
+      </Card>
+    </div>
+  );
+}
+
 export function JobPage({ onNavigate }: { onNavigate: (t: Tab) => void }) {
   const cv = useActiveCv();
   const job = useStore((s) => s.job);
@@ -124,15 +200,24 @@ export function JobPage({ onNavigate }: { onNavigate: (t: Tab) => void }) {
   const [error, setError] = useState<string | null>(null);
   const [result, setResult] = useState<AdaptResult | null>(null);
 
+  // Questions posées sur l'offre et réponses du candidat, valables tant que l'offre ne change pas.
+  const jobKey = `${job.text.length}:${job.text.slice(0, 200)}:${job.file?.name ?? ''}:${job.file?.data.length ?? 0}`;
+  const [questions, setQuestions] = useState<Question[] | null>(null);
+  const [questionsFor, setQuestionsFor] = useState('');
+  const [clarified, setClarified] = useState<{ key: string; answers: string } | null>(null);
+  const answers = clarified?.key === jobKey ? clarified.answers : '';
+
   const hasJob = !!job.text.trim() || !!job.file;
   const empty = isCvEmpty(cv);
-  const jobBody = { text: job.text, file: job.file ? { name: job.file.name, mediaType: job.file.mediaType, data: job.file.data } : null };
+  const jobBody = { text: job.text, file: job.file ? { name: job.file.name, mediaType: job.file.mediaType, data: job.file.data } : null, answers };
 
-  async function adapt() {
+  async function runAdapt(withAnswers: string) {
     setBusy('adapt');
     setError(null);
     try {
-      const res = await api.adapt({ cv: toAiContent(cv), job: jobBody, lang: null });
+      const res = await api.adapt({ cv: toAiContent(cv), job: { ...jobBody, answers: withAnswers }, lang: null });
+      setClarified({ key: jobKey, answers: withAnswers });
+      setQuestions(null);
       addAdaptedCv(cv, res);
       setResult(res);
     } catch (e) {
@@ -140,6 +225,31 @@ export function JobPage({ onNavigate }: { onNavigate: (t: Tab) => void }) {
     } finally {
       setBusy(null);
     }
+  }
+
+  async function adapt() {
+    if (clarified?.key === jobKey) return runAdapt(clarified.answers);
+    setBusy('adapt');
+    setError(null);
+    let asked: Question[] = [];
+    try {
+      // Gratuit : l'IA vérifie s'il faut d'abord poser des questions.
+      asked = (await api.clarify({ cv: toAiContent(cv), job: { ...jobBody, answers: '' } })).questions.slice(0, 3);
+    } catch {
+      // Pas connecté : la fenêtre de connexion vient de s'ouvrir, on s'arrête là.
+      if (useAccount.getState().dialog === 'account') {
+        setBusy(null);
+        return;
+      }
+      // Questions indisponibles : on adapte directement, comme avant.
+    }
+    if (asked.length) {
+      setQuestions(asked);
+      setQuestionsFor(jobKey);
+      setBusy(null);
+      return;
+    }
+    await runAdapt('');
   }
 
   const jobTitle =
@@ -199,8 +309,9 @@ export function JobPage({ onNavigate }: { onNavigate: (t: Tab) => void }) {
             Préparer l’entretien
           </Button>
         </div>
-        <p className="mt-2 text-xs text-slate-500">Chaque action utilise 1 crédit.</p>
+        <p className="mt-2 text-xs text-slate-500">Chaque action utilise 1 crédit. Les questions éventuelles sur l’offre sont gratuites.</p>
         {busy && <p className="mt-3 text-sm text-violet-700">L’IA lit l’offre et prépare votre candidature… (jusqu’à une minute)</p>}
+        {questions && questionsFor === jobKey && !busy && <p className="mt-3 text-sm text-violet-700">Quelques questions avant d’adapter votre CV : voir ci-dessous.</p>}
         {error && (
           <div className="mt-3">
             <Notice tone="error">{error}</Notice>
@@ -210,6 +321,10 @@ export function JobPage({ onNavigate }: { onNavigate: (t: Tab) => void }) {
           L’IA met en avant ce que vous avez réellement fait et reprend les mots-clés de l’offre. Elle n’invente ni diplôme, ni expérience, ni compétence.
         </p>
       </Card>
+
+      {questions && questionsFor === jobKey && (
+        <ClarifyCard key={jobKey} questions={questions} busy={busy === 'adapt'} onDone={(a) => void runAdapt(a)} onSkip={() => void runAdapt('')} />
+      )}
 
       {shown && <AnalysisCard result={shown} onNavigate={onNavigate} />}
 

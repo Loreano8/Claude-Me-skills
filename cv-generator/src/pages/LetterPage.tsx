@@ -28,7 +28,7 @@ function GenerateCard({ onNavigate }: { onNavigate: (t: Tab) => void }) {
     try {
       const res = await api.coverLetter({
         cv: toAiContent(cv),
-        job: { text: job.text, file: job.file ? { name: job.file.name, mediaType: job.file.mediaType, data: job.file.data } : null },
+        job: { text: job.text, file: job.file ? { name: job.file.name, mediaType: job.file.mediaType, data: job.file.data } : null, answers: '' },
         notes,
         tone,
         length,

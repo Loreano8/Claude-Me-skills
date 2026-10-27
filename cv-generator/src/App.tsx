@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { useSharedOffer } from './lib/shareInbox.ts';
 import { ClipboardList, FileDown, FileUser, Mail, MessageCircle, Target } from 'lucide-react';
 import { useActiveCv, useStore } from './store.ts';
 import { CvSwitcher } from './components/CvSwitcher.tsx';
@@ -121,6 +122,14 @@ export default function App() {
     window.addEventListener('hashchange', onHash);
     return () => window.removeEventListener('hashchange', onHash);
   }, []);
+
+  // Offre partagée depuis une autre appli : direction la page « Offre », qui la lit.
+  const sharedOffer = useSharedOffer((s) => s.pending);
+  useEffect(() => {
+    if (!sharedOffer) return;
+    if (window.location.hash !== '#offre') window.location.hash = 'offre';
+    setTabState('offre');
+  }, [sharedOffer]);
 
   const setTab = (t: Tab) => {
     if (t !== tab) window.location.hash = t;

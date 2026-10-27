@@ -164,6 +164,8 @@ export type Attachment = z.infer<typeof Attachment>;
 export const JobInput = z.object({
   text: z.string().max(60_000).default(''),
   file: Attachment.nullable().default(null),
+  /** Réponses du candidat aux questions posées sur l'offre (poste choisi, expériences précisées…). */
+  answers: z.string().max(5_000).default(''),
 });
 export type JobInput = z.infer<typeof JobInput>;
 
@@ -177,6 +179,29 @@ export const StructureRequest = z.object({
   lang: Lang.nullable().default('fr'),
 });
 export type StructureRequest = z.output<typeof StructureRequest>;
+
+export const ClarifyRequest = z.object({
+  cv: AiCvContent,
+  job: JobInput,
+});
+export type ClarifyRequest = z.output<typeof ClarifyRequest>;
+
+export const ClarifyResult = z.object({
+  job: z.object({ title: z.string(), company: z.string() }).describe('Le poste compris (vide s’il y en a plusieurs et qu’il faut choisir)'),
+  questions: z
+    .array(
+      z.object({
+        question: z.string().describe('Question courte, en français, tutoiement exclu (vouvoiement)'),
+        options: z.array(z.string()).describe('2 à 5 réponses courtes proposées, ou liste vide pour une réponse libre'),
+      }),
+    )
+    .describe('0 à 3 questions vraiment utiles ; liste vide si l’offre est claire'),
+});
+export type ClarifyResult = z.infer<typeof ClarifyResult>;
+
+export const JobFetchRequest = z.object({ url: z.string().min(8).max(2_000) });
+export const JobFetchResult = z.object({ url: z.string(), title: z.string(), text: z.string() });
+export type JobFetchResult = z.infer<typeof JobFetchResult>;
 
 export const AdaptRequest = z.object({
   cv: AiCvContent,
