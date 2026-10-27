@@ -28,7 +28,7 @@ export function Modal({ title, onClose, children }: { title: string; onClose: ()
 }
 
 /** Mot de passe oublié : code reçu à l'e-mail du compte, puis nouveau mot de passe. */
-function ForgotPassword({ initial, onBack }: { initial: string; onBack: () => void }) {
+function ForgotPassword({ initial, emailOn, onBack }: { initial: string; emailOn: boolean; onBack: () => void }) {
   const { close, setSession } = useAccount();
   const [identifier, setIdentifier] = useState(initial);
   const [sent, setSent] = useState(false);
@@ -62,6 +62,17 @@ function ForgotPassword({ initial, onBack }: { initial: string; onBack: () => vo
     } finally {
       setBusy(false);
     }
+  }
+
+  if (!emailOn) {
+    return (
+      <div className="space-y-3">
+        <Notice tone="info">La réinitialisation par e-mail arrive bientôt. En attendant, écrivez-nous dans « Nous contacter » (bulle en haut de l’écran) : nous vous aidons à récupérer votre compte.</Notice>
+        <button type="button" className="w-full text-center text-sm font-semibold text-brand-700" onClick={onBack}>
+          Retour à la connexion
+        </button>
+      </div>
+    );
   }
 
   return (
@@ -125,7 +136,7 @@ function AccountDialog() {
   if (mode === 'forgot') {
     return (
       <Modal title="Mot de passe oublié" onClose={close}>
-        <ForgotPassword initial={identifier} onBack={() => setMode('login')} />
+        <ForgotPassword initial={identifier} emailOn={emailOn} onBack={() => setMode('login')} />
       </Modal>
     );
   }
@@ -158,7 +169,7 @@ function AccountDialog() {
           autoComplete={mode === 'register' ? 'new-password' : 'current-password'}
           hint={mode === 'register' ? '6 caractères minimum.' : undefined}
         />
-        {mode === 'login' && emailOn && (
+        {mode === 'login' && (
           <button type="button" className="text-sm font-medium text-brand-700" onClick={() => (setMode('forgot'), setError(null))}>
             Mot de passe oublié ?
           </button>

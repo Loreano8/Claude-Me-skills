@@ -193,6 +193,21 @@ export function createApp({ fetchPage = fetchJobPage, ai, allowedOrigins, rateLi
   });
 
   // Ajout manuel de crédits (ex. paiement reçu directement par mobile money).
+  // Compte bloqué (mot de passe oublié, sans e-mail) : l'administrateur donne un mot de passe provisoire,
+  // transmis à la personne par « Nous contacter ». Elle pourra le changer ensuite.
+  app.post('/api/admin/password', async (c) => {
+    if (!accounts || !adminToken || c.req.header('authorization') !== `Bearer ${adminToken}`) {
+      return c.json({ error: 'Accès refusé.' }, 403);
+    }
+    const body = (await c.req.json().catch(() => null)) as { identifier?: string } | null;
+    const user = await accounts.findByIdentifier(String(body?.identifier ?? ''));
+    if (!user) return c.json({ error: 'Aucun compte avec cet identifiant.' }, 404);
+    const alphabet = 'abcdefghjkmnpqrstuvwxyz23456789';
+    const password = Array.from(crypto.getRandomValues(new Uint32Array(10)), (n) => alphabet[n % alphabet.length]).join('');
+    await accounts.setPassword(user.id, password);
+    return c.json({ identifier: user.identifier, password });
+  });
+
   app.post('/api/admin/credits', async (c) => {
     if (!accounts || !adminToken || c.req.header('authorization') !== `Bearer ${adminToken}`) {
       return c.json({ error: 'Accès refusé.' }, 403);

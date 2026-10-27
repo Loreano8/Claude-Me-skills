@@ -66,3 +66,18 @@ describe('mot de passe oublié', () => {
     expect(maskEmail('zdmedeton@gmail.com')).toBe('z********@gmail.com');
   });
 });
+
+describe('mot de passe provisoire (administrateur)', () => {
+  it('remplace le mot de passe d’un compte, réservé à l’administrateur', async () => {
+    const db = await testDb();
+    const accounts = createAccounts(db, { freeCredits: 1, freeIpCooldownDays: 30 });
+    await accounts.register({ identifier: '+22990000000', password: 'secret12', ip: '6.6.6.6', device: 'device-admin-pw1' });
+    const app = createApp({ ai: null, accounts, adminToken: 'adm', sessionSecret: 's', allowedOrigins: [], rateLimitPerHour: 5 });
+    const call = (auth: string) =>
+      app.request('/api/admin/password', { method: 'POST', headers: { 'content-type': 'application/json', authorization: `Bearer ${auth}` }, body: JSON.stringify({ identifier: '+229 90 00 00 00' }) });
+    expect((await call('mauvais')).status).toBe(403);
+    const { password } = await (await call('adm')).json();
+    expect(password).toHaveLength(10);
+    await expect(accounts.login('+22990000000', password)).resolves.toMatchObject({ identifier: '+22990000000' });
+  });
+});

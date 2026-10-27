@@ -263,6 +263,44 @@ function Credits({ token }: { token: string }) {
   );
 }
 
+/** Mot de passe provisoire pour un compte bloqué (à transmettre dans « Nous contacter »). */
+function TempPassword({ token }: { token: string }) {
+  const [identifier, setIdentifier] = useState('');
+  const [busy, setBusy] = useState(false);
+  const [result, setResult] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  return (
+    <div className="mt-6 space-y-3 border-t border-slate-100 pt-4">
+      <p className="text-sm font-semibold text-slate-900">Mot de passe oublié</p>
+      <p className="text-sm text-slate-600">Donne un mot de passe provisoire à un compte bloqué, puis transmets-le à la personne dans sa conversation « Nous contacter ».</p>
+      <Field label="E-mail ou téléphone du compte" value={identifier} onChange={setIdentifier} />
+      {result && <Notice tone="success">{result}</Notice>}
+      {error && <Notice tone="error">{error}</Notice>}
+      <Button
+        variant="secondary"
+        loading={busy}
+        disabled={busy || !identifier.trim()}
+        onClick={async () => {
+          if (!window.confirm(`Remplacer le mot de passe de ${identifier.trim()} ?`)) return;
+          setBusy(true);
+          setError(null);
+          setResult(null);
+          try {
+            const r = await adminRequest<{ identifier: string; password: string }>(token, 'POST', '/api/admin/password', { identifier: identifier.trim() });
+            setResult(`Nouveau mot de passe de ${r.identifier} : ${r.password}`);
+          } catch (e) {
+            setError((e as Error).message);
+          } finally {
+            setBusy(false);
+          }
+        }}
+      >
+        Créer un mot de passe provisoire
+      </Button>
+    </div>
+  );
+}
+
 export function AdminPage() {
   const [token, setToken] = useState(readToken);
   const [draft, setDraft] = useState('');
@@ -341,7 +379,7 @@ export function AdminPage() {
             [
               ['messages', 'Messages', MessageCircle],
               ['temoignages', 'Témoignages', Star],
-              ['credits', 'Crédits', Coins],
+              ['credits', 'Comptes', Coins],
             ] as const
           ).map(([id, label, Icon]) => (
             <button
@@ -354,7 +392,16 @@ export function AdminPage() {
             </button>
           ))}
         </div>
-        {tab === 'messages' ? <Messages token={token} /> : tab === 'temoignages' ? <Testimonials token={token} /> : <Credits token={token} />}
+        {tab === 'messages' ? (
+          <Messages token={token} />
+        ) : tab === 'temoignages' ? (
+          <Testimonials token={token} />
+        ) : (
+          <>
+            <Credits token={token} />
+            <TempPassword token={token} />
+          </>
+        )}
       </Card>
     </div>
   );

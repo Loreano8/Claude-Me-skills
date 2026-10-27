@@ -289,10 +289,15 @@ function VaultReset({ onDone }: { onDone: () => void }) {
           Valider
         </Button>
       </div>
-      {emailOn && user.identifier.includes('@') && (
-        <div className="space-y-2 border-t border-slate-100 pt-3">
-          <p className="text-sm font-medium text-slate-800">Ou avec un code reçu par e-mail</p>
-          {!sentTo ? (
+      <div className="space-y-2 border-t border-slate-100 pt-3">
+        <p className="text-sm font-medium text-slate-800">Ou avec un code reçu par e-mail</p>
+        {!emailOn ? (
+          <p className="flex items-center gap-2 text-sm text-slate-500">
+            <span className="rounded-full bg-slate-100 px-2 py-0.5 text-xs font-medium">Bientôt disponible</span> Utilisez le mot de passe de votre compte ci-dessus.
+          </p>
+        ) : !user.identifier.includes('@') ? (
+          <p className="text-sm text-slate-500">Votre compte utilise un numéro de téléphone : utilisez le mot de passe de votre compte ci-dessus.</p>
+        ) : !sentTo ? (
             <Button size="sm" variant="secondary" icon={<Mail className="size-4" />} loading={busy && !password} disabled={busy} onClick={() => void sendCode()}>
               M’envoyer un code
             </Button>
@@ -305,8 +310,7 @@ function VaultReset({ onDone }: { onDone: () => void }) {
               </Button>
             </>
           )}
-        </div>
-      )}
+      </div>
       {error && <Notice tone="error">{error}</Notice>}
     </div>
   );
