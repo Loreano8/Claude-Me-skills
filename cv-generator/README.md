@@ -78,7 +78,7 @@ Avec `RESEND_API_KEY` et `EMAIL_FROM` (ex. `CV Studio <no-reply@mondomaine.com>`
 
 ## Récupération de compte (phrase secrète)
 
-Chaque compte peut définir une **phrase secrète** (« Mes crédits » → « Sécurité du compte » ; seule son empreinte est gardée, comparée sans majuscules ni accents). « Mot de passe oublié ? » ouvre un formulaire (prénom, phrase secrète, dernier achat, crédits restants) : le serveur compare aussitôt les réponses au compte (`server/recovery.ts`) et la demande apparaît dans l'onglet **Récupérations** de l'espace administrateur, avec « Conforme / Différent » pour chaque réponse. « Valider » crée un mot de passe provisoire et l'envoie automatiquement dans la conversation « Nous contacter » de la personne, qui peut ensuite le changer (« Changer mon mot de passe »).
+Chaque compte peut définir une **phrase secrète** (un mot suffit) ou une **question secrète** (liste proposée ou question libre, affichée dans le formulaire de récupération) dans « Mes crédits » → « Sécurité du compte » ; seule l’empreinte de la réponse est gardée, comparée sans majuscules ni accents. « Mot de passe oublié ? » ouvre un formulaire (prénom, phrase secrète, dernier achat, crédits restants) : le serveur compare aussitôt les réponses au compte (`server/recovery.ts`) et la demande apparaît dans l'onglet **Récupérations** de l'espace administrateur, avec « Conforme / Différent » pour chaque réponse. « Valider » crée un mot de passe provisoire et l'envoie automatiquement dans la conversation « Nous contacter » de la personne, qui peut ensuite le changer (« Changer mon mot de passe »).
 
 ## Parrainage
 

@@ -80,6 +80,8 @@ create table if not exists support_threads (
 
 -- Phrase secrète (empreinte seulement) : sert à prouver son identité quand on a oublié son mot de passe.
 alter table users add column if not exists secret_phrase_hash text;
+-- Question secrète choisie par la personne (la réponse est l'empreinte ci-dessus), vide pour une simple phrase secrète.
+alter table users add column if not exists secret_question text;
 
 -- Coffre-fort : double de la clé qui chiffre les documents gardés sur le téléphone (code oublié → réinitialisation).
 create table if not exists vault_keys (

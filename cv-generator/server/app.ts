@@ -328,14 +328,15 @@ export function createApp({ fetchPage = fetchJobPage, ai, allowedOrigins, rateLi
   app.get('/api/account/secret', async (c) => {
     const user = await currentUser(c);
     if (!user || !recovery) return c.json({ error: 'Connectez-vous.', code: 'auth' }, 401);
-    return c.json({ set: await recovery.hasSecret(user.id) });
+    return c.json(await recovery.secretStatus(user.id));
   });
 
   app.post('/api/account/secret', async (c) => {
     const user = await currentUser(c);
     if (!user || !recovery) return c.json({ error: 'Connectez-vous.', code: 'auth' }, 401);
     try {
-      await recovery.setSecret(user.id, String((await body(c)).phrase ?? ''));
+      const b = await body(c);
+      await recovery.setSecret(user.id, String(b.phrase ?? ''), b.question ? String(b.question) : null);
       return c.json({ set: true });
     } catch (error) {
       return vaultError(c, error);
@@ -356,6 +357,12 @@ export function createApp({ fetchPage = fetchJobPage, ai, allowedOrigins, rateLi
     }
     await accounts.setPassword(user.id, next);
     return c.json({ ok: true });
+  });
+
+  app.get('/api/auth/recovery/question', async (c) => {
+    if (!recovery) return c.json({ question: null });
+    if (!allowAuth(clientKey(c))) return c.json({ error: 'Trop de demandes. Réessayez plus tard.' }, 429);
+    return c.json({ question: await recovery.questionFor(c.req.query('identifier') ?? '') });
   });
 
   app.post('/api/auth/recovery', async (c) => {

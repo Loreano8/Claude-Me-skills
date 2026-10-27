@@ -29,10 +29,10 @@ describe('phrase secrète et récupération de compte', () => {
 
   it('vérifie automatiquement les réponses, puis l’administrateur valide et la personne reçoit son mot de passe', async () => {
     const { accounts, call, json, auth, admin } = await setup();
-    expect(await (await call('GET', '/api/account/secret', auth)).json()).toEqual({ set: false });
-    expect((await call('POST', '/api/account/secret', auth, { phrase: 'court' })).status).toBe(400);
+    expect(await (await call('GET', '/api/account/secret', auth)).json()).toEqual({ set: false, question: null });
+    expect((await call('POST', '/api/account/secret', auth, { phrase: ' ! ' })).status).toBe(400);
     await call('POST', '/api/account/secret', auth, { phrase: 'Le chat mange des bananes' });
-    expect(await (await call('GET', '/api/account/secret', auth)).json()).toEqual({ set: true });
+    expect(await (await call('GET', '/api/account/secret', auth)).json()).toEqual({ set: true, question: null });
 
     // La personne, déconnectée, remplit le formulaire : la demande arrive dans « Nous contacter ».
     const sent = await call('POST', '/api/auth/recovery', json, { identifier: 'AWA@gmail.com', name: 'awa', phrase: 'le CHAT mange des bananes', lastPurchase: 'none', credits: 2 });
@@ -63,6 +63,18 @@ describe('phrase secrète et récupération de compte', () => {
     expect(requests[0].checks).toEqual({ account: true, name: 'wrong', phrase: 'wrong', purchase: 'wrong', credits: 'wrong' });
     await call('POST', `/api/admin/recovery/${requests[0].id}`, admin, { approve: false });
     await expect(accounts.login('awa@gmail.com', 'secret12')).resolves.toBeTruthy();
+  });
+
+  it('accepte un seul mot, ou une question secrète montrée dans le formulaire', async () => {
+    const { call, json, auth, admin } = await setup();
+    expect((await call('POST', '/api/account/secret', auth, { phrase: 'Mangue' })).status).toBe(200);
+    await call('POST', '/api/account/secret', auth, { phrase: 'Lomé', question: 'Ville de naissance de votre père ?' });
+    expect(await (await call('GET', '/api/account/secret', auth)).json()).toEqual({ set: true, question: 'Ville de naissance de votre père ?' });
+    expect(await (await call('GET', '/api/auth/recovery/question?identifier=AWA@gmail.com', json)).json()).toEqual({ question: 'Ville de naissance de votre père ?' });
+    expect(await (await call('GET', '/api/auth/recovery/question?identifier=inconnu@gmail.com', json)).json()).toEqual({ question: null });
+    await call('POST', '/api/auth/recovery', json, { identifier: 'awa@gmail.com', phrase: 'LOME' });
+    const { requests } = await (await call('GET', '/api/admin/recovery', admin)).json();
+    expect(requests[0].checks.phrase).toBe('ok');
   });
 
   it('change le mot de passe avec l’ancien', async () => {

@@ -62,15 +62,28 @@ export function createRecovery(db: Db, accounts: Accounts, support: Support) {
   }
 
   return {
-    async setSecret(userId: number, phrase: string): Promise<void> {
-      const clean = normalizePhrase(phrase);
-      if (clean.length < 8) throw new AccountError('Choisissez une phrase d’au moins 8 caractères (par exemple 3 ou 4 mots).', 400);
-      await db.query('update users set secret_phrase_hash = $2 where id = $1', [userId, await hashPassword(clean)]);
+    /** Phrase secrète (un mot suffit), ou réponse à une question secrète choisie par la personne. */
+    async setSecret(userId: number, answer: string, question: string | null = null): Promise<void> {
+      const clean = normalizePhrase(answer);
+      if (clean.length < 2) throw new AccountError('Écrivez au moins un mot.', 400);
+      const q = question?.trim().slice(0, 150) || null;
+      await db.query('update users set secret_phrase_hash = $2, secret_question = $3 where id = $1', [userId, await hashPassword(clean), q]);
     },
 
-    async hasSecret(userId: number): Promise<boolean> {
-      const [row] = await db.query<{ set: boolean }>('select secret_phrase_hash is not null as set from users where id = $1', [userId]);
-      return row?.set ?? false;
+    async secretStatus(userId: number): Promise<{ set: boolean; question: string | null }> {
+      const [row] = await db.query<{ set: boolean; question: string | null }>(
+        'select secret_phrase_hash is not null as set, secret_question as question from users where id = $1',
+        [userId],
+      );
+      return { set: row?.set ?? false, question: row?.question ?? null };
+    },
+
+    /** Question secrète à afficher dans le formulaire « mot de passe oublié » (null si le compte n'en a pas). */
+    async questionFor(rawIdentifier: string): Promise<string | null> {
+      const identifier = normalizeIdentifier(rawIdentifier);
+      if (!identifier) return null;
+      const [row] = await db.query<{ question: string | null }>('select secret_question as question from users where identifier = $1', [identifier]);
+      return row?.question ?? null;
     },
 
     /** Formulaire « mot de passe oublié » : vérifications automatiques, puis demande rangée pour l'administrateur. */

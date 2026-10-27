@@ -42,6 +42,14 @@ function RecoveryForm({ initial, onBack }: { initial: string; onBack: () => void
   const [busy, setBusy] = useState(false);
   const [done, setDone] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  // Si le compte a une question secrète, on l'affiche à la place de « phrase secrète ».
+  const [question, setQuestion] = useState<string | null>(null);
+  useEffect(() => {
+    const id = identifier.trim();
+    if (id.length < 6) return setQuestion(null);
+    const timer = setTimeout(() => void api.recoveryQuestion(id).then((r) => setQuestion(r.question), () => setQuestion(null)), 600);
+    return () => clearTimeout(timer);
+  }, [identifier]);
 
   async function send() {
     setBusy(true);
@@ -80,7 +88,12 @@ function RecoveryForm({ initial, onBack }: { initial: string; onBack: () => void
       <p className="text-sm text-slate-600">Répondez à ces questions : elles nous permettent de vérifier que le compte est bien le vôtre.</p>
       <Field label="E-mail ou téléphone du compte" value={identifier} onChange={setIdentifier} autoComplete="username" />
       <Field label="Prénom indiqué sur le compte" value={name} onChange={setName} autoComplete="given-name" />
-      <Field label="Votre phrase secrète" value={phrase} onChange={setPhrase} hint="Si vous en avez défini une dans « Mes crédits ». Majuscules et accents ne comptent pas." />
+      <Field
+        label={question ? `Votre question secrète : ${question}` : 'Votre phrase secrète'}
+        value={phrase}
+        onChange={setPhrase}
+        hint={question ? 'Majuscules et accents ne comptent pas.' : 'Si vous en avez défini une dans « Mes crédits ». Majuscules et accents ne comptent pas.'}
+      />
       <label className="block">
         <span className="mb-1 block text-sm font-medium text-slate-700">Votre dernier achat de crédits</span>
         <select value={lastPurchase} onChange={(e) => setLastPurchase(e.target.value)} className="w-full rounded-xl bg-white px-3 py-2.5 text-sm ring-1 ring-slate-300">
@@ -175,9 +188,22 @@ function ForgotPassword({ initial, emailOn, onBack }: { initial: string; emailOn
   );
 }
 
-/** « Mes crédits » : phrase secrète (récupération du compte) et changement de mot de passe. */
+const QUESTIONS = [
+  'Quel est le prénom de votre grand-mère ?',
+  'Quel était le nom de votre premier animal ?',
+  'Dans quelle ville est né votre père ?',
+  'Quel est le nom de votre école primaire ?',
+  'Quel était votre plat préféré quand vous étiez enfant ?',
+  'Quel est le surnom que vous donnait votre famille ?',
+];
+
+/** « Mes crédits » : phrase ou question secrète (récupération du compte) et changement de mot de passe. */
 function AccountSecurity() {
   const [secretSet, setSecretSet] = useState<boolean | null>(null);
+  const [savedQuestion, setSavedQuestion] = useState<string | null>(null);
+  const [kind, setKind] = useState<'phrase' | 'question'>('phrase');
+  const [choice, setChoice] = useState(QUESTIONS[0]);
+  const [custom, setCustom] = useState('');
   const [open, setOpen] = useState<'phrase' | 'password' | null>(null);
   const [phrase, setPhrase] = useState('');
   const [current, setCurrent] = useState('');
@@ -186,7 +212,13 @@ function AccountSecurity() {
   const [message, setMessage] = useState<{ tone: 'success' | 'error'; text: string } | null>(null);
 
   useEffect(() => {
-    api.secretStatus().then((r) => setSecretSet(r.set), () => setSecretSet(null));
+    api.secretStatus().then(
+      (r) => {
+        setSecretSet(r.set);
+        setSavedQuestion(r.question);
+      },
+      () => setSecretSet(null),
+    );
   }, []);
 
   async function run(action: () => Promise<unknown>, success: string) {
@@ -212,12 +244,18 @@ function AccountSecurity() {
         <ShieldCheck className="size-5 text-emerald-600" /> Sécurité du compte
       </p>
       {secretSet === false && (
-        <p className="mt-1 text-sm text-amber-800">Définissez une phrase secrète : elle vous permettra de récupérer votre compte si vous oubliez votre mot de passe.</p>
+        <p className="mt-1 text-sm text-amber-800">
+          Définissez une phrase ou une question secrète : elle vous permettra de récupérer votre compte si vous oubliez votre mot de passe.
+        </p>
       )}
-      {secretSet && <p className="mt-1 text-sm text-emerald-800">Phrase secrète définie. Gardez-la en mémoire, ne la donnez à personne.</p>}
+      {secretSet && (
+        <p className="mt-1 text-sm text-emerald-800">
+          {savedQuestion ? `Question secrète définie : « ${savedQuestion} ».` : 'Phrase secrète définie.'} Gardez la réponse en mémoire, ne la donnez à personne.
+        </p>
+      )}
       <div className="mt-3 flex flex-wrap gap-2">
         <Button size="sm" variant={secretSet ? 'secondary' : 'primary'} onClick={() => setOpen(open === 'phrase' ? null : 'phrase')}>
-          {secretSet ? 'Changer ma phrase secrète' : 'Définir ma phrase secrète'}
+          {secretSet ? 'Changer ma phrase ou question secrète' : 'Définir ma phrase ou question secrète'}
         </Button>
         <Button size="sm" variant="secondary" onClick={() => setOpen(open === 'password' ? null : 'password')}>
           Changer mon mot de passe
@@ -225,13 +263,65 @@ function AccountSecurity() {
       </div>
       {open === 'phrase' && (
         <div className="mt-3 space-y-2">
+          <div className="grid grid-cols-2 gap-1 rounded-xl bg-slate-100 p-1">
+            {(
+              [
+                ['phrase', 'Phrase secrète'],
+                ['question', 'Question secrète'],
+              ] as const
+            ).map(([id, label]) => (
+              <button
+                key={id}
+                type="button"
+                onClick={() => setKind(id)}
+                className={cx('rounded-lg py-1.5 text-sm font-medium', kind === id ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-600')}
+              >
+                {label}
+              </button>
+            ))}
+          </div>
+          {kind === 'question' && (
+            <>
+              <label className="block">
+                <span className="mb-1 block text-sm font-medium text-slate-700">Question</span>
+                <select value={choice} onChange={(e) => setChoice(e.target.value)} className="w-full rounded-xl bg-white px-3 py-2.5 text-sm ring-1 ring-slate-300">
+                  {QUESTIONS.map((q) => (
+                    <option key={q} value={q}>
+                      {q}
+                    </option>
+                  ))}
+                  <option value="">Écrire ma propre question…</option>
+                </select>
+              </label>
+              {choice === '' && <Field label="Ma question" value={custom} onChange={setCustom} hint="Une question dont vous seul connaissez la réponse." />}
+            </>
+          )}
           <Field
-            label="Phrase secrète"
+            label={kind === 'question' ? 'Réponse' : 'Phrase secrète'}
             value={phrase}
             onChange={setPhrase}
-            hint="3 ou 4 mots faciles à retenir pour vous, difficiles à deviner pour les autres. Ex. : « le chat de mamie mange des mangues »."
+            hint={
+              kind === 'question'
+                ? 'Majuscules et accents ne comptent pas.'
+                : 'Un mot ou quelques mots faciles à retenir pour vous, difficiles à deviner pour les autres. Plus c’est long, plus c’est sûr.'
+            }
           />
-          <Button size="sm" loading={busy} disabled={busy || phrase.trim().length < 8} onClick={() => void run(() => api.setSecret(phrase).then(() => setSecretSet(true)), 'Phrase secrète enregistrée.')}>
+          <Button
+            size="sm"
+            loading={busy}
+            disabled={busy || phrase.trim().length < 2 || (kind === 'question' && !(choice || custom.trim()))}
+            onClick={() => {
+              const q = kind === 'question' ? choice || custom.trim() : null;
+              void run(
+                () =>
+                  api.setSecret(phrase, q).then(() => {
+                    setSecretSet(true);
+                    setSavedQuestion(q);
+                  }),
+                q ? 'Question secrète enregistrée.' : 'Phrase secrète enregistrée.',
+              );
+            }}
+          >
             Enregistrer
           </Button>
         </div>
