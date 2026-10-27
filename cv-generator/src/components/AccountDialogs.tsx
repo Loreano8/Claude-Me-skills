@@ -198,13 +198,13 @@ const QUESTIONS = [
 ];
 
 /** « Mes crédits » : phrase ou question secrète (récupération du compte) et changement de mot de passe. */
-function AccountSecurity() {
+function AccountSecurity({ onboarding = false, onSaved }: { onboarding?: boolean; onSaved?: () => void } = {}) {
   const [secretSet, setSecretSet] = useState<boolean | null>(null);
   const [savedQuestion, setSavedQuestion] = useState<string | null>(null);
   const [kind, setKind] = useState<'phrase' | 'question'>('phrase');
   const [choice, setChoice] = useState(QUESTIONS[0]);
   const [custom, setCustom] = useState('');
-  const [open, setOpen] = useState<'phrase' | 'password' | null>(null);
+  const [open, setOpen] = useState<'phrase' | 'password' | null>(onboarding ? 'phrase' : null);
   const [phrase, setPhrase] = useState('');
   const [current, setCurrent] = useState('');
   const [next, setNext] = useState('');
@@ -226,6 +226,7 @@ function AccountSecurity() {
     setMessage(null);
     try {
       await action();
+      if (onSaved) return onSaved();
       setMessage({ tone: 'success', text: success });
       setOpen(null);
       setPhrase('');
@@ -239,11 +240,13 @@ function AccountSecurity() {
   }
 
   return (
-    <div className="mt-5 rounded-2xl border border-slate-200 p-4">
-      <p className="flex items-center gap-2 font-semibold text-slate-900">
-        <ShieldCheck className="size-5 text-emerald-600" /> Sécurité du compte
-      </p>
-      {secretSet === false && (
+    <div className={onboarding ? '' : 'mt-5 rounded-2xl border border-slate-200 p-4'}>
+      {!onboarding && (
+        <p className="flex items-center gap-2 font-semibold text-slate-900">
+          <ShieldCheck className="size-5 text-emerald-600" /> Sécurité du compte
+        </p>
+      )}
+      {secretSet === false && !onboarding && (
         <p className="mt-1 text-sm text-amber-800">
           Définissez une phrase ou une question secrète : elle vous permettra de récupérer votre compte si vous oubliez votre mot de passe.
         </p>
@@ -253,7 +256,7 @@ function AccountSecurity() {
           {savedQuestion ? `Question secrète définie : « ${savedQuestion} ».` : 'Phrase secrète définie.'} Gardez la réponse en mémoire, ne la donnez à personne.
         </p>
       )}
-      <div className="mt-3 flex flex-wrap gap-2">
+      <div className={cx('mt-3 flex flex-wrap gap-2', onboarding && 'hidden')}>
         <Button size="sm" variant={secretSet ? 'secondary' : 'primary'} onClick={() => setOpen(open === 'phrase' ? null : 'phrase')}>
           {secretSet ? 'Changer ma phrase ou question secrète' : 'Définir ma phrase ou question secrète'}
         </Button>
@@ -346,7 +349,7 @@ function AccountSecurity() {
 
 function AccountDialog() {
   const { dialogReason, close, setSession } = useAccount();
-  const [mode, setMode] = useState<'register' | 'login' | 'forgot'>('register');
+  const [mode, setMode] = useState<'register' | 'login' | 'forgot' | 'secure'>('register');
   const [emailOn, setEmailOn] = useState(false);
   useEffect(() => {
     void api.health().then((h) => setEmailOn(!!h.email), () => {});
@@ -364,14 +367,36 @@ function AccountDialog() {
     setError(null);
     try {
       const session = mode === 'register' ? await api.register(identifier, password, name, invitedBy) : await api.login(identifier, password);
-      if (mode === 'register') clearReferral();
       setSession(session.token, session.user);
+      if (mode === 'register') {
+        clearReferral();
+        // Étape suivante : phrase ou question secrète, pour pouvoir récupérer le compte un jour.
+        setMode('secure');
+        return;
+      }
       close();
     } catch (err) {
       setError((err as Error).message);
     } finally {
       setBusy(false);
     }
+  }
+
+  if (mode === 'secure') {
+    return (
+      <Modal title="Sécurisez votre compte" onClose={close}>
+        <div className="mb-3">
+          <Notice tone="success">Compte créé ! Dernière étape, 10 secondes :</Notice>
+        </div>
+        <p className="mb-3 text-sm text-slate-600">
+          Choisissez une phrase ou une question secrète. Si un jour vous oubliez votre mot de passe, elle nous permettra de vérifier que le compte est bien le vôtre.
+        </p>
+        <AccountSecurity onboarding onSaved={close} />
+        <button type="button" onClick={close} className="mt-4 w-full text-center text-sm text-slate-500">
+          Plus tard (dans « Mes crédits »)
+        </button>
+      </Modal>
+    );
   }
 
   if (mode === 'forgot') {
