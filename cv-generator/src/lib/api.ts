@@ -88,6 +88,15 @@ export const api = {
   vaultSaveKey: (key: string) => post<{ ok: true }>('/api/vault/key', { key }),
   vaultRecover: (proof: { password: string } | { code: string }) => post<{ key: string }>('/api/vault/recover', proof),
   vaultSendCode: () => post<{ to: string }>('/api/vault/recover/email', {}),
+  secretStatus: () => request<{ set: boolean }>('GET', '/api/account/secret'),
+  setSecret: (phrase: string) => post<{ set: true }>('/api/account/secret', { phrase }),
+  changePassword: (current: string, password: string) => post<{ ok: true }>('/api/account/password', { current, password }),
+  /** Formulaire « mot de passe oublié » : la demande arrive dans « Nous contacter » (secret gardé sur l'appareil). */
+  async recoveryRequest(form: { identifier: string; name: string; phrase: string; lastPurchase: string; credits: number | null; note: string }) {
+    const res = await request<{ secret?: string }>('POST', '/api/auth/recovery', form, supportHeaders());
+    if (res.secret) saveSupportSecret(res.secret);
+    return res;
+  },
   forgotPassword: (identifier: string) => post<{ ok: true; to: string | null }>('/api/auth/forgot', { identifier }),
   resetPassword: (identifier: string, code: string, password: string) => post<Session>('/api/auth/reset', { identifier, code, password }),
 

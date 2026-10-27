@@ -1,6 +1,6 @@
 import { useEffect, useState, type FormEvent, type ReactNode } from 'react';
 import { Capacitor } from '@capacitor/core';
-import { Check, Copy, Gift, LogOut, Share2, Sparkles, UserRound, X, Zap } from 'lucide-react';
+import { Check, Copy, Gift, LogOut, Share2, ShieldCheck, Sparkles, UserRound, X, Zap } from 'lucide-react';
 import { useAccount, type Pack } from '../lib/account.ts';
 import { api, refreshAccount } from '../lib/api.ts';
 import { clearReferral, pendingReferral, referralLink } from '../lib/referral.ts';
@@ -23,6 +23,83 @@ export function Modal({ title, onClose, children }: { title: string; onClose: ()
         </div>
         {children}
       </div>
+    </div>
+  );
+}
+
+/**
+ * Mot de passe oublié, sans e-mail : la personne répond à quelques questions (prénom, phrase secrète, dernier achat).
+ * Les réponses sont vérifiées automatiquement sur le serveur ; l'administrateur valide et la réponse arrive dans « Nous contacter ».
+ */
+function RecoveryForm({ initial, onBack }: { initial: string; onBack: () => void }) {
+  const { close } = useAccount();
+  const [identifier, setIdentifier] = useState(initial);
+  const [name, setName] = useState('');
+  const [phrase, setPhrase] = useState('');
+  const [lastPurchase, setLastPurchase] = useState('unknown');
+  const [credits, setCredits] = useState('');
+  const [note, setNote] = useState('');
+  const [busy, setBusy] = useState(false);
+  const [done, setDone] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  async function send() {
+    setBusy(true);
+    setError(null);
+    try {
+      await api.recoveryRequest({ identifier, name, phrase, lastPurchase, credits: credits.trim() ? Number(credits) : null, note });
+      setDone(true);
+    } catch (e) {
+      setError((e as Error).message);
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  if (done) {
+    return (
+      <div className="space-y-3">
+        <Notice tone="success">
+          Votre demande est bien prise en compte. Nous vérifions vos réponses et vous envoyons un mot de passe provisoire dans « Nous contacter », en général dans la journée.
+        </Notice>
+        <Button
+          className="w-full"
+          onClick={() => {
+            close();
+            window.location.hash = 'contact';
+          }}
+        >
+          Voir ma demande
+        </Button>
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-3">
+      <p className="text-sm text-slate-600">Répondez à ces questions : elles nous permettent de vérifier que le compte est bien le vôtre.</p>
+      <Field label="E-mail ou téléphone du compte" value={identifier} onChange={setIdentifier} autoComplete="username" />
+      <Field label="Prénom indiqué sur le compte" value={name} onChange={setName} autoComplete="given-name" />
+      <Field label="Votre phrase secrète" value={phrase} onChange={setPhrase} hint="Si vous en avez défini une dans « Mes crédits ». Majuscules et accents ne comptent pas." />
+      <label className="block">
+        <span className="mb-1 block text-sm font-medium text-slate-700">Votre dernier achat de crédits</span>
+        <select value={lastPurchase} onChange={(e) => setLastPurchase(e.target.value)} className="w-full rounded-xl bg-white px-3 py-2.5 text-sm ring-1 ring-slate-300">
+          <option value="unknown">Je ne sais plus</option>
+          <option value="none">Je n’ai jamais acheté</option>
+          <option value="500">500 FCFA</option>
+          <option value="1500">1 500 FCFA</option>
+          <option value="3000">3 000 FCFA</option>
+        </select>
+      </label>
+      <Field label="Crédits qu’il vous restait (environ, facultatif)" type="number" value={credits} onChange={setCredits} />
+      <Field label="Autre précision (facultatif)" value={note} onChange={setNote} />
+      {error && <Notice tone="error">{error}</Notice>}
+      <Button className="w-full" loading={busy} disabled={busy || identifier.trim().length < 3} onClick={() => void send()}>
+        Envoyer ma demande
+      </Button>
+      <button type="button" className="w-full text-center text-sm font-semibold text-brand-700" onClick={onBack}>
+        Retour à la connexion
+      </button>
     </div>
   );
 }
@@ -64,16 +141,8 @@ function ForgotPassword({ initial, emailOn, onBack }: { initial: string; emailOn
     }
   }
 
-  if (!emailOn) {
-    return (
-      <div className="space-y-3">
-        <Notice tone="info">La réinitialisation par e-mail arrive bientôt. En attendant, écrivez-nous dans « Nous contacter » (bulle en haut de l’écran) : nous vous aidons à récupérer votre compte.</Notice>
-        <button type="button" className="w-full text-center text-sm font-semibold text-brand-700" onClick={onBack}>
-          Retour à la connexion
-        </button>
-      </div>
-    );
-  }
+  const [form, setForm] = useState(!emailOn);
+  if (form) return <RecoveryForm initial={identifier} onBack={onBack} />;
 
   return (
     <div className="space-y-3">
@@ -96,9 +165,91 @@ function ForgotPassword({ initial, emailOn, onBack }: { initial: string; emailOn
         </>
       )}
       {error && <Notice tone="error">{error}</Notice>}
+      <button type="button" className="w-full text-center text-sm text-slate-600" onClick={() => setForm(true)}>
+        Plus accès à cet e-mail, ou compte avec un numéro de téléphone ? <span className="font-semibold text-brand-700">Faire une demande</span>
+      </button>
       <button type="button" className="w-full text-center text-sm font-semibold text-brand-700" onClick={onBack}>
         Retour à la connexion
       </button>
+    </div>
+  );
+}
+
+/** « Mes crédits » : phrase secrète (récupération du compte) et changement de mot de passe. */
+function AccountSecurity() {
+  const [secretSet, setSecretSet] = useState<boolean | null>(null);
+  const [open, setOpen] = useState<'phrase' | 'password' | null>(null);
+  const [phrase, setPhrase] = useState('');
+  const [current, setCurrent] = useState('');
+  const [next, setNext] = useState('');
+  const [busy, setBusy] = useState(false);
+  const [message, setMessage] = useState<{ tone: 'success' | 'error'; text: string } | null>(null);
+
+  useEffect(() => {
+    api.secretStatus().then((r) => setSecretSet(r.set), () => setSecretSet(null));
+  }, []);
+
+  async function run(action: () => Promise<unknown>, success: string) {
+    setBusy(true);
+    setMessage(null);
+    try {
+      await action();
+      setMessage({ tone: 'success', text: success });
+      setOpen(null);
+      setPhrase('');
+      setCurrent('');
+      setNext('');
+    } catch (e) {
+      setMessage({ tone: 'error', text: (e as Error).message });
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  return (
+    <div className="mt-5 rounded-2xl border border-slate-200 p-4">
+      <p className="flex items-center gap-2 font-semibold text-slate-900">
+        <ShieldCheck className="size-5 text-emerald-600" /> Sécurité du compte
+      </p>
+      {secretSet === false && (
+        <p className="mt-1 text-sm text-amber-800">Définissez une phrase secrète : elle vous permettra de récupérer votre compte si vous oubliez votre mot de passe.</p>
+      )}
+      {secretSet && <p className="mt-1 text-sm text-emerald-800">Phrase secrète définie. Gardez-la en mémoire, ne la donnez à personne.</p>}
+      <div className="mt-3 flex flex-wrap gap-2">
+        <Button size="sm" variant={secretSet ? 'secondary' : 'primary'} onClick={() => setOpen(open === 'phrase' ? null : 'phrase')}>
+          {secretSet ? 'Changer ma phrase secrète' : 'Définir ma phrase secrète'}
+        </Button>
+        <Button size="sm" variant="secondary" onClick={() => setOpen(open === 'password' ? null : 'password')}>
+          Changer mon mot de passe
+        </Button>
+      </div>
+      {open === 'phrase' && (
+        <div className="mt-3 space-y-2">
+          <Field
+            label="Phrase secrète"
+            value={phrase}
+            onChange={setPhrase}
+            hint="3 ou 4 mots faciles à retenir pour vous, difficiles à deviner pour les autres. Ex. : « le chat de mamie mange des mangues »."
+          />
+          <Button size="sm" loading={busy} disabled={busy || phrase.trim().length < 8} onClick={() => void run(() => api.setSecret(phrase).then(() => setSecretSet(true)), 'Phrase secrète enregistrée.')}>
+            Enregistrer
+          </Button>
+        </div>
+      )}
+      {open === 'password' && (
+        <div className="mt-3 space-y-2">
+          <Field label="Mot de passe actuel (ou provisoire)" type="password" value={current} onChange={setCurrent} autoComplete="current-password" />
+          <Field label="Nouveau mot de passe" type="password" value={next} onChange={setNext} autoComplete="new-password" hint="6 caractères minimum." />
+          <Button size="sm" loading={busy} disabled={busy || !current || next.length < 6} onClick={() => void run(() => api.changePassword(current, next), 'Mot de passe changé.')}>
+            Changer
+          </Button>
+        </div>
+      )}
+      {message && (
+        <div className="mt-3">
+          <Notice tone={message.tone}>{message.text}</Notice>
+        </div>
+      )}
     </div>
   );
 }
@@ -347,6 +498,7 @@ function CreditsDialog() {
           <Notice tone="error">{error}</Notice>
         </div>
       )}
+      {user && <AccountSecurity />}
       {user && <ReferralCard />}
       {user && (
         <button

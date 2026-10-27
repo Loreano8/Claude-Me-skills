@@ -78,6 +78,9 @@ create table if not exists support_threads (
   last_message_at timestamptz not null default now()
 );
 
+-- Phrase secrète (empreinte seulement) : sert à prouver son identité quand on a oublié son mot de passe.
+alter table users add column if not exists secret_phrase_hash text;
+
 -- Coffre-fort : double de la clé qui chiffre les documents gardés sur le téléphone (code oublié → réinitialisation).
 create table if not exists vault_keys (
   user_id integer primary key references users(id) on delete cascade,
@@ -94,6 +97,19 @@ create table if not exists email_codes (
   expires_at timestamptz not null,
   attempts integer not null default 0,
   used boolean not null default false
+);
+
+-- Demandes de récupération de compte (formulaire « mot de passe oublié »), vérifiées puis validées par l'administrateur.
+create table if not exists recovery_requests (
+  id serial primary key,
+  user_id integer references users(id) on delete cascade,
+  identifier text not null,
+  thread_id integer references support_threads(id) on delete set null,
+  given jsonb not null,
+  checks jsonb not null,
+  status text not null default 'pending' check (status in ('pending', 'approved', 'refused')),
+  created_at timestamptz not null default now(),
+  decided_at timestamptz
 );
 
 create table if not exists support_messages (

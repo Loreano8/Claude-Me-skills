@@ -76,6 +76,10 @@ Les nouveaux modèles ne sont pas dessinés un par un : une **fiche de style** (
 
 Avec `RESEND_API_KEY` et `EMAIL_FROM` (ex. `CV Studio <no-reply@mondomaine.com>`, adresse d'un **domaine vérifié** chez Resend) dans `cvstudio.settings`, le serveur envoie des codes à 6 chiffres (valables 15 minutes, 5 essais) : réinitialisation du code du coffre-fort et « Mot de passe oublié ? ». Sans ces réglages, `/api/health` renvoie `email: false` et l'appli n'affiche pas ces options (la réinitialisation du coffre par mot de passe du compte reste disponible).
 
+## Récupération de compte (phrase secrète)
+
+Chaque compte peut définir une **phrase secrète** (« Mes crédits » → « Sécurité du compte » ; seule son empreinte est gardée, comparée sans majuscules ni accents). « Mot de passe oublié ? » ouvre un formulaire (prénom, phrase secrète, dernier achat, crédits restants) : le serveur compare aussitôt les réponses au compte (`server/recovery.ts`) et la demande apparaît dans l'onglet **Récupérations** de l'espace administrateur, avec « Conforme / Différent » pour chaque réponse. « Valider » crée un mot de passe provisoire et l'envoie automatiquement dans la conversation « Nous contacter » de la personne, qui peut ensuite le changer (« Changer mon mot de passe »).
+
 ## Parrainage
 
 Chaque compte a un lien personnel (`…/?ref=CODE`), affiché dans « Mes crédits » avec un bouton de partage (WhatsApp…). Quand un ami inscrit avec ce lien **achète son premier pack**, l'ami et son parrain reçoivent chacun **1 crédit** (`REFERRAL_BONUS` dans `server/accounts.ts`). La récompense n'est versée qu'une fois par filleul. Comme elle dépend d'un vrai paiement, créer de faux comptes ne rapporte rien.

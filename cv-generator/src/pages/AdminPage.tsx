@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
-import { ArrowLeft, Check, Coins, LogOut, MessageCircle, RefreshCw, Send, ShieldCheck, Star, X } from 'lucide-react';
+import { ArrowLeft, Check, Coins, KeyRound, LogOut, MessageCircle, RefreshCw, Send, ShieldCheck, Star, X } from 'lucide-react';
 import { adminRequest, type SupportMessage } from '../lib/api.ts';
 import { Button, Card, cx, Field, Notice, TextArea } from '../components/ui.tsx';
 
@@ -221,6 +221,125 @@ function Testimonials({ token }: { token: string }) {
   );
 }
 
+type CheckValue = 'ok' | 'wrong' | 'unknown' | 'not_set';
+interface RecoveryRequest {
+  id: number;
+  identifier: string;
+  status: 'pending' | 'approved' | 'refused';
+  given: { name: string; lastPurchase: string; credits: number | null; note: string };
+  actual: { name: string; lastPurchase: number | null; credits: number } | null;
+  checks: { account: boolean; name: CheckValue; phrase: CheckValue; purchase: CheckValue; credits: CheckValue };
+  createdAt: string;
+}
+
+const purchaseLabel = (v: string | number | null) =>
+  v === null || v === 'none' ? 'aucun achat' : v === 'unknown' ? 'ne sait plus' : `${Number(v).toLocaleString('fr-FR')} FCFA`;
+
+function CheckRow({ label, value, given, actual }: { label: string; value: CheckValue; given?: string; actual?: string }) {
+  const style = {
+    ok: ['bg-emerald-100 text-emerald-800', 'Conforme'],
+    wrong: ['bg-rose-100 text-rose-800', 'Différent'],
+    unknown: ['bg-slate-100 text-slate-600', 'Non répondu'],
+    not_set: ['bg-slate-100 text-slate-600', 'Non défini sur le compte'],
+  }[value];
+  return (
+    <div className="flex items-start gap-2 text-sm">
+      <span className={cx('shrink-0 rounded-full px-2 py-0.5 text-xs font-semibold', style[0])}>{style[1]}</span>
+      <span className="min-w-0 text-slate-700">
+        <strong>{label}</strong>
+        {given !== undefined && ` : « ${given || '—'} »`}
+        {actual !== undefined && <span className="text-slate-500"> (compte : {actual || '—'})</span>}
+      </span>
+    </div>
+  );
+}
+
+/** Demandes de récupération de compte : réponses déjà comparées au compte, il reste à valider ou refuser. */
+function Recoveries({ token }: { token: string }) {
+  const [items, setItems] = useState<RecoveryRequest[] | null>(null);
+  const [busy, setBusy] = useState<number | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  const load = useCallback(
+    () =>
+      adminRequest<{ requests: RecoveryRequest[] }>(token, 'GET', '/api/admin/recovery').then(
+        (r) => setItems(r.requests),
+        (e) => setError((e as Error).message),
+      ),
+    [token],
+  );
+  useEffect(() => void load(), [load]);
+
+  async function decide(r: RecoveryRequest, approve: boolean) {
+    if (approve && !window.confirm(`Valider et envoyer un mot de passe provisoire à ${r.identifier} ?`)) return;
+    setBusy(r.id);
+    setError(null);
+    try {
+      await adminRequest(token, 'POST', `/api/admin/recovery/${r.id}`, { approve });
+      await load();
+    } catch (e) {
+      setError((e as Error).message);
+    } finally {
+      setBusy(null);
+    }
+  }
+
+  return (
+    <div className="space-y-3">
+      <p className="text-sm text-slate-600">
+        Les réponses sont comparées automatiquement au compte (la phrase secrète n’est jamais affichée). « Valider » envoie un mot de passe provisoire dans la conversation « Nous contacter » de la personne.
+      </p>
+      {error && <Notice tone="error">{error}</Notice>}
+      {items?.length === 0 && <p className="text-sm text-slate-500">Aucune demande pour l’instant.</p>}
+      {items?.map((r) => {
+        const okCount = (['name', 'phrase', 'purchase', 'credits'] as const).filter((k) => r.checks[k] === 'ok').length;
+        const wrong = (['name', 'phrase', 'purchase', 'credits'] as const).some((k) => r.checks[k] === 'wrong');
+        return (
+          <div key={r.id} className={cx('rounded-xl border p-3', r.status === 'pending' ? 'border-brand-300' : 'border-slate-200 opacity-70')}>
+            <div className="flex flex-wrap items-center gap-2">
+              <p className="min-w-0 flex-1 truncate font-semibold text-slate-900">{r.identifier}</p>
+              <span
+                className={cx(
+                  'rounded-full px-2 py-0.5 text-xs font-semibold',
+                  r.status === 'approved' ? 'bg-emerald-100 text-emerald-800' : r.status === 'refused' ? 'bg-rose-100 text-rose-800' : 'bg-amber-100 text-amber-800',
+                )}
+              >
+                {{ pending: 'À traiter', approved: 'Validée', refused: 'Refusée' }[r.status]}
+              </span>
+            </div>
+            <p className="mb-2 text-xs text-slate-500">{when(r.createdAt)}</p>
+            {!r.checks.account ? (
+              <Notice tone="warn">Aucun compte ne correspond à cet identifiant.</Notice>
+            ) : (
+              <div className="space-y-1.5">
+                <CheckRow label="Phrase secrète" value={r.checks.phrase} />
+                <CheckRow label="Prénom" value={r.checks.name} given={r.given.name} actual={r.actual?.name} />
+                <CheckRow label="Dernier achat" value={r.checks.purchase} given={purchaseLabel(r.given.lastPurchase)} actual={purchaseLabel(r.actual?.lastPurchase ?? null)} />
+                <CheckRow label="Crédits restants" value={r.checks.credits} given={r.given.credits === null ? '' : String(r.given.credits)} actual={String(r.actual?.credits ?? '')} />
+                {r.given.note && <p className="text-sm text-slate-700">Précision : « {r.given.note} »</p>}
+                <p className={cx('pt-1 text-sm font-medium', wrong ? 'text-rose-700' : okCount >= 2 ? 'text-emerald-700' : 'text-amber-700')}>
+                  {wrong ? 'Au moins une réponse ne correspond pas : prudence.' : okCount >= 2 ? `${okCount} réponses conformes.` : 'Peu d’éléments vérifiables : demandez des précisions dans « Messages ».'}
+                </p>
+              </div>
+            )}
+            {r.status === 'pending' && (
+              <div className="mt-3 flex flex-wrap gap-2">
+                {r.checks.account && (
+                  <Button size="sm" icon={<Check className="size-4" />} loading={busy === r.id} disabled={busy !== null} onClick={() => void decide(r, true)}>
+                    Valider et envoyer le mot de passe
+                  </Button>
+                )}
+                <Button size="sm" variant="ghost" icon={<X className="size-4" />} disabled={busy !== null} onClick={() => void decide(r, false)}>
+                  Refuser
+                </Button>
+              </div>
+            )}
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
 /** Offrir des crédits à un compte (testeur, geste commercial, remboursement…), sans achat. */
 function Credits({ token }: { token: string }) {
   const [identifier, setIdentifier] = useState('');
@@ -304,7 +423,7 @@ function TempPassword({ token }: { token: string }) {
 export function AdminPage() {
   const [token, setToken] = useState(readToken);
   const [draft, setDraft] = useState('');
-  const [tab, setTab] = useState<'messages' | 'temoignages' | 'credits'>('messages');
+  const [tab, setTab] = useState<'messages' | 'recuperations' | 'temoignages' | 'credits'>('messages');
   const [error, setError] = useState<string | null>(null);
   const [checking, setChecking] = useState(false);
 
@@ -378,6 +497,7 @@ export function AdminPage() {
           {(
             [
               ['messages', 'Messages', MessageCircle],
+              ['recuperations', 'Récupérations', KeyRound],
               ['temoignages', 'Témoignages', Star],
               ['credits', 'Comptes', Coins],
             ] as const
@@ -394,6 +514,8 @@ export function AdminPage() {
         </div>
         {tab === 'messages' ? (
           <Messages token={token} />
+        ) : tab === 'recuperations' ? (
+          <Recoveries token={token} />
         ) : tab === 'temoignages' ? (
           <Testimonials token={token} />
         ) : (

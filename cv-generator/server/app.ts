@@ -11,6 +11,7 @@ import { TestimonialInput, type Testimonials } from './testimonials.ts';
 import { SupportError, SupportMessageInput, type Support } from './support.ts';
 import { fetchJobPage, JobPageError } from './jobPage.ts';
 import type { Vault } from './vault.ts';
+import { RecoveryInput, type Recovery } from './recovery.ts';
 
 export interface AppOptions {
   /** Téléchargement des pages d'offres (remplaçable dans les tests). */
@@ -27,6 +28,8 @@ export interface AppOptions {
   support?: Support | null;
   /** Coffre-fort (double de la clé) et codes envoyés par e-mail. */
   vault?: Vault | null;
+  /** Récupération de compte par formulaire (phrase secrète), validée par l'administrateur. */
+  recovery?: Recovery | null;
   sessionSecret?: string;
   /** Adresse publique du site, pour revenir après un paiement. */
   publicUrl?: string;
@@ -63,7 +66,7 @@ const Credentials = z.object({
   referralCode: z.string().max(20).optional(),
 });
 
-export function createApp({ fetchPage = fetchJobPage, ai, allowedOrigins, rateLimitPerHour, accounts = null, payments = null, testimonials = null, support = null, vault = null, sessionSecret = '', publicUrl = '', apiPublicUrl = '', adminToken = '' }: AppOptions) {
+export function createApp({ fetchPage = fetchJobPage, ai, allowedOrigins, rateLimitPerHour, accounts = null, payments = null, testimonials = null, support = null, vault = null, recovery = null, sessionSecret = '', publicUrl = '', apiPublicUrl = '', adminToken = '' }: AppOptions) {
   const app = new Hono();
   const allow = createRateLimiter(rateLimitPerHour);
   const allowAuth = createRateLimiter(20);
@@ -320,6 +323,63 @@ export function createApp({ fetchPage = fetchJobPage, ai, allowedOrigins, rateLi
     }
   });
 
+  // ---- Phrase secrète, changement de mot de passe, récupération de compte -----
+
+  app.get('/api/account/secret', async (c) => {
+    const user = await currentUser(c);
+    if (!user || !recovery) return c.json({ error: 'Connectez-vous.', code: 'auth' }, 401);
+    return c.json({ set: await recovery.hasSecret(user.id) });
+  });
+
+  app.post('/api/account/secret', async (c) => {
+    const user = await currentUser(c);
+    if (!user || !recovery) return c.json({ error: 'Connectez-vous.', code: 'auth' }, 401);
+    try {
+      await recovery.setSecret(user.id, String((await body(c)).phrase ?? ''));
+      return c.json({ set: true });
+    } catch (error) {
+      return vaultError(c, error);
+    }
+  });
+
+  app.post('/api/account/password', async (c) => {
+    if (!allowAuth(clientKey(c))) return c.json({ error: 'Trop de tentatives. Réessayez plus tard.' }, 429);
+    const user = await currentUser(c);
+    if (!user || !accounts) return c.json({ error: 'Connectez-vous.', code: 'auth' }, 401);
+    const b = await body(c);
+    const next = String(b.password ?? '');
+    if (next.length < 6) return c.json({ error: 'Le mot de passe doit faire au moins 6 caractères.' }, 400);
+    try {
+      await accounts.login(user.identifier, String(b.current ?? ''));
+    } catch {
+      return c.json({ error: 'Mot de passe actuel incorrect.' }, 400);
+    }
+    await accounts.setPassword(user.id, next);
+    return c.json({ ok: true });
+  });
+
+  app.post('/api/auth/recovery', async (c) => {
+    if (!recovery) return c.json({ error: 'Indisponible.' }, 503);
+    if (!allowAuth(clientKey(c))) return c.json({ error: 'Trop de demandes. Réessayez plus tard.' }, 429);
+    const parsed = RecoveryInput.safeParse(await c.req.json().catch(() => null));
+    if (!parsed.success) return c.json({ error: 'Indiquez au moins l’e-mail ou le téléphone de votre compte.' }, 400);
+    return c.json(await recovery.request(await supportIdentity(c), parsed.data));
+  });
+
+  app.get('/api/admin/recovery', async (c) => {
+    if (!recovery || !isAdmin(c)) return c.json({ error: 'Accès refusé.' }, 403);
+    return c.json({ requests: await recovery.adminList() });
+  });
+
+  app.post('/api/admin/recovery/:id', async (c) => {
+    if (!recovery || !isAdmin(c)) return c.json({ error: 'Accès refusé.' }, 403);
+    try {
+      return c.json(await recovery.decide(Number(c.req.param('id')), (await body(c)).approve === true));
+    } catch (error) {
+      return vaultError(c, error);
+    }
+  });
+
   // ---- Témoignages -----------------------------------------------------------
 
   app.get('/api/testimonials', async (c) => c.json({ testimonials: testimonials ? await testimonials.listApproved() : [] }));
@@ -381,7 +441,7 @@ export function createApp({ fetchPage = fetchJobPage, ai, allowedOrigins, rateLi
     const parsed = SupportMessageInput.safeParse(await c.req.json().catch(() => null));
     if (!parsed.success) return c.json({ error: 'Écrivez votre message (2 000 caractères maximum).' }, 400);
     const who = await supportIdentity(c);
-    const res = await support.post(who, parsed.data);
+    const { threadId: _thread, ...res } = await support.post(who, parsed.data);
     return c.json({ ...res, messages: await support.thread({ ...who, secret: res.secret ?? who.secret }) });
   });
 

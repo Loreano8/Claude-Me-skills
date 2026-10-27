@@ -72,7 +72,7 @@ export function createSupport(db: Db, notify: Notify = async () => {}) {
 
   return {
     /** Message du client. Crée la conversation au premier message ; renvoie alors le secret à garder. */
-    async post(who: SupportIdentity, input: SupportMessageInput): Promise<{ secret?: string }> {
+    async post(who: SupportIdentity, input: SupportMessageInput): Promise<{ secret?: string; threadId: number }> {
       let thread = await findThread(who);
       let secret: string | undefined;
       if (!thread) {
@@ -97,7 +97,7 @@ export function createSupport(db: Db, notify: Notify = async () => {}) {
       const from = input.name || input.contact || `conversation n°${thread.id}`;
       // La notification ne doit jamais faire échouer l'envoi du message.
       await notify(`Nouveau message CV Studio de ${from} :\n\n${input.body.slice(0, 500)}`).catch((e) => console.error('Notification support', e));
-      return secret ? { secret } : {};
+      return secret ? { secret, threadId: thread.id } : { threadId: thread.id };
     },
 
     /** Conversation vue par le client ; marque les réponses comme lues. */
