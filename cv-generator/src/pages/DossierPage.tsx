@@ -21,8 +21,8 @@ type Item =
 type Photo = Extract<Item, { kind: 'photo' }>;
 
 const MAX_FILE = 25 * 1024 * 1024;
-/** Gratuit : 3 pages scannées par PDF, ou 2 pièces en plus du CV et de la lettre. Au-delà : 1 crédit le PDF. */
-const FREE_SCAN_PAGES = 3;
+/** Gratuit : 2 pages scannées par PDF, ou 2 pièces en plus du CV et de la lettre. Au-delà : 1 crédit le PDF. */
+const FREE_SCAN_PAGES = 2;
 const FREE_DOSSIER_PIECES = 2;
 const MAX_TRANSCRIBE_PAGES = 8;
 let seq = 0;

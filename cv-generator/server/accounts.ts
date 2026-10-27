@@ -6,7 +6,7 @@ import { hashPassword, normalizeIdentifier, verifyPassword } from './auth.ts';
 export const REFERRAL_BONUS = 1;
 /** Prix de la version Pro d'un CV. 2 crédits : le crédit offert à l'inscription ne suffit pas, il faut recharger. */
 export const UNLOCK_COST = 2;
-/** Dossier ou scan au-delà de la limite gratuite (3 pages scannées, ou 2 pièces en plus du CV et de la lettre). */
+/** Dossier ou scan au-delà de la limite gratuite (2 pages scannées, ou 2 pièces en plus du CV et de la lettre). */
 export const DOSSIER_COST = 1;
 
 // Sans 0/O ni 1/I/L : un code se lit et se dicte sans confusion.

@@ -17,7 +17,7 @@ const FEATURES: { icon: typeof Target; title: string; text: string }[] = [
   { icon: Target, title: 'CV adapté à chaque offre', text: 'Mots-clés du poste, points forts mis en avant, exigences manquantes signalées. Score avant → après pour voir le gain.' },
   { icon: Sparkles, title: 'Lettre de motivation', text: 'Courte, personnalisée, au ton choisi. Candidature spontanée possible.' },
   { icon: MessagesSquare, title: 'Fiche entretien', text: 'Les questions probables pour ce poste, des réponses construites à partir de votre parcours, et comment parler de vos points faibles.' },
-  { icon: FileStack, title: 'Scanner et dossier PDF', text: 'Scannez vos papiers avec le téléphone : la page est redressée et nettoyée, gratuit jusqu’à 3 pages. Un document écrit à la main devient du texte tapé (PDF ou Word). Ou réunissez CV, lettre et pièces en un seul fichier.' },
+  { icon: FileStack, title: 'Scanner et dossier PDF', text: 'Scannez vos papiers avec le téléphone : la page est redressée et nettoyée, gratuit jusqu’à 2 pages. Un document écrit à la main devient du texte tapé (PDF ou Word). Ou réunissez CV, lettre et pièces en un seul fichier.' },
   { icon: Languages, title: 'CV en anglais', text: 'Traduit et mis aux normes du pays visé, pour postuler dans une entreprise internationale ou à l’étranger.' },
   { icon: ClipboardList, title: 'Suivi des candidatures', text: 'Envoyée, entretien, réponse : toutes vos offres au même endroit, avec le bon CV pour chacune.' },
   { icon: Globe2, title: 'Pensé pour l’Afrique francophone', text: 'Normes locales (photo, date de naissance si attendues), paiement mobile money, prix en FCFA.' },
@@ -49,7 +49,7 @@ function Marquee({ items, reverse = false, duration }: { items: string[]; revers
 
 const FAQ: { q: string; a: ReactNode }[] = [
   { q: 'Est-ce vraiment gratuit ?', a: 'Oui : créer son CV avec les 3 modèles de base et le télécharger en PDF est gratuit et sans compte (avec une petite mention « Créé avec CV Studio » en bas de page). L’adaptation à une offre, la lettre, la fiche entretien ou la traduction coûtent 1 crédit chacune (la première est offerte) ; la version Pro d’un CV (sans mention, 13 modèles, export Word) coûte 2 crédits et reste acquise pour toujours sur ce CV.' },
-  { q: 'Le scanner est-il gratuit ?', a: 'Oui jusqu’à 3 pages par PDF (et pour un dossier : CV, lettre et 2 pièces). Au-delà, 1 crédit pour le PDF, pages illimitées. Transformer un document écrit à la main en texte tapé coûte 1 crédit par page. Vos papiers restent sur votre téléphone, sauf pour la retranscription, le temps de la lecture.' },
+  { q: 'Le scanner est-il gratuit ?', a: 'Oui jusqu’à 2 pages par PDF (et pour un dossier : CV, lettre et 2 pièces). Au-delà, 1 crédit pour le PDF, pages illimitées. Transformer un document écrit à la main en texte tapé coûte 1 crédit par page. Vos papiers restent sur votre téléphone, sauf pour la retranscription, le temps de la lecture.' },
   { q: 'Faut-il un abonnement ?', a: 'Non. Vous achetez un pack de crédits une fois, quand vous en avez besoin. Rien n’est prélevé automatiquement ensuite.' },
   { q: 'Comment payer ?', a: 'Par Mobile Money (MTN MoMo, Moov Money), via FedaPay. Les crédits arrivent sur votre compte dès que le paiement est confirmé.' },
   { q: 'Mon CV va-t-il « faire IA » ?', a: 'Non. CV Studio part de vos vraies expériences, avec vos mots : il ne fait que les mettre en forme et en valeur, sans rien inventer. Vous relisez et modifiez tout avant de télécharger, et le CV reste le vôtre.' },
@@ -204,7 +204,7 @@ export function LandingPage({ onNavigate }: { onNavigate: (t: Tab) => void }) {
               <p className="mt-1 text-sm text-slate-600">
                 {p.credits} crédits · {fcfa(Math.round(p.price / p.credits))} l’action
               </p>
-              <p className="mt-3 text-xs text-slate-500">1 crédit = 1 CV adapté, 1 lettre, 1 fiche entretien, 1 traduction, 1 page manuscrite tapée, ou 1 PDF scanné de plus de 3 pages. 2 crédits = 1 CV en version Pro.</p>
+              <p className="mt-3 text-xs text-slate-500">1 crédit = 1 CV adapté, 1 lettre, 1 fiche entretien, 1 traduction, 1 page manuscrite tapée, ou 1 PDF scanné de plus de 2 pages. 2 crédits = 1 CV en version Pro.</p>
             </div>
           ))}
         </div>

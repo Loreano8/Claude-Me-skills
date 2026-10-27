@@ -5,6 +5,8 @@ import { useActiveCv, useStore } from './store.ts';
 import { CvSwitcher } from './components/CvSwitcher.tsx';
 import { AccountButton, AccountDialogs } from './components/AccountDialogs.tsx';
 import { SaveDialog } from './components/SaveDialog.tsx';
+import { ReturnBanner } from './components/ReturnBanner.tsx';
+import { decideBanner as decideReturnBanner } from './lib/reminder.ts';
 import { refreshAccount } from './lib/api.ts';
 import { useAccount } from './lib/account.ts';
 import { Preview } from './components/Preview.tsx';
@@ -89,6 +91,9 @@ function InfosLayout() {
   );
 }
 
+/** Pages où le rappel « Une nouvelle offre ? » peut apparaître au retour. */
+const BANNER_TABS: Tab[] = ['accueil', 'infos', 'apercu', 'lettre', 'suivi', 'documents'];
+
 export default function App() {
   const [tab, setTabState] = useState<Tab>(initialTab);
 
@@ -105,6 +110,8 @@ export default function App() {
   }, []);
 
   useEffect(() => {
+    // Enregistre la visite (et décide du rappel) même si l'appli s'ouvre sur une autre page.
+    decideReturnBanner();
     void refreshAccount();
     // Retour d'une page de paiement : #paiement-approved, #paiement-pending, #paiement-failed…
     const h = window.location.hash.slice(1);
@@ -174,6 +181,7 @@ export default function App() {
       <SaveDialog />
 
       <main className="mx-auto max-w-7xl px-4 pt-4 pb-28 lg:pb-10">
+        {BANNER_TABS.includes(tab) && <ReturnBanner onAdapt={() => setTab('offre')} />}
         {tab === 'accueil' && <LandingPage onNavigate={setTab} />}
         {tab === 'infos' && <InfosLayout />}
         {tab === 'apercu' && <PreviewPage />}
