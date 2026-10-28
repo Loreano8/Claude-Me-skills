@@ -1,6 +1,7 @@
 import { useEffect, useState, type ReactNode } from 'react';
 import { ArrowRight, BadgeCheck, Check, ClipboardList, FileDown, FileStack, Globe2, Languages, Mail, MessagesSquare, PenLine, ShieldCheck, Target } from 'lucide-react';
 import { PACKS } from '../../server/payments.ts';
+import { CvStory } from '../components/CvStory.tsx';
 import type { Tab } from '../App.tsx';
 import { Button } from '../components/ui.tsx';
 import { api, type PublicTestimonial } from '../lib/api.ts';
@@ -138,6 +139,8 @@ export function LandingPage({ onNavigate }: { onNavigate: (t: Tab) => void }) {
         </div>
         <p className="mt-3 text-sm text-slate-500">Sans compte pour créer et télécharger son CV · 1re adaptation offerte</p>
       </section>
+
+      <CvStory />
 
       <section className="space-y-3 border-y border-slate-200 bg-slate-50 py-6" aria-label="Métiers et villes">
         <p className="px-4 text-center text-sm font-semibold text-slate-600">Un CV adapté à votre métier, pour postuler où vous voulez</p>
