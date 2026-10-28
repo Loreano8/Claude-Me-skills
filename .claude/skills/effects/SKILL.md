@@ -48,7 +48,7 @@ Pour retoucher : modifier `config.json` et relancer l'étape 3 (le texte est ré
 
 - **glass-widgets** : `stat {kicker, value, suffix, label}`, `progress {label, pct}`, `chart {title, value, bars[0..1]}`, `profile {name, handle}`, `badge`, `chip`.
 - **documentary** : `chapter`, `title`, `name`, `role`, `stamp` (lieu · date), `tint` (couleur du halo).
-- **orbit** : `cards [{title, sub}]` ou `[{image: "chemin/local.jpg", title, sub}]` (3 à 6 cartes ; les images sont copiées dans le projet), `accent`, `center_y` (hauteur du centre de l'orbite, ~980 = buste), `seconds_per_turn`.
+- **orbit** : `cards [{title, sub}]` ou `[{image: "chemin/local.png", title, sub}]` (3 à 6 cartes ; les images sont copiées dans le projet ; une carte `image` sans `title` ni `sub` est affichée seule, sans fond, ce qui convient à un PNG transparent comme une carte de collection), `accent`, `center_y` (hauteur du centre de l'orbite, ~980 = buste), `seconds_per_turn`.
 - **kallaway-split** : `headline`, `stat`, `chart` (`"bars"` ou `"line"`), `data [{label, value}]`, `unit`, `source` (mention de la source des chiffres), `accent`, `focus` (cadrage de la vidéo en bas, ex. `"50% 30%"`).
 - **spotlight** : `title` (court, ~8 lettres max), `subtitle`, `glow` (couleur du néon), `spot_x`, `spot_y`.
 - **checklist** : `header`, `items [{label, meta}]` (4 à 6), `headline` (mot géant derrière la personne, `""` pour aucun), `headline_at` (index de l'étape où il apparaît), `accent`.

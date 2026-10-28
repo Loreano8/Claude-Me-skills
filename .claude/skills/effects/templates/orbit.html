@@ -17,6 +17,9 @@
       .card .cs { position: relative; z-index: 1; margin-top: 12px; font-family: "JetBrains Mono", monospace; font-weight: 700; font-size: 28px; letter-spacing: 0.08em; color: #5a4a1a; }
       .card .acc { position: absolute; left: 30px; top: 30px; width: 70px; height: 10px; border-radius: 6px; }
       .card.has-img .ct, .card.has-img .cs { color: #fff; }
+      .card.img-only { width: 390px; height: 500px; margin-left: -45px; margin-top: -70px; background: transparent; box-shadow: none; border-radius: 0; overflow: visible; }
+      .card.img-only::after { display: none; }
+      .card.img-only img { object-fit: contain; filter: drop-shadow(0 26px 40px rgba(0,0,0,0.5)); }
     </style>
   </head>
   <body>
@@ -35,10 +38,9 @@
       const N = CFG.cards.length;
       function makeCard(c, i, layer) {
         const el = document.createElement("div");
-        el.className = "card" + (c.image ? " has-img" : "");
+        el.className = "card" + (c.image ? (c.title || c.sub ? " has-img" : " img-only") : "");
         el.id = `card-${layer}-${i}`;
         el.setAttribute("data-layout-allow-overflow", "");
-
         if (c.image) { const im = document.createElement("img"); im.src = c.image; im.alt = c.title || "card"; el.appendChild(im); }
         else { const a = document.createElement("div"); a.className = "acc"; a.style.background = CFG.accent; el.appendChild(a); }
         const t = document.createElement("div"); t.className = "ct"; t.textContent = c.title || ""; el.appendChild(t);
