@@ -20,7 +20,7 @@ const FEATURES: { icon: typeof Target; title: string; text: string }[] = [
   { icon: FileStack, title: 'Scanner et dossier PDF', text: 'Scannez vos papiers avec le téléphone : la page est redressée et nettoyée, gratuit jusqu’à 2 pages. Un document écrit à la main devient du texte tapé (PDF ou Word). Ou réunissez CV, lettre et pièces en un seul fichier.' },
   { icon: Languages, title: 'CV en anglais', text: 'Traduit et mis aux normes du pays visé, pour postuler dans une entreprise internationale ou à l’étranger.' },
   { icon: ClipboardList, title: 'Suivi des candidatures', text: 'Envoyée, entretien, réponse : toutes vos offres au même endroit, avec le bon CV pour chacune.' },
-  { icon: Globe2, title: 'Pensé pour l’Afrique francophone', text: 'Normes locales (photo, date de naissance si attendues), paiement mobile money, prix en FCFA.' },
+  { icon: Globe2, title: 'Aux normes de chaque pays', text: 'Photo, date de naissance ou nationalité seulement quand elles sont attendues, CV en français ou en anglais. Paiement simple par Mobile Money.' },
 ];
 
 const JOBS = [
