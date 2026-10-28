@@ -514,7 +514,7 @@ export function createApp({ fetchPage = fetchJobPage, ai, allowedOrigins, rateLi
       let user: User | null = null;
       if (accounts) {
         user = await currentUser(c);
-        if (!user) return c.json({ error: 'Créez un compte gratuit ou connectez-vous pour utiliser l’IA.', code: 'auth' }, 401);
+        if (!user) return c.json({ error: 'Créez un compte gratuit ou connectez-vous pour continuer.', code: 'auth' }, 401);
         if (!free) {
           try {
             const remaining = await accounts.spend(user.id, action, cost(parsed.data));

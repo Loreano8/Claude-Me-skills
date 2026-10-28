@@ -62,7 +62,7 @@ async function request<T>(method: 'GET' | 'POST', path: string, body?: unknown, 
   if (!res.ok) {
     const message = typeof data?.error === 'string' ? data.error : null;
     // Pas de réponse de notre API : site publié sans serveur (ex. version de démonstration).
-    if (!message) throw new ApiError('Les fonctions IA ne sont pas encore activées sur ce site.');
+    if (!message) throw new ApiError('Les fonctions en ligne ne sont pas encore activées sur ce site.');
     if (res.status === 401 && (path.startsWith('/api/ai/') || path.startsWith('/api/vault/') || path === '/api/unlock' || path === '/api/dossier/unlock')) {
       account.logout();
       account.open('account', message);

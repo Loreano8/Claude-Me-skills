@@ -138,7 +138,7 @@ export function ElegantTemplate({ cv }: { cv: CvDocument }) {
                     {cv.languages.map((l) => (
                       <Text key={l.id} style={{ marginBottom: 2 }}>
                         <Text style={{ fontWeight: 600 }}>{l.name}</Text>
-                        {l.level ? ` — ${l.level}` : ''}
+                        {l.level ? ` (${l.level})` : ''}
                       </Text>
                     ))}
                   </View>
@@ -149,7 +149,7 @@ export function ElegantTemplate({ cv }: { cv: CvDocument }) {
                     {cv.certifications.map((c) => (
                       <Text key={c.id} style={{ marginBottom: 2 }}>
                         <Text style={{ fontWeight: 600 }}>{c.name}</Text>
-                        {[c.issuer, c.date].filter(Boolean).length ? ` — ${[c.issuer, c.date].filter(Boolean).join(', ')}` : ''}
+                        {[c.issuer, c.date].filter(Boolean).length ? `, ${[c.issuer, c.date].filter(Boolean).join(', ')}` : ''}
                       </Text>
                     ))}
                   </View>

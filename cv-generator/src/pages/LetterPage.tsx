@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { FileDown, FileText, Lock, Mail, MessageCircleQuestion, Wand2 } from 'lucide-react';
+import { FileDown, FileText, Lock, Mail, MessageCircleQuestion, PenLine } from 'lucide-react';
 import { DossierLink } from './DossierPage.tsx';
 import { useActiveCv, useStore } from '../store.ts';
 import type { CoverLetterRequest, LetterQuestionsResult } from '../../shared/schema.ts';
@@ -81,10 +81,10 @@ function GenerateCard({ onNavigate }: { onNavigate: (t: Tab) => void }) {
 
   return (
     <Card
-      className="border-violet-200 bg-gradient-to-br from-violet-50 to-white"
+      className="border-brand-100"
       title={
         <span className="flex items-center gap-2">
-          <Wand2 className="size-5 text-violet-600" /> Rédiger avec l’IA
+          <Mail className="size-5 text-brand-600" /> Rédiger ma lettre
         </span>
       }
       subtitle={
@@ -146,9 +146,9 @@ function GenerateCard({ onNavigate }: { onNavigate: (t: Tab) => void }) {
         </div>
       )}
       {questions ? (
-        <div className="mt-4 space-y-3 rounded-xl bg-white p-3.5 ring-1 ring-violet-100">
+        <div className="mt-4 space-y-3 rounded-xl bg-white p-3.5 ring-1 ring-brand-100">
           <p className="flex items-center gap-2 text-sm font-semibold text-slate-800">
-            <MessageCircleQuestion className="size-4 text-violet-600" /> Pour une lettre qui vous ressemble (facultatif, gratuit)
+            <MessageCircleQuestion className="size-4 text-brand-600" /> Pour une lettre qui vous ressemble (facultatif, gratuit)
           </p>
           {questions.map((q, i) => (
             <div key={i}>
@@ -165,7 +165,7 @@ function GenerateCard({ onNavigate }: { onNavigate: (t: Tab) => void }) {
             </div>
           ))}
           <div className="flex flex-wrap gap-2">
-            <Button variant="ai" icon={<Wand2 className="size-4" />} loading={busy} onClick={() => void generate(answers)}>
+            <Button variant="ai" icon={<PenLine className="size-4" />} loading={busy} onClick={() => void generate(answers)}>
               Générer la lettre
             </Button>
             <Button variant="ghost" disabled={busy} onClick={() => void generate([])}>
@@ -175,14 +175,14 @@ function GenerateCard({ onNavigate }: { onNavigate: (t: Tab) => void }) {
         </div>
       ) : (
         <div className="mt-3">
-          <Button variant="ai" icon={<Wand2 className="size-4" />} loading={busy || asking} disabled={isCvEmpty(cv) || (!hasJob && !notes.trim())} onClick={() => void start()}>
+          <Button variant="ai" icon={<PenLine className="size-4" />} loading={busy || asking} disabled={isCvEmpty(cv) || (!hasJob && !notes.trim())} onClick={() => void start()}>
             Générer la lettre
           </Button>
           {!hasJob && !notes.trim() && <p className="mt-1.5 text-xs text-slate-500">Pour une candidature spontanée, indiquez au moins l’entreprise ou le poste visé.</p>}
         </div>
       )}
-      {asking && <p className="mt-3 text-sm text-violet-700">Préparation de vos questions…</p>}
-      {busy && <p className="mt-3 text-sm text-violet-700">Rédaction en cours…</p>}
+      {asking && <p className="mt-3 text-sm text-brand-700">Préparation de vos questions…</p>}
+      {busy && <p className="mt-3 text-sm text-brand-700">Rédaction en cours…</p>}
       {error && (
         <div className="mt-3">
           <Notice tone="error">{error}</Notice>

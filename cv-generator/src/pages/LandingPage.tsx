@@ -1,5 +1,5 @@
 import { useEffect, useState, type ReactNode } from 'react';
-import { ArrowRight, BadgeCheck, Check, ClipboardList, FileDown, FileStack, Globe2, Languages, MessagesSquare, PenLine, ShieldCheck, Sparkles, Target } from 'lucide-react';
+import { ArrowRight, BadgeCheck, Check, ClipboardList, FileDown, FileStack, Globe2, Languages, Mail, MessagesSquare, PenLine, ShieldCheck, Target } from 'lucide-react';
 import { PACKS } from '../../server/payments.ts';
 import type { Tab } from '../App.tsx';
 import { Button } from '../components/ui.tsx';
@@ -15,7 +15,7 @@ const STEPS = [
 
 const FEATURES: { icon: typeof Target; title: string; text: string }[] = [
   { icon: Target, title: 'CV adapté à chaque offre', text: 'Mots-clés du poste, points forts mis en avant, exigences manquantes signalées. Score avant → après pour voir le gain.' },
-  { icon: Sparkles, title: 'Lettre de motivation', text: 'Courte, personnalisée, au ton choisi. Candidature spontanée possible.' },
+  { icon: Mail, title: 'Lettre de motivation', text: 'Courte, personnalisée, au ton choisi. Candidature spontanée possible.' },
   { icon: MessagesSquare, title: 'Fiche entretien', text: 'Les questions probables pour ce poste, des réponses construites à partir de votre parcours, et comment parler de vos points faibles.' },
   { icon: FileStack, title: 'Scanner et dossier PDF', text: 'Scannez vos papiers avec le téléphone : la page est redressée et nettoyée, gratuit jusqu’à 2 pages. Un document écrit à la main devient du texte tapé (PDF ou Word). Ou réunissez CV, lettre et pièces en un seul fichier.' },
   { icon: Languages, title: 'CV en anglais', text: 'Traduit et mis aux normes du pays visé, pour postuler dans une entreprise internationale ou à l’étranger.' },
@@ -57,11 +57,11 @@ const FAQ: { q: string; a: ReactNode }[] = [
   { q: 'Ça marche sur iPhone ?', a: 'Oui, depuis Safari. Touchez « Partager » puis « Sur l’écran d’accueil » pour l’utiliser comme une application. Sur Android, l’application est aussi disponible.' },
 ];
 
-function SectionTitle({ eyebrow, title }: { eyebrow: string; title: string }) {
+function SectionTitle({ title, subtitle }: { title: string; subtitle?: string }) {
   return (
     <div className="mb-6 text-center">
-      <p className="text-xs font-semibold tracking-widest text-brand-600 uppercase">{eyebrow}</p>
-      <h2 className="mt-1 text-2xl font-bold tracking-tight text-slate-900 sm:text-3xl">{title}</h2>
+      <h2 className="text-2xl font-bold tracking-tight text-slate-900 sm:text-3xl">{title}</h2>
+      {subtitle && <p className="mt-1.5 text-slate-600">{subtitle}</p>}
     </div>
   );
 }
@@ -78,7 +78,7 @@ function Testimonials() {
   const quotes = items.filter((t) => t.message).slice(0, 6);
   return (
     <section className="mx-auto max-w-5xl px-4 pt-12">
-      <SectionTitle eyebrow="Ils ont décroché un poste" title="Nos utilisateurs embauchés" />
+      <SectionTitle title="Ils ont trouvé un poste" />
       {hires.length >= 3 ? (
         <Marquee items={hires} duration={`${Math.max(30, hires.length * 6)}s`} />
       ) : (
@@ -121,10 +121,7 @@ export function LandingPage({ onNavigate }: { onNavigate: (t: Tab) => void }) {
   return (
     <div className="-mx-4 -mt-4">
       <section className="bg-gradient-to-b from-brand-50 to-white px-4 pt-12 pb-14 text-center sm:pt-20">
-        <p className="mx-auto inline-flex items-center gap-1.5 rounded-full bg-white px-3 py-1 text-xs font-semibold text-brand-700 shadow-sm ring-1 ring-brand-100">
-          <Sparkles className="size-3.5" /> CV, lettre de motivation et entretien
-        </p>
-        <h1 className="mx-auto mt-5 max-w-3xl text-3xl font-extrabold tracking-tight text-slate-900 sm:text-5xl">
+        <h1 className="mx-auto max-w-3xl text-3xl font-extrabold tracking-tight text-slate-900 sm:text-5xl">
           Un CV qui correspond <span className="text-brand-600">à chaque offre</span>, en quelques minutes
         </h1>
         <p className="mx-auto mt-4 max-w-2xl text-base text-slate-600 sm:text-lg">
@@ -151,7 +148,7 @@ export function LandingPage({ onNavigate }: { onNavigate: (t: Tab) => void }) {
       <Testimonials />
 
       <section className="mx-auto max-w-5xl px-4 py-12">
-        <SectionTitle eyebrow="Comment ça marche" title="Trois étapes, c’est tout" />
+        <SectionTitle title="Comment ça marche" />
         <ol className="grid gap-4 sm:grid-cols-3">
           {STEPS.map((s, i) => (
             <li key={s.title} className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
@@ -168,7 +165,7 @@ export function LandingPage({ onNavigate }: { onNavigate: (t: Tab) => void }) {
 
       <section className="bg-white px-4 py-12">
         <div className="mx-auto max-w-5xl">
-          <SectionTitle eyebrow="Fonctionnalités" title="Tout pour décrocher l’entretien" />
+          <SectionTitle title="Ce que vous pouvez faire" />
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
             {FEATURES.map((f) => (
               <div key={f.title} className="rounded-2xl border border-slate-100 bg-slate-50/60 p-5">
@@ -184,7 +181,7 @@ export function LandingPage({ onNavigate }: { onNavigate: (t: Tab) => void }) {
       </section>
 
       <section className="mx-auto max-w-5xl px-4 py-12">
-        <SectionTitle eyebrow="Tarifs" title="Payez seulement ce que vous utilisez" />
+        <SectionTitle title="Tarifs" subtitle="Le CV est gratuit. Le reste se paie à l’usage, sans abonnement." />
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
           <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
             <h3 className="font-semibold text-slate-900">Gratuit</h3>
@@ -213,7 +210,7 @@ export function LandingPage({ onNavigate }: { onNavigate: (t: Tab) => void }) {
 
       <section className="bg-white px-4 py-12">
         <div className="mx-auto max-w-3xl">
-          <SectionTitle eyebrow="Questions fréquentes" title="Vous vous demandez peut-être…" />
+          <SectionTitle title="Questions fréquentes" />
           <div className="divide-y divide-slate-100 rounded-2xl border border-slate-200">
             {FAQ.map((f) => (
               <details key={f.q} className="group px-5 py-4">

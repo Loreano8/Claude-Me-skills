@@ -109,29 +109,29 @@ export function createAi(client: Anthropic, model = DEFAULT_MODEL) {
         throw new AiError('Clé API Anthropic invalide ou absente sur le serveur.', 503, 'auth');
       }
       if (error instanceof Anthropic.RateLimitError) {
-        throw new AiError('Le service IA est très sollicité. Réessayez dans un instant.', 429, 'rate_limited');
+        throw new AiError('Le service est très sollicité. Réessayez dans un instant.', 429, 'rate_limited');
       }
       if (error instanceof Anthropic.BadRequestError && /credit balance/i.test(error.message)) {
         console.error('Compte Anthropic sans crédit : rechargez sur console.anthropic.com');
-        throw new AiError('Le service IA est momentanément indisponible. Réessayez plus tard.', 503, 'billing');
+        throw new AiError('Le service est momentanément indisponible. Réessayez plus tard.', 503, 'billing');
       }
       if (error instanceof Anthropic.BadRequestError) {
         throw new AiError('Le document envoyé n’a pas pu être lu (fichier trop lourd ou illisible ?).', 400, 'bad_request');
       }
       if (error instanceof Anthropic.APIError) {
-        throw new AiError('Le service IA est momentanément indisponible.', 502, 'upstream');
+        throw new AiError('Le service est momentanément indisponible.', 502, 'upstream');
       }
       throw error;
     }
 
     if (response.stop_reason === 'refusal') {
-      throw new AiError('L’IA n’a pas pu traiter cette demande.', 422, 'refusal');
+      throw new AiError('Cette demande n’a pas pu être traitée. Reformulez-la ou réessayez.', 422, 'refusal');
     }
     if (response.stop_reason === 'max_tokens') {
       throw new AiError('Le contenu est trop long pour être traité en une fois.', 422, 'too_long');
     }
     if (!response.parsed_output) {
-      throw new AiError('Réponse de l’IA inattendue. Réessayez.', 502, 'parse');
+      throw new AiError('Réponse inattendue. Réessayez.', 502, 'parse');
     }
     return response.parsed_output as z.infer<S>;
   }

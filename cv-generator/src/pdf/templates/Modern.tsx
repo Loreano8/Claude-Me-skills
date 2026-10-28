@@ -141,7 +141,7 @@ export function ModernTemplate({ cv }: { cv: CvDocument }) {
               {cv.certifications.map((c) => (
                 <Text key={c.id} style={{ marginBottom: 3 }}>
                   <Text style={{ fontWeight: 600 }}>{c.name}</Text>
-                  {[c.issuer, c.date].filter(Boolean).length ? ` — ${[c.issuer, c.date].filter(Boolean).join(', ')}` : ''}
+                  {[c.issuer, c.date].filter(Boolean).length ? `, ${[c.issuer, c.date].filter(Boolean).join(', ')}` : ''}
                 </Text>
               ))}
             </View>

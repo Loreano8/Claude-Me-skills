@@ -176,7 +176,7 @@ function Certifications({ c }: { c: Ctx }) {
       {c.cv.certifications.map((x) => (
         <Text key={x.id} style={{ marginBottom: 3 }}>
           <Text style={{ fontWeight: 600 }}>{x.name}</Text>
-          {[x.issuer, x.date].filter(Boolean).length ? ` — ${[x.issuer, x.date].filter(Boolean).join(', ')}` : ''}
+          {[x.issuer, x.date].filter(Boolean).length ? `, ${[x.issuer, x.date].filter(Boolean).join(', ')}` : ''}
         </Text>
       ))}
     </>

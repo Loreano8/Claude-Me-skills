@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { ArrowRight, CheckCircle2, ClipboardList, Eye, HelpCircle, Mail, MessagesSquare, PencilLine, Target, Wand2 } from 'lucide-react';
+import { ArrowRight, CheckCircle2, ClipboardList, Eye, HelpCircle, Mail, MessagesSquare, PencilLine, Target } from 'lucide-react';
 import type { AdaptResult, ClarifyResult, InterviewResult } from '../../shared/schema.ts';
 import { useActiveCv, useStore } from '../store.ts';
 import { api } from '../lib/api.ts';
@@ -134,10 +134,10 @@ function ClarifyCard({ questions, busy, onDone, onSkip }: { questions: Question[
   return (
     <div ref={box} className="scroll-mt-20">
       <Card
-        className="border-violet-200"
+        className="border-brand-200"
         title={
           <span className="flex items-center gap-2">
-            <HelpCircle className="size-5 text-violet-600" /> Avant d’adapter votre CV
+            <HelpCircle className="size-5 text-brand-600" /> Avant d’adapter votre CV
           </span>
         }
         subtitle="Quelques précisions pour viser juste. Répondez à ce que vous savez, le reste est facultatif."
@@ -156,7 +156,7 @@ function ClarifyCard({ questions, busy, onDone, onSkip }: { questions: Question[
                       onClick={() => setPicked((p) => set(p, i, p[i] === o ? '' : o))}
                       className={
                         picked[i] === o
-                          ? 'rounded-full bg-violet-600 px-3 py-1.5 text-sm font-medium text-white'
+                          ? 'rounded-full bg-brand-600 px-3 py-1.5 text-sm font-medium text-white'
                           : 'rounded-full bg-white px-3 py-1.5 text-sm font-medium text-slate-700 ring-1 ring-slate-300 hover:bg-slate-50'
                       }
                     >
@@ -170,13 +170,13 @@ function ClarifyCard({ questions, busy, onDone, onSkip }: { questions: Question[
                 onChange={(e) => setNotes((n) => set(n, i, e.target.value))}
                 placeholder={q.options.length ? 'Précisez si besoin (facultatif)' : 'Votre réponse'}
                 aria-label={`Réponse : ${q.question}`}
-                className="mt-2 w-full rounded-xl px-3 py-2 text-sm ring-1 ring-slate-300 outline-none focus:ring-2 focus:ring-violet-500"
+                className="mt-2 w-full rounded-xl px-3 py-2 text-sm ring-1 ring-slate-300 outline-none focus:ring-2 focus:ring-brand-500"
               />
             </div>
           ))}
         </div>
         <div className="mt-4 flex flex-wrap gap-2">
-          <Button variant="ai" icon={<Wand2 className="size-4" />} loading={busy} disabled={busy} onClick={() => onDone(answers)}>
+          <Button variant="ai" icon={<Target className="size-4" />} loading={busy} disabled={busy} onClick={() => onDone(answers)}>
             Adapter mon CV (1 crédit)
           </Button>
           <Button variant="ghost" disabled={busy} onClick={onSkip}>
@@ -297,9 +297,9 @@ export function JobPage({ onNavigate }: { onNavigate: (t: Tab) => void }) {
         }
         subtitle={<>À partir du CV : <strong>{cv.label}</strong></>}
       >
-        {empty && <Notice tone="warn">Remplissez d’abord votre CV dans « Mes infos » (la saisie rapide avec l’IA suffit).</Notice>}
+        {empty && <Notice tone="warn">Remplissez d’abord votre CV dans « Mes infos » (la saisie rapide suffit).</Notice>}
         <div className="mt-3 flex flex-wrap gap-2">
-          <Button variant="ai" size="lg" icon={<Wand2 className="size-5" />} loading={busy === 'adapt'} disabled={!hasJob || empty || busy !== null} onClick={adapt}>
+          <Button variant="ai" size="lg" icon={<Target className="size-5" />} loading={busy === 'adapt'} disabled={!hasJob || empty || busy !== null} onClick={adapt}>
             Adapter mon CV à l’offre
           </Button>
           <Button variant="secondary" size="lg" icon={<Mail className="size-5" />} loading={busy === 'letter'} disabled={!hasJob || empty || busy !== null} onClick={letter}>
@@ -310,15 +310,15 @@ export function JobPage({ onNavigate }: { onNavigate: (t: Tab) => void }) {
           </Button>
         </div>
         <p className="mt-2 text-xs text-slate-500">Chaque action utilise 1 crédit. Les questions éventuelles sur l’offre sont gratuites.</p>
-        {busy && <p className="mt-3 text-sm text-violet-700">L’IA lit l’offre et prépare votre candidature… (jusqu’à une minute)</p>}
-        {questions && questionsFor === jobKey && !busy && <p className="mt-3 text-sm text-violet-700">Quelques questions avant d’adapter votre CV : voir ci-dessous.</p>}
+        {busy && <p className="mt-3 text-sm text-brand-700">Lecture de l’offre et préparation de votre candidature… (jusqu’à une minute)</p>}
+        {questions && questionsFor === jobKey && !busy && <p className="mt-3 text-sm text-brand-700">Quelques questions avant d’adapter votre CV : voir ci-dessous.</p>}
         {error && (
           <div className="mt-3">
             <Notice tone="error">{error}</Notice>
           </div>
         )}
         <p className="mt-3 text-xs text-slate-500">
-          L’IA met en avant ce que vous avez réellement fait et reprend les mots-clés de l’offre. Elle n’invente ni diplôme, ni expérience, ni compétence.
+          CV Studio met en avant ce que vous avez réellement fait et reprend les mots-clés de l’offre. Il n’invente ni diplôme, ni expérience, ni compétence.
         </p>
       </Card>
 

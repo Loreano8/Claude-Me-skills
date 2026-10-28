@@ -417,10 +417,10 @@ export function DossierPage({ onNavigate, mode = 'dossier' }: { onNavigate: (t: 
         <Card
           title={
             <span className="flex items-center gap-2">
-              <PenLine className="size-5 text-violet-600" /> Texte tapé
+              <PenLine className="size-5 text-brand-600" /> Texte tapé
             </span>
           }
-          subtitle="Document écrit à la main ou difficile à lire ? L’IA le retranscrit en texte tapé propre, modifiable, en PDF ou en Word."
+          subtitle="Document écrit à la main ou difficile à lire ? CV Studio le retranscrit en texte tapé propre, modifiable, en PDF ou en Word."
         >
           {!transcript ? (
             <>
@@ -428,9 +428,9 @@ export function DossierPage({ onNavigate, mode = 'dossier' }: { onNavigate: (t: 
                 Transformer en texte tapé ({Math.min(photos.length, MAX_TRANSCRIBE_PAGES)} crédit{Math.min(photos.length, MAX_TRANSCRIBE_PAGES) > 1 ? 's' : ''})
               </Button>
               <p className="mt-2 text-xs text-slate-500">
-                1 crédit par page{photos.length > MAX_TRANSCRIBE_PAGES ? ` (les ${MAX_TRANSCRIBE_PAGES} premières pages)` : ''}. Les photos sont envoyées à l’IA uniquement pour la lecture.
+                1 crédit par page{photos.length > MAX_TRANSCRIBE_PAGES ? ` (les ${MAX_TRANSCRIBE_PAGES} premières pages)` : ''}. Les photos sont envoyées uniquement le temps de la lecture.
               </p>
-              {transcribing && <p className="mt-2 text-sm text-violet-700">L’IA lit votre document… (jusqu’à une minute)</p>}
+              {transcribing && <p className="mt-2 text-sm text-brand-700">Lecture de votre document… (jusqu’à une minute)</p>}
             </>
           ) : (
             <div className="space-y-3">

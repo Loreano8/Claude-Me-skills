@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { AlertTriangle, CheckCircle2, FileDown, FileText, Languages, Lightbulb, Lock, Wand2 } from 'lucide-react';
+import { AlertTriangle, Check, CheckCircle2, FileDown, FileText, Languages, Lightbulb, Lock } from 'lucide-react';
 import type { Market } from '../../shared/schema.ts';
 import { MARKET_LABELS, useActiveCv, useStore } from '../store.ts';
 import type { CvDocument, CvSettings } from '../types.ts';
@@ -58,7 +58,7 @@ export function DesignPanel({ cv }: { cv: CvDocument }) {
               <CheckCircle2 className="size-4" /> Recommandé
             </span>
           ) : (
-            <Button size="sm" variant="secondary" icon={<Wand2 className="size-4" />} onClick={() => set(advice.settings)}>
+            <Button size="sm" variant="secondary" icon={<Check className="size-4" />} onClick={() => set(advice.settings)}>
               Recommandé
             </Button>
           )
@@ -167,10 +167,10 @@ function TranslateCard({ cv }: { cv: CvDocument }) {
     <Card
       title={
         <span className="flex items-center gap-2">
-          <Languages className="size-5 text-violet-600" /> Mon CV dans une autre langue
+          <Languages className="size-5 text-brand-600" /> Mon CV dans une autre langue
         </span>
       }
-      subtitle="L’IA traduit tout votre CV (postes, diplômes, compétences…) et l’adapte aux usages du pays visé. Votre CV d’origine est conservé."
+      subtitle="CV Studio traduit tout votre CV (postes, diplômes, compétences…) et l’adapte aux usages du pays visé. Votre CV d’origine est conservé."
     >
       {cv.translation && (
         <div className="mb-3">
@@ -197,7 +197,7 @@ function TranslateCard({ cv }: { cv: CvDocument }) {
       <Button className="mt-3" variant="ai" icon={<Languages className="size-4" />} loading={busy} disabled={isCvEmpty(cv)} onClick={run}>
         Créer cette version
       </Button>
-      {busy && <p className="mt-2 text-sm text-violet-700">Traduction en cours… (jusqu’à une minute)</p>}
+      {busy && <p className="mt-2 text-sm text-brand-700">Traduction en cours… (jusqu’à une minute)</p>}
       {error && (
         <div className="mt-3">
           <Notice tone="error">{error}</Notice>

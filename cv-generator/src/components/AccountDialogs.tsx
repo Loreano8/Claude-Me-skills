@@ -1,6 +1,6 @@
 import { useEffect, useState, type FormEvent, type ReactNode } from 'react';
 import { Capacitor } from '@capacitor/core';
-import { Check, Copy, Gift, LogOut, Share2, ShieldCheck, Sparkles, UserRound, X, Zap } from 'lucide-react';
+import { Check, Copy, Gift, LogOut, Share2, ShieldCheck, UserRound, X, Zap } from 'lucide-react';
 import { useAccount, type Pack } from '../lib/account.ts';
 import { api, refreshAccount } from '../lib/api.ts';
 import { clearReferral, pendingReferral, referralLink } from '../lib/referral.ts';
@@ -415,8 +415,8 @@ function AccountDialog() {
         </div>
       )}
       {mode === 'register' && (
-        <div className="mb-4 flex items-center gap-2 rounded-xl bg-violet-50 px-3 py-2.5 text-sm text-violet-900">
-          <Sparkles className="size-4 shrink-0" /> Gratuit : votre première génération par l’IA est offerte.
+        <div className="mb-4 flex items-center gap-2 rounded-xl bg-brand-50 px-3 py-2.5 text-sm text-brand-900">
+          <Gift className="size-4 shrink-0" /> Gratuit : votre premier crédit est offert.
         </div>
       )}
       {mode === 'register' && invitedBy && (
@@ -587,7 +587,7 @@ function CreditsDialog() {
         </div>
       )}
       <p className="mb-3 text-sm text-slate-600">
-        1 crédit = 1 action de l’IA (générer ou corriger le CV, l’adapter à une offre, lettre, fiche entretien, traduction). 2 crédits = 1 CV en version Pro, acquise pour toujours sur ce CV (sans mention « Créé avec CV Studio », 13 modèles, export Word). Scanner : 1 crédit le PDF au-delà de 2 pages, 1 crédit par page manuscrite tapée. Remplir le CV et le télécharger en PDF reste gratuit.
+        1 crédit = 1 action : créer ou corriger le CV, l’adapter à une offre, la lettre, la fiche entretien ou la traduction. 2 crédits = 1 CV en version Pro, acquise pour toujours sur ce CV (sans mention « Créé avec CV Studio », 13 modèles, export Word). Scanner : 1 crédit le PDF au-delà de 2 pages, 1 crédit par page manuscrite tapée. Remplir le CV et le télécharger en PDF reste gratuit.
       </p>
       <div className="space-y-2">
         {offerOpen && (

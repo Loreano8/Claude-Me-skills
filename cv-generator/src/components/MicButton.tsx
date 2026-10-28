@@ -35,7 +35,7 @@ export function MicButton({ onText, lang = 'fr', label = 'Parler', hint }: { onT
           aria-pressed={listening}
           className={cx(
             'relative inline-flex items-center gap-2 rounded-full px-4 py-2.5 text-sm font-semibold shadow-sm transition',
-            listening ? 'bg-red-600 text-white hover:bg-red-700' : 'bg-white text-violet-700 ring-1 ring-violet-200 hover:bg-violet-50',
+            listening ? 'bg-red-600 text-white hover:bg-red-700' : 'bg-white text-brand-700 ring-1 ring-brand-200 hover:bg-brand-50',
           )}
         >
           {listening && <span className="absolute inset-0 animate-ping rounded-full bg-red-400 opacity-30 motion-reduce:hidden" />}
@@ -51,7 +51,7 @@ export function MicButton({ onText, lang = 'fr', label = 'Parler', hint }: { onT
               aria-pressed={spoken === l}
               title={l === 'fr' ? 'Je parle en français' : 'I speak English'}
               onClick={() => setSpoken(l)}
-              className={cx('rounded-full px-2.5 py-1 transition disabled:opacity-60', spoken === l ? 'bg-violet-600 text-white' : 'text-slate-600 hover:text-slate-900')}
+              className={cx('rounded-full px-2.5 py-1 transition disabled:opacity-60', spoken === l ? 'bg-brand-600 text-white' : 'text-slate-600 hover:text-slate-900')}
             >
               {l.toUpperCase()}
             </button>

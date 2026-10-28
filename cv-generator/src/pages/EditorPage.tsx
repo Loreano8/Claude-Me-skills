@@ -1,24 +1,5 @@
 import { useRef, useState } from 'react';
-import {
-  ArrowDown,
-  ArrowUp,
-  Award,
-  Briefcase,
-  Camera,
-  GraduationCap,
-  Heart,
-  Languages,
-  Paperclip,
-  PenLine,
-  Plus,
-  Sparkles,
-  Trash2,
-  Undo2,
-  User,
-  Wand2,
-  Wrench,
-  X,
-} from 'lucide-react';
+import { AlignLeft, ArrowDown, ArrowUp, Award, Briefcase, Camera, FileText, GraduationCap, Heart, Languages, Paperclip, PenLine, Plus, Trash2, Undo2, User, Wrench, X } from 'lucide-react';
 import type { Attachment } from '../../shared/schema.ts';
 import { settingsForLang, useActiveCv, useStore } from '../store.ts';
 import type { Certification, CvDocument, Education, Experience, LanguageSkill } from '../types.ts';
@@ -140,13 +121,13 @@ function QuickFill() {
 
   return (
     <Card
-      className="border-violet-200 bg-gradient-to-br from-violet-50 to-white"
+      className="border-brand-100"
       title={
         <span className="flex items-center gap-2">
-          <Sparkles className="size-5 text-violet-600" /> Saisie rapide avec l’IA
+          <PenLine className="size-5 text-brand-600" /> Saisie rapide
         </span>
       }
-      subtitle="Racontez votre parcours à voix haute, écrivez-le en vrac ou importez votre ancien CV : l’IA range tout et le rédige aux normes actuelles."
+      subtitle="Racontez votre parcours à voix haute, écrivez-le en vrac ou importez votre ancien CV : CV Studio range tout et le met aux normes actuelles."
     >
       <div className="mb-3">
         <MicButton
@@ -219,11 +200,11 @@ function QuickFill() {
       )}
 
       <div className="mt-3 flex flex-wrap gap-2">
-        <Button variant="ai" icon={<Wand2 className="size-4" />} loading={busy === 'fill'} disabled={busy !== null || (!text.trim() && !files.length)} onClick={() => run('fill')}>
+        <Button variant="ai" icon={<FileText className="size-4" />} loading={busy === 'fill'} disabled={busy !== null || (!text.trim() && !files.length)} onClick={() => run('fill')}>
           Générer mon CV
         </Button>
         {hasContent && (
-          <Button variant="secondary" icon={<Sparkles className="size-4" />} loading={busy === 'improve'} disabled={busy !== null} onClick={() => run('improve')}>
+          <Button variant="secondary" icon={<PenLine className="size-4" />} loading={busy === 'improve'} disabled={busy !== null} onClick={() => run('improve')}>
             Améliorer la rédaction
           </Button>
         )}
@@ -242,15 +223,15 @@ function QuickFill() {
         )}
       </div>
 
-      {busy && <p className="mt-3 text-sm text-violet-700">L’IA travaille sur votre CV… cela peut prendre jusqu’à une minute.</p>}
+      {busy && <p className="mt-3 text-sm text-brand-700">Rédaction de votre CV… cela peut prendre jusqu’à une minute.</p>}
       {error && (
         <div className="mt-3">
           <Notice tone="error">{error}</Notice>
         </div>
       )}
       {suggestions.length > 0 && (
-        <div className="mt-4 rounded-xl bg-white p-3 ring-1 ring-violet-100">
-          <p className="mb-1.5 text-sm font-semibold text-slate-800">C’est fait ! Vérifiez les informations ci-dessous. Conseils de l’IA :</p>
+        <div className="mt-4 rounded-xl bg-white p-3 ring-1 ring-brand-100">
+          <p className="mb-1.5 text-sm font-semibold text-slate-800">C’est fait ! Vérifiez les informations ci-dessous. Nos conseils :</p>
           <ul className="list-disc space-y-1 pl-5 text-sm text-slate-700">
             {suggestions.map((s, i) => (
               <li key={i}>{s}</li>
@@ -388,7 +369,7 @@ function PhotoSection({ cv, update }: { cv: CvDocument; update: Update }) {
 function SummarySection({ cv, update }: { cv: CvDocument; update: Update }) {
   const n = cv.summary.length;
   return (
-    <Section title="Profil / accroche" icon={<Sparkles className="size-5" />} badge={n ? count(1) : null}>
+    <Section title="Profil / accroche" icon={<AlignLeft className="size-5" />} badge={n ? count(1) : null}>
       <TextArea
         value={cv.summary}
         onChange={(summary) => update((c) => ({ ...c, summary }))}

@@ -1,5 +1,5 @@
 import { useRef, useState } from 'react';
-import { CheckCircle2, ImageUp, Sparkles, XCircle } from 'lucide-react';
+import { CheckCircle2, ImageUp, Palette, XCircle } from 'lucide-react';
 import type { TemplateAnalysis, TemplateStyle } from '../../shared/schema.ts';
 import type { CvDocument, CvSettings } from '../types.ts';
 import { api } from '../lib/api.ts';
@@ -196,12 +196,12 @@ function TemplateImport({ onApply, onClose }: { onApply: (patch: Partial<CvSetti
   const closest = result ? catalogEntry(result.closestTemplate) : undefined;
 
   return (
-    <div className="mt-3 rounded-xl border border-violet-200 bg-violet-50/60 p-4">
+    <div className="mt-3 rounded-xl border border-brand-200 bg-brand-50/60 p-4">
       <p className="flex items-center gap-2 font-semibold text-slate-900">
-        <Sparkles className="size-4 text-violet-600" /> Un CV dans le style que vous aimez
+        <Palette className="size-4 text-brand-600" /> Un CV dans le style que vous aimez
       </p>
       <p className="mt-1 text-sm text-slate-600">
-        Importez la photo ou le PDF d’un CV dont le style vous plaît. L’IA vérifie qu’il est vraiment professionnel, puis reproduit sa mise en page avec
+        Importez la photo ou le PDF d’un CV dont le style vous plaît. CV Studio vérifie qu’il est vraiment professionnel, puis reproduit sa mise en page avec
         vos informations, en corrigeant ses défauts. Seul le style est repris, jamais le contenu. 1 crédit.
       </p>
       <input ref={input} type="file" accept="application/pdf,image/png,image/jpeg,image/webp" className="hidden" onChange={(e) => onFile(e.target.files?.[0])} />
@@ -213,7 +213,7 @@ function TemplateImport({ onApply, onClose }: { onApply: (patch: Partial<CvSetti
           Fermer
         </Button>
       </div>
-      {busy && <p className="mt-3 text-sm text-violet-700">L’IA examine ce modèle…</p>}
+      {busy && <p className="mt-3 text-sm text-brand-700">Analyse du modèle…</p>}
       {error && (
         <div className="mt-3">
           <Notice tone="error">{error}</Notice>
@@ -227,7 +227,7 @@ function TemplateImport({ onApply, onClose }: { onApply: (patch: Partial<CvSetti
       )}
 
       {result?.isCv && (
-        <div className="mt-4 space-y-3 rounded-xl bg-white p-4 ring-1 ring-violet-100">
+        <div className="mt-4 space-y-3 rounded-xl bg-white p-4 ring-1 ring-brand-100">
           <div className="flex flex-wrap items-center gap-3">
             <div className="h-28 w-[5.5rem] shrink-0 overflow-hidden rounded-md bg-white ring-1 ring-slate-200">
               <StyleThumb st={result.style} />
@@ -353,7 +353,7 @@ export function TemplateGallery({ cv, set }: { cv: CvDocument; set: (patch: Part
             </p>
           </button>
         ))}
-        <button type="button" onClick={() => setImporting(true)} className="flex flex-col items-center justify-center gap-1.5 rounded-xl border-2 border-dashed border-violet-300 p-2 text-center text-violet-700 hover:bg-violet-50">
+        <button type="button" onClick={() => setImporting(true)} className="flex flex-col items-center justify-center gap-1.5 rounded-xl border-2 border-dashed border-brand-300 p-2 text-center text-brand-700 hover:bg-brand-50">
           <ImageUp className="size-6" />
           <span className="text-xs font-semibold">Importer un modèle que j’aime</span>
         </button>

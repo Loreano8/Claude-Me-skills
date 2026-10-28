@@ -66,7 +66,7 @@ export function InterviewSheet({ sheet, title }: { sheet: InterviewResult; title
           <ul className="space-y-1.5 text-sm text-amber-950">
             {sheet.weakPoints.map((w, i) => (
               <li key={i}>
-                <span className="font-medium">{w.gap}</span> — {w.howToAddress}
+                <span className="font-medium">{w.gap}</span> : {w.howToAddress}
               </li>
             ))}
           </ul>

@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { MessageSquareText, Undo2, Wand2 } from 'lucide-react';
+import { MessageSquareText, PenLine, Undo2 } from 'lucide-react';
 import { useActiveCv, useStore } from '../store.ts';
 import type { CvDocument } from '../types.ts';
 import { api } from '../lib/api.ts';
@@ -42,20 +42,20 @@ export function ReviseCard() {
 
   return (
     <Card
-      className="border-violet-200 bg-gradient-to-br from-violet-50 to-white"
+      className="border-brand-100"
       title={
         <span className="flex items-center gap-2">
-          <MessageSquareText className="size-5 text-violet-600" /> Corriger mon CV en parlant
+          <MessageSquareText className="size-5 text-brand-600" /> Corriger mon CV en parlant
         </span>
       }
-      subtitle="Dites simplement ce que vous voulez changer, comme à un ami : l’IA s’occupe du reste."
+      subtitle="Dites simplement ce que vous voulez changer, comme vous le diriez à un ami : CV Studio fait les changements."
     >
       <div className="mb-3">
         <MicButton onText={(t) => setText((cur) => appendSpoken(cur, t))} lang={cv.settings.headingLang} label="Dicter mes corrections" />
       </div>
       <TextArea value={text} onChange={setText} rows={4} placeholder={PLACEHOLDER} />
       <div className="mt-3 flex flex-wrap items-center gap-2">
-        <Button variant="ai" icon={<Wand2 className="size-4" />} loading={busy} disabled={busy || !text.trim()} onClick={apply}>
+        <Button variant="ai" icon={<PenLine className="size-4" />} loading={busy} disabled={busy || !text.trim()} onClick={apply}>
           Appliquer les corrections
         </Button>
         {undo && !busy && (
@@ -73,14 +73,14 @@ export function ReviseCard() {
         )}
         <span className="text-xs text-slate-500">1 crédit</span>
       </div>
-      {busy && <p className="mt-3 text-sm text-violet-700">L’IA applique vos corrections…</p>}
+      {busy && <p className="mt-3 text-sm text-brand-700">Corrections en cours…</p>}
       {error && (
         <div className="mt-3">
           <Notice tone="error">{error}</Notice>
         </div>
       )}
       {result && (
-        <div className="mt-4 space-y-2 rounded-xl bg-white p-3 text-sm ring-1 ring-violet-100">
+        <div className="mt-4 space-y-2 rounded-xl bg-white p-3 text-sm ring-1 ring-brand-100">
           {result.changes.length > 0 && (
             <>
               <p className="font-semibold text-slate-800">C’est fait :</p>
