@@ -161,11 +161,13 @@ export default function App() {
                 type="button"
                 onClick={() => setTab(t.id)}
                 className={cx(
-                  'flex items-center gap-2 rounded-xl px-3 py-2 text-sm font-medium transition-colors',
+                  'flex items-center gap-2 rounded-xl px-3 py-2 text-sm font-medium whitespace-nowrap transition-colors',
                   tab === t.id ? 'bg-brand-50 text-brand-700' : 'text-slate-600 hover:bg-slate-100',
                 )}
               >
-                <t.icon className="size-4" /> {t.label}
+                <t.icon className="size-4 shrink-0" />
+                <span className="2xl:hidden">{t.short}</span>
+                <span className="hidden 2xl:inline">{t.label}</span>
               </button>
             ))}
           </nav>
