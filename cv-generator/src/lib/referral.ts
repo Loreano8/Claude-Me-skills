@@ -4,7 +4,7 @@
 const KEY = 'cv-studio-ref';
 
 /** Adresse publique du site, pour les liens de parrainage (l'appli Android n'a pas d'adresse web). */
-export const PUBLIC_SITE = ((import.meta.env.VITE_PUBLIC_SITE as string | undefined) ?? 'https://cv-studio-site.onrender.com').replace(/\/$/, '');
+export const PUBLIC_SITE = ((import.meta.env.VITE_PUBLIC_SITE as string | undefined) ?? 'https://cvcasa.com').replace(/\/$/, '');
 
 export const referralLink = (code: string) => `${PUBLIC_SITE}/?ref=${code}`;
 

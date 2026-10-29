@@ -56,7 +56,7 @@ export function FreeMark({ cv, left = 0, right = 0 }: { cv: CvDocument; /** Larg
   return (
     <View fixed style={{ position: 'absolute', bottom: 9, left, right, alignItems: 'center' }}>
       <Text style={{ fontSize: 7.5, color: '#64748b', backgroundColor: '#ffffff', paddingHorizontal: 8, paddingVertical: 2, borderRadius: 6 }}>
-        Créé gratuitement avec CVCasa · cv-studio-site.onrender.com
+        Créé gratuitement avec CVCasa · cvcasa.com
       </Text>
     </View>
   );

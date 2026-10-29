@@ -183,7 +183,7 @@ const Outro = () => {
         <br />
         CV gratuit · paiement Mobile Money
       </div>
-      <div style={{ marginTop: 20, background: "#fff", color: BRAND, borderRadius: 999, padding: "22px 48px", fontFamily, fontWeight: 800, fontSize: 52 }}>bit.ly/cv_studio</div>
+      <div style={{ marginTop: 20, background: "#fff", color: BRAND, borderRadius: 999, padding: "22px 48px", fontFamily, fontWeight: 800, fontSize: 52 }}>cvcasa.com</div>
     </AbsoluteFill>
   );
 };
