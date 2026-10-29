@@ -467,14 +467,14 @@ function ReferralCard() {
   }, []);
   if (!info) return null;
   const link = referralLink(info.code);
-  const message = `J’ai fait mon CV avec CV Studio : il s’adapte à chaque offre d’emploi. Essaie gratuitement : ${link}`;
+  const message = `J’ai fait mon CV avec CVCasa : il s’adapte à chaque offre d’emploi. Essaie gratuitement : ${link}`;
 
   async function share() {
     if (Capacitor.isNativePlatform()) {
       const { Share } = await import('@capacitor/share');
-      await Share.share({ title: 'CV Studio', text: message });
+      await Share.share({ title: 'CVCasa', text: message });
     } else if (navigator.share) {
-      await navigator.share({ title: 'CV Studio', text: message }).catch(() => {});
+      await navigator.share({ title: 'CVCasa', text: message }).catch(() => {});
     } else {
       window.open(`https://wa.me/?text=${encodeURIComponent(message)}`, '_blank');
     }
@@ -587,7 +587,7 @@ function CreditsDialog() {
         </div>
       )}
       <p className="mb-3 text-sm text-slate-600">
-        1 crédit = 1 action : créer ou corriger le CV, l’adapter à une offre, la lettre, la fiche entretien ou la traduction. 2 crédits = 1 CV en version Pro, acquise pour toujours sur ce CV (sans mention « Créé avec CV Studio », 13 modèles, export Word). Scanner : 1 crédit le PDF au-delà de 2 pages, 1 crédit par page manuscrite tapée. Remplir le CV et le télécharger en PDF reste gratuit.
+        1 crédit = 1 action : créer ou corriger le CV, l’adapter à une offre, la lettre, la fiche entretien ou la traduction. 2 crédits = 1 CV en version Pro, acquise pour toujours sur ce CV (sans mention « Créé avec CVCasa », 13 modèles, export Word). Scanner : 1 crédit le PDF au-delà de 2 pages, 1 crédit par page manuscrite tapée. Remplir le CV et le télécharger en PDF reste gratuit.
       </p>
       <div className="space-y-2">
         {offerOpen && (

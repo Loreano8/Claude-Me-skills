@@ -9,7 +9,7 @@ import { Bullets, Photo, SignatureBlock, FreeMark } from '../parts.tsx';
 import { FONT, SERIF, contactItems, dateRange, tint } from '../theme.ts';
 
 // Moteur de mise en page : un seul composant produit tous les modèles décrits par une fiche de style
-// (catalogue CV Studio, ou style repris d'un CV importé par l'utilisateur).
+// (catalogue CVCasa, ou style repris d'un CV importé par l'utilisateur).
 
 const SIDEBAR = 178;
 const LABEL_COL = 112;
@@ -360,7 +360,7 @@ export function StudioTemplate({ cv, style }: { cv: CvDocument; style: TemplateS
   const p = pagePalette(st.accent);
   const markInset = st.layout === 'sidebar-left' ? { left: SIDEBAR } : st.layout === 'sidebar-right' ? { right: SIDEBAR } : {};
   const doc = (children: ReactNode, pageStyle: Style) => (
-    <Document title={`CV – ${fullName(cv.personal)}`} author={fullName(cv.personal)} creator="CV Studio">
+    <Document title={`CV – ${fullName(cv.personal)}`} author={fullName(cv.personal)} creator="CVCasa">
       <Page size="A4" style={{ ...page, ...pageStyle }}>
         {children}
         <FreeMark cv={cv} {...markInset} />

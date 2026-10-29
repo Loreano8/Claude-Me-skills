@@ -1,7 +1,7 @@
 import { Capacitor, registerPlugin, type PluginListenerHandle } from '@capacitor/core';
 import { create } from 'zustand';
 
-// « Partager → CV Studio » depuis LinkedIn, WhatsApp, le navigateur… : le texte ou le lien partagé
+// « Partager → CVCasa » depuis LinkedIn, WhatsApp, le navigateur… : le texte ou le lien partagé
 // arrive ici, puis la page « Offre » le lit.
 // - Android (appli) : ShareInboxPlugin.java reçoit le partage ;
 // - site installé sur Android : « share_target » du manifeste, qui ouvre ?share-text=… .

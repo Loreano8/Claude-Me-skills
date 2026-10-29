@@ -127,7 +127,7 @@ function QuickFill() {
           <PenLine className="size-5 text-brand-600" /> Saisie rapide
         </span>
       }
-      subtitle="Racontez votre parcours à voix haute, écrivez-le en vrac ou importez votre ancien CV : CV Studio range tout et le met aux normes actuelles."
+      subtitle="Racontez votre parcours à voix haute, écrivez-le en vrac ou importez votre ancien CV : CVCasa range tout et le met aux normes actuelles."
     >
       <div className="mb-3">
         <MicButton
@@ -241,7 +241,7 @@ function QuickFill() {
       )}
       {styleOffer && (
         <div className="mt-3 rounded-xl bg-white p-3 text-sm text-slate-700 ring-1 ring-brand-100">
-          <p>Cet ancien CV, c’est vous qui l’avez écrit ? CV Studio peut retenir votre façon d’écrire pour vos prochains CV et lettres (gratuit).</p>
+          <p>Cet ancien CV, c’est vous qui l’avez écrit ? CVCasa peut retenir votre façon d’écrire pour vos prochains CV et lettres (gratuit).</p>
           <div className="mt-2 flex flex-wrap gap-2">
             <Button size="sm" icon={<PenLine className="size-4" />} loading={styleBusy} onClick={() => void keepStyle(styleOffer)}>
               Oui, écrire comme moi

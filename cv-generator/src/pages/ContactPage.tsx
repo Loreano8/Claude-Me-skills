@@ -8,7 +8,7 @@ import { Button, Card, cx, Field, Notice, TextArea } from '../components/ui.tsx'
 const time = (iso: string) =>
   new Date(iso).toLocaleString('fr-FR', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' });
 
-/** « Nous contacter » : la conversation avec l'équipe CV Studio, réponses comprises. */
+/** « Nous contacter » : la conversation avec l'équipe CVCasa, réponses comprises. */
 export function ContactPage() {
   const user = useAccount((s) => s.user);
   const [messages, setMessages] = useState<SupportMessage[] | null>(null);
@@ -75,7 +75,7 @@ export function ContactPage() {
                     m.author === 'user' ? 'rounded-br-md bg-brand-600 text-white' : 'rounded-bl-md bg-slate-100 text-slate-900',
                   )}
                 >
-                  {m.author === 'admin' && <p className="mb-0.5 text-xs font-semibold text-brand-700">CV Studio</p>}
+                  {m.author === 'admin' && <p className="mb-0.5 text-xs font-semibold text-brand-700">CVCasa</p>}
                   {m.body}
                   <p className={cx('mt-1 text-[11px]', m.author === 'user' ? 'text-brand-100' : 'text-slate-500')}>{time(m.createdAt)}</p>
                 </div>

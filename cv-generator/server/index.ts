@@ -18,4 +18,4 @@ if (process.env.NODE_ENV === 'production') {
   app.get('*', serveStatic({ path: './dist/index.html' }));
 }
 
-serve({ fetch: app.fetch, port }, () => console.log(`API CV Studio sur http://localhost:${port} — ${summary}`));
+serve({ fetch: app.fetch, port }, () => console.log(`API CVCasa sur http://localhost:${port} — ${summary}`));

@@ -26,7 +26,7 @@ export function ClassicTemplate({ cv }: { cv: CvDocument }) {
   const heading = [s.heading, { color: accent, borderBottomColor: accent }];
 
   return (
-    <Document title={`CV – ${fullName(cv.personal)}`} author={fullName(cv.personal)} creator="CV Studio">
+    <Document title={`CV – ${fullName(cv.personal)}`} author={fullName(cv.personal)} creator="CVCasa">
       <Page size="A4" style={s.page}>
         <View style={{ flexDirection: 'row', alignItems: 'center' }}>
           <View style={{ flex: 1 }}>

@@ -19,7 +19,7 @@ export async function learnStyle(files: Attachment[], text: string): Promise<str
 }
 
 /**
- * « Écrire comme moi » : CV Studio retient la façon d'écrire de la personne (jamais le contenu)
+ * « Écrire comme moi » : CVCasa retient la façon d'écrire de la personne (jamais le contenu)
  * et l'applique à ses CV et lettres. Version compacte (une ligne) sur la page Lettre.
  */
 export function WriteLikeMe({ compact = false }: { compact?: boolean }) {

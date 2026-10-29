@@ -53,8 +53,8 @@ export function createVault(db: Db, accounts: Accounts, mailer: Mailer | null) {
     const what = purpose === 'vault' ? 'réinitialiser le code de votre coffre-fort' : 'choisir un nouveau mot de passe';
     await mailer(
       user.identifier,
-      `Votre code CV Studio : ${code}`,
-      `Bonjour${user.name ? ` ${user.name}` : ''},\n\nVoici votre code pour ${what} dans CV Studio :\n\n${code}\n\nIl est valable ${CODE_TTL_MIN} minutes. Si vous n’avez rien demandé, ignorez simplement cet e-mail.\n\nL’équipe CV Studio`,
+      `Votre code CVCasa : ${code}`,
+      `Bonjour${user.name ? ` ${user.name}` : ''},\n\nVoici votre code pour ${what} dans CVCasa :\n\n${code}\n\nIl est valable ${CODE_TTL_MIN} minutes. Si vous n’avez rien demandé, ignorez simplement cet e-mail.\n\nL’équipe CVCasa`,
     );
     return { to: maskEmail(user.identifier) };
   }

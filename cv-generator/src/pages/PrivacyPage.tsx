@@ -45,7 +45,7 @@ const SECTIONS: { title: string; text: string[] }[] = [
 export function PrivacyPage() {
   return (
     <div className="mx-auto max-w-2xl">
-      <Card title="Confidentialité" subtitle="Ce que CV Studio garde, et ce qui reste chez vous.">
+      <Card title="Confidentialité" subtitle="Ce que CVCasa garde, et ce qui reste chez vous.">
         <div className="space-y-5">
           {SECTIONS.map((s) => (
             <section key={s.title}>

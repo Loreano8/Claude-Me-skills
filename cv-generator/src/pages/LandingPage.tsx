@@ -9,7 +9,7 @@ import { api, type PublicTestimonial } from '../lib/api.ts';
 const fcfa = (n: number) => `${n.toLocaleString('fr-FR')} FCFA`;
 
 const STEPS = [
-  { icon: PenLine, title: 'Écrivez comme vous parlez', text: 'Tapez ou dictez votre parcours en vrac, ou importez votre ancien CV (PDF ou photo). CV Studio range tout et le met en forme proprement, avec vos vraies expériences.' },
+  { icon: PenLine, title: 'Écrivez comme vous parlez', text: 'Tapez ou dictez votre parcours en vrac, ou importez votre ancien CV (PDF ou photo). CVCasa range tout et le met en forme proprement, avec vos vraies expériences.' },
   { icon: Target, title: 'Collez l’offre', text: 'Lien de l’annonce, texte copié, PDF ou capture d’écran : vous obtenez un CV adapté au poste et un score de compatibilité.' },
   { icon: FileDown, title: 'Téléchargez et postulez', text: 'PDF prêt pour les logiciels de tri des recruteurs (gratuit), ou version Pro sans mention avec le Word. Avec la lettre de motivation qui va avec.' },
 ];
@@ -49,11 +49,11 @@ function Marquee({ items, reverse = false, duration }: { items: string[]; revers
 }
 
 const FAQ: { q: string; a: ReactNode }[] = [
-  { q: 'Est-ce vraiment gratuit ?', a: 'Oui : créer son CV avec les 3 modèles de base et le télécharger en PDF est gratuit et sans compte (avec une petite mention « Créé avec CV Studio » en bas de page). L’adaptation à une offre, la lettre, la fiche entretien ou la traduction coûtent 1 crédit chacune (la première est offerte) ; la version Pro d’un CV (sans mention, 13 modèles, export Word) coûte 2 crédits et reste acquise pour toujours sur ce CV.' },
+  { q: 'Est-ce vraiment gratuit ?', a: 'Oui : créer son CV avec les 3 modèles de base et le télécharger en PDF est gratuit et sans compte (avec une petite mention « Créé avec CVCasa » en bas de page). L’adaptation à une offre, la lettre, la fiche entretien ou la traduction coûtent 1 crédit chacune (la première est offerte) ; la version Pro d’un CV (sans mention, 13 modèles, export Word) coûte 2 crédits et reste acquise pour toujours sur ce CV.' },
   { q: 'Le scanner est-il gratuit ?', a: 'Oui jusqu’à 2 pages par PDF (et pour un dossier : CV, lettre et 2 pièces). Au-delà, 1 crédit pour le PDF, pages illimitées. Transformer un document écrit à la main en texte tapé coûte 1 crédit par page. Vos papiers restent sur votre téléphone, sauf pour la retranscription, le temps de la lecture.' },
   { q: 'Faut-il un abonnement ?', a: 'Non. Vous achetez un pack de crédits une fois, quand vous en avez besoin. Rien n’est prélevé automatiquement ensuite.' },
   { q: 'Comment payer ?', a: 'Par Mobile Money (MTN MoMo, Moov Money), via FedaPay. Les crédits arrivent sur votre compte dès que le paiement est confirmé.' },
-  { q: 'Mon CV va-t-il « faire IA » ?', a: 'Non. CV Studio part de vos vraies expériences, avec vos mots : il ne fait que les mettre en forme et en valeur, sans rien inventer. Vous relisez et modifiez tout avant de télécharger, et le CV reste le vôtre.' },
+  { q: 'Mon CV va-t-il « faire IA » ?', a: 'Non. CVCasa part de vos vraies expériences, avec vos mots : il ne fait que les mettre en forme et en valeur, sans rien inventer. Vous relisez et modifiez tout avant de télécharger, et le CV reste le vôtre.' },
   { q: 'Où sont mes données ?', a: 'Votre CV reste sur votre téléphone ou votre ordinateur. Seul le texte nécessaire à une adaptation ou à une lettre passe par notre serveur, le temps de la traiter.' },
   { q: 'Ça marche sur iPhone ?', a: 'Oui, depuis Safari. Touchez « Partager » puis « Sur l’écran d’accueil » pour l’utiliser comme une application. Sur Android, l’application est aussi disponible.' },
 ];
@@ -126,7 +126,7 @@ export function LandingPage({ onNavigate }: { onNavigate: (t: Tab) => void }) {
           Un CV qui correspond <span className="text-brand-600">à chaque offre</span>, en quelques minutes
         </h1>
         <p className="mx-auto mt-4 max-w-2xl text-base text-slate-600 sm:text-lg">
-          Écrivez votre parcours en vrac, collez l’annonce : CV Studio met en forme un CV aux normes actuelles, adapté au poste, avec la lettre de
+          Écrivez votre parcours en vrac, collez l’annonce : CVCasa met en forme un CV aux normes actuelles, adapté au poste, avec la lettre de
           motivation et la préparation de l’entretien.
         </p>
         <div className="mt-7 flex flex-col items-center justify-center gap-3 sm:flex-row">
@@ -190,7 +190,7 @@ export function LandingPage({ onNavigate }: { onNavigate: (t: Tab) => void }) {
             <h3 className="font-semibold text-slate-900">Gratuit</h3>
             <p className="mt-1 text-2xl font-bold text-slate-900">0 FCFA</p>
             <ul className="mt-3 space-y-1.5 text-sm text-slate-600">
-              {['CV complet, 3 modèles', 'Export PDF (avec mention CV Studio)', 'Photo et signature', '1re adaptation offerte'].map((x) => (
+              {['CV complet, 3 modèles', 'Export PDF (avec mention CVCasa)', 'Photo et signature', '1re adaptation offerte'].map((x) => (
                 <li key={x} className="flex gap-2">
                   <Check className="mt-0.5 size-4 shrink-0 text-emerald-600" /> {x}
                 </li>

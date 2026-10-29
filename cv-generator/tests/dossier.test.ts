@@ -20,7 +20,7 @@ describe('dossier en un seul PDF', () => {
     ]);
     const out = await PDFDocument.load(await blob.arrayBuffer());
     expect(out.getPageCount()).toBe(4);
-    expect(out.getCreator()).toBe('CV Studio');
+    expect(out.getCreator()).toBe('CVCasa');
   });
 
   it('explique quand un PDF est illisible, et refuse un dossier vide', async () => {

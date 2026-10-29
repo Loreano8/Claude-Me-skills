@@ -38,7 +38,7 @@ export function ElegantTemplate({ cv }: { cv: CvDocument }) {
   const contacts = contactItems(cv, L);
 
   return (
-    <Document title={`CV – ${fullName(cv.personal)}`} author={fullName(cv.personal)} creator="CV Studio">
+    <Document title={`CV – ${fullName(cv.personal)}`} author={fullName(cv.personal)} creator="CVCasa">
       <Page size="A4" style={s.page}>
         <View style={[s.band, { backgroundColor: accent }]}>
           <View style={{ flex: 1 }}>

@@ -245,7 +245,7 @@ Défauts fréquents à signaler dans "issues" : jauges ou pourcentages de compé
 - accent : la couleur dominante du modèle (#RRGGBB). Si elle est criarde ou peu lisible, prends une nuance plus sobre de la même famille ;
 - photoShape : forme de la photo (ou « round » s'il n'y en a pas).
 
-4. closestTemplate : le modèle CV Studio le plus proche parmi :
+4. closestTemplate : le modèle CVCasa le plus proche parmi :
 moderne (colonne colorée à gauche, polyvalent), classique (une colonne sobre, très ATS), elegant (bandeau d'en-tête et colonne claire), finance (une colonne avec empattement, banque/finance), ingenieur (colonne claire à droite, technique), creatif (bandeau coloré, étiquettes), canada (une page sans photo, Amérique du Nord), europass (titres en marge gauche, Europe), concours (centré, classique, administration), etudiant (colonne claire, formation d'abord), executif (bandeau foncé, cadres dirigeants), sante (colonne colorée, santé/social), minimal (une colonne très aérée).
 
 ${UNTRUSTED_INPUT_RULE}

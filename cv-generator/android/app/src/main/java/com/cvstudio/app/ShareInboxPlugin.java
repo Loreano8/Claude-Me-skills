@@ -8,7 +8,7 @@ import com.getcapacitor.PluginMethod;
 import com.getcapacitor.annotation.CapacitorPlugin;
 
 /**
- * « Partager → CV Studio » depuis LinkedIn, WhatsApp, le navigateur… :
+ * « Partager → CVCasa » depuis LinkedIn, WhatsApp, le navigateur… :
  * garde le texte partagé jusqu'à ce que la page « Offre » le demande (voir src/lib/shareInbox.ts).
  */
 @CapacitorPlugin(name = "ShareInbox")

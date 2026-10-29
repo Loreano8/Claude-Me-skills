@@ -318,7 +318,7 @@ export function JobPage({ onNavigate }: { onNavigate: (t: Tab) => void }) {
           </div>
         )}
         <p className="mt-3 text-xs text-slate-500">
-          CV Studio met en avant ce que vous avez réellement fait et reprend les mots-clés de l’offre. Il n’invente ni diplôme, ni expérience, ni compétence.
+          CVCasa met en avant ce que vous avez réellement fait et reprend les mots-clés de l’offre. Il n’invente ni diplôme, ni expérience, ni compétence.
         </p>
       </Card>
 

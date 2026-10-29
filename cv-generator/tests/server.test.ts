@@ -166,7 +166,7 @@ describe('API avec comptes et crédits', async () => {
     expect(back.status).toBe(302);
     expect(back.headers.get('location')).toBe('https://site.example/#paiement-approved');
     await post(app, '/api/payments/webhook', { name: 'transaction.approved', entity: { id: 777 } });
-    // Événements étrangers à CV Studio : ignorés sans erreur (sinon FedaPay coupe le webhook).
+    // Événements étrangers à CVCasa : ignorés sans erreur (sinon FedaPay coupe le webhook).
     for (const event of [{ name: 'customer.created', entity: { id: 777 } }, { name: 'transaction.approved', entity: { id: 999 } }, {}]) {
       expect((await post(app, '/api/payments/webhook', event)).status).toBe(200);
     }

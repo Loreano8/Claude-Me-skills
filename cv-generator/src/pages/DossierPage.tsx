@@ -341,7 +341,7 @@ export function DossierPage({ onNavigate, mode = 'dossier' }: { onNavigate: (t: 
                     {it.kind === 'cv' ? `CV : ${cv.label}` : it.kind === 'letter' ? 'Lettre de motivation' : it.name}
                   </p>
                   {it.kind === 'pdf' && <p className="text-xs text-slate-500">{it.pages ? `${it.pages} page${it.pages > 1 ? 's' : ''}` : 'PDF'}</p>}
-                  {(it.kind === 'cv' || it.kind === 'letter') && !cv.unlocked && <p className="text-xs text-slate-500">Version gratuite (avec la mention CV Studio)</p>}
+                  {(it.kind === 'cv' || it.kind === 'letter') && !cv.unlocked && <p className="text-xs text-slate-500">Version gratuite (avec la mention CVCasa)</p>}
                   {it.kind === 'photo' && (
                     <div className="mt-1 flex flex-wrap items-center gap-1.5">
                       <div role="group" aria-label="Rendu" className="inline-flex rounded-full bg-slate-100 p-0.5 text-xs font-medium">
@@ -420,7 +420,7 @@ export function DossierPage({ onNavigate, mode = 'dossier' }: { onNavigate: (t: 
               <PenLine className="size-5 text-brand-600" /> Texte tapé
             </span>
           }
-          subtitle="Document écrit à la main ou difficile à lire ? CV Studio le retranscrit en texte tapé propre, modifiable, en PDF ou en Word."
+          subtitle="Document écrit à la main ou difficile à lire ? CVCasa le retranscrit en texte tapé propre, modifiable, en PDF ou en Word."
         >
           {!transcript ? (
             <>

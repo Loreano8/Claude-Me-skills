@@ -86,7 +86,7 @@ function HiredPanel({ app }: { app: Application }) {
       </p>
       {!open ? (
         <>
-          <p className="mt-1 text-sm text-emerald-900">Votre réussite peut motiver d’autres candidats. Acceptez-vous de la partager sur le site CV Studio ?</p>
+          <p className="mt-1 text-sm text-emerald-900">Votre réussite peut motiver d’autres candidats. Acceptez-vous de la partager sur le site CVCasa ?</p>
           <div className="mt-3 flex flex-wrap gap-2">
             <Button size="sm" onClick={() => setOpen(true)}>
               Oui, je témoigne
@@ -106,7 +106,7 @@ function HiredPanel({ app }: { app: Application }) {
           </div>
           <TextArea label="Un mot sur votre expérience (facultatif)" value={form.message} onChange={set('message')} rows={2} placeholder="Ex. Le CV adapté m’a permis d’obtenir l’entretien en une semaine." />
           <Toggle
-            label="J’accepte que mon prénom, mon poste, l’entreprise, la ville et mon message apparaissent sur le site CV Studio."
+            label="J’accepte que mon prénom, mon poste, l’entreprise, la ville et mon message apparaissent sur le site CVCasa."
             hint="Seul votre prénom est affiché, jamais votre nom ni vos coordonnées. Vous pourrez retirer votre témoignage à tout moment depuis cette page."
             checked={consent}
             onChange={setConsent}

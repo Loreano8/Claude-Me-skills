@@ -47,7 +47,7 @@ export function SignatureBlock({ cv, L, align = 'right' }: { cv: CvDocument; L: 
 }
 
 /**
- * Mention « Créé avec CV Studio » en bas de chaque page des documents gratuits.
+ * Mention « Créé avec CVCasa » en bas de chaque page des documents gratuits.
  * La version Pro (2 crédits) la retire.
  */
 export function FreeMark({ cv, left = 0, right = 0 }: { cv: CvDocument; /** Largeur d'une barre latérale à éviter. */ left?: number; right?: number }) {
@@ -56,7 +56,7 @@ export function FreeMark({ cv, left = 0, right = 0 }: { cv: CvDocument; /** Larg
   return (
     <View fixed style={{ position: 'absolute', bottom: 9, left, right, alignItems: 'center' }}>
       <Text style={{ fontSize: 7.5, color: '#64748b', backgroundColor: '#ffffff', paddingHorizontal: 8, paddingVertical: 2, borderRadius: 6 }}>
-        Créé gratuitement avec CV Studio · cv-studio-site.onrender.com
+        Créé gratuitement avec CVCasa · cv-studio-site.onrender.com
       </Text>
     </View>
   );

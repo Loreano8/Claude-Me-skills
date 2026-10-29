@@ -22,7 +22,7 @@ export function LetterPdf({ letter, cv }: { letter: CoverLetter; cv: CvDocument 
   const dateLine = [place, letter.date].filter(Boolean).join(', ');
 
   return (
-    <Document title={`Lettre de motivation – ${name}`} author={name} creator="CV Studio">
+    <Document title={`Lettre de motivation – ${name}`} author={name} creator="CVCasa">
       <Page size="A4" style={s.page}>
         <View style={s.sender}>
           <Text style={{ fontWeight: 700, fontSize: 11.5, color: letter.accent }}>{name || ' '}</Text>

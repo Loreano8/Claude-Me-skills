@@ -48,7 +48,7 @@ export function ReviseCard() {
           <MessageSquareText className="size-5 text-brand-600" /> Corriger mon CV en parlant
         </span>
       }
-      subtitle="Dites simplement ce que vous voulez changer, comme vous le diriez à un ami : CV Studio fait les changements."
+      subtitle="Dites simplement ce que vous voulez changer, comme vous le diriez à un ami : CVCasa fait les changements."
     >
       <div className="mb-3">
         <MicButton onText={(t) => setText((cur) => appendSpoken(cur, t))} lang={cv.settings.headingLang} label="Dicter mes corrections" />

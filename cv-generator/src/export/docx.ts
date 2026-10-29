@@ -232,7 +232,7 @@ export function buildCvDocx(cv: CvDocument): Document {
   }
 
   return new Document({
-    creator: 'CV Studio',
+    creator: 'CVCasa',
     title: `CV – ${fullName(cv.personal)}`,
     styles: docStyles(resolveStyle(cv.settings)?.font === 'serif' ? 'Cambria' : FONT),
     sections: [{ properties: pageProps, children }],
@@ -280,7 +280,7 @@ export function buildLetterDocx(letter: CoverLetter, cv: CvDocument): Document {
   children.push(new Paragraph({ alignment: AlignmentType.RIGHT, children: [new TextRun({ text: name, bold: true })] }));
 
   return new Document({
-    creator: 'CV Studio',
+    creator: 'CVCasa',
     title: `Lettre de motivation – ${name}`,
     styles: { default: { document: { run: { font: FONT, size: 21 }, paragraph: { spacing: { line: 276, lineRule: LineRuleType.AUTO } } } } },
     sections: [{ properties: { page: { margin: { top: 1300, bottom: 1300, left: 1300, right: 1300 } } }, children }],
@@ -299,7 +299,7 @@ export function buildTranscriptDocx(title: string, text: string): Document {
     }
   }
   return new Document({
-    creator: 'CV Studio',
+    creator: 'CVCasa',
     title: title || 'Document retranscrit',
     styles: { default: { document: { run: { font: FONT, size: 22 }, paragraph: { spacing: { line: 288, lineRule: LineRuleType.AUTO } } } } },
     sections: [{ properties: { page: { margin: { top: MARGIN, bottom: MARGIN, left: MARGIN, right: MARGIN } } }, children }],

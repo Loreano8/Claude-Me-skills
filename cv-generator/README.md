@@ -1,4 +1,4 @@
-# CV Studio
+# CVCasa
 
 Site web (et application Android) pour créer un CV aux normes actuelles, l’adapter à une offre d’emploi et rédiger la lettre de motivation. Export en **PDF** et **Word**.
 
@@ -10,7 +10,7 @@ Site web (et application Android) pour créer un CV aux normes actuelles, l’ad
 | | **Saisie rapide avec l’IA** : l’utilisateur **raconte son parcours à voix haute** (bouton micro), l’écrit en vrac, ou importe son ancien CV en PDF ou en photo. L’IA range les informations et les rédige proprement. |
 | | **Corriger mon CV en parlant** : « mets MTN en premier », « enlève le permis »… dictées ou écrites, les corrections sont appliquées par l’IA (annulables). Ce qui demanderait d’inventer une information est signalé « à préciser ». |
 | **Aperçu & export** | **13 modèles** classés par usage (polyvalents, sobres, créatifs, international : finance, ingénieur, Canada/USA sans photo, Europe, concours, premier emploi, cadre dirigeant, santé…), **« Importer un modèle que j’aime »** (l’IA juge le CV importé, signale ses défauts et reproduit son style avec nos règles de mise en page), 8 couleurs + couleur libre, options (photo, date de naissance, nationalité, signature, titres en français ou en anglais). Aperçu fidèle, export PDF et Word. Conseils automatiques sur le CV. |
-| **Adapter à une offre** | L’utilisateur colle le **lien** de l’annonce (LinkedIn, site d’emploi… : le serveur lit la page publique, `server/jobPage.ts`), la **partage** depuis une autre appli (« Partager → CV Studio » sur Android, appli ou site installé), colle son texte ou importe le PDF / une capture d’écran. Avant d’adapter, l’IA pose gratuitement 0 à 3 questions si besoin (poste à choisir dans une publication, exigence absente du CV) ; les réponses servent aussi pour la lettre et la fiche entretien. L’IA crée une **version du CV adaptée** à ce poste (le CV d’origine est conservé), donne un score d’adéquation avant → après adaptation, les points forts, les exigences manquantes et des conseils. |
+| **Adapter à une offre** | L’utilisateur colle le **lien** de l’annonce (LinkedIn, site d’emploi… : le serveur lit la page publique, `server/jobPage.ts`), la **partage** depuis une autre appli (« Partager → CVCasa » sur Android, appli ou site installé), colle son texte ou importe le PDF / une capture d’écran. Avant d’adapter, l’IA pose gratuitement 0 à 3 questions si besoin (poste à choisir dans une publication, exigence absente du CV) ; les réponses servent aussi pour la lettre et la fiche entretien. L’IA crée une **version du CV adaptée** à ce poste (le CV d’origine est conservé), donne un score d’adéquation avant → après adaptation, les points forts, les exigences manquantes et des conseils. |
 | | **Mon CV dans une autre langue** : l’IA traduit tout le CV (postes, diplômes, compétences…) et l’adapte au pays visé (anglais Royaume-Uni, États-Unis/Canada ou international ; français France ou Afrique). Une nouvelle version est créée, l’original est conservé. En anglais, photo, date de naissance, nationalité et signature sont masquées comme le veut l’usage. |
 | | **Fiche entretien** : questions probables pour ce poste avec réponses construites à partir du CV, points faibles et comment les aborder, questions à poser au recruteur, conseils. Copiable pour WhatsApp. |
 | **Lettre de motivation** | Rédaction par l’IA à partir du CV et de l’offre (ou candidature spontanée), ton et longueur au choix, modifiable, signée, export PDF et Word. |
@@ -61,7 +61,7 @@ Les nouveaux modèles ne sont pas dessinés un par un : une **fiche de style** (
 
 ## Gratuit et payant
 
-- **Gratuit, sans compte** : remplir son CV, les 3 modèles de base (Moderne, Classique, Élégant), l’export PDF avec une petite mention « Créé avec CV Studio » en bas de chaque page, les conseils.
+- **Gratuit, sans compte** : remplir son CV, les 3 modèles de base (Moderne, Classique, Élégant), l’export PDF avec une petite mention « Créé avec CVCasa » en bas de chaque page, les conseils.
 - **Version Pro d’un CV : 2 crédits** (`UNLOCK_COST`), définitive pour ce CV : PDF sans la mention, les 13 modèles et « Mon style », export Word (CV et lettre). Le crédit offert à l’inscription ne suffit donc pas : il faut un premier achat. Un CV adapté à une offre ou traduit par l’IA garde le statut du CV de départ ; une copie manuelle repart en version gratuite.
 - **IA** : il faut un compte (e-mail ou téléphone + mot de passe). **1 génération offerte** à l’inscription, puis **1 crédit par action** (générer, améliorer, corriger, adapter à une offre, lettre, fiche entretien, traduction, analyse d’un modèle importé).
 - **Packs** (modifiables dans `server/payments.ts`) : 3 crédits = 500 FCFA, 10 crédits = 1 500 FCFA, 25 crédits = 3 000 FCFA.
@@ -74,7 +74,7 @@ Les nouveaux modèles ne sont pas dessinés un par un : une **fiche de style** (
 
 ## E-mails (code du coffre-fort, mot de passe oublié)
 
-Avec `RESEND_API_KEY` et `EMAIL_FROM` (ex. `CV Studio <no-reply@mondomaine.com>`, adresse d'un **domaine vérifié** chez Resend) dans `cvstudio.settings`, le serveur envoie des codes à 6 chiffres (valables 15 minutes, 5 essais) : réinitialisation du code du coffre-fort et « Mot de passe oublié ? ». Sans ces réglages, `/api/health` renvoie `email: false` et l'appli n'affiche pas ces options (la réinitialisation du coffre par mot de passe du compte reste disponible).
+Avec `RESEND_API_KEY` et `EMAIL_FROM` (ex. `CVCasa <no-reply@mondomaine.com>`, adresse d'un **domaine vérifié** chez Resend) dans `cvstudio.settings`, le serveur envoie des codes à 6 chiffres (valables 15 minutes, 5 essais) : réinitialisation du code du coffre-fort et « Mot de passe oublié ? ». Sans ces réglages, `/api/health` renvoie `email: false` et l'appli n'affiche pas ces options (la réinitialisation du coffre par mot de passe du compte reste disponible).
 
 ## Récupération de compte (phrase secrète)
 
@@ -121,7 +121,7 @@ Les témoignages arrivent « en attente » et n’apparaissent sur la page d’a
 | Serveur : IA, comptes, crédits, paiements | Supabase, fonction `api` (gratuit, ne s’endort jamais) | https://clgmqhyzyiswnekmoygw.supabase.co/functions/v1/api/health |
 | Base de données | Supabase, schéma privé `cvstudio` | — |
 
-- **Réveil quotidien** : la tâche GitHub « CV Studio – réveil quotidien » (`.github/workflows/cv-studio-reveil.yml`, sur la branche `main` car GitHub n’exécute les tâches planifiées que depuis la branche principale) appelle `/api/health` chaque matin. Cette route fait une petite requête à la base, ce qui empêche la mise en pause du projet Supabase gratuit (après ~7 jours sans activité). Si le serveur ne répond pas, GitHub envoie un e-mail d’alerte.
+- **Réveil quotidien** : la tâche GitHub « CVCasa – réveil quotidien » (`.github/workflows/cv-studio-reveil.yml`, sur la branche `main` car GitHub n’exécute les tâches planifiées que depuis la branche principale) appelle `/api/health` chaque matin. Cette route fait une petite requête à la base, ce qui empêche la mise en pause du projet Supabase gratuit (après ~7 jours sans activité). Si le serveur ne répond pas, GitHub envoie un e-mail d’alerte.
 - **Coût mensuel : 0 $.** Seule l’IA (Anthropic) est payée, à l’usage.
 - Le site statique se met à jour tout seul à chaque `git push` sur la branche `claude/cv-generator-app-a1kcdw`.
 - **La fonction Supabase** charge le code du serveur depuis ce dépôt GitHub, figé sur un commit (`supabase/functions/api/index.ts` déployé). Pour la mettre à jour : remplacer le numéro de commit dans ce fichier et redéployer la fonction (`npm run edge:bundle` puis `supabase functions deploy api --no-verify-jwt` avec la CLI Supabase, ou via l’outil Supabase de Claude).
@@ -136,7 +136,7 @@ Le serveur Node (`npm start`, `server/index.ts`) reste utilisable pour un héber
 
 Le même site, emballé avec [Capacitor](https://capacitorjs.com) ; il parle au serveur Render (`VITE_API_URL`).
 
-- **APK de test** : onglet *Actions* du dépôt GitHub → workflow « CV Studio » → fichier `cv-studio-apk`.
+- **APK de test** : onglet *Actions* du dépôt GitHub → workflow « CVCasa » → fichier `cv-studio-apk`.
 - **Play Store** : compte Google Play Console (25 $ une fois), puis Android Studio → *Build → Generate Signed Bundle*.
   Règle Google : dans l’appli du Play Store, l’achat de crédits devra passer par **Google Play Billing**. Le système de crédits est prêt pour ça (un prestataire de paiement de plus dans `server/payments.ts`) ; le site garde FedaPay.
 - **iPhone** : le site s’installe depuis Safari (« Sur l’écran d’accueil ») et fonctionne comme une appli.

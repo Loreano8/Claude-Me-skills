@@ -18,7 +18,7 @@
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
-            <!-- « Partager → CV Studio » : un lien ou le texte d'une offre (LinkedIn, WhatsApp, navigateur…). -->
+            <!-- « Partager → CVCasa » : un lien ou le texte d'une offre (LinkedIn, WhatsApp, navigateur…). -->
             <intent-filter android:label="Adapter mon CV">
                 <action android:name="android.intent.action.SEND" />
                 <category android:name="android.intent.category.DEFAULT" />

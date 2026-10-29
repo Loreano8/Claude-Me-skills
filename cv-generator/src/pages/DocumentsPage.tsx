@@ -65,7 +65,7 @@ function Creations({ onNavigate }: { onNavigate: (t: Tab) => void }) {
   }, [cvs, letters, filter, query]);
 
   return (
-    <Card title="Créés avec CV Studio" subtitle="Tous vos CV (y compris adaptés et traduits) et vos lettres, du plus récent au plus ancien.">
+    <Card title="Créés avec CVCasa" subtitle="Tous vos CV (y compris adaptés et traduits) et vos lettres, du plus récent au plus ancien.">
       <div className="flex flex-wrap items-center gap-2">
         {(
           [

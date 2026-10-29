@@ -277,7 +277,7 @@ export type ReviseResult = z.infer<typeof ReviseResult>;
 
 // ---- Modèles de CV ---------------------------------------------------------
 
-/** Modèles proposés par CV Studio ; « perso » = style repris d'un CV importé par l'utilisateur. */
+/** Modèles proposés par CVCasa ; « perso » = style repris d'un CV importé par l'utilisateur. */
 export const CatalogTemplateId = z.enum([
   'moderne',
   'classique',
@@ -326,7 +326,7 @@ export const TemplateAnalysis = z.object({
   issues: z.array(z.string()).describe('Défauts de mise en page, corrigés automatiquement dans notre version'),
   atsFriendly: z.boolean().describe('Le modèle d’origine est-il lisible par les logiciels de tri (ATS) ?'),
   style: TemplateStyle,
-  closestTemplate: CatalogTemplateId.describe('Modèle CV Studio le plus proche'),
+  closestTemplate: CatalogTemplateId.describe('Modèle CVCasa le plus proche'),
 });
 export type TemplateAnalysis = z.infer<typeof TemplateAnalysis>;
 

@@ -2,7 +2,7 @@ import { Document, Page, StyleSheet, Text, View } from '@react-pdf/renderer';
 import { FONT } from './theme.ts';
 import { transcriptBlocks } from './transcriptText.ts';
 
-// Document manuscrit retranscrit en texte tapé (service payant : pas de mention CV Studio).
+// Document manuscrit retranscrit en texte tapé (service payant : pas de mention CVCasa).
 
 const s = StyleSheet.create({
   page: { fontFamily: FONT, fontSize: 11, color: '#111827', lineHeight: 1.5, paddingVertical: 56, paddingHorizontal: 60 },
@@ -13,7 +13,7 @@ const s = StyleSheet.create({
 
 export function TranscriptPdf({ title, text }: { title: string; text: string }) {
   return (
-    <Document title={title || 'Document retranscrit'} creator="CV Studio">
+    <Document title={title || 'Document retranscrit'} creator="CVCasa">
       <Page size="A4" style={s.page}>
         {title ? <Text style={s.title}>{title}</Text> : null}
         {transcriptBlocks(text).map((b, i) =>

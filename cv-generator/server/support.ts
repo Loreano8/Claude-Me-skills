@@ -96,7 +96,7 @@ export function createSupport(db: Db, notify: Notify = async () => {}) {
       });
       const from = input.name || input.contact || `conversation n°${thread.id}`;
       // La notification ne doit jamais faire échouer l'envoi du message.
-      await notify(`Nouveau message CV Studio de ${from} :\n\n${input.body.slice(0, 500)}`).catch((e) => console.error('Notification support', e));
+      await notify(`Nouveau message CVCasa de ${from} :\n\n${input.body.slice(0, 500)}`).catch((e) => console.error('Notification support', e));
       return secret ? { secret, threadId: thread.id } : { threadId: thread.id };
     },
 
@@ -164,9 +164,9 @@ export function notifier(env: Record<string, string | undefined>, adminUrl: stri
           method: 'POST',
           headers: { Authorization: `Bearer ${env.RESEND_API_KEY}`, 'Content-Type': 'application/json' },
           body: JSON.stringify({
-            from: env.SUPPORT_FROM_EMAIL || env.EMAIL_FROM || 'CV Studio <onboarding@resend.dev>',
+            from: env.SUPPORT_FROM_EMAIL || env.EMAIL_FROM || 'CVCasa <onboarding@resend.dev>',
             to: env.SUPPORT_NOTIFY_EMAIL,
-            subject: 'Nouveau message sur CV Studio',
+            subject: 'Nouveau message sur CVCasa',
             text: full,
           }),
         }),

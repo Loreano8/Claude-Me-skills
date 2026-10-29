@@ -72,11 +72,11 @@ export function fedapay(secretKey: string, env: 'sandbox' | 'live', fetchImpl: t
   return {
     name: 'fedapay',
     async createCheckout({ user, pack, returnUrl }) {
-      const customer: Record<string, unknown> = { firstname: user.name || 'Client', lastname: 'CV Studio' };
+      const customer: Record<string, unknown> = { firstname: user.name || 'Client', lastname: 'CVCasa' };
       if (user.identifier.includes('@')) customer.email = user.identifier;
       const created = transaction(
         await call('POST', '/transactions', {
-          description: `CV Studio – ${pack.credits} crédits`,
+          description: `CVCasa – ${pack.credits} crédits`,
           amount: pack.price,
           currency: { iso: 'XOF' },
           callback_url: returnUrl,
@@ -148,7 +148,7 @@ export function createPayments(db: Db, accounts: Accounts, provider: PaymentProv
      */
     async confirm(ref: string): Promise<{ status: PaymentStatus; credits?: number; userId?: number }> {
       if (!provider) throw new PaymentError('Le paiement en ligne n’est pas encore activé.', 503);
-      // Paiement qui n'a pas été créé par CV Studio (autre projet sur le même compte FedaPay…) : on l'ignore.
+      // Paiement qui n'a pas été créé par CVCasa (autre projet sur le même compte FedaPay…) : on l'ignore.
       const [known] = await db.query('select 1 from payments where provider = $1 and provider_ref = $2', [provider.name, ref]);
       if (!known) throw new PaymentError('Paiement introuvable.', 404);
       const status = await provider.fetchStatus(ref);

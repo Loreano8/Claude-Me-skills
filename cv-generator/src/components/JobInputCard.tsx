@@ -144,7 +144,7 @@ export function JobInputCard() {
           </Button>
         )}
       </div>
-      <p className="mt-2 text-xs text-slate-500">Astuce : depuis la page d’une offre, touchez « Partager » puis choisissez CV Studio.</p>
+      <p className="mt-2 text-xs text-slate-500">Astuce : depuis la page d’une offre, touchez « Partager » puis choisissez CVCasa.</p>
       {error && (
         <div className="mt-3">
           <Notice tone="error">{error}</Notice>

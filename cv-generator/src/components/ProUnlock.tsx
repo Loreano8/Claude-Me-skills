@@ -58,7 +58,7 @@ export function ProOffer({
       <p className="flex items-start gap-2 text-sm text-amber-900">
         <Crown className="mt-0.5 size-4 shrink-0" />
         <span>
-          <strong>Version Pro, {UNLOCK_COST} crédits</strong> : sans la mention « Créé avec CV Studio », les 13 modèles, l’export Word, et la lettre de ce CV.
+          <strong>Version Pro, {UNLOCK_COST} crédits</strong> : sans la mention « Créé avec CVCasa », les 13 modèles, l’export Word, et la lettre de ce CV.
           Acquis pour toujours sur ce CV : modifiez-le et retéléchargez-le autant de fois que vous voulez.
         </span>
       </p>

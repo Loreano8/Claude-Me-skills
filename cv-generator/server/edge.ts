@@ -26,7 +26,7 @@ function handler(): Promise<(req: Request) => Response | Promise<Response>> {
     const { db, settings } = await connect();
     // Les tables existent déjà : pas de vérification à chaque démarrage (npm run migrate pour les mettre à jour).
     const { app, summary } = await createServer({ NODE_ENV: 'production', ...Deno.env.toObject(), ...settings }, { db, migrate: false });
-    console.log(`CV Studio (fonction Supabase) — ${summary}`);
+    console.log(`CVCasa (fonction Supabase) — ${summary}`);
     return app.fetch;
   })().catch((error) => {
     server = null;

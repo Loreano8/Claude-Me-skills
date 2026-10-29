@@ -238,8 +238,8 @@ export async function buildDossier(parts: DossierPart[]): Promise<Blob> {
     }
   }
   if (out.getPageCount() === 0) throw new Error('Ajoutez au moins un document.');
-  out.setCreator('CV Studio');
-  out.setProducer('CV Studio');
+  out.setCreator('CVCasa');
+  out.setProducer('CVCasa');
   const bytes = await out.save();
   return new Blob([bytes as BlobPart], { type: 'application/pdf' });
 }

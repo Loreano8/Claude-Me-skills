@@ -51,10 +51,10 @@ function initialTab(): Tab {
 
 function Logo({ onClick }: { onClick: () => void }) {
   return (
-    <button type="button" onClick={onClick} className="flex items-center gap-2" aria-label="CV Studio, accueil">
+    <button type="button" onClick={onClick} className="flex items-center gap-2" aria-label="CVCasa, accueil">
       <img src={`${import.meta.env.BASE_URL}icons/icon.svg`} alt="" className="size-8" />
       <span className="text-lg font-bold tracking-tight whitespace-nowrap text-slate-900 max-[419px]:hidden">
-        CV <span className="text-brand-600">Studio</span>
+        CV<span className="text-brand-600">Casa</span>
       </span>
     </button>
   );

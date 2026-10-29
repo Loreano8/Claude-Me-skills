@@ -28,7 +28,7 @@ export function ModernTemplate({ cv }: { cv: CvDocument }) {
   const contacts = contactItems(cv, L);
 
   return (
-    <Document title={`CV – ${fullName(cv.personal)}`} author={fullName(cv.personal)} creator="CV Studio">
+    <Document title={`CV – ${fullName(cv.personal)}`} author={fullName(cv.personal)} creator="CVCasa">
       <Page size="A4" style={s.page}>
         <View fixed style={[s.sidebarBg, { backgroundColor: accent }]} />
 

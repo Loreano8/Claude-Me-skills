@@ -201,7 +201,7 @@ function TemplateImport({ onApply, onClose }: { onApply: (patch: Partial<CvSetti
         <Palette className="size-4 text-brand-600" /> Un CV dans le style que vous aimez
       </p>
       <p className="mt-1 text-sm text-slate-600">
-        Importez la photo ou le PDF d’un CV dont le style vous plaît. CV Studio vérifie qu’il est vraiment professionnel, puis reproduit sa mise en page avec
+        Importez la photo ou le PDF d’un CV dont le style vous plaît. CVCasa vérifie qu’il est vraiment professionnel, puis reproduit sa mise en page avec
         vos informations, en corrigeant ses défauts. Seul le style est repris, jamais le contenu. 1 crédit.
       </p>
       <input ref={input} type="file" accept="application/pdf,image/png,image/jpeg,image/webp" className="hidden" onChange={(e) => onFile(e.target.files?.[0])} />

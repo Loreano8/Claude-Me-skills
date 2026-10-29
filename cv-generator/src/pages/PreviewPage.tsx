@@ -126,7 +126,7 @@ export function ExportButtons({ cv }: { cv: CvDocument }) {
       <p className="text-xs text-slate-500">
         {pro
           ? 'Le PDF garde exactement la mise en page. Le fichier Word se modifie facilement.'
-          : 'Le PDF gratuit porte une petite mention « Créé avec CV Studio » en bas de page.'}
+          : 'Le PDF gratuit porte une petite mention « Créé avec CVCasa » en bas de page.'}
       </p>
       <ProOffer cv={cv} reason={needPro?.reason} onUnlocked={() => needPro && void run(needPro.kind, true)} />
       {error && <Notice tone="error">{error}</Notice>}
@@ -170,7 +170,7 @@ function TranslateCard({ cv }: { cv: CvDocument }) {
           <Languages className="size-5 text-brand-600" /> Mon CV dans une autre langue
         </span>
       }
-      subtitle="CV Studio traduit tout votre CV (postes, diplômes, compétences…) et l’adapte aux usages du pays visé. Votre CV d’origine est conservé."
+      subtitle="CVCasa traduit tout votre CV (postes, diplômes, compétences…) et l’adapte aux usages du pays visé. Votre CV d’origine est conservé."
     >
       {cv.translation && (
         <div className="mb-3">
