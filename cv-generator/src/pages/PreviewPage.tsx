@@ -28,7 +28,7 @@ export function DesignPanel({ cv }: { cv: CvDocument }) {
 
   return (
     <div className="space-y-4">
-      <Card title="Modèle" subtitle="13 modèles pensés pour chaque métier et chaque pays, ou le style d’un CV que vous aimez.">
+      <Card tour="templates" title="Modèle" subtitle="13 modèles pensés pour chaque métier et chaque pays, ou le style d’un CV que vous aimez.">
         <TemplateGallery cv={cv} set={set} />
       </Card>
 
@@ -51,6 +51,7 @@ export function DesignPanel({ cv }: { cv: CvDocument }) {
       </Card>
 
       <Card
+        tour="options"
         title="Options d’affichage"
         actions={
           recommended ? (
@@ -165,6 +166,7 @@ function TranslateCard({ cv }: { cv: CvDocument }) {
 
   return (
     <Card
+      tour="translate"
       title={
         <span className="flex items-center gap-2">
           <Languages className="size-5 text-brand-600" /> Mon CV dans une autre langue
@@ -211,6 +213,7 @@ function ChecksCard({ cv }: { cv: CvDocument }) {
   const checks = checkCv(cv);
   return (
     <Card
+      tour="checks"
       title={
         <span className="flex items-center gap-2">
           <Lightbulb className="size-5 text-amber-500" /> Conseils pour un CV actuel
@@ -240,10 +243,10 @@ export function PreviewPage() {
   return (
     // Sur téléphone : export, puis aperçu, puis réglages. Sur grand écran : réglages à gauche, aperçu à droite.
     <div className="grid grid-cols-[minmax(0,1fr)] gap-4 lg:grid-cols-[360px_minmax(0,1fr)] lg:grid-rows-[auto_auto_auto_auto_1fr]">
-      <Card title="Télécharger mon CV" className="lg:col-start-1">
+      <Card tour="export" title="Télécharger mon CV" className="lg:col-start-1">
         <ExportButtons cv={cv} />
       </Card>
-      <div className="lg:sticky lg:top-20 lg:col-start-2 lg:row-span-5 lg:row-start-1 lg:self-start">
+      <div data-tour="preview" className="lg:sticky lg:top-20 lg:col-start-2 lg:row-span-5 lg:row-start-1 lg:self-start">
         <div className="mx-auto max-w-[700px]">
           <Preview source={{ kind: 'cv', cv }} />
         </div>

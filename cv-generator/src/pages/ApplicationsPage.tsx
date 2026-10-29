@@ -243,6 +243,7 @@ export function ApplicationsPage({ onNavigate }: { onNavigate: (t: Tab) => void 
   return (
     <div className="mx-auto max-w-3xl space-y-4">
       <Card
+        tour="applications"
         title={
           <span className="flex items-center gap-2">
             <ClipboardList className="size-5 text-brand-600" /> Mes candidatures

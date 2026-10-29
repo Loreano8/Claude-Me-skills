@@ -75,8 +75,8 @@ export function JobInputCard() {
   const pastedLink = !link && job.text.trim().length < 400 ? firstUrl(job.text) : null;
 
   return (
-    <Card title="L’offre d’emploi" subtitle="Collez le lien de l’annonce, son texte, ou importez-la en PDF ou en capture d’écran.">
-      <div className="flex flex-col gap-2 sm:flex-row">
+    <Card tour="job" title="L’offre d’emploi" subtitle="Collez le lien de l’annonce, son texte, ou importez-la en PDF ou en capture d’écran.">
+      <div data-tour="job-link" className="flex flex-col gap-2 sm:flex-row">
         <label className="flex min-w-0 flex-1 items-center gap-2 rounded-xl bg-white px-3 ring-1 ring-slate-300 focus-within:ring-2 focus-within:ring-brand-500">
           <Link2 className="size-4 shrink-0 text-slate-400" />
           <span className="sr-only">Lien de l’offre</span>
@@ -108,7 +108,7 @@ export function JobInputCard() {
         </div>
       )}
 
-      <div className="mt-3">
+      <div className="mt-3" data-tour="job-text">
         <TextArea
           value={job.text}
           onChange={(text) => setJob({ ...job, text })}
@@ -126,7 +126,7 @@ export function JobInputCard() {
             </button>
           </span>
         ) : (
-          <Button variant="secondary" size="sm" icon={<FileUp className="size-4" />} onClick={() => input.current?.click()}>
+          <Button variant="secondary" size="sm" data-tour="job-import" icon={<FileUp className="size-4" />} onClick={() => input.current?.click()}>
             Importer l’annonce (PDF, photo)
           </Button>
         )}

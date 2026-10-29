@@ -268,6 +268,7 @@ export function DossierPage({ onNavigate, mode = 'dossier' }: { onNavigate: (t: 
   return (
     <div className="mx-auto max-w-2xl space-y-4">
       <Card
+        tour="dossier"
         title={
           <span className="flex items-center gap-2">
             {scanner ? <ScanLine className="size-5 text-brand-600" /> : <FileStack className="size-5 text-brand-600" />}
@@ -281,10 +282,10 @@ export function DossierPage({ onNavigate, mode = 'dossier' }: { onNavigate: (t: 
         }
       >
         <div className="flex flex-wrap gap-2">
-          <Button icon={<Camera className="size-4" />} onClick={() => camera.current?.click()}>
+          <Button data-tour="scan" icon={<Camera className="size-4" />} onClick={() => camera.current?.click()}>
             Scanner un document
           </Button>
-          <Button variant="secondary" icon={<Paperclip className="size-4" />} onClick={() => files.current?.click()}>
+          <Button variant="secondary" data-tour="add-files" icon={<Paperclip className="size-4" />} onClick={() => files.current?.click()}>
             Ajouter des fichiers (PDF, photos)
           </Button>
           {!scanner && !has('cv') && !isCvEmpty(cv) && !cvBlocked && (

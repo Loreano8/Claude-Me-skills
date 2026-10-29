@@ -65,7 +65,7 @@ function Creations({ onNavigate }: { onNavigate: (t: Tab) => void }) {
   }, [cvs, letters, filter, query]);
 
   return (
-    <Card title="Créés avec CVCasa" subtitle="Tous vos CV (y compris adaptés et traduits) et vos lettres, du plus récent au plus ancien.">
+    <Card tour="creations" title="Créés avec CVCasa" subtitle="Tous vos CV (y compris adaptés et traduits) et vos lettres, du plus récent au plus ancien.">
       <div className="flex flex-wrap items-center gap-2">
         {(
           [
@@ -613,7 +613,7 @@ export function DocumentsPage({ onNavigate }: { onNavigate: (t: Tab) => void }) 
   const [part, setPart] = useState<'creations' | 'coffre'>('creations');
   return (
     <div className="mx-auto max-w-2xl space-y-4">
-      <div className="grid grid-cols-2 gap-1 rounded-2xl bg-white p-1 ring-1 ring-slate-200">
+      <div data-tour="doc-tabs" className="grid grid-cols-2 gap-1 rounded-2xl bg-white p-1 ring-1 ring-slate-200">
         {(
           [
             ['creations', 'Mes créations', FileUser],

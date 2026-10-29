@@ -122,6 +122,7 @@ function QuickFill() {
   return (
     <Card
       className="border-brand-100"
+      tour="quickfill"
       title={
         <span className="flex items-center gap-2">
           <PenLine className="size-5 text-brand-600" /> Saisie rapide
@@ -129,7 +130,7 @@ function QuickFill() {
       }
       subtitle="Racontez votre parcours à voix haute, écrivez-le en vrac ou importez votre ancien CV : CVCasa range tout et le met aux normes actuelles."
     >
-      <div className="mb-3">
+      <div className="mb-3" data-tour="mic">
         <MicButton
           onText={(t) => setText((cur) => appendSpoken(cur, t))}
           lang={cv.settings.headingLang}
@@ -178,7 +179,7 @@ function QuickFill() {
             <Button variant="secondary" size="sm" icon={<Camera className="size-4" />} onClick={() => cameraInput.current?.click()}>
               {files.length ? 'Ajouter une photo' : 'Prendre en photo'}
             </Button>
-            <Button variant="secondary" size="sm" icon={<Paperclip className="size-4" />} onClick={() => fileInput.current?.click()}>
+            <Button variant="secondary" size="sm" data-tour="import" icon={<Paperclip className="size-4" />} onClick={() => fileInput.current?.click()}>
               {files.length ? 'Ajouter un fichier' : 'Importer des fichiers (PDF ou images)'}
             </Button>
           </>
@@ -200,7 +201,7 @@ function QuickFill() {
       )}
 
       <div className="mt-3 flex flex-wrap gap-2">
-        <Button variant="ai" icon={<FileText className="size-4" />} loading={busy === 'fill'} disabled={busy !== null || (!text.trim() && !files.length)} onClick={() => run('fill')}>
+        <Button variant="ai" data-tour="generate" icon={<FileText className="size-4" />} loading={busy === 'fill'} disabled={busy !== null || (!text.trim() && !files.length)} onClick={() => run('fill')}>
           Générer mon CV
         </Button>
         {hasContent && (
@@ -319,7 +320,7 @@ function PersonalSection({ cv, update }: { cv: CvDocument; update: Update }) {
   const p = cv.personal;
   const set = (key: keyof typeof p) => (v: string) => update((c) => ({ ...c, personal: { ...c.personal, [key]: v } }));
   return (
-    <Section title="Informations personnelles" icon={<User className="size-5" />} defaultOpen>
+    <Section title="Informations personnelles" icon={<User className="size-5" />} defaultOpen tour="sections">
       <div className="grid gap-3 sm:grid-cols-2">
         <Field label="Prénom" value={p.firstName} onChange={set('firstName')} autoComplete="given-name" />
         <Field label="Nom" value={p.lastName} onChange={set('lastName')} autoComplete="family-name" />

@@ -50,9 +50,9 @@ export function Button({
   );
 }
 
-export function Card({ title, subtitle, actions, children, className }: { title?: ReactNode; subtitle?: ReactNode; actions?: ReactNode; children: ReactNode; className?: string }) {
+export function Card({ title, subtitle, actions, children, className, tour }: { title?: ReactNode; subtitle?: ReactNode; actions?: ReactNode; children: ReactNode; className?: string; tour?: string }) {
   return (
-    <section className={cx('rounded-2xl border border-slate-200 bg-white p-4 shadow-sm sm:p-5', className)}>
+    <section data-tour={tour} className={cx('rounded-2xl border border-slate-200 bg-white p-4 shadow-sm sm:p-5', className)}>
       {(title || actions) && (
         <div className="mb-4 flex items-start justify-between gap-3">
           <div>
@@ -73,16 +73,18 @@ export function Section({
   badge,
   defaultOpen = false,
   children,
+  tour,
 }: {
   title: string;
   icon?: ReactNode;
   badge?: ReactNode;
   defaultOpen?: boolean;
   children: ReactNode;
+  tour?: string;
 }) {
   const [open, setOpen] = useState(defaultOpen);
   return (
-    <section className="rounded-2xl border border-slate-200 bg-white shadow-sm">
+    <section data-tour={tour} className="rounded-2xl border border-slate-200 bg-white shadow-sm">
       <button
         type="button"
         onClick={() => setOpen(!open)}

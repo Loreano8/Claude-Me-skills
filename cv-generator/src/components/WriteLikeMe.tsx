@@ -67,7 +67,7 @@ export function WriteLikeMe({ compact = false }: { compact?: boolean }) {
 
   if (compact && !open) {
     return (
-      <div className="rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm">
+      <div data-tour="style" className="rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm">
         <div className="flex items-center gap-2">
           <PenLine className="size-4 shrink-0 text-brand-600" />
           <span className="font-semibold text-slate-800">Écrire comme moi</span>

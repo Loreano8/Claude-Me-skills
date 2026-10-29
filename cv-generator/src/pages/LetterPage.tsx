@@ -82,6 +82,7 @@ function GenerateCard({ onNavigate }: { onNavigate: (t: Tab) => void }) {
   return (
     <Card
       className="border-brand-100"
+      tour="letter-generate"
       title={
         <span className="flex items-center gap-2">
           <Mail className="size-5 text-brand-600" /> Rédiger ma lettre
@@ -224,6 +225,7 @@ export function LetterPage({ onNavigate }: { onNavigate: (t: Tab) => void }) {
         <GenerateCard onNavigate={onNavigate} />
 
         <Card
+          tour="letter-body"
           title={
             <span className="flex items-center gap-2">
               <Mail className="size-5 text-brand-600" /> Ma lettre
@@ -262,7 +264,7 @@ export function LetterPage({ onNavigate }: { onNavigate: (t: Tab) => void }) {
       </div>
 
       <div className="space-y-3 lg:sticky lg:top-20 lg:self-start">
-        <div className="grid grid-cols-2 gap-2">
+        <div data-tour="letter-export" className="grid grid-cols-2 gap-2">
           <Button size="lg" icon={<FileDown className="size-5" />} loading={busy === 'pdf'} onClick={() => exportAs('pdf')}>
             {pro ? 'PDF' : 'PDF gratuit'}
           </Button>

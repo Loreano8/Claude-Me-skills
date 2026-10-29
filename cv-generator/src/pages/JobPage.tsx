@@ -290,6 +290,7 @@ export function JobPage({ onNavigate }: { onNavigate: (t: Tab) => void }) {
       <JobInputCard />
 
       <Card
+        tour="apply"
         title={
           <span className="flex items-center gap-2">
             <Target className="size-5 text-brand-600" /> Postuler à cette offre

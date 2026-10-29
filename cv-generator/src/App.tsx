@@ -6,6 +6,7 @@ import { CvSwitcher } from './components/CvSwitcher.tsx';
 import { AccountButton, AccountDialogs } from './components/AccountDialogs.tsx';
 import { SaveDialog } from './components/SaveDialog.tsx';
 import { ReturnBanner } from './components/ReturnBanner.tsx';
+import { Tour } from './components/Tour.tsx';
 import { decideBanner as decideReturnBanner } from './lib/reminder.ts';
 import { refreshAccount } from './lib/api.ts';
 import { useAccount } from './lib/account.ts';
@@ -83,7 +84,7 @@ function InfosLayout() {
   return (
     <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_420px] xl:grid-cols-[minmax(0,1fr)_480px]">
       <EditorPage />
-      <aside className="hidden space-y-3 lg:sticky lg:top-20 lg:block lg:self-start">
+      <aside data-tour="live" className="hidden space-y-3 lg:sticky lg:top-20 lg:block lg:self-start">
         <ExportButtons cv={cv} />
         <Preview source={{ kind: 'cv', cv }} />
       </aside>
@@ -197,6 +198,7 @@ export default function App() {
         {tab === 'contact' && <ContactPage />}
         {tab === 'admin' && <AdminPage />}
       </main>
+      <Tour key={tab} tab={tab} />
 
       <nav className="fixed inset-x-0 bottom-0 z-20 grid grid-cols-6 border-t border-slate-200 bg-white pb-[env(safe-area-inset-bottom)] lg:hidden">
         {TABS.map((t) => (
