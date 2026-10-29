@@ -665,7 +665,7 @@ export function AccountButton() {
   if (!enabled) return null;
   if (!user) {
     return (
-      <button type="button" aria-label="Se connecter" onClick={() => open('account')} className="flex items-center gap-1.5 rounded-xl bg-brand-600 px-3 py-2 text-sm font-medium text-white hover:bg-brand-700">
+      <button type="button" aria-label="Se connecter" onClick={() => open('account')} className="flex items-center gap-1.5 rounded-xl bg-brand-600 px-3 py-2 text-sm font-medium whitespace-nowrap text-white hover:bg-brand-700">
         <UserRound className="size-4" /> <span className="hidden sm:inline">Se connecter</span>
       </button>
     );

@@ -64,7 +64,7 @@ export function ScannerButton({ active, onClick }: { active: boolean; onClick: (
       aria-label="Scanner un document en PDF"
       title="Scanner un document en PDF"
       className={cx(
-        'flex items-center gap-1.5 rounded-xl border px-2.5 py-1.5 text-sm font-semibold whitespace-nowrap transition-colors',
+        'flex items-center gap-1.5 rounded-xl border px-2 py-1.5 text-sm font-semibold whitespace-nowrap transition-colors sm:px-2.5',
         active ? 'border-brand-600 bg-brand-600 text-white' : 'border-brand-200 bg-brand-50 text-brand-700 hover:bg-brand-100',
       )}
     >

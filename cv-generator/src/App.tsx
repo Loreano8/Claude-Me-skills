@@ -51,7 +51,7 @@ function initialTab(): Tab {
 
 function Logo({ onClick }: { onClick: () => void }) {
   return (
-    <button type="button" onClick={onClick} className="flex items-center gap-2" aria-label="CVCasa, accueil">
+    <button type="button" onClick={onClick} className="flex shrink-0 items-center gap-2" aria-label="CVCasa, accueil">
       <img src={`${import.meta.env.BASE_URL}icons/icon.svg`} alt="" className="size-8" />
       <span className="text-lg font-bold tracking-tight whitespace-nowrap text-slate-900 max-[419px]:hidden">
         CV<span className="text-brand-600">Casa</span>
@@ -152,26 +152,26 @@ export default function App() {
   return (
     <div className="min-h-dvh bg-slate-100/70">
       <header className="sticky top-0 z-20 border-b border-slate-200 bg-white/90 backdrop-blur pt-[env(safe-area-inset-top)]">
-        <div className="mx-auto flex max-w-7xl items-center justify-between gap-3 px-4 py-2.5">
+        <div className="mx-auto flex max-w-7xl items-center justify-between gap-2 px-3 py-2.5 sm:gap-3 sm:px-4">
           <Logo onClick={() => setTab('accueil')} />
-          <nav className="hidden gap-1 lg:flex">
+          <nav className="hidden min-w-0 gap-0.5 lg:flex">
             {TABS.map((t) => (
               <button
                 key={t.id}
                 type="button"
+                title={t.label}
                 onClick={() => setTab(t.id)}
                 className={cx(
-                  'flex items-center gap-2 rounded-xl px-3 py-2 text-sm font-medium whitespace-nowrap transition-colors',
+                  'flex items-center gap-1.5 rounded-xl px-2.5 py-2 text-sm font-medium whitespace-nowrap transition-colors',
                   tab === t.id ? 'bg-brand-50 text-brand-700' : 'text-slate-600 hover:bg-slate-100',
                 )}
               >
-                <t.icon className="size-4 shrink-0" />
-                <span className="2xl:hidden">{t.short}</span>
-                <span className="hidden 2xl:inline">{t.label}</span>
+                <t.icon className="hidden size-4 shrink-0 xl:block" />
+                {t.short}
               </button>
             ))}
           </nav>
-          <div className="flex min-w-0 items-center gap-2">
+          <div className="flex min-w-0 shrink-0 items-center gap-1.5 sm:gap-2">
             <CvSwitcher />
             <ScannerButton active={tab === 'scanner'} onClick={() => setTab('scanner')} />
             <ContactButton active={tab === 'contact'} onClick={() => setTab('contact')} />
