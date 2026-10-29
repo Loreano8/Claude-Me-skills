@@ -25,6 +25,7 @@ import type {
   LetterQuestionsResult,
 } from '../../shared/schema.ts';
 import { styleForAi } from './writingStyle.ts';
+import { pendingSource } from './source.ts';
 import { useAccount, type AccountUser, type Pack, type ReturnOffer } from './account.ts';
 import { deviceId } from './device.ts';
 
@@ -114,7 +115,7 @@ export const api = {
   resetPassword: (identifier: string, code: string, password: string) => post<Session>('/api/auth/reset', { identifier, code, password }),
 
   register: (identifier: string, password: string, name: string, referralCode?: string | null) =>
-    post<Session>('/api/auth/register', { identifier, password, name, ...(referralCode ? { referralCode } : {}) }),
+    post<Session>('/api/auth/register', { identifier, password, name, ...(referralCode ? { referralCode } : {}), ...(pendingSource() ? { source: pendingSource() } : {}) }),
   referral: () => request<{ code: string; invited: number; rewarded: number; bonus: number }>('GET', '/api/referral'),
   login: (identifier: string, password: string) => post<Session>('/api/auth/login', { identifier, password }),
   me: () => request<{ user: AccountUser }>('GET', '/api/me'),

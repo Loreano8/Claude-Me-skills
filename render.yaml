@@ -1,4 +1,4 @@
-# Site CV Studio sur Render : uniquement les pages (site statique, gratuit, sans mise en veille).
+# Site CVCasa (cvcasa.com) sur Render : uniquement les pages (site statique, gratuit, sans mise en veille).
 # Le serveur (IA, comptes, paiements) est une fonction Supabase : voir cv-generator/README.md.
 services:
   - type: web
@@ -9,5 +9,7 @@ services:
     envVars:
       - key: VITE_API_URL
         value: https://clgmqhyzyiswnekmoygw.supabase.co/functions/v1
+      - key: VITE_PUBLIC_SITE
+        value: https://cvcasa.com
       - key: NODE_VERSION
         value: "22"

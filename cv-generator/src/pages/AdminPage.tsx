@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from 'react';
-import { ArrowLeft, Check, Coins, KeyRound, LogOut, MessageCircle, RefreshCw, Send, ShieldCheck, Star, X } from 'lucide-react';
+import { ArrowLeft, BarChart3, Check, Coins, Copy, KeyRound, LogOut, MessageCircle, RefreshCw, Send, ShieldCheck, Star, X } from 'lucide-react';
+import { PUBLIC_SITE } from '../lib/referral.ts';
 import { adminRequest, type SupportMessage } from '../lib/api.ts';
 import { Button, Card, cx, Field, Notice, TextArea } from '../components/ui.tsx';
 
@@ -341,6 +342,110 @@ function Recoveries({ token }: { token: string }) {
 }
 
 /** Offrir des crédits à un compte (testeur, geste commercial, remboursement…), sans achat. */
+interface SourceRow {
+  source: string;
+  visits: number;
+  signups: number;
+  buyers: number;
+  revenue: number;
+}
+
+/** Même règle que le serveur : « Facebook Vidéo 1 » → « facebook-video1 ». */
+const slug = (s: string) =>
+  s
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .toLowerCase()
+    .replace(/[^a-z0-9_-]+/g, '-')
+    .replace(/^-+|-+$/g, '')
+    .slice(0, 40);
+
+const pct = (a: number, b: number) => (b > 0 ? `${Math.round((a / b) * 100)} %` : '–');
+
+/** Ce que rapporte chaque pub : visites, inscriptions, acheteurs, chiffre d'affaires. */
+function Sources({ token }: { token: string }) {
+  const [days, setDays] = useState(30);
+  const [rows, setRows] = useState<SourceRow[] | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  const [name, setName] = useState('');
+  const [copied, setCopied] = useState(false);
+
+  useEffect(() => {
+    setRows(null);
+    adminRequest<{ sources: SourceRow[] }>(token, 'GET', `/api/admin/sources?days=${days}`)
+      .then((r) => setRows(r.sources))
+      .catch((e) => setError((e as Error).message));
+  }, [token, days]);
+
+  const link = slug(name) ? `${PUBLIC_SITE}/?src=${slug(name)}` : '';
+  const fcfa = (n: number) => `${n.toLocaleString('fr-FR')} F`;
+
+  return (
+    <div className="space-y-4">
+      <div className="rounded-xl bg-slate-50 p-3">
+        <p className="text-sm font-semibold text-slate-800">Créer le lien d’une pub</p>
+        <p className="mb-2 text-xs text-slate-500">Un lien différent par pub : chaque visite, inscription et achat sera compté pour elle.</p>
+        <Field label="Nom de la pub" value={name} onChange={setName} placeholder="Ex. Facebook vidéo 1" />
+        {link && (
+          <div className="mt-2 flex items-center gap-2">
+            <code className="min-w-0 flex-1 truncate rounded-lg bg-white px-2 py-1.5 text-xs ring-1 ring-slate-200">{link}</code>
+            <Button
+              size="sm"
+              variant="secondary"
+              icon={copied ? <Check className="size-4" /> : <Copy className="size-4" />}
+              onClick={() => {
+                void navigator.clipboard?.writeText(link);
+                setCopied(true);
+                setTimeout(() => setCopied(false), 1500);
+              }}
+            >
+              {copied ? 'Copié' : 'Copier'}
+            </Button>
+          </div>
+        )}
+      </div>
+
+      <div className="flex gap-2">
+        {[7, 30, 90].map((d) => (
+          <button
+            key={d}
+            type="button"
+            onClick={() => setDays(d)}
+            className={cx('rounded-full px-3 py-1 text-sm', days === d ? 'bg-slate-900 text-white' : 'bg-slate-100 text-slate-700')}
+          >
+            {d} jours
+          </button>
+        ))}
+      </div>
+      {error && <Notice tone="error">{error}</Notice>}
+      {!rows && !error && <div className="h-24 animate-pulse rounded-xl bg-slate-100" />}
+      {rows?.length === 0 && <p className="text-sm text-slate-500">Aucune visite sur cette période.</p>}
+      <ul className="space-y-2">
+        {rows?.map((r) => (
+          <li key={r.source} className="rounded-xl border border-slate-200 p-3">
+            <div className="flex items-baseline justify-between gap-2">
+              <p className="font-semibold text-slate-900">{r.source === 'direct' ? 'Direct (sans lien de pub)' : r.source}</p>
+              <p className="font-bold text-emerald-700">{fcfa(r.revenue)}</p>
+            </div>
+            <div className="mt-2 grid grid-cols-3 gap-2 text-center text-xs text-slate-500">
+              <div>
+                <p className="text-lg font-bold text-slate-900">{r.visits}</p>visites
+              </div>
+              <div>
+                <p className="text-lg font-bold text-slate-900">{r.signups}</p>inscrits · {pct(r.signups, r.visits)}
+              </div>
+              <div>
+                <p className="text-lg font-bold text-slate-900">{r.buyers}</p>acheteurs · {pct(r.buyers, r.signups)}
+              </div>
+            </div>
+          </li>
+        ))}
+      </ul>
+      <p className="text-xs text-slate-400">Une visite est comptée une fois par session. Les inscrits et acheteurs sont ceux inscrits pendant la période, d’après la première pub qui les a amenés (30 jours).</p>
+    </div>
+  );
+}
+
 function Credits({ token }: { token: string }) {
   const [identifier, setIdentifier] = useState('');
   const [amount, setAmount] = useState('10');
@@ -423,7 +528,7 @@ function TempPassword({ token }: { token: string }) {
 export function AdminPage() {
   const [token, setToken] = useState(readToken);
   const [draft, setDraft] = useState('');
-  const [tab, setTab] = useState<'messages' | 'recuperations' | 'temoignages' | 'credits'>('messages');
+  const [tab, setTab] = useState<'messages' | 'recuperations' | 'temoignages' | 'credits' | 'pubs'>('messages');
   const [error, setError] = useState<string | null>(null);
   const [checking, setChecking] = useState(false);
 
@@ -500,6 +605,7 @@ export function AdminPage() {
               ['recuperations', 'Récupérations', KeyRound],
               ['temoignages', 'Témoignages', Star],
               ['credits', 'Comptes', Coins],
+              ['pubs', 'Pubs', BarChart3],
             ] as const
           ).map(([id, label, Icon]) => (
             <button
@@ -518,6 +624,8 @@ export function AdminPage() {
           <Recoveries token={token} />
         ) : tab === 'temoignages' ? (
           <Testimonials token={token} />
+        ) : tab === 'pubs' ? (
+          <Sources token={token} />
         ) : (
           <>
             <Credits token={token} />

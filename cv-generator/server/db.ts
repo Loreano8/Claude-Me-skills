@@ -83,6 +83,15 @@ alter table users add column if not exists secret_phrase_hash text;
 -- Question secrète choisie par la personne (la réponse est l'empreinte ci-dessus), vide pour une simple phrase secrète.
 alter table users add column if not exists secret_question text;
 
+-- Provenance des visiteurs (lien de pub ?src=…) : retenue à l'inscription, et visites comptées par jour.
+alter table users add column if not exists signup_source text not null default '';
+create table if not exists visits (
+  day date not null,
+  source text not null,
+  count integer not null default 0,
+  primary key (day, source)
+);
+
 -- Offre de retour (4 crédits pour le prix de 3) : ouverte pour 72 heures quand la personne revient après une absence, une seule fois.
 alter table users add column if not exists return_offer_until timestamptz;
 

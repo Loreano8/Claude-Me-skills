@@ -1,3 +1,4 @@
+import { normalizeSource } from './sources.ts';
 import type { Db } from './db.ts';
 import { randomInt } from 'node:crypto';
 import { hashPassword, normalizeIdentifier, verifyPassword } from './auth.ts';
@@ -67,7 +68,7 @@ export function createAccounts(db: Db, opts: AccountOptions) {
       return true;
     },
 
-    async register(input: { identifier: string; password: string; name?: string; ip: string; device: string; referralCode?: string }): Promise<User> {
+    async register(input: { identifier: string; password: string; name?: string; ip: string; device: string; referralCode?: string; source?: string }): Promise<User> {
       const identifier = normalizeIdentifier(input.identifier);
       if (!identifier) throw new AccountError('Indiquez un e-mail ou un numéro de téléphone valide.', 400);
       if (input.password.length < 6) throw new AccountError('Le mot de passe doit faire au moins 6 caractères.', 400);
@@ -85,8 +86,8 @@ export function createAccounts(db: Db, opts: AccountOptions) {
         const code = (input.referralCode ?? '').trim().toUpperCase();
         const [referrer] = code ? await tx.query<{ id: number }>('select id from users where referral_code = $1', [code]) : [];
         const [user] = await tx.query<User>(
-          `insert into users (identifier, name, password_hash, signup_ip, signup_device, referred_by) values ($1, $2, $3, $4, $5, $6) returning ${USER_COLUMNS}`,
-          [identifier, (input.name ?? '').trim().slice(0, 80), passwordHash, input.ip, device, referrer?.id ?? null],
+          `insert into users (identifier, name, password_hash, signup_ip, signup_device, referred_by, signup_source) values ($1, $2, $3, $4, $5, $6, $7) returning ${USER_COLUMNS}`,
+          [identifier, (input.name ?? '').trim().slice(0, 80), passwordHash, input.ip, device, referrer?.id ?? null, input.source ? normalizeSource(input.source) : ''],
         );
         // Sans identifiant d'appareil (client trop ancien ou bricolé), pas de crédit offert.
         if (opts.freeCredits > 0 && device.length >= 8 && n === 0) {

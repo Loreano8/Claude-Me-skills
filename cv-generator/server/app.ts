@@ -11,6 +11,7 @@ import { TestimonialInput, type Testimonials } from './testimonials.ts';
 import { SupportError, SupportMessageInput, type Support } from './support.ts';
 import { fetchJobPage, JobPageError } from './jobPage.ts';
 import type { Vault } from './vault.ts';
+import type { Sources } from './sources.ts';
 import { RecoveryInput, type Recovery } from './recovery.ts';
 
 export interface AppOptions {
@@ -30,6 +31,8 @@ export interface AppOptions {
   vault?: Vault | null;
   /** Récupération de compte par formulaire (phrase secrète), validée par l'administrateur. */
   recovery?: Recovery | null;
+  /** Provenance des visiteurs (liens de pub). */
+  sources?: Sources | null;
   sessionSecret?: string;
   /** Adresse publique du site, pour revenir après un paiement. */
   publicUrl?: string;
@@ -64,9 +67,11 @@ const Credentials = z.object({
   password: z.string().max(200),
   name: z.string().max(80).optional(),
   referralCode: z.string().max(20).optional(),
+  /** Provenance du visiteur (lien de pub ?src=…). */
+  source: z.string().max(60).optional(),
 });
 
-export function createApp({ fetchPage = fetchJobPage, ai, allowedOrigins, rateLimitPerHour, accounts = null, payments = null, testimonials = null, support = null, vault = null, recovery = null, sessionSecret = '', publicUrl = '', apiPublicUrl = '', adminToken = '' }: AppOptions) {
+export function createApp({ fetchPage = fetchJobPage, ai, allowedOrigins, rateLimitPerHour, accounts = null, payments = null, testimonials = null, support = null, vault = null, recovery = null, sources = null, sessionSecret = '', publicUrl = '', apiPublicUrl = '', adminToken = '' }: AppOptions) {
   const app = new Hono();
   const allow = createRateLimiter(rateLimitPerHour);
   const allowAuth = createRateLimiter(20);
@@ -415,6 +420,21 @@ export function createApp({ fetchPage = fetchJobPage, ai, allowedOrigins, rateLi
   });
 
   const isAdmin = (c: Context) => Boolean(adminToken) && c.req.header('authorization') === `Bearer ${adminToken}`;
+
+  // Visite comptée une fois par session de navigation (aucune donnée personnelle).
+  app.post('/api/visit', async (c) => {
+    if (!sources) return c.json({ ok: true });
+    if (!allowFree(clientKey(c))) return c.json({ ok: true });
+    const body = (await c.req.json().catch(() => null)) as { source?: unknown } | null;
+    await sources.visit(String(body?.source ?? '')).catch((e) => console.error('Visite', e));
+    return c.json({ ok: true });
+  });
+
+  app.get('/api/admin/sources', async (c) => {
+    if (!sources || !isAdmin(c)) return c.json({ error: 'Accès refusé.' }, 403);
+    const days = Math.min(365, Math.max(1, Number(c.req.query('days')) || 30));
+    return c.json({ days, sources: await sources.stats(days) });
+  });
 
   app.get('/api/admin/testimonials', async (c) => {
     if (!testimonials || !isAdmin(c)) return c.json({ error: 'Accès refusé.' }, 403);

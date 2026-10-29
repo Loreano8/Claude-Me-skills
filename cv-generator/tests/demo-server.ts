@@ -7,6 +7,7 @@ import { createApp } from '../server/app.ts';
 import { createAccounts } from '../server/accounts.ts';
 import { createPayments } from '../server/payments.ts';
 import { createTestimonials } from '../server/testimonials.ts';
+import { createSources } from '../server/sources.ts';
 import { createSupport } from '../server/support.ts';
 import { testDb } from './pglite.ts';
 import { sampleAdapt, sampleInterview, sampleLetter, sampleRevise, sampleTemplateAnalysis, sampleTranslation, sampleClarify, sampleTranscript, sampleStyle, sampleLetterQuestions } from './fixtures.ts';
@@ -36,7 +37,7 @@ const ai = {
 // E-mails simulés : le code s'affiche dans la console du serveur de démo.
 const support = createSupport(db, async (t) => console.log('[notification]', t));
 const vault = createVault(db, accounts, async (to, subject, text) => console.log('[e-mail]', to, subject, text.replace(/\n/g, ' ')));
-const app = createApp({ ai, accounts, payments, vault, testimonials: createTestimonials(db), support, recovery: createRecovery(db, accounts, support), sessionSecret: 'dev', adminToken: 'demo', publicUrl: 'http://localhost:5173', allowedOrigins: [], rateLimitPerHour: 100 });
+const app = createApp({ ai, accounts, payments, vault, testimonials: createTestimonials(db), support, recovery: createRecovery(db, accounts, support), sources: createSources(db), sessionSecret: 'dev', adminToken: 'demo', publicUrl: 'http://localhost:5173', allowedOrigins: [], rateLimitPerHour: 100 });
 // Fausse page de paiement : « payer » puis revenir comme le ferait FedaPay.
 app.get('/fake-pay', (c) => { paid.add(c.req.query('id')!); return c.redirect(`/api/payments/return?id=${c.req.query('id')}&status=approved`); });
 serve({ fetch: app.fetch, port: 8787 }, () => console.log('e2e server ready'));
