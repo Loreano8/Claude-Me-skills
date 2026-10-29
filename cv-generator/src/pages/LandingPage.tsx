@@ -1,5 +1,5 @@
 import { useEffect, useState, type ReactNode } from 'react';
-import { ArrowRight, BadgeCheck, Check, ClipboardList, FileDown, FileStack, Globe2, Languages, Mail, MessagesSquare, PenLine, ShieldCheck, Target } from 'lucide-react';
+import { ArrowRight, BadgeCheck, Check, ClipboardList, FileDown, FileStack, Globe2, Languages, Mail, MessagesSquare, PenLine, PlayCircle, ShieldCheck, Target } from 'lucide-react';
 import { PACKS } from '../../server/payments.ts';
 import { CvStory } from '../components/CvStory.tsx';
 import type { Tab } from '../App.tsx';
@@ -138,6 +138,9 @@ export function LandingPage({ onNavigate }: { onNavigate: (t: Tab) => void }) {
           </Button>
         </div>
         <p className="mt-3 text-sm text-slate-500">Sans compte pour créer et télécharger son CV · 1re adaptation offerte</p>
+        <a href="#tutoriel" onClick={(e) => { e.preventDefault(); document.getElementById('tutoriel')?.scrollIntoView({ behavior: 'smooth', block: 'center' }); }} className="mt-4 inline-flex items-center gap-2 text-sm font-semibold text-brand-700 hover:text-brand-800">
+          <PlayCircle className="size-5" /> Voir le tutoriel en vidéo (2 min)
+        </a>
       </section>
 
       <CvStory />
@@ -164,6 +167,19 @@ export function LandingPage({ onNavigate }: { onNavigate: (t: Tab) => void }) {
             </li>
           ))}
         </ol>
+        <figure id="tutoriel" className="mt-8 scroll-mt-24">
+          <video
+            controls
+            playsInline
+            preload="none"
+            poster={`${import.meta.env.BASE_URL}tutoriel/poster.jpg`}
+            src={`${import.meta.env.BASE_URL}tutoriel/tutoriel.mp4`}
+            className="aspect-video w-full rounded-2xl bg-slate-900 shadow-lg ring-1 ring-slate-200"
+          >
+            Votre navigateur ne lit pas cette vidéo.
+          </video>
+          <figcaption className="mt-2 text-center text-sm text-slate-500">Le tutoriel complet : CV, modèle, offre, lettre, scanner et documents, pas à pas.</figcaption>
+        </figure>
       </section>
 
       <section className="bg-white px-4 py-12">
