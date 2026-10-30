@@ -1,10 +1,17 @@
-import { useEffect, useState, type ReactNode } from 'react';
+import { useEffect, useState } from 'react';
 import { ArrowRight, BadgeCheck, Check, ClipboardList, FileDown, FileStack, Globe2, Languages, Mail, MessagesSquare, PenLine, PlayCircle, ShieldCheck, Target } from 'lucide-react';
 import { PACKS } from '../../server/payments.ts';
 import { CvStory } from '../components/CvStory.tsx';
 import type { Tab } from '../App.tsx';
 import { Button } from '../components/ui.tsx';
 import { api, type PublicTestimonial } from '../lib/api.ts';
+import { FAQ } from '../lib/faq.ts';
+import { GUIDES } from '../../seo/guides.ts';
+import { Capacitor } from '@capacitor/core';
+import { PUBLIC_SITE } from '../lib/referral.ts';
+
+// Dans l'application Android, les guides s'ouvrent sur le site.
+const GUIDE_BASE = Capacitor.isNativePlatform() ? PUBLIC_SITE.replace(/\/$/, '') : '';
 
 const fcfa = (n: number) => `${n.toLocaleString('fr-FR')} FCFA`;
 
@@ -48,15 +55,6 @@ function Marquee({ items, reverse = false, duration }: { items: string[]; revers
   );
 }
 
-const FAQ: { q: string; a: ReactNode }[] = [
-  { q: 'Est-ce vraiment gratuit ?', a: 'Oui : créer son CV avec les 3 modèles de base et le télécharger en PDF est gratuit et sans compte (avec une petite mention « Créé avec CVCasa » en bas de page). L’adaptation à une offre, la lettre, la fiche entretien ou la traduction coûtent 1 crédit chacune (la première est offerte) ; la version Pro d’un CV (sans mention, 13 modèles, export Word) coûte 2 crédits et reste acquise pour toujours sur ce CV.' },
-  { q: 'Le scanner est-il gratuit ?', a: 'Oui jusqu’à 2 pages par PDF (et pour un dossier : CV, lettre et 2 pièces). Au-delà, 1 crédit pour le PDF, pages illimitées. Transformer un document écrit à la main en texte tapé coûte 1 crédit par page. Vos papiers restent sur votre téléphone, sauf pour la retranscription, le temps de la lecture.' },
-  { q: 'Faut-il un abonnement ?', a: 'Non. Vous achetez un pack de crédits une fois, quand vous en avez besoin. Rien n’est prélevé automatiquement ensuite.' },
-  { q: 'Comment payer ?', a: 'Par Mobile Money (MTN MoMo, Moov Money), via FedaPay. Les crédits arrivent sur votre compte dès que le paiement est confirmé.' },
-  { q: 'Mon CV va-t-il « faire IA » ?', a: 'Non. CVCasa part de vos vraies expériences, avec vos mots : il ne fait que les mettre en forme et en valeur, sans rien inventer. Vous relisez et modifiez tout avant de télécharger, et le CV reste le vôtre.' },
-  { q: 'Où sont mes données ?', a: 'Votre CV reste sur votre téléphone ou votre ordinateur. Seul le texte nécessaire à une adaptation ou à une lettre passe par notre serveur, le temps de la traiter.' },
-  { q: 'Ça marche sur iPhone ?', a: 'Oui, depuis Safari. Touchez « Partager » puis « Sur l’écran d’accueil » pour l’utiliser comme une application. Sur Android, l’application est aussi disponible.' },
-];
 
 function SectionTitle({ title, subtitle }: { title: string; subtitle?: string }) {
   return (
@@ -225,6 +223,19 @@ export function LandingPage({ onNavigate }: { onNavigate: (t: Tab) => void }) {
           ))}
         </div>
         <p className="mt-4 text-center text-sm text-slate-500">Sans abonnement · MTN MoMo ou Moov Money · Crédit rendu en cas d’échec</p>
+      </section>
+
+      <section className="px-4 py-12">
+        <div className="mx-auto max-w-5xl">
+          <SectionTitle title="Conseils et exemples" subtitle="Par métier, selon votre situation, et pour la lettre de motivation." />
+          <div className="flex flex-wrap justify-center gap-2">
+            {GUIDES.map((g) => (
+              <a key={g.slug} href={`${GUIDE_BASE}/${g.slug}/`} className="rounded-full border border-slate-200 bg-white px-4 py-2 text-sm font-medium text-slate-700 shadow-sm hover:border-brand-300 hover:text-brand-700">
+                {g.label}
+              </a>
+            ))}
+          </div>
+        </div>
       </section>
 
       <section className="bg-white px-4 py-12">
