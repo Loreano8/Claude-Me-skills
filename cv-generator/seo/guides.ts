@@ -1,7 +1,10 @@
 // Guides publics (une page par recherche courante) : générés en HTML statique au build (scripts/build-seo.ts),
 // pour que Google les lise sans exécuter l'application. Chaque page renvoie vers l'outil.
 
-export type GuideKind = 'metier' | 'situation' | 'lettre';
+import { METIERS } from './guides-metiers.ts';
+import { PAYS } from './guides-pays.ts';
+
+export type GuideKind = 'metier' | 'pays' | 'situation' | 'lettre';
 
 export type Guide = {
   slug: string;
@@ -23,11 +26,12 @@ export type Guide = {
 
 export const KIND_LABEL: Record<GuideKind, string> = {
   metier: 'CV par métier',
+  pays: 'CV par pays',
   situation: 'CV selon votre situation',
   lettre: 'Lettres de motivation',
 };
 
-export const GUIDES: Guide[] = [
+const BASE: Guide[] = [
   // ——— Par métier ———
   {
     slug: 'cv-comptable',
@@ -741,3 +745,9 @@ export const GUIDES: Guide[] = [
     ],
   },
 ];
+
+const ALL = [...BASE, ...METIERS, ...PAYS];
+const ORDER: GuideKind[] = ['metier', 'pays', 'situation', 'lettre'];
+
+/** Tous les guides, regroupés par catégorie. */
+export const GUIDES: Guide[] = ORDER.flatMap((k) => ALL.filter((g) => g.kind === k));

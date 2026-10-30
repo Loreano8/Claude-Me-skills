@@ -8,7 +8,7 @@ import { GUIDES, KIND_LABEL, type Guide, type GuideKind } from '../seo/guides.ts
 
 const SITE = (process.env.VITE_PUBLIC_SITE || 'https://cvcasa.com').replace(/\/$/, '');
 const DIST = join(import.meta.dirname, '..', 'dist');
-const KINDS: GuideKind[] = ['metier', 'situation', 'lettre'];
+const KINDS: GuideKind[] = ['metier', 'pays', 'situation', 'lettre'];
 
 const esc = (s: string) => s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
 const json = (o: unknown) => JSON.stringify(o).replace(/</g, '\\u003c');
@@ -199,7 +199,7 @@ function landingStatic(): string {
       .join('')}</ul>`,
   ).join('');
   return `<div id="seo-static" style="max-width:760px;margin:0 auto;padding:40px 16px;font:16px/1.6 system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;color:#334155">
-<h1 style="color:#0f172a;font-size:30px;font-weight:800;line-height:1.2;margin:0 0 12px">Un CV qui correspond à chaque offre, en quelques minutes</h1>
+<h1 style="color:#0f172a;font-size:30px;font-weight:800;line-height:1.2;margin:0 0 12px">Votre CV gratuit, adapté à chaque offre, en quelques minutes</h1>
 <p>Écrivez votre parcours en vrac, collez l’annonce : CVCasa met en forme un CV aux normes actuelles, adapté au poste, avec la lettre de motivation et la préparation de l’entretien.</p>
 <p style="margin:16px 0"><a href="/#infos" style="display:inline-block;background:#2549eb;color:#fff;text-decoration:none;font-weight:700;border-radius:12px;padding:12px 20px">Créer mon CV gratuitement</a></p>
 <h2 style="color:#0f172a;font-size:21px;font-weight:700;margin:28px 0 8px">Comment ça marche</h2>

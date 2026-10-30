@@ -121,7 +121,7 @@ export function LandingPage({ onNavigate }: { onNavigate: (t: Tab) => void }) {
     <div className="-mx-4 -mt-4">
       <section className="bg-gradient-to-b from-brand-50 to-white px-4 pt-12 pb-14 text-center sm:pt-20">
         <h1 className="mx-auto max-w-3xl text-3xl font-extrabold tracking-tight text-slate-900 sm:text-5xl">
-          Un CV qui correspond <span className="text-brand-600">à chaque offre</span>, en quelques minutes
+          Votre CV gratuit, adapté <span className="text-brand-600">à chaque offre</span>, en quelques minutes
         </h1>
         <p className="mx-auto mt-4 max-w-2xl text-base text-slate-600 sm:text-lg">
           Écrivez votre parcours en vrac, collez l’annonce : CVCasa met en forme un CV aux normes actuelles, adapté au poste, avec la lettre de
