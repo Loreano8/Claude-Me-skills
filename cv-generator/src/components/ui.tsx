@@ -36,8 +36,8 @@ export function Button({
       disabled={disabled || loading}
       className={cx(
         'inline-flex items-center justify-center gap-2 rounded-xl font-medium transition-colors disabled:cursor-not-allowed disabled:opacity-60',
-        size === 'sm' && 'px-2.5 py-1.5 text-sm',
-        size === 'md' && 'px-4 py-2.5 text-sm',
+        size === 'sm' && 'hit min-h-9 px-3 py-1.5 text-sm',
+        size === 'md' && 'min-h-11 px-4 py-2.5 text-sm',
         size === 'lg' && 'px-5 py-3 text-base',
         VARIANTS[variant],
         className,
@@ -251,7 +251,7 @@ export function Chip({ children, tone = 'slate', onRemove }: { children: ReactNo
     <span className={cx('inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-sm', tones[tone])}>
       {children}
       {onRemove && (
-        <button type="button" onClick={onRemove} className="-mr-1 rounded-full px-1 text-current opacity-60 hover:opacity-100" aria-label="Retirer">
+        <button type="button" onClick={onRemove} className="hit -mr-1 rounded-full px-1.5 text-current opacity-60 hover:opacity-100" aria-label="Retirer">
           ×
         </button>
       )}

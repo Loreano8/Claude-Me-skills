@@ -94,7 +94,7 @@ function GenerateCard({ onNavigate }: { onNavigate: (t: Tab) => void }) {
         ) : (
           <>
             Aucune offre saisie : ce sera une candidature spontanée.{' '}
-            <button type="button" className="font-medium text-brand-700 underline" onClick={() => onNavigate('offre')}>
+            <button type="button" className="hit font-medium text-brand-700 underline" onClick={() => onNavigate('offre')}>
               Ajouter une offre
             </button>
           </>

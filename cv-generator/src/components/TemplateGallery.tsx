@@ -315,7 +315,7 @@ export function TemplateGallery({ cv, set }: { cv: CvDocument; set: (patch: Part
             key={c}
             type="button"
             onClick={() => setCategory(c)}
-            className={cx('shrink-0 rounded-full px-3 py-1 text-xs font-medium', category === c ? 'bg-slate-900 text-white' : 'bg-slate-100 text-slate-700')}
+            className={cx('min-h-10 shrink-0 rounded-full px-3.5 py-2.5 text-xs font-medium', category === c ? 'bg-slate-900 text-white' : 'bg-slate-100 text-slate-700')}
           >
             {c === 'all' ? 'Tous' : CATEGORY_LABELS[c]}
           </button>

@@ -40,11 +40,11 @@ export function DesignPanel({ cv }: { cv: CvDocument }) {
               type="button"
               aria-label={`Couleur ${c}`}
               onClick={() => set({ accent: c })}
-              className={cx('size-8 rounded-full ring-offset-2 transition', st.accent === c && 'ring-2 ring-slate-900')}
+              className={cx('hit size-9 rounded-full ring-offset-2 transition', st.accent === c && 'ring-2 ring-slate-900')}
               style={{ backgroundColor: c }}
             />
           ))}
-          <label className="relative size-8 cursor-pointer overflow-hidden rounded-full bg-[conic-gradient(red,yellow,lime,aqua,blue,magenta,red)]" title="Autre couleur">
+          <label className="relative size-9 cursor-pointer overflow-hidden rounded-full bg-[conic-gradient(red,yellow,lime,aqua,blue,magenta,red)]" title="Autre couleur">
             <input type="color" value={st.accent} onChange={(e) => set({ accent: e.target.value })} className="absolute inset-0 opacity-0" />
           </label>
         </div>
@@ -77,7 +77,7 @@ export function DesignPanel({ cv }: { cv: CvDocument }) {
               key={l}
               type="button"
               onClick={() => set({ headingLang: l })}
-              className={cx('rounded-lg px-2.5 py-1 font-medium', st.headingLang === l ? 'bg-brand-600 text-white' : 'bg-slate-100 text-slate-700')}
+              className={cx('hit min-h-8 rounded-lg px-3 py-1.5 font-medium', st.headingLang === l ? 'bg-brand-600 text-white' : 'bg-slate-100 text-slate-700')}
             >
               {l === 'fr' ? 'Français' : 'English'}
             </button>

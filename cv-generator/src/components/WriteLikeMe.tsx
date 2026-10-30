@@ -71,7 +71,7 @@ export function WriteLikeMe({ compact = false }: { compact?: boolean }) {
         <div className="flex items-center gap-2">
           <PenLine className="size-4 shrink-0 text-brand-600" />
           <span className="font-semibold text-slate-800">Écrire comme moi</span>
-          <button type="button" className="ml-auto font-medium text-brand-700 underline" onClick={() => setOpen(true)}>
+          <button type="button" className="hit ml-auto min-h-8 py-1 font-medium text-brand-700 underline" onClick={() => setOpen(true)}>
             {style ? 'Modifier' : 'Configurer'}
           </button>
         </div>

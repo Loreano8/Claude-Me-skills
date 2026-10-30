@@ -78,7 +78,7 @@ function Creations({ onNavigate }: { onNavigate: (t: Tab) => void }) {
             key={id}
             type="button"
             onClick={() => setFilter(id)}
-            className={cx('rounded-full px-3 py-1.5 text-sm font-medium', filter === id ? 'bg-slate-900 text-white' : 'bg-slate-100 text-slate-700')}
+            className={cx('min-h-10 rounded-full px-3.5 py-2 text-sm font-medium', filter === id ? 'bg-slate-900 text-white' : 'bg-slate-100 text-slate-700')}
           >
             {label}
           </button>
@@ -97,7 +97,7 @@ function Creations({ onNavigate }: { onNavigate: (t: Tab) => void }) {
             </div>
             <button
               type="button"
-              className="min-w-0 flex-1 text-left"
+              className="min-h-11 min-w-0 flex-1 text-left"
               onClick={() => {
                 if (it.kind === 'cv') {
                   setActive(it.id);
@@ -117,7 +117,7 @@ function Creations({ onNavigate }: { onNavigate: (t: Tab) => void }) {
             <button
               type="button"
               aria-label="Supprimer"
-              className="shrink-0 rounded p-1.5 text-slate-400 hover:bg-red-50 hover:text-red-600"
+              className="shrink-0 rounded-lg p-3 text-slate-500 hover:bg-red-50 hover:text-red-600"
               onClick={() => {
                 if (!window.confirm(`Supprimer « ${it.title} » ? Cette action est définitive.`)) return;
                 if (it.kind === 'cv') deleteCv(it.id);
@@ -565,7 +565,7 @@ function VaultOpen({ onNavigate }: { onNavigate: (t: Tab) => void }) {
             }}
           />
         )}
-        <p className="text-xs text-slate-400">Sauvegarde en ligne (retrouver ses documents sur un autre téléphone) · bientôt</p>
+        <p className="text-xs text-slate-500">Sauvegarde en ligne (retrouver ses documents sur un autre téléphone) · bientôt</p>
       </div>
 
       {viewing && (
@@ -624,7 +624,7 @@ export function DocumentsPage({ onNavigate }: { onNavigate: (t: Tab) => void }) 
             key={id}
             type="button"
             onClick={() => setPart(id)}
-            className={cx('flex items-center justify-center gap-2 rounded-xl py-2.5 text-sm font-semibold', part === id ? 'bg-brand-600 text-white' : 'text-slate-600')}
+            className={cx('flex min-h-11 items-center justify-center gap-2 rounded-xl py-2.5 text-sm font-semibold', part === id ? 'bg-brand-600 text-white' : 'text-slate-600')}
           >
             <Icon className="size-4" /> {label}
           </button>

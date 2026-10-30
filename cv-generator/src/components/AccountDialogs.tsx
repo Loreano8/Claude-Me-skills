@@ -17,7 +17,7 @@ export function Modal({ title, onClose, children }: { title: string; onClose: ()
       <div role="dialog" aria-modal="true" aria-label={title} className="max-h-[92dvh] w-full overflow-y-auto rounded-t-3xl bg-white p-5 pb-[max(1.25rem,env(safe-area-inset-bottom))] shadow-2xl sm:max-w-md sm:rounded-3xl">
         <div className="mb-4 flex items-center justify-between">
           <h2 className="text-lg font-semibold text-slate-900">{title}</h2>
-          <button type="button" onClick={onClose} aria-label="Fermer" className="rounded-full p-1.5 text-slate-500 hover:bg-slate-100">
+          <button type="button" onClick={onClose} aria-label="Fermer" className="hit rounded-full p-2 text-slate-500 hover:bg-slate-100">
             <X className="size-5" />
           </button>
         </div>
@@ -436,7 +436,7 @@ function AccountDialog() {
           hint={mode === 'register' ? '6 caractères minimum.' : undefined}
         />
         {mode === 'login' && (
-          <button type="button" className="text-sm font-medium text-brand-700" onClick={() => (setMode('forgot'), setError(null))}>
+          <button type="button" className="hit min-h-8 text-sm font-medium text-brand-700" onClick={() => (setMode('forgot'), setError(null))}>
             Mot de passe oublié ?
           </button>
         )}
@@ -447,7 +447,7 @@ function AccountDialog() {
       </form>
       <p className="mt-4 text-center text-sm text-slate-600">
         {mode === 'register' ? 'Déjà un compte ?' : 'Pas encore de compte ?'}{' '}
-        <button type="button" className="font-semibold text-brand-700" onClick={() => (setMode(mode === 'register' ? 'login' : 'register'), setError(null))}>
+        <button type="button" className="hit min-h-8 font-semibold text-brand-700" onClick={() => (setMode(mode === 'register' ? 'login' : 'register'), setError(null))}>
           {mode === 'register' ? 'Se connecter' : 'Créer un compte'}
         </button>
       </p>
@@ -665,7 +665,7 @@ export function AccountButton() {
   if (!enabled) return null;
   if (!user) {
     return (
-      <button type="button" aria-label="Se connecter" onClick={() => open('account')} className="flex items-center gap-1.5 rounded-xl bg-brand-600 px-3 py-2 text-sm font-medium whitespace-nowrap text-white hover:bg-brand-700">
+      <button type="button" aria-label="Se connecter" onClick={() => open('account')} className="hit flex items-center gap-1.5 rounded-xl bg-brand-600 px-3 py-2 text-sm font-medium whitespace-nowrap text-white hover:bg-brand-700">
         <UserRound className="size-4" /> <span className="hidden sm:inline">Se connecter</span>
       </button>
     );
@@ -675,7 +675,7 @@ export function AccountButton() {
       type="button"
       onClick={() => open('credits')}
       title="Mes crédits"
-      className={cx('flex items-center gap-1 rounded-xl px-2.5 py-2 text-sm font-semibold', user.credits > 0 ? 'bg-brand-50 text-brand-800' : 'bg-amber-100 text-amber-900')}
+      className={cx('hit flex items-center gap-1 rounded-xl px-2.5 py-2 text-sm font-semibold', user.credits > 0 ? 'bg-brand-50 text-brand-800' : 'bg-amber-100 text-amber-900')}
     >
       <Zap className="size-4" /> {user.credits}
     </button>

@@ -115,7 +115,7 @@ function Testimonials() {
           ))}
         </div>
       )}
-      <p className="mt-3 text-center text-xs text-slate-400">Témoignages envoyés par nos utilisateurs, publiés avec leur accord.</p>
+      <p className="mt-3 text-center text-xs text-slate-500">Témoignages envoyés par nos utilisateurs, publiés avec leur accord.</p>
     </section>
   );
 }
@@ -142,7 +142,7 @@ export function LandingPage({ onNavigate }: { onNavigate: (t: Tab) => void }) {
           </Button>
         </div>
         <p className="mt-3 text-sm text-slate-500">Sans compte pour créer et télécharger son CV · 1re adaptation offerte</p>
-        <a href="#tutoriel" onClick={(e) => { e.preventDefault(); document.getElementById('tutoriel')?.scrollIntoView({ behavior: 'smooth', block: 'center' }); }} className="mt-4 inline-flex items-center gap-2 text-sm font-semibold text-brand-700 hover:text-brand-800">
+        <a href="#tutoriel" onClick={(e) => { e.preventDefault(); document.getElementById('tutoriel')?.scrollIntoView({ behavior: 'smooth', block: 'center' }); }} className="mt-3 inline-flex min-h-11 items-center gap-2 px-2 text-sm font-semibold text-brand-700 hover:text-brand-800">
           <PlayCircle className="size-5" /> Voir le tutoriel en vidéo (2 min)
         </a>
       </section>
@@ -248,7 +248,7 @@ export function LandingPage({ onNavigate }: { onNavigate: (t: Tab) => void }) {
                   <ul className="mt-3 space-y-0.5">
                     {list.slice(0, 6).map((g) => (
                       <li key={g.slug}>
-                        <a href={`${GUIDE_BASE}/${g.slug}/`} className="group flex items-center justify-between gap-2 rounded-lg px-2 py-1.5 text-sm text-slate-700 hover:bg-brand-50 hover:text-brand-800">
+                        <a href={`${GUIDE_BASE}/${g.slug}/`} className="group flex min-h-11 items-center justify-between gap-2 rounded-lg px-2 py-2 text-sm text-slate-700 hover:bg-brand-50 hover:text-brand-800">
                           {g.label}
                           <ArrowRight className="size-3.5 shrink-0 text-slate-300 transition-transform group-hover:translate-x-0.5 group-hover:text-brand-600" />
                         </a>
@@ -256,7 +256,7 @@ export function LandingPage({ onNavigate }: { onNavigate: (t: Tab) => void }) {
                     ))}
                   </ul>
                   {list.length > 6 && (
-                    <a href={`${GUIDE_BASE}/guides/`} className="mt-auto pt-2 pl-2 text-sm font-semibold text-brand-700 hover:text-brand-800">
+                    <a href={`${GUIDE_BASE}/guides/`} className="mt-auto inline-flex min-h-11 items-center pl-2 text-sm font-semibold text-brand-700 hover:text-brand-800">
                       + {list.length - 6} autres
                     </a>
                   )}
@@ -265,7 +265,7 @@ export function LandingPage({ onNavigate }: { onNavigate: (t: Tab) => void }) {
             })}
           </div>
           <p className="mt-5 text-center">
-            <a href={`${GUIDE_BASE}/guides/`} className="inline-flex items-center gap-1.5 text-sm font-semibold text-brand-700 hover:text-brand-800">
+            <a href={`${GUIDE_BASE}/guides/`} className="inline-flex min-h-11 items-center gap-1.5 px-2 text-sm font-semibold text-brand-700 hover:text-brand-800">
               Tous les guides <ArrowRight className="size-4" />
             </a>
           </p>
@@ -277,14 +277,14 @@ export function LandingPage({ onNavigate }: { onNavigate: (t: Tab) => void }) {
           <SectionTitle title="Questions fréquentes" />
           <div className="divide-y divide-slate-100 rounded-2xl border border-slate-200">
             {FAQ.map((f) => (
-              <details key={f.q} className="group px-5 py-4">
-                <summary className="cursor-pointer list-none font-medium text-slate-900 marker:hidden">
+              <details key={f.q} className="group px-5">
+                <summary className="cursor-pointer list-none py-4 font-medium text-slate-900 marker:hidden">
                   <span className="flex items-center justify-between gap-3">
                     {f.q}
                     <span className="text-brand-600 transition-transform group-open:rotate-45">+</span>
                   </span>
                 </summary>
-                <p className="mt-2 text-sm leading-relaxed text-slate-600">{f.a}</p>
+                <p className="pb-4 text-sm leading-relaxed text-slate-600">{f.a}</p>
               </details>
             ))}
           </div>
@@ -293,7 +293,7 @@ export function LandingPage({ onNavigate }: { onNavigate: (t: Tab) => void }) {
 
       <p className="px-4 pt-8 text-center text-sm text-slate-600">
         Une autre question ?{' '}
-        <button type="button" className="font-semibold text-brand-700 underline" onClick={() => onNavigate('contact')}>
+        <button type="button" className="hit font-semibold text-brand-700 underline" onClick={() => onNavigate('contact')}>
           Écrivez-nous
         </button>
         , nous répondons dans l’appli.
@@ -308,8 +308,8 @@ export function LandingPage({ onNavigate }: { onNavigate: (t: Tab) => void }) {
         </Button>
       </section>
 
-      <footer className="px-4 pb-8 text-center text-xs text-slate-400">
-        <button type="button" className="underline" onClick={() => onNavigate('confidentialite')}>
+      <footer className="px-4 pb-8 text-center text-xs text-slate-500">
+        <button type="button" className="min-h-11 px-2 underline" onClick={() => onNavigate('confidentialite')}>
           Confidentialité
         </button>
       </footer>

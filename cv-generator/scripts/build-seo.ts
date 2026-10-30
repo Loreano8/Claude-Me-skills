@@ -88,7 +88,7 @@ details p{margin:0;padding:0 16px 14px}
 .related h2{margin-top:0}
 footer{border-top:1px solid var(--line);background:#fff;font-size:14px}
 footer .in{max-width:1040px;margin:0 auto;padding:28px 16px;display:grid;gap:20px;grid-template-columns:repeat(auto-fit,minmax(190px,1fr))}
-footer h4{margin:0 0 8px;color:var(--ink);font-size:14px}footer ul{list-style:none;padding:0;margin:0}footer li{margin:4px 0}footer a{color:var(--text);text-decoration:none}footer a:hover{color:var(--brand)}
+footer h4{margin:0 0 8px;color:var(--ink);font-size:14px}footer ul{list-style:none;padding:0;margin:0}footer li{margin:0}footer a{display:inline-block;padding:7px 0;color:var(--text);text-decoration:none}footer a:hover{color:var(--brand)}
 @media (max-width:560px){h1{font-size:27px}.lead{font-size:17px}.top nav .hide-sm{display:none}.cta{padding:20px}}
 `;
 

@@ -297,7 +297,7 @@ export function CvStory() {
   // Animations réduites : le CV terminé, avec les trois étapes à côté.
   if (reduced) {
     return (
-      <section className="px-4 py-12" aria-label="Comment votre CV se construit">
+      <section className="overflow-x-clip px-4 py-12" aria-label="Comment votre CV se construit">
         <div className="mx-auto grid max-w-5xl items-center gap-10 lg:grid-cols-2">
           <ol className="space-y-5">
             {STEPS.map((s, i) => (
@@ -319,14 +319,14 @@ export function CvStory() {
 
   const active = p < 0.36 ? 0 : p < 0.62 ? 1 : 2;
   return (
-    <section ref={ref} className="relative h-[320vh]" aria-label="Comment votre CV se construit">
+    <section ref={ref} className="relative h-[320vh] overflow-x-clip" aria-label="Comment votre CV se construit">
       <div className="sticky top-14 flex h-[calc(100svh-3.5rem-4rem)] items-center px-4 lg:h-[calc(100svh-3.5rem)]">
         <div className="mx-auto grid w-full max-w-5xl items-center gap-6 lg:grid-cols-[1fr_auto] lg:gap-16">
           {/* Les étapes : en liste sur ordinateur, l'étape en cours seulement sur téléphone. */}
           <div>
             <ol className="hidden space-y-6 lg:block">
               {STEPS.map((s, i) => (
-                <li key={s.title} className="flex gap-4 transition-opacity duration-300" style={{ opacity: i === active ? 1 : 0.35 }}>
+                <li key={s.title} className="flex gap-4 transition-opacity duration-300" style={{ opacity: i === active ? 1 : 0.6 }}>
                   <span
                     className={`flex size-10 shrink-0 items-center justify-center rounded-full text-lg font-bold transition-colors ${i <= active ? 'bg-brand-600 text-white' : 'bg-slate-200 text-slate-600'}`}
                   >
@@ -355,7 +355,7 @@ export function CvStory() {
             <Scaled scale={scale}>
               <CvCanvas p={p} />
             </Scaled>
-            <p className="mt-4 text-center text-xs text-slate-400" style={{ opacity: 1 - step(p, 0.05, 0.15) }}>
+            <p className="mt-4 text-center text-xs text-slate-500" style={{ opacity: 1 - step(p, 0.05, 0.15) }}>
               Faites défiler pour voir votre CV se construire
             </p>
           </div>

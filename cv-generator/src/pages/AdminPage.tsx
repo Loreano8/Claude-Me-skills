@@ -441,7 +441,7 @@ function Sources({ token }: { token: string }) {
           </li>
         ))}
       </ul>
-      <p className="text-xs text-slate-400">Une visite est comptée une fois par session. Les inscrits et acheteurs sont ceux inscrits pendant la période, d’après la première pub qui les a amenés (30 jours).</p>
+      <p className="text-xs text-slate-500">Une visite est comptée une fois par session. Les inscrits et acheteurs sont ceux inscrits pendant la période, d’après la première pub qui les a amenés (30 jours).</p>
     </div>
   );
 }

@@ -277,7 +277,7 @@ export function ApplicationsPage({ onNavigate }: { onNavigate: (t: Tab) => void 
       {applications.length === 0 && (
         <Notice tone="info">
           Aucune candidature pour l’instant. Elles s’ajoutent toutes seules quand vous adaptez votre CV à une offre ou préparez un entretien.{' '}
-          <button type="button" className="font-semibold underline" onClick={() => onNavigate('offre')}>
+          <button type="button" className="hit font-semibold underline" onClick={() => onNavigate('offre')}>
             Ajouter une offre
           </button>
         </Notice>

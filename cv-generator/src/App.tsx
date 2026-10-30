@@ -52,7 +52,7 @@ function initialTab(): Tab {
 
 function Logo({ onClick }: { onClick: () => void }) {
   return (
-    <button type="button" onClick={onClick} className="flex shrink-0 items-center gap-2" aria-label="CVCasa, accueil">
+    <button type="button" onClick={onClick} className="hit flex shrink-0 items-center gap-2 rounded-xl" aria-label="CVCasa, accueil">
       <img src={`${import.meta.env.BASE_URL}icons/icon.svg`} alt="" className="size-8" />
       <span className="text-lg font-bold tracking-tight whitespace-nowrap text-slate-900 max-[419px]:hidden">
         CV<span className="text-brand-600">Casa</span>
@@ -69,7 +69,7 @@ function ContactButton({ active, onClick }: { active: boolean; onClick: () => vo
       onClick={onClick}
       aria-label={unread ? `Nous contacter (${unread} réponse${unread > 1 ? 's' : ''} non lue${unread > 1 ? 's' : ''})` : 'Nous contacter'}
       title="Nous contacter"
-      className={cx('relative rounded-xl p-2 transition-colors', active ? 'bg-brand-50 text-brand-700' : 'text-slate-600 hover:bg-slate-100')}
+      className={cx('hit relative rounded-xl p-2.5 transition-colors', active ? 'bg-brand-50 text-brand-700' : 'text-slate-600 hover:bg-slate-100')}
     >
       <MessageCircle className="size-5" />
       {unread > 0 && (
@@ -151,7 +151,7 @@ export default function App() {
   };
 
   return (
-    <div className="min-h-dvh bg-slate-100/70">
+    <div className="min-h-dvh bg-slate-50">
       <header className="sticky top-0 z-20 border-b border-slate-200 bg-white/90 backdrop-blur pt-[env(safe-area-inset-top)]">
         <div className="mx-auto flex max-w-7xl items-center justify-between gap-2 px-3 py-2.5 sm:gap-3 sm:px-4">
           <Logo onClick={() => setTab('accueil')} />
@@ -206,7 +206,7 @@ export default function App() {
             key={t.id}
             type="button"
             onClick={() => setTab(t.id)}
-            className={cx('flex flex-col items-center gap-0.5 py-2.5 text-[11px] font-medium', tab === t.id ? 'text-brand-700' : 'text-slate-500')}
+            className={cx('flex min-h-14 flex-col items-center justify-center gap-0.5 py-2 text-xs font-medium', tab === t.id ? 'text-brand-700' : 'text-slate-500')}
           >
             <t.icon className={cx('size-5', tab === t.id && 'stroke-[2.4]')} />
             {t.short}

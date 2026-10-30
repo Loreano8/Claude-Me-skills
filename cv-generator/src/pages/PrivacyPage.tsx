@@ -57,7 +57,7 @@ export function PrivacyPage() {
               ))}
             </section>
           ))}
-          <p className="text-xs text-slate-400">Dernière mise à jour : octobre 2026.</p>
+          <p className="text-xs text-slate-500">Dernière mise à jour : octobre 2026.</p>
         </div>
       </Card>
     </div>

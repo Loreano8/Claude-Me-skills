@@ -205,7 +205,7 @@ export function Tour({ tab }: { tab: Tab }) {
         <button
           type="button"
           onClick={start}
-          className="fixed right-3 bottom-[calc(env(safe-area-inset-bottom)+4.75rem)] z-10 flex items-center gap-1.5 rounded-full border border-slate-200 bg-white/95 px-3 py-2 text-sm font-medium text-slate-700 shadow-md backdrop-blur hover:bg-slate-50 lg:right-5 lg:bottom-5"
+          className="fixed right-3 bottom-[calc(env(safe-area-inset-bottom)+4.75rem)] z-10 flex items-center gap-1.5 rounded-full border border-slate-200 bg-white/95 px-3.5 py-3 text-sm font-medium text-slate-700 shadow-md backdrop-blur hover:bg-slate-50 lg:right-5 lg:bottom-5"
           aria-label="Revoir le guide de cette page"
         >
           <HelpCircle className="size-4 text-brand-600" /> Guide
@@ -243,7 +243,7 @@ export function Tour({ tab }: { tab: Tab }) {
                   {step.title}
                 </h2>
               </div>
-              <button type="button" onClick={close} aria-label="Fermer le guide" className="-mt-1 -mr-1 rounded-lg p-1.5 text-slate-400 hover:bg-slate-100 hover:text-slate-700">
+              <button type="button" onClick={close} aria-label="Fermer le guide" className="-mt-2 -mr-2 rounded-lg p-2.5 text-slate-500 hover:bg-slate-100 hover:text-slate-700">
                 <X className="size-4" />
               </button>
             </div>
@@ -257,7 +257,7 @@ export function Tour({ tab }: { tab: Tab }) {
             </div>
             <div className="mt-3 flex items-center gap-2">
               {!last && (
-                <button type="button" onClick={close} className="text-sm font-medium text-slate-500 hover:text-slate-800">
+                <button type="button" onClick={close} className="min-h-9 px-1 text-sm font-medium text-slate-600 hover:text-slate-900">
                   Passer
                 </button>
               )}

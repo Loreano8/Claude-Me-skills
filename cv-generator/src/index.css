@@ -19,7 +19,31 @@ html {
 }
 
 body {
-  @apply bg-slate-100 font-sans text-slate-900 antialiased;
+  @apply bg-slate-50 font-sans text-slate-900 antialiased;
+}
+
+/* Contour visible pour la navigation au clavier (jamais au toucher ni à la souris). */
+:where(button, a[href], summary, [role='button'], label:has(> input[type='color'])):focus-visible {
+  outline: 2px solid var(--color-brand-500);
+  outline-offset: 2px;
+}
+
+/* Au doigt : retour visuel immédiat sur ce qui se touche, sans faire bouger la mise en page. */
+@media (pointer: coarse) {
+  :where(button:not(:disabled), a[href], summary):active {
+    opacity: 0.7;
+    transition: opacity 80ms;
+  }
+}
+
+/* Zone tactile agrandie (44 px) autour d'un petit bouton, sans changer son apparence. */
+@utility hit {
+  position: relative;
+  &::after {
+    content: '';
+    position: absolute;
+    inset: -6px;
+  }
 }
 
 /* Titre d'étape de l'animation du CV (accueil). */

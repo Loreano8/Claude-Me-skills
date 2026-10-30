@@ -64,7 +64,7 @@ export function ScannerButton({ active, onClick }: { active: boolean; onClick: (
       aria-label="Scanner un document en PDF"
       title="Scanner un document en PDF"
       className={cx(
-        'flex items-center gap-1.5 rounded-xl border px-2 py-1.5 text-sm font-semibold whitespace-nowrap transition-colors sm:px-2.5',
+        'hit flex items-center gap-1.5 rounded-xl border px-2 py-2 text-sm font-semibold whitespace-nowrap transition-colors sm:px-2.5',
         active ? 'border-brand-600 bg-brand-600 text-white' : 'border-brand-200 bg-brand-50 text-brand-700 hover:bg-brand-100',
       )}
     >
@@ -305,7 +305,7 @@ export function DossierPage({ onNavigate, mode = 'dossier' }: { onNavigate: (t: 
           Pour scanner : posez la feuille à plat sur une surface sombre, bien éclairée. Une photo par page, puis ajustez les coins avec <Crop className="inline size-3.5" /> si besoin.
         </p>
         <p className="mt-1.5">
-          <span className="inline-flex items-center gap-1 rounded-full bg-slate-100 px-2 py-0.5 text-[11px] font-medium text-slate-500">Recadrage automatique · bientôt</span>
+          <span className="inline-flex items-center gap-1 rounded-full bg-slate-100 px-2 py-0.5 text-xs font-medium text-slate-600">Recadrage automatique · bientôt</span>
         </p>
         {!scanner && cvBlocked && (
           <div className="mt-3">
