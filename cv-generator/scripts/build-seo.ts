@@ -16,42 +16,80 @@ const json = (o: unknown) => JSON.stringify(o).replace(/</g, '\\u003c');
 const appLink = (from: string, tab = 'infos') => `/?src=${encodeURIComponent(from)}#${tab}`;
 
 const CSS = `
-:root{--brand:#2549eb;--brand-dark:#1e3a8a;--ink:#0f172a;--text:#334155;--muted:#64748b;--line:#e2e8f0;--soft:#eff4ff;--bg:#f8fafc}
+:root{--brand:#2549eb;--brand-dark:#1e3a8a;--ink:#0f172a;--text:#334155;--muted:#64748b;--line:#e2e8f0;--soft:#eef3ff;--bg:#f8fafc}
 *{box-sizing:border-box}
-body{margin:0;background:var(--bg);color:var(--text);font:16px/1.65 system-ui,-apple-system,"Segoe UI",Roboto,Inter,Arial,sans-serif;-webkit-text-size-adjust:100%}
+html{scroll-behavior:smooth}
+@media (prefers-reduced-motion:reduce){html{scroll-behavior:auto}*{transition:none!important}}
+body{margin:0;background:var(--bg);color:var(--text);font:16px/1.7 system-ui,-apple-system,"Segoe UI",Roboto,Inter,Arial,sans-serif;-webkit-text-size-adjust:100%}
 a{color:var(--brand)}
-.top{position:sticky;top:0;z-index:5;background:rgba(255,255,255,.95);backdrop-filter:blur(6px);border-bottom:1px solid var(--line)}
-.top .in{max-width:960px;margin:0 auto;padding:10px 16px;display:flex;align-items:center;gap:12px}
-.logo{display:flex;align-items:center;gap:8px;text-decoration:none;color:var(--ink);font-weight:800;font-size:18px}
+a:focus-visible,summary:focus-visible{outline:2px solid var(--brand);outline-offset:2px;border-radius:8px}
+.top{position:sticky;top:0;z-index:5;background:rgba(255,255,255,.92);backdrop-filter:blur(8px);border-bottom:1px solid var(--line)}
+.top .in{max-width:1040px;margin:0 auto;padding:10px 16px;display:flex;align-items:center;gap:12px}
+.logo{display:flex;align-items:center;gap:8px;text-decoration:none;color:var(--ink);font-weight:800;font-size:18px;letter-spacing:-.01em}
 .logo img{width:30px;height:30px}.logo b{color:var(--brand)}
 .top nav{margin-left:auto;display:flex;align-items:center;gap:6px}
 .top nav a{text-decoration:none;font-weight:600;font-size:14px;color:var(--text);padding:8px 10px;border-radius:10px;white-space:nowrap}
-.btn{display:inline-block;background:var(--brand);color:#fff!important;text-decoration:none;font-weight:700;border-radius:12px;padding:12px 20px}
+.top nav a:not(.btn):hover{background:var(--soft);color:var(--brand)}
+.btn{display:inline-flex;align-items:center;gap:8px;background:var(--brand);color:#fff!important;text-decoration:none;font-weight:700;border-radius:12px;padding:12px 20px;box-shadow:0 1px 2px rgba(15,23,42,.08);transition:background .15s,transform .15s}
+.btn:hover{background:var(--brand-dark)}.btn:active{transform:translateY(1px)}
 .top .btn{padding:8px 14px;font-size:14px}
-main{max-width:760px;margin:0 auto;padding:20px 16px 40px}
-.crumbs{font-size:13px;color:var(--muted);margin:4px 0 14px}.crumbs a{color:var(--muted)}
-h1{color:var(--ink);font-size:30px;line-height:1.2;letter-spacing:-.02em;margin:0 0 14px}
-h2{color:var(--ink);font-size:21px;line-height:1.3;margin:30px 0 10px}
-h3{color:var(--ink);font-size:17px;margin:0 0 6px}
+.hero{background:linear-gradient(180deg,#e8efff 0%,var(--bg) 100%);border-bottom:1px solid var(--line)}
+.hero .in{max-width:1040px;margin:0 auto;padding:18px 16px 30px}
+.crumbs{font-size:13px;color:var(--muted);margin:0 0 18px}.crumbs a{color:var(--muted);text-decoration:none}.crumbs a:hover{color:var(--brand)}
+.badge{display:inline-block;font-size:12px;font-weight:700;color:var(--brand);background:#fff;border:1px solid #c7d7fe;border-radius:999px;padding:3px 10px;letter-spacing:.03em;text-transform:uppercase}
+h1{color:var(--ink);font-size:34px;line-height:1.15;letter-spacing:-.025em;margin:12px 0 12px;max-width:760px}
+.lead{font-size:18px;color:#1e293b;max-width:720px;margin:0}
+.meta{display:flex;flex-wrap:wrap;align-items:center;gap:14px;margin-top:18px;font-size:14px;color:var(--muted)}
+.meta .btn{font-size:15px}
+.wrap{max-width:1040px;margin:0 auto;padding:28px 16px 48px;display:grid;gap:40px}
+@media (min-width:980px){.wrap{grid-template-columns:minmax(0,1fr) 270px}}
+article{max-width:720px}
+h2{color:var(--ink);font-size:22px;line-height:1.3;letter-spacing:-.01em;margin:34px 0 10px;scroll-margin-top:80px}
+article > p:first-child{margin-top:0}
 p{margin:0 0 12px}
-ul{margin:0 0 12px;padding-left:22px}li{margin:4px 0}
-.lead{font-size:18px;color:var(--ink)}
-.cta{margin:26px 0;padding:20px;border-radius:18px;background:var(--soft);border:1px solid #c7d7fe}
-.cta p{margin:0 0 12px;color:var(--ink)}
-.ex{margin:16px 0;padding:16px 18px;border-radius:14px;background:#fff;border:1px solid var(--line);border-left:4px solid var(--brand)}
-.ex .t{font-size:13px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;color:var(--muted);margin-bottom:6px}
-.ex ul{list-style:none;padding:0;margin:0}.ex ul.lines li:first-child{font-weight:700;color:var(--ink)}
-.note{font-size:14px;color:var(--muted);margin-top:8px}
-details{background:#fff;border:1px solid var(--line);border-radius:14px;padding:12px 16px;margin:8px 0}
-summary{cursor:pointer;font-weight:600;color:var(--ink)}
-details p{margin:8px 0 0}
-.grid{display:grid;gap:10px;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));margin:10px 0 20px}
-.grid a{display:block;background:#fff;border:1px solid var(--line);border-radius:14px;padding:12px 14px;text-decoration:none;color:var(--ink);font-weight:600}
-.grid a:hover,.top nav a:hover{background:var(--soft)}
+article ul{margin:0 0 12px;padding-left:0;list-style:none}
+article ul li{position:relative;padding-left:22px;margin:7px 0}
+article ul li::before{content:"";position:absolute;left:4px;top:.72em;width:7px;height:7px;border-radius:99px;background:var(--brand);opacity:.75}
+.side{display:none}
+@media (min-width:980px){.side{display:block}}
+.side .box{position:sticky;top:80px;display:grid;gap:14px}
+.toc{background:#fff;border:1px solid var(--line);border-radius:16px;padding:16px}
+.toc .t,.cv .t{font-size:12px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:var(--muted);margin-bottom:8px}
+.toc ol{list-style:none;margin:0;padding:0;counter-reset:s}
+.toc li{counter-increment:s;margin:2px 0}
+.toc a{display:flex;gap:8px;padding:6px 8px;border-radius:8px;text-decoration:none;color:var(--text);font-size:14px;line-height:1.4}
+.toc a::before{content:counter(s);color:var(--brand);font-weight:700;min-width:12px}
+.toc a:hover{background:var(--soft);color:var(--ink)}
+.mini{background:var(--ink);color:#fff;border-radius:16px;padding:18px}
+.mini p{margin:0 0 12px;font-weight:600;line-height:1.5}
+.mini .btn{width:100%;justify-content:center}
+.cv{margin:22px 0;background:#fff;border:1px solid var(--line);border-radius:16px;overflow:hidden;box-shadow:0 10px 30px -12px rgba(15,23,42,.18)}
+.cv .bar{height:6px;background:linear-gradient(90deg,var(--brand),#60a5fa)}
+.cv .body{padding:18px 22px}
+.cv .role{font-weight:700;color:var(--ink);margin:0 0 8px}
+.cv ul{margin:0}
+.cv blockquote{margin:0;padding-left:14px;border-left:3px solid #c7d7fe;color:#1e293b;font-style:italic}
+.cv .note{font-size:14px;color:var(--muted);margin:12px 0 0;padding-top:12px;border-top:1px dashed var(--line)}
+.cta{margin:30px 0;padding:24px;border-radius:20px;background:linear-gradient(135deg,var(--brand) 0%,var(--brand-dark) 100%);color:#fff;display:grid;gap:14px}
+.cta p{margin:0;font-size:17px;font-weight:600;line-height:1.5;color:#fff}
+.cta .btn{background:#fff;color:var(--brand)!important;justify-self:start}
+.cta .btn:hover{background:#eef3ff}
+details{background:#fff;border:1px solid var(--line);border-radius:14px;padding:0;margin:10px 0}
+summary{cursor:pointer;list-style:none;display:flex;justify-content:space-between;gap:12px;padding:14px 16px;font-weight:600;color:var(--ink)}
+summary::-webkit-details-marker{display:none}
+summary::after{content:"+";color:var(--brand);font-size:22px;line-height:1;transition:transform .2s}
+details[open] summary::after{transform:rotate(45deg)}
+details p{margin:0;padding:0 16px 14px}
+.grid{display:grid;gap:10px;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));margin:12px 0 8px}
+.grid a{display:flex;flex-direction:column;gap:2px;background:#fff;border:1px solid var(--line);border-radius:14px;padding:12px 14px;text-decoration:none;color:var(--ink);font-weight:600;transition:border-color .15s,box-shadow .15s,transform .15s}
+.grid a small{font-size:12px;font-weight:600;color:var(--muted)}
+.grid a:hover{border-color:#a5b8fc;box-shadow:0 6px 18px -8px rgba(37,73,235,.35);transform:translateY(-1px)}
+.related{max-width:1040px;margin:0 auto;padding:0 16px 48px}
+.related h2{margin-top:0}
 footer{border-top:1px solid var(--line);background:#fff;font-size:14px}
-footer .in{max-width:960px;margin:0 auto;padding:24px 16px;display:grid;gap:18px;grid-template-columns:repeat(auto-fit,minmax(200px,1fr))}
-footer h4{margin:0 0 6px;color:var(--ink);font-size:14px}footer ul{list-style:none;padding:0;margin:0}footer a{color:var(--text);text-decoration:none}
-@media (max-width:520px){h1{font-size:25px}.top nav .hide-sm{display:none}}
+footer .in{max-width:1040px;margin:0 auto;padding:28px 16px;display:grid;gap:20px;grid-template-columns:repeat(auto-fit,minmax(190px,1fr))}
+footer h4{margin:0 0 8px;color:var(--ink);font-size:14px}footer ul{list-style:none;padding:0;margin:0}footer li{margin:4px 0}footer a{color:var(--text);text-decoration:none}footer a:hover{color:var(--brand)}
+@media (max-width:560px){h1{font-size:27px}.lead{font-size:17px}.top nav .hide-sm{display:none}.cta{padding:20px}}
 `;
 
 function head(o: { title: string; description: string; path: string; jsonld: unknown[] }): string {
@@ -118,20 +156,37 @@ function related(g: Guide): Guide[] {
   return [...same.slice(0, 3), ...other.slice(0, 3)];
 }
 
+const slugify = (t: string) =>
+  t.normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+
+/** Temps de lecture estimé (200 mots par minute). */
+function readingMinutes(g: Guide): number {
+  const text = [...g.intro, ...g.sections.flatMap((s) => [s.h, ...(s.p ?? []), ...(s.list ?? [])]), ...(g.example?.lines ?? []), ...g.faq.flatMap((f) => [f.q, f.a])].join(' ');
+  return Math.max(1, Math.round(text.split(/\s+/).length / 200));
+}
+
+function exampleBlock(g: Guide): string {
+  if (!g.example) return '';
+  const { title, lines, note } = g.example;
+  const body =
+    lines.length > 1
+      ? `<p class="role">${esc(lines[0])}</p><ul>${lines.slice(1).map((l) => `<li>${esc(l)}</li>`).join('')}</ul>`
+      : `<blockquote>${esc(lines[0])}</blockquote>`;
+  return `<figure class="cv"><div class="bar"></div><div class="body"><div class="t">${esc(title)}</div>${body}${note ? `<p class="note">${esc(note)}</p>` : ''}</div></figure>`;
+}
+
 function guidePage(g: Guide): string {
-  const sections = g.sections
-    .map(
-      (s) =>
-        `<h2>${esc(s.h)}</h2>${(s.p ?? []).map((p) => `<p>${esc(p)}</p>`).join('')}${s.list ? `<ul>${s.list.map((l) => `<li>${esc(l)}</li>`).join('')}</ul>` : ''}`,
-    )
-    .join('\n');
-  const example = g.example
-    ? `<div class="ex"><div class="t">${esc(g.example.title)}</div><ul${g.example.lines.length > 1 ? ' class="lines"' : ''}>${g.example.lines.map((l) => `<li>${esc(l)}</li>`).join('')}</ul>${g.example.note ? `<p class="note">${esc(g.example.note)}</p>` : ''}</div>`
-    : '';
-  const middle = Math.min(2, g.sections.length);
-  const [first, rest] = [sections.split('\n').slice(0, middle).join('\n'), sections.split('\n').slice(middle).join('\n')];
+  const blocks = g.sections.map(
+    (s) =>
+      `<h2 id="${slugify(s.h)}">${esc(s.h)}</h2>${(s.p ?? []).map((p) => `<p>${esc(p)}</p>`).join('')}${s.list ? `<ul>${s.list.map((l) => `<li>${esc(l)}</li>`).join('')}</ul>` : ''}`,
+  );
+  const middle = Math.min(2, blocks.length);
   const faq = g.faq.map((f) => `<details><summary>${esc(f.q)}</summary><p>${esc(f.a)}</p></details>`).join('');
+  const toc = [...g.sections.map((s) => ({ id: slugify(s.h), h: s.h })), { id: 'questions-frequentes', h: 'Questions fréquentes' }];
   const path = `/${g.slug}/`;
+  const tab = g.kind === 'lettre' ? 'lettre' : 'infos';
+  const action = g.kind === 'lettre' ? 'Rédiger ma lettre' : 'Créer mon CV gratuitement';
+  const from = 'guide-' + g.slug;
   return `${head({
     title: g.title,
     description: g.description,
@@ -139,25 +194,34 @@ function guidePage(g: Guide): string {
     jsonld: [crumbsLd([{ name: 'Accueil', path: '/' }, { name: 'Guides', path: '/guides/' }, { name: g.label, path }]), faqLd(g.faq)],
   })}
 <body>
-${topBar('guide-' + g.slug)}
-<main>
-<div class="crumbs"><a href="/">Accueil</a> › <a href="/guides/">Guides</a> › ${esc(g.label)}</div>
-<article>
+${topBar(from)}
+<header class="hero"><div class="in">
+<nav class="crumbs" aria-label="Fil d’Ariane"><a href="/">Accueil</a> › <a href="/guides/">Guides</a> › ${esc(g.label)}</nav>
+<span class="badge">${KIND_LABEL[g.kind]}</span>
 <h1>${esc(g.h1)}</h1>
-${g.intro.map((p, i) => `<p${i === 0 ? ' class="lead"' : ''}>${esc(p)}</p>`).join('')}
-${first}
-${example}
+<p class="lead">${esc(g.intro[0])}</p>
+<div class="meta"><a class="btn" href="${appLink(from, tab)}">${action}</a><span>Lecture : ${readingMinutes(g)} min · Gratuit, sans compte</span></div>
+</div></header>
+<div class="wrap">
+<article>
+${g.intro.slice(1).map((p) => `<p>${esc(p)}</p>`).join('')}
+${blocks.slice(0, middle).join('\n')}
+${exampleBlock(g)}
 ${cta(g, g.kind === 'lettre' ? 'Une lettre personnalisée pour chaque offre, à partir de votre CV et de vos réponses.' : 'Racontez votre parcours en vrac, à l’écrit ou au micro : CVCasa le met en forme dans un CV clair. Gratuit, sans compte.')}
-${rest}
-<h2>Questions fréquentes</h2>
+${blocks.slice(middle).join('\n')}
+<h2 id="questions-frequentes">Questions fréquentes</h2>
 ${faq}
 ${cta(g, 'Collez une offre d’emploi : votre CV est adapté au poste, avec la lettre qui va avec.')}
 </article>
-<h2>À lire aussi</h2>
+<aside class="side" aria-label="Sur cette page"><div class="box">
+<nav class="toc"><div class="t">Sur cette page</div><ol>${toc.map((t) => `<li><a href="#${t.id}">${esc(t.h)}</a></li>`).join('')}</ol></nav>
+<div class="mini"><p>Votre CV prêt en quelques minutes, à partir de vos mots.</p><a class="btn" href="${appLink(from, tab)}">${action}</a></div>
+</div></aside>
+</div>
+<section class="related"><h2>À lire aussi</h2>
 <div class="grid">${related(g)
-    .map((r) => `<a href="/${r.slug}/">${esc(r.label)}</a>`)
-    .join('')}</div>
-</main>
+    .map((r) => `<a href="/${r.slug}/"><small>${KIND_LABEL[r.kind]}</small>${esc(r.label)}</a>`)
+    .join('')}</div></section>
 ${footer()}
 </body>
 </html>
@@ -166,24 +230,28 @@ ${footer()}
 
 function hubPage(): string {
   const groups = KINDS.map(
-    (k) => `<h2>${KIND_LABEL[k]}</h2><div class="grid">${GUIDES.filter((g) => g.kind === k)
-      .map((g) => `<a href="/${g.slug}/">${esc(g.label)}</a>`)
+    (k) => `<h2 id="${k}">${KIND_LABEL[k]}</h2><div class="grid">${GUIDES.filter((g) => g.kind === k)
+      .map((g) => `<a href="/${g.slug}/"><small>${readingMinutes(g)} min de lecture</small>${esc(g.label)}</a>`)
       .join('')}</div>`,
   ).join('\n');
   return `${head({
     title: 'Guides CV et lettre de motivation : modèles et conseils | CVCasa',
-    description: 'Des guides concrets pour faire votre CV par métier ou selon votre situation, et écrire une lettre de motivation qui donne envie de vous rencontrer.',
+    description: 'Des guides concrets pour faire votre CV par métier, par pays ou selon votre situation, et écrire une lettre de motivation qui donne envie de vous rencontrer.',
     path: '/guides/',
     jsonld: [crumbsLd([{ name: 'Accueil', path: '/' }, { name: 'Guides', path: '/guides/' }])],
   })}
 <body>
 ${topBar('guides')}
-<main>
-<div class="crumbs"><a href="/">Accueil</a> › Guides</div>
+<header class="hero"><div class="in">
+<nav class="crumbs" aria-label="Fil d’Ariane"><a href="/">Accueil</a> › Guides</nav>
+<span class="badge">${GUIDES.length} guides gratuits</span>
 <h1>Guides pour votre CV et votre lettre de motivation</h1>
-<p class="lead">Des conseils concrets, des exemples et les erreurs à éviter, métier par métier.</p>
+<p class="lead">Des conseils concrets, des exemples et les erreurs à éviter, métier par métier et pays par pays.</p>
+<div class="meta"><a class="btn" href="${appLink('guides')}">Créer mon CV gratuitement</a></div>
+</div></header>
+<main class="related" style="padding-top:28px">
 ${groups}
-<div class="cta"><p>Prêt à vous lancer ? Votre CV est gratuit, sans compte.</p><a class="btn" href="${appLink('guides')}">Créer mon CV</a></div>
+${'<div class="cta"><p>Prêt à vous lancer ? Votre CV est gratuit, sans compte.</p><a class="btn" href="' + appLink('guides') + '">Créer mon CV</a></div>'}
 </main>
 ${footer()}
 </body>

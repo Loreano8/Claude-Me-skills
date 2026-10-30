@@ -1,17 +1,23 @@
 import { useEffect, useState } from 'react';
-import { ArrowRight, BadgeCheck, Check, ClipboardList, FileDown, FileStack, Globe2, Languages, Mail, MessagesSquare, PenLine, PlayCircle, ShieldCheck, Target } from 'lucide-react';
+import { ArrowRight, BadgeCheck, Briefcase, GraduationCap, Check, ClipboardList, FileDown, FileStack, Globe2, Languages, Mail, MessagesSquare, PenLine, PlayCircle, ShieldCheck, Target } from 'lucide-react';
 import { PACKS } from '../../server/payments.ts';
 import { CvStory } from '../components/CvStory.tsx';
 import type { Tab } from '../App.tsx';
 import { Button } from '../components/ui.tsx';
 import { api, type PublicTestimonial } from '../lib/api.ts';
 import { FAQ } from '../lib/faq.ts';
-import { GUIDES } from '../../seo/guides.ts';
+import { GUIDES, KIND_LABEL, type GuideKind } from '../../seo/guides.ts';
 import { Capacitor } from '@capacitor/core';
 import { PUBLIC_SITE } from '../lib/referral.ts';
 
 // Dans l'application Android, les guides s'ouvrent sur le site.
 const GUIDE_BASE = Capacitor.isNativePlatform() ? PUBLIC_SITE.replace(/\/$/, '') : '';
+const GUIDE_GROUPS: { kind: GuideKind; icon: typeof Target }[] = [
+  { kind: 'metier', icon: Briefcase },
+  { kind: 'pays', icon: Globe2 },
+  { kind: 'situation', icon: GraduationCap },
+  { kind: 'lettre', icon: Mail },
+];
 
 const fcfa = (n: number) => `${n.toLocaleString('fr-FR')} FCFA`;
 
@@ -227,14 +233,42 @@ export function LandingPage({ onNavigate }: { onNavigate: (t: Tab) => void }) {
 
       <section className="px-4 py-12">
         <div className="mx-auto max-w-5xl">
-          <SectionTitle title="Conseils et exemples" subtitle="Par métier, selon votre situation, et pour la lettre de motivation." />
-          <div className="flex flex-wrap justify-center gap-2">
-            {GUIDES.map((g) => (
-              <a key={g.slug} href={`${GUIDE_BASE}/${g.slug}/`} className="rounded-full border border-slate-200 bg-white px-4 py-2 text-sm font-medium text-slate-700 shadow-sm hover:border-brand-300 hover:text-brand-700">
-                {g.label}
-              </a>
-            ))}
+          <SectionTitle title="Conseils et exemples" subtitle="Des guides concrets, métier par métier, pays par pays." />
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+            {GUIDE_GROUPS.map(({ kind, icon: Icon }) => {
+              const list = GUIDES.filter((g) => g.kind === kind);
+              return (
+                <div key={kind} className="flex flex-col rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+                  <div className="flex items-center gap-2.5">
+                    <span className="flex size-9 items-center justify-center rounded-xl bg-brand-50 text-brand-700">
+                      <Icon className="size-5" />
+                    </span>
+                    <h3 className="font-semibold text-slate-900">{KIND_LABEL[kind]}</h3>
+                  </div>
+                  <ul className="mt-3 space-y-0.5">
+                    {list.slice(0, 6).map((g) => (
+                      <li key={g.slug}>
+                        <a href={`${GUIDE_BASE}/${g.slug}/`} className="group flex items-center justify-between gap-2 rounded-lg px-2 py-1.5 text-sm text-slate-700 hover:bg-brand-50 hover:text-brand-800">
+                          {g.label}
+                          <ArrowRight className="size-3.5 shrink-0 text-slate-300 transition-transform group-hover:translate-x-0.5 group-hover:text-brand-600" />
+                        </a>
+                      </li>
+                    ))}
+                  </ul>
+                  {list.length > 6 && (
+                    <a href={`${GUIDE_BASE}/guides/`} className="mt-auto pt-2 pl-2 text-sm font-semibold text-brand-700 hover:text-brand-800">
+                      + {list.length - 6} autres
+                    </a>
+                  )}
+                </div>
+              );
+            })}
           </div>
+          <p className="mt-5 text-center">
+            <a href={`${GUIDE_BASE}/guides/`} className="inline-flex items-center gap-1.5 text-sm font-semibold text-brand-700 hover:text-brand-800">
+              Tous les guides <ArrowRight className="size-4" />
+            </a>
+          </p>
         </div>
       </section>
 
