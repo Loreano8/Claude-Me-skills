@@ -10,7 +10,7 @@ import { cvFileName, isCvEmpty } from '../lib/cv.ts';
 import { buildDossier, formatSize, FULL_QUAD, orientedPhoto, pdfPageCount, processPhoto, type DossierPart, type Quad, type ScanMode } from '../lib/dossier.ts';
 import { isProTemplate } from '../pdf/catalog.ts';
 import { saveFile } from '../export/save.ts';
-import { Button, Card, cx, Field, Notice, TextArea } from '../components/ui.tsx';
+import { Button, Card, Cost, cx, Field, Notice, TextArea } from '../components/ui.tsx';
 import type { Tab } from '../App.tsx';
 
 type Item =
@@ -407,7 +407,7 @@ export function DossierPage({ onNavigate, mode = 'dossier' }: { onNavigate: (t: 
             {paid && ' Réglé : vous pouvez le recréer autant de fois que nécessaire.'}
           </p>
           <Button className="mt-2" size="lg" icon={<FileStack className="size-5" />} loading={busy} disabled={busy} onClick={() => void create()}>
-            Créer le PDF{needsCredit && !paid ? ' (1 crédit)' : ` (${items.length} document${items.length > 1 ? 's' : ''})`}
+            Créer le PDF ({items.length} document{items.length > 1 ? 's' : ''}) {needsCredit && !paid ? <Cost /> : <Cost free />}
           </Button>
           {done && (
             <div className="mt-3">

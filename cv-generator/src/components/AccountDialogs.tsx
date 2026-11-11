@@ -197,6 +197,15 @@ const QUESTIONS = [
   'Quel est le surnom que vous donnait votre famille ?',
 ];
 
+/** Ce que coûte chaque action, en une ligne chacune. */
+const PRICES: [string, string][] = [
+  ['Remplir son CV à la main et le télécharger en PDF', 'Gratuit'],
+  ['Une action : générer ou corriger le CV, l’adapter à une offre, la lettre, la fiche entretien, la traduction', '1 crédit'],
+  ['Version Pro d’un CV, pour toujours : sans mention, 13 modèles, Word', '2 crédits'],
+  ['Scanner ou dossier PDF : gratuit jusqu’à 2 pages ou 2 pièces, puis', '1 crédit'],
+  ['Texte écrit à la main tapé au propre, par page', '1 crédit'],
+];
+
 /** « Mes crédits » : phrase ou question secrète (récupération du compte) et changement de mot de passe. */
 function AccountSecurity({ onboarding = false, onSaved }: { onboarding?: boolean; onSaved?: () => void } = {}) {
   const [secretSet, setSecretSet] = useState<boolean | null>(null);
@@ -586,9 +595,19 @@ function CreditsDialog() {
           <Notice tone="warn">{dialogReason}</Notice>
         </div>
       )}
-      <p className="mb-3 text-sm text-slate-600">
-        1 crédit = 1 action : créer ou corriger le CV, l’adapter à une offre, la lettre, la fiche entretien ou la traduction. 2 crédits = 1 CV en version Pro, acquise pour toujours sur ce CV (sans mention « Créé avec CVCasa », 13 modèles, export Word). Scanner : 1 crédit le PDF au-delà de 2 pages, 1 crédit par page manuscrite tapée. Remplir le CV et le télécharger en PDF reste gratuit.
-      </p>
+      <table className="mb-3 w-full text-sm">
+        <caption className="sr-only">Ce que coûte chaque action</caption>
+        <tbody className="divide-y divide-slate-100">
+          {PRICES.map(([what, price]) => (
+            <tr key={what}>
+              <th scope="row" className="py-1.5 pr-3 text-left font-normal text-slate-700">
+                {what}
+              </th>
+              <td className="py-1.5 text-right font-semibold whitespace-nowrap text-slate-900">{price}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
       <div className="space-y-2">
         {offerOpen && (
           <div className="flex items-center gap-3 rounded-2xl border-2 border-amber-400 bg-amber-50 p-3">

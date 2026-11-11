@@ -12,7 +12,7 @@ import { NaturalReview } from '../components/NaturalReview.tsx';
 import { letterCliches } from '../lib/naturalCheck.ts';
 import { appendSpoken, MicButton } from '../components/MicButton.tsx';
 import { ProOffer } from '../components/ProUnlock.tsx';
-import { Button, Card, Field, Notice, Select, TextArea, Toggle } from '../components/ui.tsx';
+import { Button, Card, Cost, Field, Notice, Select, TextArea, Toggle } from '../components/ui.tsx';
 import type { Tab } from '../App.tsx';
 
 function GenerateCard({ onNavigate }: { onNavigate: (t: Tab) => void }) {
@@ -167,7 +167,7 @@ function GenerateCard({ onNavigate }: { onNavigate: (t: Tab) => void }) {
           ))}
           <div className="flex flex-wrap gap-2">
             <Button variant="ai" icon={<PenLine className="size-4" />} loading={busy} onClick={() => void generate(answers)}>
-              Générer la lettre
+              Générer la lettre <Cost />
             </Button>
             <Button variant="ghost" disabled={busy} onClick={() => void generate([])}>
               Passer
@@ -177,7 +177,7 @@ function GenerateCard({ onNavigate }: { onNavigate: (t: Tab) => void }) {
       ) : (
         <div className="mt-3">
           <Button variant="ai" icon={<PenLine className="size-4" />} loading={busy || asking} disabled={isCvEmpty(cv) || (!hasJob && !notes.trim())} onClick={() => void start()}>
-            Générer la lettre
+            Générer la lettre <Cost />
           </Button>
           {!hasJob && !notes.trim() && <p className="mt-1.5 text-xs text-slate-500">Pour une candidature spontanée, indiquez au moins l’entreprise ou le poste visé.</p>}
         </div>

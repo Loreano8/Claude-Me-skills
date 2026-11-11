@@ -1,5 +1,5 @@
 import { useRef, useState } from 'react';
-import { AlignLeft, ArrowDown, ArrowUp, Award, Briefcase, Camera, FileText, GraduationCap, Heart, Languages, Paperclip, PenLine, Plus, Trash2, Undo2, User, Wrench, X } from 'lucide-react';
+import { AlignLeft, ArrowDown, ArrowUp, Award, Briefcase, Camera, FileText, GraduationCap, Heart, Languages, ListChecks, Paperclip, PenLine, Plus, Trash2, Undo2, User, Wrench, X } from 'lucide-react';
 import type { Attachment } from '../../shared/schema.ts';
 import { settingsForLang, useActiveCv, useStore } from '../store.ts';
 import type { Certification, CvDocument, Education, Experience, LanguageSkill } from '../types.ts';
@@ -13,7 +13,7 @@ import { learnStyle, WriteLikeMe } from '../components/WriteLikeMe.tsx';
 import { useWritingStyle } from '../lib/writingStyle.ts';
 import { SignaturePad } from '../components/SignaturePad.tsx';
 import { TagInput } from '../components/TagInput.tsx';
-import { Button, Card, Field, Notice, Section, Select, TextArea, Toggle } from '../components/ui.tsx';
+import { Button, Card, Cost, Field, Notice, Section, Select, TextArea, Toggle } from '../components/ui.tsx';
 
 type Update = (recipe: (cv: CvDocument) => CvDocument) => void;
 
@@ -202,11 +202,11 @@ function QuickFill() {
 
       <div className="mt-3 flex flex-wrap gap-2">
         <Button variant="ai" data-tour="generate" icon={<FileText className="size-4" />} loading={busy === 'fill'} disabled={busy !== null || (!text.trim() && !files.length)} onClick={() => run('fill')}>
-          Générer mon CV
+          Générer mon CV <Cost />
         </Button>
         {hasContent && (
           <Button variant="secondary" icon={<PenLine className="size-4" />} loading={busy === 'improve'} disabled={busy !== null} onClick={() => run('improve')}>
-            Améliorer la rédaction
+            Améliorer la rédaction <Cost />
           </Button>
         )}
         {undo && !busy && (
@@ -583,6 +583,8 @@ function SignatureSection({ cv, update }: { cv: CvDocument; update: Update }) {
 export function EditorPage() {
   const cv = useActiveCv();
   const update = useStore((s) => s.updateCv);
+  const empty = isCvEmpty(cv);
+  const [manual, setManual] = useState(false);
   return (
     <div className="space-y-3">
       {cv.adaptation && (
@@ -591,8 +593,22 @@ export function EditorPage() {
         </Notice>
       )}
       <QuickFill />
-      <WriteLikeMe compact />
-      {!isCvEmpty(cv) && <ReviseCard />}
+      {/* Tant que le CV est vide, une seule chose à faire : la saisie rapide. Le reste attend derrière un lien. */}
+      {empty && !manual && (
+        <button type="button" onClick={() => setManual(true)} className="flex min-h-11 w-full items-center justify-center gap-2 rounded-2xl border border-dashed border-slate-300 px-4 text-sm font-semibold text-slate-700 hover:bg-white">
+          <ListChecks className="size-4" aria-hidden="true" /> Je préfère remplir rubrique par rubrique
+        </button>
+      )}
+      {(!empty || manual) && <EditorSections cv={cv} update={update} empty={empty} />}
+    </div>
+  );
+}
+
+function EditorSections({ cv, update, empty }: { cv: CvDocument; update: ReturnType<typeof useStore.getState>['updateCv']; empty: boolean }) {
+  return (
+    <>
+      {!empty && <WriteLikeMe compact />}
+      {!empty && <ReviseCard />}
       <PersonalSection cv={cv} update={update} />
       <PhotoSection cv={cv} update={update} />
       <SummarySection cv={cv} update={update} />
@@ -603,6 +619,6 @@ export function EditorPage() {
       <CertificationsSection cv={cv} update={update} />
       <InterestsSection cv={cv} update={update} />
       <SignatureSection cv={cv} update={update} />
-    </div>
+    </>
   );
 }

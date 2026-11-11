@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useSharedOffer } from './lib/shareInbox.ts';
-import { ClipboardList, FileDown, FileUser, FolderOpen, Mail, MessageCircle, Target } from 'lucide-react';
+import { ArrowLeft, Check, LayoutGrid } from 'lucide-react';
 import { useActiveCv, useStore } from './store.ts';
 import { CvSwitcher } from './components/CvSwitcher.tsx';
 import { AccountButton, AccountDialogs } from './components/AccountDialogs.tsx';
@@ -20,25 +20,28 @@ import { ApplicationsPage } from './pages/ApplicationsPage.tsx';
 import { LandingPage } from './pages/LandingPage.tsx';
 import { ContactPage } from './pages/ContactPage.tsx';
 import { AdminPage } from './pages/AdminPage.tsx';
-import { DossierPage, ScannerButton } from './pages/DossierPage.tsx';
+import { DossierPage } from './pages/DossierPage.tsx';
+import { MorePage } from './pages/MorePage.tsx';
+import { isCvEmpty } from './lib/cv.ts';
 import { DocumentsPage } from './pages/DocumentsPage.tsx';
 import { PrivacyPage } from './pages/PrivacyPage.tsx';
 import { refreshSupportBadge, useSupportBadge } from './lib/supportBadge.ts';
 
-export type Tab = 'accueil' | 'infos' | 'apercu' | 'offre' | 'lettre' | 'suivi' | 'documents' | 'dossier' | 'scanner' | 'confidentialite' | 'contact' | 'admin';
+export type Tab = 'accueil' | 'infos' | 'apercu' | 'offre' | 'lettre' | 'plus' | 'suivi' | 'documents' | 'dossier' | 'scanner' | 'confidentialite' | 'contact' | 'admin';
 
-const TABS: { id: Tab; label: string; short: string; icon: typeof FileUser }[] = [
-  { id: 'infos', label: 'Mes infos', short: 'Infos', icon: FileUser },
-  { id: 'apercu', label: 'Aperçu & export', short: 'Aperçu', icon: FileDown },
-  { id: 'offre', label: 'Adapter à une offre', short: 'Offre', icon: Target },
-  { id: 'lettre', label: 'Lettre de motivation', short: 'Lettre', icon: Mail },
-  { id: 'suivi', label: 'Mes candidatures', short: 'Suivi', icon: ClipboardList },
-  { id: 'documents', label: 'Mes documents', short: 'Docs', icon: FolderOpen },
+// La navigation suit le parcours : 1. le CV, 2. l'offre, 3. la lettre. Tout le reste est rangé dans « Plus ».
+type Section = 'cv' | 'offre' | 'lettre' | 'plus';
+const NAV: { id: Section; tab: Tab; label: string; short: string; step?: number; tabs: Tab[] }[] = [
+  { id: 'cv', tab: 'infos', label: 'Mon CV', short: 'Mon CV', step: 1, tabs: ['infos', 'apercu'] },
+  { id: 'offre', tab: 'offre', label: 'Adapter à une offre', short: 'Offre', step: 2, tabs: ['offre'] },
+  { id: 'lettre', tab: 'lettre', label: 'Lettre de motivation', short: 'Lettre', step: 3, tabs: ['lettre'] },
+  { id: 'plus', tab: 'plus', label: 'Scanner, documents, suivi, aide', short: 'Plus', tabs: ['plus', 'suivi', 'documents', 'dossier', 'scanner', 'contact', 'confidentialite'] },
 ];
+/** Pages ouvertes depuis « Plus » : elles affichent un retour vers ce menu. */
+const MORE_PAGES: Tab[] = ['suivi', 'documents', 'dossier', 'scanner', 'contact', 'confidentialite'];
+const ALL_TABS: Tab[] = ['accueil', 'admin', ...NAV.flatMap((n) => n.tabs)];
 
-// Pages hors de la barre d'onglets : accueil, dossier en un PDF, scanner, « Nous contacter » et l'espace administrateur.
-const EXTRA_PAGES: Tab[] = ['accueil', 'dossier', 'scanner', 'confidentialite', 'contact', 'admin'];
-const isTab = (v: string): v is Tab => EXTRA_PAGES.includes(v as Tab) || TABS.some((t) => t.id === v);
+const isTab = (v: string): v is Tab => ALL_TABS.includes(v as Tab);
 
 // Première visite (CV encore vide, pas d'onglet demandé) : on présente le produit.
 function initialTab(): Tab {
@@ -61,21 +64,63 @@ function Logo({ onClick }: { onClick: () => void }) {
   );
 }
 
-function ContactButton({ active, onClick }: { active: boolean; onClick: () => void }) {
-  const unread = useSupportBadge((s) => s.unread);
+/** Étapes déjà faites : elles portent une coche dans la navigation. */
+function useDoneSteps(): Record<Section, boolean> {
+  const cv = useActiveCv();
+  const job = useStore((s) => s.job);
+  const letter = useStore((s) => s.letter);
+  return {
+    cv: !isCvEmpty(cv),
+    offre: Boolean(cv.adaptation || job.text.trim() || job.file),
+    lettre: Boolean(letter.body.trim()),
+    plus: false,
+  };
+}
+
+/** Pastille d'une entrée de navigation : numéro de l'étape, coche si elle est faite, ou icône de « Plus ». */
+function StepMark({ step, done, active, unread }: { step?: number; done: boolean; active: boolean; unread: number }) {
+  if (!step) {
+    return (
+      <span className="relative flex size-6 items-center justify-center">
+        <LayoutGrid className={cx('size-5', active && 'stroke-[2.4]')} aria-hidden="true" />
+        {unread > 0 && <span className="absolute -top-0.5 -right-1 size-2.5 rounded-full bg-red-600 ring-2 ring-white" />}
+      </span>
+    );
+  }
   return (
-    <button
-      type="button"
-      onClick={onClick}
-      aria-label={unread ? `Nous contacter (${unread} réponse${unread > 1 ? 's' : ''} non lue${unread > 1 ? 's' : ''})` : 'Nous contacter'}
-      title="Nous contacter"
-      className={cx('hit relative rounded-xl p-2.5 transition-colors', active ? 'bg-brand-50 text-brand-700' : 'text-slate-600 hover:bg-slate-100')}
-    >
-      <MessageCircle className="size-5" />
-      {unread > 0 && (
-        <span className="absolute -top-0.5 -right-0.5 flex size-4.5 items-center justify-center rounded-full bg-red-600 text-[10px] font-bold text-white">{unread}</span>
+    <span
+      className={cx(
+        'flex size-6 items-center justify-center rounded-full text-xs font-bold',
+        done ? 'bg-emerald-600 text-white' : active ? 'bg-brand-600 text-white' : 'bg-slate-200 text-slate-700',
       )}
-    </button>
+    >
+      {done ? <Check className="size-3.5 stroke-[3]" aria-hidden="true" /> : step}
+    </span>
+  );
+}
+
+/** Dans « Mon CV » : remplir, ou voir et télécharger. */
+function CvTabs({ tab, onNavigate }: { tab: Tab; onNavigate: (t: Tab) => void }) {
+  return (
+    <div className="mx-auto mb-4 grid max-w-md grid-cols-2 gap-1 rounded-2xl bg-white p-1 ring-1 ring-slate-200" role="tablist" aria-label="Mon CV">
+      {(
+        [
+          ['infos', 'Remplir'],
+          ['apercu', 'Modèle et téléchargement'],
+        ] as const
+      ).map(([id, label]) => (
+        <button
+          key={id}
+          type="button"
+          role="tab"
+          aria-selected={tab === id}
+          onClick={() => onNavigate(id)}
+          className={cx('min-h-11 rounded-xl px-2 text-sm font-semibold', tab === id ? 'bg-brand-600 text-white' : 'text-slate-600 hover:bg-slate-50')}
+        >
+          {label}
+        </button>
+      ))}
+    </div>
   );
 }
 
@@ -95,8 +140,13 @@ function InfosLayout() {
 /** Pages où le rappel « Une nouvelle offre ? » peut apparaître au retour. */
 const BANNER_TABS: Tab[] = ['accueil', 'infos', 'apercu', 'lettre', 'suivi', 'documents'];
 
+const navLabel = (n: (typeof NAV)[number], done: boolean) => `${n.step ? `Étape ${n.step} : ` : ''}${n.label}${done ? ' (fait)' : ''}`;
+
 export default function App() {
   const [tab, setTabState] = useState<Tab>(initialTab);
+  const done = useDoneSteps();
+  const unread = useSupportBadge((s) => s.unread);
+  const section = NAV.find((n) => n.tabs.includes(tab))?.id;
 
   useEffect(() => {
     void refreshSupportBadge();
@@ -155,27 +205,27 @@ export default function App() {
       <header className="sticky top-0 z-20 border-b border-slate-200 bg-white/90 backdrop-blur pt-[env(safe-area-inset-top)]">
         <div className="mx-auto flex max-w-7xl items-center justify-between gap-2 px-3 py-2.5 sm:gap-3 sm:px-4">
           <Logo onClick={() => setTab('accueil')} />
-          <nav className="hidden min-w-0 gap-0.5 lg:flex">
-            {TABS.map((t) => (
+          <nav className="hidden min-w-0 gap-1 lg:flex" aria-label="Navigation principale">
+            {NAV.map((n) => (
               <button
-                key={t.id}
+                key={n.id}
                 type="button"
-                title={t.label}
-                onClick={() => setTab(t.id)}
+                aria-label={navLabel(n, done[n.id])}
+                aria-current={section === n.id ? 'page' : undefined}
+                onClick={() => setTab(n.tab)}
                 className={cx(
-                  'flex items-center gap-1.5 rounded-xl px-2.5 py-2 text-sm font-medium whitespace-nowrap transition-colors',
-                  tab === t.id ? 'bg-brand-50 text-brand-700' : 'text-slate-600 hover:bg-slate-100',
+                  'flex items-center gap-2 rounded-xl px-3 py-2 text-sm font-semibold whitespace-nowrap transition-colors',
+                  section === n.id ? 'bg-brand-50 text-brand-800' : 'text-slate-600 hover:bg-slate-100',
                 )}
               >
-                <t.icon className="hidden size-4 shrink-0 xl:block" />
-                {t.short}
+                <StepMark step={n.step} done={done[n.id]} active={section === n.id} unread={unread} />
+                {n.short}
               </button>
             ))}
           </nav>
           <div className="flex min-w-0 shrink-0 items-center gap-1.5 sm:gap-2">
+            <span id="tour-slot" className="contents" />
             <CvSwitcher />
-            <ScannerButton active={tab === 'scanner'} onClick={() => setTab('scanner')} />
-            <ContactButton active={tab === 'contact'} onClick={() => setTab('contact')} />
             <AccountButton />
           </div>
         </div>
@@ -185,6 +235,13 @@ export default function App() {
 
       <main className="mx-auto max-w-7xl px-4 pt-4 pb-28 lg:pb-10">
         {BANNER_TABS.includes(tab) && <ReturnBanner onAdapt={() => setTab('offre')} />}
+        {MORE_PAGES.includes(tab) && (
+          <button type="button" onClick={() => setTab('plus')} className="mb-3 inline-flex min-h-11 items-center gap-1.5 rounded-xl pr-3 text-sm font-semibold text-slate-600 hover:text-slate-900">
+            <ArrowLeft className="size-4" aria-hidden="true" /> Plus
+          </button>
+        )}
+        {(tab === 'infos' || tab === 'apercu') && <CvTabs tab={tab} onNavigate={setTab} />}
+        {tab === 'plus' && <MorePage onNavigate={setTab} />}
         {tab === 'accueil' && <LandingPage onNavigate={setTab} />}
         {tab === 'infos' && <InfosLayout />}
         {tab === 'apercu' && <PreviewPage />}
@@ -200,16 +257,18 @@ export default function App() {
       </main>
       <Tour key={tab} tab={tab} />
 
-      <nav className="fixed inset-x-0 bottom-0 z-20 grid grid-cols-6 border-t border-slate-200 bg-white pb-[env(safe-area-inset-bottom)] lg:hidden">
-        {TABS.map((t) => (
+      <nav className="fixed inset-x-0 bottom-0 z-20 grid grid-cols-4 border-t border-slate-200 bg-white pb-[env(safe-area-inset-bottom)] lg:hidden" aria-label="Navigation principale">
+        {NAV.map((n) => (
           <button
-            key={t.id}
+            key={n.id}
             type="button"
-            onClick={() => setTab(t.id)}
-            className={cx('flex min-h-14 flex-col items-center justify-center gap-0.5 py-2 text-xs font-medium', tab === t.id ? 'text-brand-700' : 'text-slate-500')}
+            aria-label={navLabel(n, done[n.id])}
+            aria-current={section === n.id ? 'page' : undefined}
+            onClick={() => setTab(n.tab)}
+            className={cx('flex min-h-15 flex-col items-center justify-center gap-1 py-2 text-xs font-semibold', section === n.id ? 'text-brand-800' : 'text-slate-600')}
           >
-            <t.icon className={cx('size-5', tab === t.id && 'stroke-[2.4]')} />
-            {t.short}
+            <StepMark step={n.step} done={done[n.id]} active={section === n.id} unread={unread} />
+            {n.short}
           </button>
         ))}
       </nav>

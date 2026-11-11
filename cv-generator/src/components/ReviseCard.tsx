@@ -5,7 +5,7 @@ import type { CvDocument } from '../types.ts';
 import { api } from '../lib/api.ts';
 import { applyAiContent, toAiContent } from '../lib/cv.ts';
 import { appendSpoken, MicButton } from './MicButton.tsx';
-import { Button, Card, Notice, TextArea } from './ui.tsx';
+import { Button, Card, Cost, Notice, TextArea } from './ui.tsx';
 
 const PLACEHOLDER = `Dites ou écrivez ce qu’il faut changer, par exemple :
 « Mets mon expérience chez MTN en premier »
@@ -56,7 +56,7 @@ export function ReviseCard() {
       <TextArea value={text} onChange={setText} rows={4} placeholder={PLACEHOLDER} />
       <div className="mt-3 flex flex-wrap items-center gap-2">
         <Button variant="ai" icon={<PenLine className="size-4" />} loading={busy} disabled={busy || !text.trim()} onClick={apply}>
-          Appliquer les corrections
+          Appliquer les corrections <Cost />
         </Button>
         {undo && !busy && (
           <Button
@@ -71,7 +71,6 @@ export function ReviseCard() {
             Annuler
           </Button>
         )}
-        <span className="text-xs text-slate-500">1 crédit</span>
       </div>
       {busy && <p className="mt-3 text-sm text-brand-700">Corrections en cours…</p>}
       {error && (

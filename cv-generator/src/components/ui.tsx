@@ -50,13 +50,22 @@ export function Button({
   );
 }
 
+/** Prix d'une action, écrit sur son bouton : pas de surprise au moment de cliquer. */
+export function Cost({ n = 1, free = false }: { n?: number; free?: boolean }) {
+  return (
+    <span className={cx('ml-1 rounded-full px-2 py-0.5 text-xs font-semibold whitespace-nowrap', free ? 'bg-emerald-100 text-emerald-900' : 'bg-sun-100 text-sun-900')}>
+      {free ? 'Gratuit' : `${n} crédit${n > 1 ? 's' : ''}`}
+    </span>
+  );
+}
+
 export function Card({ title, subtitle, actions, children, className, tour }: { title?: ReactNode; subtitle?: ReactNode; actions?: ReactNode; children: ReactNode; className?: string; tour?: string }) {
   return (
     <section data-tour={tour} className={cx('rounded-2xl border border-slate-200 bg-white p-4 shadow-sm sm:p-5', className)}>
       {(title || actions) && (
         <div className="mb-4 flex items-start justify-between gap-3">
           <div>
-            {title && <h2 className="text-base font-semibold text-slate-900">{title}</h2>}
+            {title && <h2 className="text-lg font-semibold text-ink">{title}</h2>}
             {subtitle && <p className="mt-0.5 text-sm text-slate-500">{subtitle}</p>}
           </div>
           {actions}

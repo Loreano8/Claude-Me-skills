@@ -1,7 +1,21 @@
 @import 'tailwindcss';
 
+/* Police des titres (Bricolage Grotesque, licence OFL), servie par le site : rien n'est chargé ailleurs. */
+@font-face {
+  font-family: 'Bricolage Grotesque';
+  src: url('/fonts/bricolage.woff2') format('woff2');
+  font-weight: 200 800;
+  font-display: swap;
+}
+
 @theme {
-  --font-sans: 'Inter', ui-sans-serif, system-ui, sans-serif;
+  --font-sans: ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  --font-display: 'Bricolage Grotesque', ui-sans-serif, system-ui, sans-serif;
+  /* Encre des titres (bleu nuit du logo) et jaune du toit du logo, pour ce qui est fait ou offert. */
+  --color-ink: #101a4a;
+  --color-sun-100: #fff3c4;
+  --color-sun-400: #ffc933;
+  --color-sun-900: #5c4300;
   --color-brand-50: #eef4ff;
   --color-brand-100: #dbe6fe;
   --color-brand-200: #bfd3fe;
@@ -20,6 +34,12 @@ html {
 
 body {
   @apply bg-slate-50 font-sans text-slate-900 antialiased;
+}
+
+h1,
+h2 {
+  font-family: var(--font-display);
+  letter-spacing: -0.015em;
 }
 
 /* Contour visible pour la navigation au clavier (jamais au toucher ni à la souris). */

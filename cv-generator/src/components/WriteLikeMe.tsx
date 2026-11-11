@@ -4,7 +4,7 @@ import type { Attachment } from '../../shared/schema.ts';
 import { api } from '../lib/api.ts';
 import { fileToAttachment } from '../lib/files.ts';
 import { useWritingStyle } from '../lib/writingStyle.ts';
-import { Button, Card, Notice, TextArea, Toggle } from './ui.tsx';
+import { Button, Card, Cost, Notice, TextArea, Toggle } from './ui.tsx';
 
 const MAX_FILES = 4;
 const ACCEPTED = 'application/pdf,image/png,image/jpeg,image/webp,text/plain';
@@ -114,7 +114,7 @@ export function WriteLikeMe({ compact = false }: { compact?: boolean }) {
       <TextArea value={text} onChange={setText} rows={3} placeholder="Ou collez ici un texte que vous avez écrit vous-même : une ancienne lettre, un message, un rapport…" />
       <div className="flex flex-wrap gap-2">
         <Button icon={<PenLine className="size-4" />} loading={busy} disabled={!files.length && !text.trim()} onClick={analyze}>
-          Retenir ma façon d’écrire
+          Retenir ma façon d’écrire <Cost free />
         </Button>
         {style && (
           <Button variant="ghost" onClick={() => setEditing(false)}>

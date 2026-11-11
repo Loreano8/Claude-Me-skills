@@ -1,3 +1,4 @@
+import { createPortal } from 'react-dom';
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { HelpCircle, X } from 'lucide-react';
 import type { Tab } from '../App.tsx';
@@ -95,6 +96,9 @@ export function Tour({ tab }: { tab: Tab }) {
   const [box, setBox] = useState<Box | null>(null);
   const [pop, setPop] = useState<{ top: number; left: number } | null>(null);
   const popRef = useRef<HTMLDivElement>(null);
+  // Le bouton « Guide » vit dans l'en-tête : il ne recouvre plus le contenu.
+  const [slot, setSlot] = useState<HTMLElement | null>(null);
+  useEffect(() => setSlot(document.getElementById('tour-slot')), []);
 
   // Étapes réellement visibles à l'écran (calculées au lancement).
   const [visible, setVisible] = useState<Step[]>([]);
@@ -201,16 +205,14 @@ export function Tour({ tab }: { tab: Tab }) {
 
   return (
     <>
-      {!active && (
-        <button
-          type="button"
-          onClick={start}
-          className="fixed right-3 bottom-[calc(env(safe-area-inset-bottom)+4.75rem)] z-10 flex items-center gap-1.5 rounded-full border border-slate-200 bg-white/95 px-3.5 py-3 text-sm font-medium text-slate-700 shadow-md backdrop-blur hover:bg-slate-50 lg:right-5 lg:bottom-5"
-          aria-label="Revoir le guide de cette page"
-        >
-          <HelpCircle className="size-4 text-brand-600" /> Guide
-        </button>
-      )}
+      {!active &&
+        slot &&
+        createPortal(
+          <button type="button" onClick={start} className="hit flex size-9 items-center justify-center rounded-xl text-slate-600 hover:bg-slate-100" aria-label="Revoir le guide de cette page" title="Guide de cette page">
+            <HelpCircle className="size-5" aria-hidden="true" />
+          </button>,
+          slot,
+        )}
 
       {step && (
         <div className="fixed inset-0 z-40" aria-hidden={false}>

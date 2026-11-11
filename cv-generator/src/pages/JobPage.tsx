@@ -7,7 +7,7 @@ import { useAccount } from '../lib/account.ts';
 import { isCvEmpty, toAiContent } from '../lib/cv.ts';
 import { JobInputCard } from '../components/JobInputCard.tsx';
 import { InterviewSheet } from '../components/InterviewSheet.tsx';
-import { Button, Card, Chip, Notice } from '../components/ui.tsx';
+import { Button, Card, Cost, Chip, Notice } from '../components/ui.tsx';
 import type { Tab } from '../App.tsx';
 
 function ScoreRing({ score, label }: { score: number; label?: string }) {
@@ -177,7 +177,7 @@ function ClarifyCard({ questions, busy, onDone, onSkip }: { questions: Question[
         </div>
         <div className="mt-4 flex flex-wrap gap-2">
           <Button variant="ai" icon={<Target className="size-4" />} loading={busy} disabled={busy} onClick={() => onDone(answers)}>
-            Adapter mon CV (1 crédit)
+            Adapter mon CV <Cost />
           </Button>
           <Button variant="ghost" disabled={busy} onClick={onSkip}>
             Passer les questions
@@ -301,16 +301,16 @@ export function JobPage({ onNavigate }: { onNavigate: (t: Tab) => void }) {
         {empty && <Notice tone="warn">Remplissez d’abord votre CV dans « Mes infos » (la saisie rapide suffit).</Notice>}
         <div className="mt-3 flex flex-wrap gap-2">
           <Button variant="ai" size="lg" icon={<Target className="size-5" />} loading={busy === 'adapt'} disabled={!hasJob || empty || busy !== null} onClick={adapt}>
-            Adapter mon CV à l’offre
+            Adapter mon CV à l’offre <Cost />
           </Button>
           <Button variant="secondary" size="lg" icon={<Mail className="size-5" />} loading={busy === 'letter'} disabled={!hasJob || empty || busy !== null} onClick={letter}>
-            Rédiger la lettre de motivation
+            Rédiger la lettre <Cost />
           </Button>
           <Button variant="secondary" size="lg" icon={<MessagesSquare className="size-5" />} loading={busy === 'interview'} disabled={!hasJob || empty || busy !== null} onClick={prepareInterview}>
-            Préparer l’entretien
+            Préparer l’entretien <Cost />
           </Button>
         </div>
-        <p className="mt-2 text-xs text-slate-500">Chaque action utilise 1 crédit. Les questions éventuelles sur l’offre sont gratuites.</p>
+        <p className="mt-2 text-xs text-slate-500">Les questions éventuelles sur l’offre sont gratuites.</p>
         {busy && <p className="mt-3 text-sm text-brand-700">Lecture de l’offre et préparation de votre candidature… (jusqu’à une minute)</p>}
         {questions && questionsFor === jobKey && !busy && <p className="mt-3 text-sm text-brand-700">Quelques questions avant d’adapter votre CV : voir ci-dessous.</p>}
         {error && (

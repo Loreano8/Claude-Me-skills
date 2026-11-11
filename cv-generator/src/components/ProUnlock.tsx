@@ -3,7 +3,7 @@ import { BadgeCheck, Crown } from 'lucide-react';
 import { useStore } from '../store.ts';
 import type { CvDocument } from '../types.ts';
 import { api } from '../lib/api.ts';
-import { Button, Notice } from './ui.tsx';
+import { Button, Cost, Notice } from './ui.tsx';
 
 /** Prix de la version Pro, en crédits (doit suivre UNLOCK_COST dans server/accounts.ts). */
 export const UNLOCK_COST = 2;
@@ -71,7 +71,7 @@ export function ProOffer({
           if (await unlock()) onUnlocked?.();
         }}
       >
-        Passer en Pro ({UNLOCK_COST} crédits)
+        Passer en Pro <Cost n={UNLOCK_COST} />
       </Button>
       {error && (
         <div className="mt-2">

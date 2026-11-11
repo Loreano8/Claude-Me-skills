@@ -16,7 +16,7 @@ import { ProOffer } from '../components/ProUnlock.tsx';
 import { isProTemplate } from '../pdf/catalog.ts';
 import { ReviseCard } from '../components/ReviseCard.tsx';
 import { DossierLink } from './DossierPage.tsx';
-import { Button, Card, cx, Notice, Select, Toggle } from '../components/ui.tsx';
+import { Button, Card, Cost, cx, Notice, Select, Toggle } from '../components/ui.tsx';
 
 export function DesignPanel({ cv }: { cv: CvDocument }) {
   const updateCv = useStore((s) => s.updateCv);
@@ -197,7 +197,7 @@ function TranslateCard({ cv }: { cv: CvDocument }) {
       />
       <p className="mt-1 text-xs text-slate-500">{target.hint}</p>
       <Button className="mt-3" variant="ai" icon={<Languages className="size-4" />} loading={busy} disabled={isCvEmpty(cv)} onClick={run}>
-        Créer cette version
+        Créer cette version <Cost />
       </Button>
       {busy && <p className="mt-2 text-sm text-brand-700">Traduction en cours… (jusqu’à une minute)</p>}
       {error && (
