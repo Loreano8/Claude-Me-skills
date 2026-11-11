@@ -40,7 +40,8 @@ export default function PdfPane({ source }: { source: PdfSource }) {
       try {
         const blob = letter ? await renderLetterPdf(letter, cv) : await renderCvPdf(cv);
         if (cancelled) return;
-        const doc = await pdfjs.getDocument({ data: new Uint8Array(await blob.arrayBuffer()) }).promise;
+        const task = pdfjs.getDocument({ data: new Uint8Array(await blob.arrayBuffer()) });
+        const doc = await task.promise;
         const ratio = window.devicePixelRatio || 1;
         const canvases: HTMLCanvasElement[] = [];
         for (let n = 1; n <= doc.numPages; n++) {
@@ -55,7 +56,7 @@ export default function PdfPane({ source }: { source: PdfSource }) {
           await page.render({ canvas, viewport }).promise;
           canvases.push(canvas);
         }
-        await doc.destroy();
+        await task.destroy();
         if (cancelled) return;
         const el = host.current!;
         el.replaceChildren(...canvases);

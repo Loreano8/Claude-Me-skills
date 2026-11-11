@@ -204,3 +204,20 @@ describe('corrections et modèles', () => {
     expect((await res.json()).style.layout).toBe('sidebar-right');
   });
 });
+
+describe('limite de tentatives en base', () => {
+  it('bloque après la limite, par clé, et tient entre deux instances', async () => {
+    const { testDb } = await import('./pglite.ts');
+    const { dbRateLimiter } = await import('../server/rateLimit.ts');
+    const db = await testDb();
+    const a = dbRateLimiter(db, 'auth', 2);
+    expect(await a('1.2.3.4')).toBe(true);
+    expect(await a('1.2.3.4')).toBe(true);
+    expect(await a('1.2.3.4')).toBe(false);
+    expect(await a('5.6.7.8')).toBe(true);
+    // Un « redémarrage » (nouvelle instance) ne remet pas le compteur à zéro.
+    expect(await dbRateLimiter(db, 'auth', 2)('1.2.3.4')).toBe(false);
+    const [row] = await db.query<{ key: string }>('select key from rate_hits limit 1');
+    expect(row.key).not.toContain('1.2.3.4');
+  });
+});

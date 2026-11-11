@@ -24,6 +24,7 @@ import { saveFile } from '../export/save.ts';
 import { useDossierInbox } from './DossierPage.tsx';
 import { Modal } from '../components/AccountDialogs.tsx';
 import { Button, Card, cx, Field, Notice } from '../components/ui.tsx';
+import { isCvEmpty } from '../lib/cv.ts';
 import type { Tab } from '../App.tsx';
 
 const when = (t: number) => new Date(t).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short', year: 'numeric' });
@@ -40,7 +41,8 @@ function Creations({ onNavigate }: { onNavigate: (t: Tab) => void }) {
   const items = useMemo(() => {
     const cvName = (id: string) => cvs.find((c) => c.id === id)?.label ?? '';
     const all = [
-      ...cvs.map((c) => ({
+      // Le brouillon vide de départ n'est pas une création : on ne le liste pas.
+      ...cvs.filter((c) => !isCvEmpty(c)).map((c) => ({
         id: c.id,
         kind: 'cv' as const,
         title: c.label,
@@ -128,7 +130,17 @@ function Creations({ onNavigate }: { onNavigate: (t: Tab) => void }) {
             </button>
           </li>
         ))}
-        {items.length === 0 && <p className="py-4 text-center text-sm text-slate-500">Rien à afficher.</p>}
+        {items.length === 0 &&
+          (query || filter !== 'tout' ? (
+            <p className="py-4 text-center text-sm text-slate-500">Aucun document ne correspond.</p>
+          ) : (
+            <li className="rounded-xl border border-dashed border-slate-300 px-4 py-6 text-center">
+              <p className="text-sm text-slate-600">Vos CV et vos lettres apparaîtront ici dès que vous en aurez créé.</p>
+              <Button className="mt-3" onClick={() => onNavigate('infos')}>
+                Créer mon CV
+              </Button>
+            </li>
+          ))}
       </ul>
     </Card>
   );

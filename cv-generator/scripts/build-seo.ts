@@ -103,6 +103,8 @@ function head(o: { title: string; description: string; path: string; jsonld: unk
 <meta name="description" content="${esc(o.description)}">
 <link rel="canonical" href="${url}">
 <meta name="theme-color" content="#2549eb">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; script-src 'none'; object-src 'none'; base-uri 'self'">
+<meta name="referrer" content="strict-origin-when-cross-origin">
 <link rel="icon" href="/icons/icon.svg" type="image/svg+xml">
 <meta property="og:site_name" content="CVCasa">
 <meta property="og:type" content="article">

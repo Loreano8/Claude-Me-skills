@@ -171,8 +171,8 @@ function ForgotPassword({ initial, emailOn, onBack }: { initial: string; emailOn
         <>
           <Notice tone="info">Si un compte existe avec cette adresse, un code vient d’y être envoyé (pensez aux spams).</Notice>
           <Field label="Code reçu (6 chiffres)" value={code} onChange={(v) => setCode(v.replace(/\D/g, '').slice(0, 6))} />
-          <Field label="Nouveau mot de passe" type="password" value={password} onChange={setPassword} autoComplete="new-password" hint="6 caractères minimum." />
-          <Button className="w-full" loading={busy} disabled={busy || code.length !== 6 || password.length < 6} onClick={() => void reset()}>
+          <Field label="Nouveau mot de passe" type="password" value={password} onChange={setPassword} autoComplete="new-password" hint="8 caractères minimum." />
+          <Button className="w-full" loading={busy} disabled={busy || code.length !== 6 || password.length < 8} onClick={() => void reset()}>
             Changer mon mot de passe
           </Button>
         </>
@@ -332,8 +332,8 @@ function AccountSecurity({ onboarding = false, onSaved }: { onboarding?: boolean
       {open === 'password' && (
         <div className="mt-3 space-y-2">
           <Field label="Mot de passe actuel (ou provisoire)" type="password" value={current} onChange={setCurrent} autoComplete="current-password" />
-          <Field label="Nouveau mot de passe" type="password" value={next} onChange={setNext} autoComplete="new-password" hint="6 caractères minimum." />
-          <Button size="sm" loading={busy} disabled={busy || !current || next.length < 6} onClick={() => void run(() => api.changePassword(current, next), 'Mot de passe changé.')}>
+          <Field label="Nouveau mot de passe" type="password" value={next} onChange={setNext} autoComplete="new-password" hint="8 caractères minimum." />
+          <Button size="sm" loading={busy} disabled={busy || !current || next.length < 8} onClick={() => void run(() => api.changePassword(current, next), 'Mot de passe changé.')}>
             Changer
           </Button>
         </div>
@@ -433,7 +433,7 @@ function AccountDialog() {
           value={password}
           onChange={setPassword}
           autoComplete={mode === 'register' ? 'new-password' : 'current-password'}
-          hint={mode === 'register' ? '6 caractères minimum.' : undefined}
+          hint={mode === 'register' ? '8 caractères minimum.' : undefined}
         />
         {mode === 'login' && (
           <button type="button" className="hit min-h-8 text-sm font-medium text-brand-700" onClick={() => (setMode('forgot'), setError(null))}>

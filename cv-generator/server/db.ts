@@ -92,6 +92,14 @@ create table if not exists visits (
   primary key (day, source)
 );
 
+-- Tentatives de connexion et de codes, par adresse (empreinte, jamais l'adresse elle-même) : la limite survit aux redémarrages.
+create table if not exists rate_hits (
+  bucket text not null,
+  key text not null,
+  at timestamptz not null default now()
+);
+create index if not exists rate_hits_lookup on rate_hits (bucket, key, at);
+
 -- Offre de retour (4 crédits pour le prix de 3) : ouverte pour 72 heures quand la personne revient après une absence, une seule fois.
 alter table users add column if not exists return_offer_until timestamptz;
 

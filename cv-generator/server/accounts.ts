@@ -71,7 +71,7 @@ export function createAccounts(db: Db, opts: AccountOptions) {
     async register(input: { identifier: string; password: string; name?: string; ip: string; device: string; referralCode?: string; source?: string }): Promise<User> {
       const identifier = normalizeIdentifier(input.identifier);
       if (!identifier) throw new AccountError('Indiquez un e-mail ou un numéro de téléphone valide.', 400);
-      if (input.password.length < 6) throw new AccountError('Le mot de passe doit faire au moins 6 caractères.', 400);
+      if (input.password.length < 8) throw new AccountError('Le mot de passe doit faire au moins 8 caractères.', 400);
       const passwordHash = await hashPassword(input.password);
       return db.transaction(async (tx) => {
         const [existing] = await tx.query('select id from users where identifier = $1', [identifier]);

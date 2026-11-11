@@ -118,7 +118,7 @@ export function createVault(db: Db, accounts: Accounts, mailer: Mailer | null) {
     async resetPassword(rawIdentifier: string, code: string, password: string): Promise<User> {
       const user = await accounts.findByIdentifier(rawIdentifier);
       if (!user) throw new AccountError('Code incorrect.', 400);
-      if (password.length < 6) throw new AccountError('Le mot de passe doit faire au moins 6 caractères.', 400);
+      if (password.length < 8) throw new AccountError('Le mot de passe doit faire au moins 8 caractères.', 400);
       await checkCode(user, 'password', code);
       await accounts.setPassword(user.id, password);
       return user;

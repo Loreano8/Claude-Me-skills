@@ -6,6 +6,20 @@ services:
     name: cv-studio-site
     buildCommand: cd cv-generator && npm ci --include=dev && npm run build
     staticPublishPath: cv-generator/dist
+    # Protections du navigateur : https forcé, pas d'affichage dans le cadre d'un autre site, pas de fuite d'adresse.
+    headers:
+      - path: /*
+        name: Strict-Transport-Security
+        value: max-age=31536000; includeSubDomains
+      - path: /*
+        name: X-Frame-Options
+        value: DENY
+      - path: /*
+        name: Referrer-Policy
+        value: strict-origin-when-cross-origin
+      - path: /*
+        name: Permissions-Policy
+        value: camera=(self), microphone=(self), geolocation=()
     envVars:
       - key: VITE_API_URL
         value: https://clgmqhyzyiswnekmoygw.supabase.co/functions/v1

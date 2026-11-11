@@ -2,6 +2,7 @@ import Anthropic from '@anthropic-ai/sdk';
 import { createAi, DEFAULT_MODEL } from './ai.ts';
 import { createApp } from './app.ts';
 import { createAccounts } from './accounts.ts';
+import { dbRateLimiter, type RateLimiter } from './rateLimit.ts';
 import { createPgDb, migrate, type Db } from './db.ts';
 import { createPayments, fedapay } from './payments.ts';
 import { createTestimonials } from './testimonials.ts';
@@ -34,6 +35,7 @@ export async function createServer(env: Settings, opts: { db?: Db; migrate?: boo
   let vault = null;
   let recovery = null;
   let sources = null;
+  let authLimiter: RateLimiter | null = null;
   if (hasDb) {
     if (!env.SESSION_SECRET) throw new Error('SESSION_SECRET est obligatoire avec une base de données.');
     // DATABASE_SSL=true pour une base externe (Supabase…) ; inutile pour la base interne de Render.
@@ -48,6 +50,7 @@ export async function createServer(env: Settings, opts: { db?: Db; migrate?: boo
     vault = createVault(db, accounts, resendMailer(env));
     recovery = createRecovery(db, accounts, support);
     sources = createSources(db);
+    authLimiter = dbRateLimiter(db, 'auth', 20);
     if (env.FEDAPAY_SECRET_KEY) {
       payments = createPayments(db, accounts, fedapay(env.FEDAPAY_SECRET_KEY, env.FEDAPAY_ENV === 'live' ? 'live' : 'sandbox'));
     }
@@ -55,6 +58,7 @@ export async function createServer(env: Settings, opts: { db?: Db; migrate?: boo
 
   const app = createApp({
     ai,
+    authLimiter,
     accounts,
     payments,
     testimonials,

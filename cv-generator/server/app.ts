@@ -13,6 +13,8 @@ import { fetchJobPage, JobPageError } from './jobPage.ts';
 import type { Vault } from './vault.ts';
 import type { Sources } from './sources.ts';
 import { RecoveryInput, type Recovery } from './recovery.ts';
+import { memoryRateLimiter, type RateLimiter } from './rateLimit.ts';
+import { createHash, timingSafeEqual } from 'node:crypto';
 
 export interface AppOptions {
   /** Téléchargement des pages d'offres (remplaçable dans les tests). */
@@ -20,6 +22,8 @@ export interface AppOptions {
   ai: Ai | null;
   allowedOrigins: string[];
   rateLimitPerHour: number;
+  /** Limite des tentatives de connexion et de codes (en base quand elle existe, pour survivre aux redémarrages). */
+  authLimiter?: RateLimiter | null;
   /** Comptes et crédits. Sans base de données (développement local), l'IA est en accès libre. */
   accounts?: Accounts | null;
   payments?: Payments | null;
@@ -43,21 +47,6 @@ export interface AppOptions {
 }
 
 // Limite simple en mémoire : suffisante pour une seule instance du serveur.
-function createRateLimiter(limit: number) {
-  const hits = new Map<string, number[]>();
-  return (key: string): boolean => {
-    const now = Date.now();
-    const recent = (hits.get(key) ?? []).filter((t) => now - t < 3_600_000);
-    if (recent.length >= limit) {
-      hits.set(key, recent);
-      return false;
-    }
-    recent.push(now);
-    hits.set(key, recent);
-    return true;
-  };
-}
-
 function clientKey(c: Context): string {
   return c.req.header('x-forwarded-for')?.split(',')[0]?.trim() || c.req.header('x-real-ip') || 'local';
 }
@@ -71,11 +60,11 @@ const Credentials = z.object({
   source: z.string().max(60).optional(),
 });
 
-export function createApp({ fetchPage = fetchJobPage, ai, allowedOrigins, rateLimitPerHour, accounts = null, payments = null, testimonials = null, support = null, vault = null, recovery = null, sources = null, sessionSecret = '', publicUrl = '', apiPublicUrl = '', adminToken = '' }: AppOptions) {
+export function createApp({ fetchPage = fetchJobPage, ai, allowedOrigins, rateLimitPerHour, accounts = null, payments = null, testimonials = null, support = null, vault = null, recovery = null, sources = null, sessionSecret = '', publicUrl = '', apiPublicUrl = '', adminToken = '', authLimiter = null }: AppOptions) {
   const app = new Hono();
-  const allow = createRateLimiter(rateLimitPerHour);
-  const allowAuth = createRateLimiter(20);
-  const allowFree = createRateLimiter(30);
+  const allow = memoryRateLimiter(rateLimitPerHour);
+  const allowAuth = authLimiter ?? memoryRateLimiter(20);
+  const allowFree = memoryRateLimiter(30);
 
   app.use('/api/*', cors({ origin: allowedOrigins, allowMethods: ['GET', 'POST'], exposeHeaders: ['X-Credits-Remaining'] }));
   app.use(
@@ -116,7 +105,7 @@ export function createApp({ fetchPage = fetchJobPage, ai, allowedOrigins, rateLi
 
   app.post('/api/auth/register', async (c) => {
     if (!accounts) return c.json({ error: 'Les comptes ne sont pas activés sur ce serveur.' }, 503);
-    if (!allowAuth(clientKey(c))) return c.json({ error: 'Trop de tentatives. Réessayez plus tard.' }, 429);
+    if (!(await allowAuth(clientKey(c)))) return c.json({ error: 'Trop de tentatives. Réessayez plus tard.' }, 429);
     const parsed = Credentials.safeParse(await c.req.json().catch(() => null));
     if (!parsed.success) return c.json({ error: 'Requête invalide.' }, 400);
     try {
@@ -129,7 +118,7 @@ export function createApp({ fetchPage = fetchJobPage, ai, allowedOrigins, rateLi
 
   app.post('/api/auth/login', async (c) => {
     if (!accounts) return c.json({ error: 'Les comptes ne sont pas activés sur ce serveur.' }, 503);
-    if (!allowAuth(clientKey(c))) return c.json({ error: 'Trop de tentatives. Réessayez plus tard.' }, 429);
+    if (!(await allowAuth(clientKey(c)))) return c.json({ error: 'Trop de tentatives. Réessayez plus tard.' }, 429);
     const parsed = Credentials.safeParse(await c.req.json().catch(() => null));
     if (!parsed.success) return c.json({ error: 'Requête invalide.' }, 400);
     try {
@@ -287,7 +276,7 @@ export function createApp({ fetchPage = fetchJobPage, ai, allowedOrigins, rateLi
 
   app.post('/api/vault/recover', async (c) => {
     if (!vault) return c.json({ error: 'Coffre-fort indisponible.' }, 503);
-    if (!allowAuth(clientKey(c))) return c.json({ error: 'Trop de tentatives. Réessayez plus tard.' }, 429);
+    if (!(await allowAuth(clientKey(c)))) return c.json({ error: 'Trop de tentatives. Réessayez plus tard.' }, 429);
     const user = await currentUser(c);
     if (!user) return c.json({ error: 'Connectez-vous à votre compte pour réinitialiser le code.', code: 'auth' }, 401);
     const b = await body(c);
@@ -302,7 +291,7 @@ export function createApp({ fetchPage = fetchJobPage, ai, allowedOrigins, rateLi
 
   app.post('/api/vault/recover/email', async (c) => {
     if (!vault) return c.json({ error: 'Coffre-fort indisponible.' }, 503);
-    if (!allowAuth(clientKey(c))) return c.json({ error: 'Trop de demandes. Réessayez plus tard.' }, 429);
+    if (!(await allowAuth(clientKey(c)))) return c.json({ error: 'Trop de demandes. Réessayez plus tard.' }, 429);
     const user = await currentUser(c);
     if (!user) return c.json({ error: 'Connectez-vous à votre compte pour réinitialiser le code.', code: 'auth' }, 401);
     try {
@@ -315,7 +304,7 @@ export function createApp({ fetchPage = fetchJobPage, ai, allowedOrigins, rateLi
   // Mot de passe du compte oublié : code envoyé à l'e-mail du compte, puis nouveau mot de passe.
   app.post('/api/auth/forgot', async (c) => {
     if (!vault) return c.json({ error: 'Indisponible.' }, 503);
-    if (!allowAuth(clientKey(c))) return c.json({ error: 'Trop de demandes. Réessayez plus tard.' }, 429);
+    if (!(await allowAuth(clientKey(c)))) return c.json({ error: 'Trop de demandes. Réessayez plus tard.' }, 429);
     try {
       const sent = await vault.sendPasswordCode(String((await body(c)).identifier ?? ''));
       return c.json({ ok: true, to: sent?.to ?? null });
@@ -326,7 +315,7 @@ export function createApp({ fetchPage = fetchJobPage, ai, allowedOrigins, rateLi
 
   app.post('/api/auth/reset', async (c) => {
     if (!vault || !accounts) return c.json({ error: 'Indisponible.' }, 503);
-    if (!allowAuth(clientKey(c))) return c.json({ error: 'Trop de tentatives. Réessayez plus tard.' }, 429);
+    if (!(await allowAuth(clientKey(c)))) return c.json({ error: 'Trop de tentatives. Réessayez plus tard.' }, 429);
     const b = await body(c);
     try {
       const user = await vault.resetPassword(String(b.identifier ?? ''), String(b.code ?? ''), String(b.password ?? ''));
@@ -357,12 +346,12 @@ export function createApp({ fetchPage = fetchJobPage, ai, allowedOrigins, rateLi
   });
 
   app.post('/api/account/password', async (c) => {
-    if (!allowAuth(clientKey(c))) return c.json({ error: 'Trop de tentatives. Réessayez plus tard.' }, 429);
+    if (!(await allowAuth(clientKey(c)))) return c.json({ error: 'Trop de tentatives. Réessayez plus tard.' }, 429);
     const user = await currentUser(c);
     if (!user || !accounts) return c.json({ error: 'Connectez-vous.', code: 'auth' }, 401);
     const b = await body(c);
     const next = String(b.password ?? '');
-    if (next.length < 6) return c.json({ error: 'Le mot de passe doit faire au moins 6 caractères.' }, 400);
+    if (next.length < 8) return c.json({ error: 'Le mot de passe doit faire au moins 8 caractères.' }, 400);
     try {
       await accounts.login(user.identifier, String(b.current ?? ''));
     } catch {
@@ -374,13 +363,13 @@ export function createApp({ fetchPage = fetchJobPage, ai, allowedOrigins, rateLi
 
   app.get('/api/auth/recovery/question', async (c) => {
     if (!recovery) return c.json({ question: null });
-    if (!allowAuth(clientKey(c))) return c.json({ error: 'Trop de demandes. Réessayez plus tard.' }, 429);
+    if (!(await allowAuth(clientKey(c)))) return c.json({ error: 'Trop de demandes. Réessayez plus tard.' }, 429);
     return c.json({ question: await recovery.questionFor(c.req.query('identifier') ?? '') });
   });
 
   app.post('/api/auth/recovery', async (c) => {
     if (!recovery) return c.json({ error: 'Indisponible.' }, 503);
-    if (!allowAuth(clientKey(c))) return c.json({ error: 'Trop de demandes. Réessayez plus tard.' }, 429);
+    if (!(await allowAuth(clientKey(c)))) return c.json({ error: 'Trop de demandes. Réessayez plus tard.' }, 429);
     const parsed = RecoveryInput.safeParse(await c.req.json().catch(() => null));
     if (!parsed.success) return c.json({ error: 'Indiquez au moins l’e-mail ou le téléphone de votre compte.' }, 400);
     return c.json(await recovery.request(await supportIdentity(c), parsed.data));
@@ -406,7 +395,7 @@ export function createApp({ fetchPage = fetchJobPage, ai, allowedOrigins, rateLi
 
   app.post('/api/testimonials', async (c) => {
     if (!testimonials) return c.json({ error: 'Les témoignages ne sont pas activés sur ce serveur.' }, 503);
-    if (!allowAuth(clientKey(c))) return c.json({ error: 'Trop de tentatives. Réessayez plus tard.' }, 429);
+    if (!(await allowAuth(clientKey(c)))) return c.json({ error: 'Trop de tentatives. Réessayez plus tard.' }, 429);
     const parsed = TestimonialInput.safeParse(await c.req.json().catch(() => null));
     if (!parsed.success) return c.json({ error: 'Remplissez le prénom, le poste et l’entreprise, et cochez la case d’accord.' }, 400);
     return c.json(await testimonials.submit(parsed.data, c.req.header('x-device-id') ?? ''));
@@ -419,12 +408,14 @@ export function createApp({ fetchPage = fetchJobPage, ai, allowedOrigins, rateLi
     return ok ? c.json({ ok: true }) : c.json({ error: 'Témoignage introuvable ou déjà retiré.' }, 404);
   });
 
-  const isAdmin = (c: Context) => Boolean(adminToken) && c.req.header('authorization') === `Bearer ${adminToken}`;
+  // Comparaison à durée constante : le temps de réponse ne renseigne pas sur la clé.
+  const digest = (v: string) => createHash('sha256').update(v).digest();
+  const isAdmin = (c: Context) => Boolean(adminToken) && timingSafeEqual(digest(c.req.header('authorization') ?? ''), digest(`Bearer ${adminToken}`));
 
   // Visite comptée une fois par session de navigation (aucune donnée personnelle).
   app.post('/api/visit', async (c) => {
     if (!sources) return c.json({ ok: true });
-    if (!allowFree(clientKey(c))) return c.json({ ok: true });
+    if (!(await allowFree(clientKey(c)))) return c.json({ ok: true });
     const body = (await c.req.json().catch(() => null)) as { source?: unknown } | null;
     await sources.visit(String(body?.source ?? '')).catch((e) => console.error('Visite', e));
     return c.json({ ok: true });
@@ -472,7 +463,7 @@ export function createApp({ fetchPage = fetchJobPage, ai, allowedOrigins, rateLi
 
   app.post('/api/support', async (c) => {
     if (!support) return supportOff(c);
-    if (!allowAuth(clientKey(c))) return c.json({ error: 'Trop de messages en peu de temps. Réessayez plus tard.' }, 429);
+    if (!(await allowAuth(clientKey(c)))) return c.json({ error: 'Trop de messages en peu de temps. Réessayez plus tard.' }, 429);
     const parsed = SupportMessageInput.safeParse(await c.req.json().catch(() => null));
     if (!parsed.success) return c.json({ error: 'Écrivez votre message (2 000 caractères maximum).' }, 400);
     const who = await supportIdentity(c);
@@ -521,7 +512,7 @@ export function createApp({ fetchPage = fetchJobPage, ai, allowedOrigins, rateLi
       if (!ai) {
         return c.json({ error: 'Les fonctions IA ne sont pas configurées sur ce serveur (ANTHROPIC_API_KEY manquante).' }, 503);
       }
-      if (!(free ? allowFree : allow)(clientKey(c))) {
+      if (!(await (free ? allowFree : allow)(clientKey(c)))) {
         return c.json({ error: 'Trop de demandes en peu de temps. Réessayez dans une heure.' }, 429);
       }
       const parsed = schema.safeParse(await c.req.json().catch(() => null));
@@ -574,7 +565,7 @@ export function createApp({ fetchPage = fetchJobPage, ai, allowedOrigins, rateLi
 
   // Lecture d'une offre à partir de son lien : gratuite, sans compte.
   app.post('/api/job/fetch', async (c) => {
-    if (!allowFree(clientKey(c))) return c.json({ error: 'Trop de demandes en peu de temps. Réessayez plus tard.' }, 429);
+    if (!(await allowFree(clientKey(c)))) return c.json({ error: 'Trop de demandes en peu de temps. Réessayez plus tard.' }, 429);
     const parsed = JobFetchRequest.safeParse(await c.req.json().catch(() => null));
     if (!parsed.success) return c.json({ error: 'Lien invalide.' }, 400);
     try {
