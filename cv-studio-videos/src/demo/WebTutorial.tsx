@@ -1,9 +1,10 @@
-import { Video } from "@remotion/media";
+import { Audio, Video } from "@remotion/media";
 import { loadFont } from "@remotion/fonts";
 import { AbsoluteFill, Easing, Img, interpolate, Sequence, spring, staticFile, useCurrentFrame, useVideoConfig } from "remotion";
 
 // Tutoriel CVCasa filmé sur le site en version ordinateur : à gauche les étapes à suivre, à droite le site.
-// Les clips (public/web/w*.mp4) sont filmés par scripts/record-web.cjs. Pas de voix : tout est écrit à l'écran.
+// Les clips (public/web/w*.mp4) sont filmés par scripts/record-web.cjs. Voix off : public/web/v*.mp3 (Fish Audio),
+// découpée aux pauses pour que chaque phrase tombe sur l'étape qu'elle décrit.
 
 const fontFamily = "Inter";
 for (const weight of ["500", "700", "800"]) {
@@ -12,8 +13,8 @@ for (const weight of ["500", "700", "800"]) {
 
 const BRAND = "#2549eb";
 const BRAND_DARK = "#1e2d8a";
-const INTRO = 3.2;
-const OUTRO = 4;
+const INTRO = 3.8;
+const OUTRO = 4.6;
 const ease = Easing.bezier(0.16, 1, 0.3, 1);
 
 type Chapter = {
@@ -25,6 +26,8 @@ type Chapter = {
   title: string;
   /** `at` : secondes à l'écran depuis le début du chapitre. */
   steps: { at: number; text: string }[];
+  /** Morceaux de voix off : fichier, extrait [from, to] en secondes (to absent = jusqu'au bout), et moment où il commence. */
+  voice: { src: string; from?: number; to?: number; at: number }[];
 };
 
 export const CHAPTERS: Chapter[] = [
@@ -35,6 +38,7 @@ export const CHAPTERS: Chapter[] = [
       { at: 2.4, text: "Faites défiler pour voir ce que fait CVCasa." },
       { at: 6, text: "Cliquez sur « Créer mon CV gratuitement »." },
     ],
+    voice: [{ src: "web/v1.mp3", at: 0.4 }],
   },
   {
     clip: "web/w2-infos.mp4", clipSeconds: 41.43, seconds: 28, title: "Créer votre CV",
@@ -45,6 +49,12 @@ export const CHAPTERS: Chapter[] = [
       { at: 21, text: "Votre CV apparaît à droite et se met à jour en direct." },
       { at: 23.8, text: "Vérifiez et complétez chaque rubrique si besoin." },
     ],
+    voice: [
+      { src: "web/v2.mp3", to: 4.4, at: 0.3 },
+      { src: "web/v2.mp3", from: 4.4, to: 8.85, at: 9.4 },
+      { src: "web/v2.mp3", from: 8.85, to: 15.45, at: 18.8 },
+      { src: "web/v2.mp3", from: 15.45, at: 25.6 },
+    ],
   },
   {
     clip: "web/w3-apercu.mp4", clipSeconds: 19.4, trim: 2.5, seconds: 12, title: "Choisir le modèle",
@@ -54,6 +64,7 @@ export const CHAPTERS: Chapter[] = [
       { at: 5.6, text: "« Recommandé » règle la photo et les détails selon l’usage." },
       { at: 8.6, text: "Téléchargez votre CV en PDF." },
     ],
+    voice: [{ src: "web/v3.mp3", at: 0.3 }],
   },
   {
     clip: "web/w4-offre.mp4", clipSeconds: 28.83, seconds: 18, title: "Adapter à une offre",
@@ -64,6 +75,12 @@ export const CHAPTERS: Chapter[] = [
       { at: 11.3, text: "Validez : votre CV est réécrit pour ce poste. L’original ne change pas." },
       { at: 13.8, text: "Le score montre ce que vous avez gagné." },
     ],
+    voice: [
+      { src: "web/v4.mp3", to: 4.3, at: 0.3 },
+      { src: "web/v4.mp3", from: 4.3, to: 6.5, at: 5.0 },
+      { src: "web/v4.mp3", from: 6.5, to: 8.65, at: 7.0 },
+      { src: "web/v4.mp3", from: 8.65, at: 11.3 },
+    ],
   },
   {
     clip: "web/w5-lettre.mp4", clipSeconds: 31.4, seconds: 20, title: "La lettre de motivation",
@@ -72,6 +89,12 @@ export const CHAPTERS: Chapter[] = [
       { at: 3.8, text: "Répondez à une ou deux questions, à l’écrit ou au micro." },
       { at: 11.5, text: "Votre lettre est prête. Relisez : tout se modifie." },
       { at: 17.4, text: "Téléchargez-la en PDF, assortie à votre CV." },
+    ],
+    voice: [
+      { src: "web/v5.mp3", to: 5.15, at: 0.3 },
+      { src: "web/v5.mp3", from: 5.15, to: 8.65, at: 4.0 },
+      { src: "web/v5.mp3", from: 8.65, to: 10.9, at: 11.5 },
+      { src: "web/v5.mp3", from: 10.9, at: 16.8 },
     ],
   },
   {
@@ -83,6 +106,11 @@ export const CHAPTERS: Chapter[] = [
       { at: 16.9, text: "Validez : la page est redressée, comme un vrai scan." },
       { at: 18.9, text: "Créez le PDF, prêt à joindre." },
     ],
+    voice: [
+      { src: "web/v6.mp3", to: 4.7, at: 0.3 },
+      { src: "web/v6.mp3", from: 4.7, to: 7.7, at: 7.0 },
+      { src: "web/v6.mp3", from: 7.7, at: 16.2 },
+    ],
   },
   {
     clip: "web/w7-documents.mp4", clipSeconds: 12.2, seconds: 8, title: "Retrouver vos documents",
@@ -90,13 +118,15 @@ export const CHAPTERS: Chapter[] = [
       { at: 0, text: "Onglet « Docs » : tous vos CV et lettres, du plus récent au plus ancien." },
       { at: 3.6, text: "Le coffre-fort garde vos papiers, protégé par votre code." },
     ],
+    voice: [{ src: "web/v7.mp3", at: 0.3 }],
   },
   {
-    clip: "web/w8-credits.mp4", clipSeconds: 8.27, seconds: 6.5, title: "Crédits",
+    clip: "web/w8-credits.mp4", clipSeconds: 8.27, seconds: 7.4, title: "Crédits",
     steps: [
       { at: 0, text: "Votre CV est gratuit." },
       { at: 1.6, text: "Le reste se paie en crédits, par Mobile Money, sans abonnement." },
     ],
+    voice: [{ src: "web/v8.mp3", at: 0.3 }],
   },
 ];
 
@@ -266,11 +296,23 @@ export const WebTutorial = () => {
       <Background />
       <Sequence durationInFrames={Math.round(INTRO * fps)}>
         <Intro />
+        <Sequence from={6} layout="none">
+          <Audio src={staticFile("web/v0.mp3")} />
+        </Sequence>
       </Sequence>
       {CHAPTERS.map((c, i) => (
         <Sequence key={c.clip} from={Math.round(starts[i] * fps)} durationInFrames={Math.round(c.seconds * fps)}>
           <Steps chapter={c} index={i} />
           <Browser chapter={c} />
+          {c.voice.map((v) => (
+            <Sequence key={`${v.src}-${v.at}`} from={Math.round(v.at * fps)} layout="none">
+              <Audio
+                src={staticFile(v.src)}
+                trimBefore={v.from ? Math.round(v.from * fps) : undefined}
+                trimAfter={v.to ? Math.round(v.to * fps) : undefined}
+              />
+            </Sequence>
+          ))}
         </Sequence>
       ))}
       <Sequence from={Math.round(INTRO * fps)} durationInFrames={Math.round((WEB_TUTORIAL_SECONDS - INTRO - OUTRO) * fps)}>
@@ -278,6 +320,9 @@ export const WebTutorial = () => {
       </Sequence>
       <Sequence from={Math.round((WEB_TUTORIAL_SECONDS - OUTRO) * fps)}>
         <Outro />
+        <Sequence from={10} layout="none">
+          <Audio src={staticFile("web/v9.mp3")} />
+        </Sequence>
       </Sequence>
     </AbsoluteFill>
   );
