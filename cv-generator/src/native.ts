@@ -16,8 +16,8 @@ export async function setupNative(): Promise<void> {
   // Relances : une notification le jour où une candidature envoyée mérite d'être relancée.
   const { watchFollowUps } = await import('./lib/followUpNotify.ts');
   watchFollowUps();
-  await App.addListener('backButton', ({ canGoBack }) => {
-    if (canGoBack) window.history.back();
-    else void App.exitApp();
+  // L'appli décide (page précédente, menu Plus) ; quand il n'y a plus rien derrière, on sort.
+  await App.addListener('backButton', () => {
+    window.dispatchEvent(new CustomEvent('cvcasa:back', { detail: { exit: () => void App.exitApp() } }));
   });
 }

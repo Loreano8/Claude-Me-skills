@@ -42,7 +42,7 @@ export function ChangeReview({ base, adapted, keywords }: { base: CvDocument; ad
             <li key={c.key} className="rounded-xl border border-slate-200 p-3">
               <div className="flex flex-wrap items-center justify-between gap-2">
                 <p className="font-semibold text-slate-900">{c.label}</p>
-                <div className="flex gap-1 rounded-xl bg-slate-100 p-1" role="group" aria-label={`Changement : ${c.label}`}>
+                <div className="flex gap-1 rounded-xl bg-slate-100 p-1" role="group" aria-label={t('Changement : {0}', [c.label])}>
                   <button
                     type="button"
                     aria-pressed={keep}

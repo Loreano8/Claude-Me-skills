@@ -90,7 +90,7 @@ export const useStore = create<State>()(
         const src = get().cvs.find((c) => c.id === id);
         if (!src) return;
         // Une copie repart en version gratuite : la version Pro est propre au CV débloqué.
-        const copy: CvDocument = { ...structuredClone(src), id: uid(), label: `${src.label} (copie)`, updatedAt: Date.now(), unlocked: undefined };
+        const copy: CvDocument = { ...structuredClone(src), id: uid(), label: t('{0} (copie)', [src.label]), updatedAt: Date.now(), unlocked: undefined };
         set((s) => ({ cvs: [...s.cvs, copy], activeId: copy.id }));
       },
 

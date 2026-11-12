@@ -5,9 +5,9 @@ import { useAccount } from '../lib/account.ts';
 import { useSupportBadge } from '../lib/supportBadge.ts';
 import { Button, Card, cx, Field, Notice, TextArea } from '../components/ui.tsx';
 
-import { t } from '../i18n.ts';
+import { LOCALE, t } from '../i18n.ts';
 const time = (iso: string) =>
-  new Date(iso).toLocaleString('fr-FR', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' });
+  new Date(iso).toLocaleString(LOCALE, { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' });
 
 /** « Nous contacter » : la conversation avec l'équipe CVCasa, réponses comprises. */
 export function ContactPage() {

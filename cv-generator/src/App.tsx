@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useSharedOffer } from './lib/shareInbox.ts';
 import { ArrowLeft, LayoutGrid } from 'lucide-react';
 import { useActiveCv, useStore } from './store.ts';
@@ -205,6 +205,28 @@ export default function App() {
     setTabState(t);
     window.scrollTo({ top: 0 });
   };
+
+  // Bouton « retour » d'Android : géré par l'appli (pages visitées), sans passer par l'historique du navigateur.
+  // Revenir dans l'historique du navigateur peut tomber sur une page d'avant un rechargement (changement de langue)
+  // et laisser un écran blanc.
+  const visited = useRef<Tab[]>([]);
+  useEffect(() => {
+    const v = visited.current;
+    if (v[v.length - 1] !== tab) v.push(tab);
+    if (v.length > 30) v.splice(0, v.length - 30);
+  }, [tab]);
+  useEffect(() => {
+    const onBack = (e: Event) => {
+      const v = visited.current;
+      v.pop(); // la page actuelle
+      // Pages du menu Plus : retour au menu ; sinon, la page vue juste avant (elle sera remise dans la liste en l'ouvrant).
+      const target = MORE_PAGES.includes(tab) ? 'plus' : v.pop();
+      if (target && target !== tab) setTab(target);
+      else (e as CustomEvent<{ exit: () => void }>).detail.exit();
+    };
+    window.addEventListener('cvcasa:back', onBack);
+    return () => window.removeEventListener('cvcasa:back', onBack);
+  });
 
   return (
     <div className="min-h-dvh bg-slate-50">

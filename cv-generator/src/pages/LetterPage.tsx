@@ -1,10 +1,10 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { BellRing, ClipboardList, FileDown, FileText, Link2, Lock, Mail, MessageCircleQuestion, PenLine } from 'lucide-react';
 import { DossierLink } from './DossierPage.tsx';
 import { useActiveCv, useStore } from '../store.ts';
 import type { CoverLetterRequest, LetterQuestionsResult } from '../../shared/schema.ts';
 import { api } from '../lib/api.ts';
-import { isCvEmpty, toAiContent } from '../lib/cv.ts';
+import { emptyLetter, isCvEmpty, toAiContent } from '../lib/cv.ts';
 import { exportLetterDocx, exportLetterPdf } from '../export/exporters.ts';
 import { Preview } from '../components/Preview.tsx';
 import { WriteLikeMe } from '../components/WriteLikeMe.tsx';
@@ -18,7 +18,7 @@ import { TranslateLetter } from '../components/TranslateLetter.tsx';
 import { NextSteps } from '../components/NextSteps.tsx';
 import type { Tab } from '../App.tsx';
 
-import { t } from '../i18n.ts';
+import { LANG, t } from '../i18n.ts';
 function GenerateCard({ onNavigate }: { onNavigate: (t: Tab) => void }) {
   const cv = useActiveCv();
   const job = useStore((s) => s.job);
@@ -197,6 +197,19 @@ export function LetterPage({ onNavigate }: { onNavigate: (t: Tab) => void }) {
   const cv = useActiveCv();
   const letter = useStore((s) => s.letter);
   const update = useStore((s) => s.updateLetter);
+  // Lettre encore vide : ses formules toutes faites (date, formule d'appel, politesse) suivent la langue de l'appli.
+  // Dès qu'elle a un texte, elle garde sa langue (le bloc « Ma lettre dans une autre langue » la traduit).
+  useEffect(() => {
+    if (letter.body.trim() || (letter.lang ?? 'fr') === LANG) return;
+    const other = emptyLetter(letter.lang ?? 'fr');
+    const next = emptyLetter(LANG);
+    update({
+      lang: LANG,
+      date: next.date,
+      ...(letter.salutation === other.salutation ? { salutation: next.salutation } : {}),
+      ...(letter.closing === other.closing ? { closing: next.closing } : {}),
+    });
+  }, [letter.body, letter.lang, letter.salutation, letter.closing, update]);
   const [busy, setBusy] = useState<'pdf' | 'docx' | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [needPro, setNeedPro] = useState(false);

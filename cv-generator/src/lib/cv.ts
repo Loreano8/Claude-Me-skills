@@ -54,6 +54,24 @@ export function defaultSettings(): CvSettings {
   };
 }
 
+/**
+ * Nom d'un CV tel qu'affiché : les noms donnés automatiquement (« Mon CV », « CV adapté », « (copie) »…) suivent la
+ * langue de l'interface, même s'ils ont été créés dans l'autre langue. Un nom choisi par la personne reste tel quel.
+ */
+export function cvLabel(label: string): string {
+  if (label === 'Mon CV' || label === 'My CV') return t('Mon CV');
+  if (label === 'CV adapté' || label === 'Tailored CV') return t('CV adapté');
+  let m = label.match(/^(?:Adapté : |Tailored: )(.+)$/);
+  if (m) return t('Adapté : {0}', [m[1]]);
+  m = label.match(/^(.+) \((?:copie|copy)\)$/);
+  if (m) return t('{0} (copie)', [cvLabel(m[1])]);
+  m = label.match(/^(.+) – (Français|French) \((France|Afrique|Africa)\)$/);
+  if (m) return `${cvLabel(m[1])} – ${m[3] === 'France' ? t('Français (France)') : t('Français (Afrique)')}`;
+  m = label.match(/^(.+) – (English .+)$/);
+  if (m) return `${cvLabel(m[1])} – ${m[2]}`;
+  return label;
+}
+
 export function emptyCv(label = t('Mon CV')): CvDocument {
   return {
     id: uid(),

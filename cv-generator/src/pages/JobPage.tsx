@@ -5,7 +5,7 @@ import type { AdaptResult, ClarifyResult, InterviewResult } from '../../shared/s
 import { useActiveCv, useStore } from '../store.ts';
 import { api } from '../lib/api.ts';
 import { useAccount } from '../lib/account.ts';
-import { isCvEmpty, toAiContent } from '../lib/cv.ts';
+import { cvLabel, isCvEmpty, toAiContent } from '../lib/cv.ts';
 import { jobKey as makeJobKey } from '../lib/jobKey.ts';
 import { KeywordCheck } from '../components/KeywordCheck.tsx';
 import { ChangeReview } from '../components/ChangeReview.tsx';
@@ -321,7 +321,7 @@ export function JobPage({ onNavigate }: { onNavigate: (t: Tab) => void }) {
           <span className="flex items-center gap-2">
             <Target className="size-5 text-brand-600" /> {' '}{t('Postuler à cette offre')}</span>
         }
-        subtitle={<>{t('À partir du CV :')}{' '}<strong>{cv.label}</strong></>}
+        subtitle={<>{t('À partir du CV :')}{' '}<strong>{cvLabel(cv.label)}</strong></>}
       >
         {empty && <Notice tone="warn">{t('Remplissez d’abord votre CV dans « Mes infos » (la saisie rapide suffit).')}</Notice>}
         <div className="mt-3 flex flex-wrap gap-2">

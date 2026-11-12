@@ -1106,6 +1106,14 @@ export const EN: Record<string, string> = {
   "Votre lettre en anglais est prête, ci-dessus.": "Your letter in English is ready, above.",
   "Votre lettre en français est prête, ci-dessus.": "Your letter in French is ready, above.",
   "Écrivez-nous": "Write to us",
+  "Un souci est survenu": "Something went wrong",
+  "Vos CV et lettres sont bien enregistrés sur cet appareil. Rechargez pour reprendre là où vous en étiez.": "Your CVs and letters are safely saved on this device. Reload to pick up where you left off.",
+  "Recharger": "Reload",
+  "Changement : {0}": "Change: {0}",
+  "{0} (copie)": "{0} (copy)",
+  "Coffre-fort": "Safe",
+  "CV : {0}": "CV: {0}",
+  "Chauffeur-livreur": "Delivery driver",
 
   // Messages du serveur (erreurs, veille) : traduits à l’envoi quand l’interface est en anglais.
   "Fichier trop volumineux (15 Mo maximum).": "File too large (15 MB maximum).",

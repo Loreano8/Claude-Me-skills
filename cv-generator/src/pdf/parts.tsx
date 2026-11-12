@@ -50,13 +50,13 @@ export function SignatureBlock({ cv, L, align = 'right' }: { cv: CvDocument; L: 
  * Mention « Créé avec CVCasa » en bas de chaque page des documents gratuits.
  * La version Pro (2 crédits) la retire.
  */
-export function FreeMark({ cv, left = 0, right = 0 }: { cv: CvDocument; /** Largeur d'une barre latérale à éviter. */ left?: number; right?: number }) {
+export function FreeMark({ cv, left = 0, right = 0, lang }: { cv: CvDocument; /** Largeur d'une barre latérale à éviter. */ left?: number; right?: number; /** Langue du document (par défaut celle du CV). */ lang?: 'fr' | 'en' }) {
   if (cv.unlocked) return null;
   // Centrée sous la colonne principale, pour ne jamais déborder sur une barre latérale colorée.
   return (
     <View fixed style={{ position: 'absolute', bottom: 9, left, right, alignItems: 'center' }}>
       <Text style={{ fontSize: 7.5, color: '#64748b', backgroundColor: '#ffffff', paddingHorizontal: 8, paddingVertical: 2, borderRadius: 6 }}>
-        Créé gratuitement avec CVCasa · cvcasa.com
+        {(lang ?? cv.settings.headingLang) === 'en' ? 'Made for free with CVCasa · cvcasa.com' : 'Créé gratuitement avec CVCasa · cvcasa.com'}
       </Text>
     </View>
   );

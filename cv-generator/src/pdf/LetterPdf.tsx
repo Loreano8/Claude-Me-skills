@@ -65,7 +65,7 @@ export function LetterPdf({ letter, cv }: { letter: CoverLetter; cv: CvDocument 
           ) : null}
           <Text style={{ fontWeight: 600 }}>{name}</Text>
         </View>
-        <FreeMark cv={cv} />
+        <FreeMark cv={cv} lang={letter.lang ?? 'fr'} />
       </Page>
     </Document>
   );

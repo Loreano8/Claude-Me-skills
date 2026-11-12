@@ -45,7 +45,7 @@ const FEATURES: { icon: typeof Target; title: string; text: string }[] = [
 const JOBS = [
   t('Comptable'), t('Infirmier·e'), t('Commercial·e'), t('Développeur·se'), t('Enseignant·e'), t('Assistant·e de direction'), t('Agent de banque'),
   t('Logisticien·ne'), t('Juriste'), t('Chargé·e de communication'), t('Technicien·ne de maintenance'), t('Ingénieur·e BTP'), t('Caissier·e'),
-  t('Community manager'), t('Pharmacien·ne'), 'Chauffeur-livreur', t('Responsable RH'), t('Agent de saisie'),
+  t('Community manager'), t('Pharmacien·ne'), t('Chauffeur-livreur'), t('Responsable RH'), t('Agent de saisie'),
 ];
 const PLACES = [
   t('Cotonou'), t('Lomé'), t('Dakar'), t('Abidjan'), t('Douala'), t('Ouagadougou'), t('Bamako'), t('Niamey'), t('Libreville'), t('Kinshasa'),

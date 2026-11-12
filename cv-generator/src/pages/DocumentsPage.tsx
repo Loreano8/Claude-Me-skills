@@ -24,7 +24,7 @@ import { saveFile } from '../export/save.ts';
 import { useDossierInbox } from './DossierPage.tsx';
 import { Modal } from '../components/AccountDialogs.tsx';
 import { Button, Card, cx, Field, Notice } from '../components/ui.tsx';
-import { isCvEmpty } from '../lib/cv.ts';
+import { cvLabel, isCvEmpty } from '../lib/cv.ts';
 import type { Tab } from '../App.tsx';
 
 import { LOCALE, t } from '../i18n.ts';
@@ -40,13 +40,13 @@ function Creations({ onNavigate }: { onNavigate: (t: Tab) => void }) {
   const [query, setQuery] = useState('');
 
   const items = useMemo(() => {
-    const cvName = (id: string) => cvs.find((c) => c.id === id)?.label ?? '';
+    const cvName = (id: string) => cvLabel(cvs.find((c) => c.id === id)?.label ?? '');
     const all = [
       // Le brouillon vide de départ n'est pas une création : on ne le liste pas.
       ...cvs.filter((c) => !isCvEmpty(c)).map((c) => ({
         id: c.id,
         kind: 'cv' as const,
-        title: c.label,
+        title: cvLabel(c.label),
         type: c.adaptation ? t('CV adapté') : c.translation ? t('CV traduit') : 'CV',
         detail: c.adaptation ? [c.adaptation.job.title, c.adaptation.job.company].filter(Boolean).join(' · ') : '',
         date: c.updatedAt,
@@ -588,7 +588,7 @@ function Vault({ onNavigate }: { onNavigate: (t: Tab) => void }) {
     <Card
       title={
         <span className="flex items-center gap-2">
-          <ShieldCheck className="size-5 text-emerald-600" /> Coffre-fort
+          <ShieldCheck className="size-5 text-emerald-600" /> {t('Coffre-fort')}
         </span>
       }
       subtitle={t('Vos papiers importants, toujours sous la main.')}
@@ -610,7 +610,7 @@ export function DocumentsPage({ onNavigate }: { onNavigate: (t: Tab) => void }) 
         {(
           [
             ['creations', t('Mes créations'), FileUser],
-            ['coffre', 'Coffre-fort', ShieldCheck],
+            ['coffre', t('Coffre-fort'), ShieldCheck],
           ] as const
         ).map(([id, label, Icon]) => (
           <button

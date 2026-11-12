@@ -6,6 +6,7 @@ import '@fontsource/inter/600.css';
 import '@fontsource/inter/700.css';
 import './index.css';
 import App from './App.tsx';
+import { ErrorBoundary } from './components/ErrorBoundary.tsx';
 import { setupNative } from './native.ts';
 import { captureSource } from './lib/source.ts';
 import { captureReferral } from './lib/referral.ts';
@@ -21,6 +22,8 @@ void setupNative();
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
-    <App />
+    <ErrorBoundary>
+      <App />
+    </ErrorBoundary>
   </StrictMode>,
 );

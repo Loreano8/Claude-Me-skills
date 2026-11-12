@@ -6,7 +6,7 @@ import { api } from '../lib/api.ts';
 import { readAsDataUrl } from '../lib/files.ts';
 import { CropEditor } from '../components/CropEditor.tsx';
 import { useActiveCv, useStore } from '../store.ts';
-import { cvFileName, isCvEmpty } from '../lib/cv.ts';
+import { cvFileName, cvLabel, isCvEmpty } from '../lib/cv.ts';
 import { buildDossier, formatSize, FULL_QUAD, orientedPhoto, pdfPageCount, processPhoto, type DossierPart, type Quad, type ScanMode } from '../lib/dossier.ts';
 import { isProTemplate } from '../pdf/catalog.ts';
 import { saveFile } from '../export/save.ts';
@@ -335,7 +335,7 @@ export function DossierPage({ onNavigate, mode = 'dossier' }: { onNavigate: (t: 
                 </div>
                 <div className="min-w-0 flex-1">
                   <p className="truncate text-sm font-medium text-slate-900">
-                    {it.kind === 'cv' ? `CV : ${cv.label}` : it.kind === 'letter' ? t('Lettre de motivation') : it.name}
+                    {it.kind === 'cv' ? t('CV : {0}', [cvLabel(cv.label)]) : it.kind === 'letter' ? t('Lettre de motivation') : it.name}
                   </p>
                   {it.kind === 'pdf' && <p className="text-xs text-slate-500">{it.pages ? `${it.pages} page${it.pages > 1 ? 's' : ''}` : 'PDF'}</p>}
                   {(it.kind === 'cv' || it.kind === 'letter') && !cv.unlocked && <p className="text-xs text-slate-500">{t('Version gratuite (avec la mention CVCasa)')}</p>}

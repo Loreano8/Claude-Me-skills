@@ -1,3 +1,4 @@
+import { cvLabel } from '../lib/cv.ts';
 import { useEffect, useRef, useState } from 'react';
 import { ChevronDown, Copy, FilePlus2, PencilLine, Trash2 } from 'lucide-react';
 import { useStore } from '../store.ts';
@@ -29,7 +30,7 @@ export function CvSwitcher() {
         onClick={() => setOpen(!open)}
         className="hit flex max-w-[42vw] items-center gap-1.5 rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-800 hover:bg-slate-50 sm:max-w-xs"
       >
-        <span className="truncate">{active.label}</span>
+        <span className="truncate">{cvLabel(active.label)}</span>
         <ChevronDown className="size-4 shrink-0 text-slate-400" />
       </button>
       {/* Téléphone : menu calé sur la largeur de l'écran (il débordait à gauche) ; ordinateur : sous le bouton. */}
@@ -47,7 +48,7 @@ export function CvSwitcher() {
                 }}
                 className={cx(item, c.id === activeId && 'bg-brand-50 font-semibold text-brand-800')}
               >
-                <span className="truncate">{c.label}</span>
+                <span className="truncate">{cvLabel(c.label)}</span>
               </button>
             ))}
           </div>
@@ -60,7 +61,7 @@ export function CvSwitcher() {
               type="button"
               className={item}
               onClick={() => {
-                const label = window.prompt(t('Nom de ce CV'), active.label);
+                const label = window.prompt(t('Nom de ce CV'), cvLabel(active.label));
                 if (label?.trim()) renameCv(active.id, label.trim());
                 setOpen(false);
               }}
@@ -70,7 +71,7 @@ export function CvSwitcher() {
               type="button"
               className={cx(item, 'text-red-600 hover:bg-red-50')}
               onClick={() => {
-                if (window.confirm(t('Supprimer « {0} » ? Cette action est définitive.', [active.label]))) deleteCv(active.id);
+                if (window.confirm(t('Supprimer « {0} » ? Cette action est définitive.', [cvLabel(active.label)]))) deleteCv(active.id);
                 setOpen(false);
               }}
             >
