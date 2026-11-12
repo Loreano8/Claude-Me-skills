@@ -1,5 +1,5 @@
 import { useRef, useState } from 'react';
-import { AlignLeft, ArrowDown, ArrowUp, Award, Briefcase, Camera, FileText, GraduationCap, Heart, Languages, ListChecks, Paperclip, PenLine, Plus, Trash2, Undo2, User, Wrench, X } from 'lucide-react';
+import { AlignLeft, ArrowDown, BellRing, Eye, Target, ArrowUp, Award, Briefcase, Camera, FileText, GraduationCap, Heart, Languages, ListChecks, Paperclip, PenLine, Plus, Trash2, Undo2, User, Wrench, X } from 'lucide-react';
 import type { Attachment } from '../../shared/schema.ts';
 import { settingsForLang, useActiveCv, useStore } from '../store.ts';
 import type { Certification, CvDocument, Education, Experience, LanguageSkill } from '../types.ts';
@@ -7,6 +7,7 @@ import { api } from '../lib/api.ts';
 import { applyAiContent, isCvEmpty, toAiContent, uid } from '../lib/cv.ts';
 import { ACCEPTED_DOCS, fileToAttachment } from '../lib/files.ts';
 import { PhotoInput } from '../components/PhotoInput.tsx';
+import { NextSteps } from '../components/NextSteps.tsx';
 import { appendSpoken, MicButton } from '../components/MicButton.tsx';
 import { ReviseCard } from '../components/ReviseCard.tsx';
 import { learnStyle, WriteLikeMe } from '../components/WriteLikeMe.tsx';
@@ -246,6 +247,18 @@ function QuickFill() {
               <li key={i}>{s}</li>
             ))}
           </ul>
+        </div>
+      )}
+      {suggestions.length > 0 && (
+        <div className="mt-3">
+          <NextSteps
+            id="apres-cv"
+            steps={[
+              { icon: Eye, label: 'Voir et télécharger', text: 'Votre CV en PDF, prêt à envoyer.', tab: 'apercu' },
+              { icon: Target, label: 'L’adapter à une offre', text: 'Collez une annonce : le CV reprend ses mots-clés.', tab: 'offre' },
+              { icon: BellRing, label: 'Recevoir des offres', text: 'La veille emploi vous envoie les annonces qui vous correspondent.', tab: 'veille' },
+            ]}
+          />
         </div>
       )}
       {styleOffer && (

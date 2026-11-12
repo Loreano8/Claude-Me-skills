@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { AlertTriangle, Check, CheckCircle2, FileDown, FileText, Languages, Lightbulb, Lock } from 'lucide-react';
+import { AlertTriangle, BellRing, Check, PenLine, Target, CheckCircle2, FileDown, FileText, Languages, Lightbulb, Lock } from 'lucide-react';
 import type { Market } from '../../shared/schema.ts';
 import { MARKET_LABELS, useActiveCv, useStore } from '../store.ts';
 import type { CvDocument, CvSettings } from '../types.ts';
@@ -13,6 +13,7 @@ import { exportCvDocx, exportCvPdf } from '../export/exporters.ts';
 import { Preview } from '../components/Preview.tsx';
 import { TemplateGallery } from '../components/TemplateGallery.tsx';
 import { ShareCv } from '../components/ShareCv.tsx';
+import { NextSteps } from '../components/NextSteps.tsx';
 import { ProOffer } from '../components/ProUnlock.tsx';
 import { isProTemplate } from '../pdf/catalog.ts';
 import { ReviseCard } from '../components/ReviseCard.tsx';
@@ -248,8 +249,16 @@ export function PreviewPage() {
         <ExportButtons cv={cv} />
       </Card>
       {!isCvEmpty(cv) && (
-        <div className="lg:col-start-1">
+        <div className="space-y-4 lg:col-start-1">
           <ShareCv cv={cv} />
+          <NextSteps
+            id="apercu"
+            steps={[
+              { icon: Target, label: 'L’adapter à une offre', text: 'Un CV qui reprend les mots de l’annonce.', tab: 'offre' },
+              { icon: PenLine, label: 'Écrire la lettre', text: 'La lettre de motivation, à partir de ce CV.', tab: 'lettre' },
+              { icon: BellRing, label: 'Recevoir des offres', text: 'Les annonces qui vous correspondent, chaque matin.', tab: 'veille' },
+            ]}
+          />
         </div>
       )}
       <div data-tour="preview" className="lg:sticky lg:top-20 lg:col-start-2 lg:row-span-6 lg:row-start-1 lg:self-start">

@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
-import { ArrowRight, CheckCircle2, ClipboardList, Eye, HelpCircle, Mail, MessagesSquare, PencilLine, Target } from 'lucide-react';
+import { ArrowRight, BellRing, CheckCircle2, PenLine, ClipboardList, Eye, HelpCircle, Mail, MessagesSquare, PencilLine, Target } from 'lucide-react';
+import { NextSteps } from '../components/NextSteps.tsx';
 import type { AdaptResult, ClarifyResult, InterviewResult } from '../../shared/schema.ts';
 import { useActiveCv, useStore } from '../store.ts';
 import { api } from '../lib/api.ts';
@@ -112,6 +113,17 @@ export function AnalysisCard({ result, onNavigate }: { result: Pick<AdaptResult,
         <Button variant="secondary" icon={<PencilLine className="size-4" />} onClick={() => onNavigate('infos')}>
           Le modifier
         </Button>
+      </div>
+      <div className="mt-4">
+        <NextSteps
+          id="apres-offre"
+          onNavigate={onNavigate}
+          steps={[
+            { icon: PenLine, label: 'Écrire la lettre', text: 'Une lettre pour cette offre, à partir du CV adapté.', tab: 'lettre' },
+            { icon: ClipboardList, label: 'Suivre cette candidature', text: 'Notez-la, et recevez un rappel pour relancer.', tab: 'suivi' },
+            { icon: BellRing, label: 'Trouver d’autres offres', text: 'La veille emploi cherche pour vous chaque matin.', tab: 'veille' },
+          ]}
+        />
       </div>
     </Card>
   );

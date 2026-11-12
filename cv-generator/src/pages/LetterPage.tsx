@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { FileDown, FileText, Lock, Mail, MessageCircleQuestion, PenLine } from 'lucide-react';
+import { BellRing, ClipboardList, FileDown, FileText, Link2, Lock, Mail, MessageCircleQuestion, PenLine } from 'lucide-react';
 import { DossierLink } from './DossierPage.tsx';
 import { useActiveCv, useStore } from '../store.ts';
 import type { CoverLetterRequest, LetterQuestionsResult } from '../../shared/schema.ts';
@@ -14,6 +14,7 @@ import { appendSpoken, MicButton } from '../components/MicButton.tsx';
 import { ProOffer } from '../components/ProUnlock.tsx';
 import { Button, Card, Cost, Field, Notice, Select, TextArea, Toggle } from '../components/ui.tsx';
 import { SendApplication } from '../components/SendApplication.tsx';
+import { NextSteps } from '../components/NextSteps.tsx';
 import type { Tab } from '../App.tsx';
 
 function GenerateCard({ onNavigate }: { onNavigate: (t: Tab) => void }) {
@@ -263,6 +264,17 @@ export function LetterPage({ onNavigate }: { onNavigate: (t: Tab) => void }) {
         </Card>
         {letter.body.trim() && <NaturalReview hits={letterCliches(letter)} edit="Corrigez directement dans « Corps de la lettre » ci-dessus." />}
         {letter.body.trim() && <SendApplication />}
+        {letter.body.trim() && (
+          <NextSteps
+            id="apres-lettre"
+            onNavigate={onNavigate}
+            steps={[
+              { icon: ClipboardList, label: 'Suivre mes candidatures', text: 'Où vous avez postulé, et quand relancer.', tab: 'suivi' },
+              { icon: Link2, label: 'Partager mon CV', text: 'Un lien et un QR code à donner au recruteur.', tab: 'apercu' },
+              { icon: BellRing, label: 'Trouver d’autres offres', text: 'La veille emploi cherche pour vous chaque matin.', tab: 'veille' },
+            ]}
+          />
+        )}
       </div>
 
       <div className="space-y-3 lg:sticky lg:top-20 lg:self-start">
