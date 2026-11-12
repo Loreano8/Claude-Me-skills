@@ -1,6 +1,6 @@
 import { useEffect, useState, type FormEvent, type ReactNode } from 'react';
 import { Capacitor } from '@capacitor/core';
-import { Check, Copy, Gift, Settings, Share2, ShieldCheck, UserRound, X, Zap } from 'lucide-react';
+import { Check, Copy, Gift, LogOut, Settings, Share2, ShieldCheck, UserRound, X, Zap } from 'lucide-react';
 import { useAccount, type Pack } from '../lib/account.ts';
 import { api, refreshAccount } from '../lib/api.ts';
 import { clearReferral, pendingReferral, referralLink } from '../lib/referral.ts';
@@ -527,7 +527,7 @@ export function offerEnd(iso: string): string {
 }
 
 function CreditsDialog() {
-  const { user, dialogReason, close } = useAccount();
+  const { user, dialogReason, close, logout } = useAccount();
   const [packs, setPacks] = useState<Pack[] | null>(null);
   const [paymentsOn, setPaymentsOn] = useState(true);
   const [busy, setBusy] = useState<string | null>(null);
@@ -648,16 +648,29 @@ function CreditsDialog() {
       {user && <ReferralCard />}
       {/* Compte (prénom, mot de passe, phrase secrète, déconnexion) : dans Réglages. */}
       {user && (
-        <button
-          type="button"
-          onClick={() => {
-            close();
-            window.location.hash = 'reglages';
-          }}
-          className="mt-5 flex min-h-11 items-center gap-1.5 text-sm font-semibold text-brand-700 hover:text-brand-800"
-        >
-          <Settings className="size-4" aria-hidden="true" /> {t('Mon compte et sécurité')}
-        </button>
+        <div className="mt-5 flex flex-wrap items-center justify-between gap-x-4 gap-y-1 border-t border-slate-100 pt-3">
+          <button
+            type="button"
+            onClick={() => {
+              close();
+              window.location.hash = 'reglages';
+            }}
+            className="flex min-h-11 items-center gap-1.5 text-sm font-semibold text-brand-700 hover:text-brand-800"
+          >
+            <Settings className="size-4" aria-hidden="true" /> {t('Mon compte et sécurité')}
+          </button>
+          {/* Se déconnecter : les CV restent sur l'appareil, seuls les crédits sont liés au compte. */}
+          <button
+            type="button"
+            onClick={() => {
+              logout();
+              close();
+            }}
+            className="flex min-h-11 items-center gap-1.5 text-sm font-semibold text-slate-600 hover:text-red-700"
+          >
+            <LogOut className="size-4" aria-hidden="true" /> {t('Se déconnecter')}
+          </button>
+        </div>
       )}
     </Modal>
   );
