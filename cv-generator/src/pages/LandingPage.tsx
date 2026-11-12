@@ -1,9 +1,11 @@
-import { useEffect, useState } from 'react';
-import { ArrowRight, BadgeCheck, BellRing, Briefcase, Check, ClipboardList, FileDown, FileStack, Globe2, GraduationCap, Languages, Link2, Mail, MessagesSquare, PenLine, PlayCircle, Send, ShieldCheck, Target, UserRound } from 'lucide-react';
+import { useEffect, useRef, useState } from 'react';
+import { ArrowRight, BadgeCheck, ChevronLeft, ChevronRight, FileUp, BellRing, Briefcase, Check, ClipboardList, FileDown, FileStack, Globe2, GraduationCap, Languages, Link2, Mail, MessagesSquare, PenLine, PlayCircle, Send, ShieldCheck, Target, UserRound } from 'lucide-react';
 import { PACKS } from '../../server/payments.ts';
 import { HeroScene } from '../components/HeroScene.tsx';
 import type { Tab } from '../App.tsx';
-import { Button } from '../components/ui.tsx';
+import { Button, cx } from '../components/ui.tsx';
+import { useActiveCv, useStore } from '../store.ts';
+import { isCvEmpty } from '../lib/cv.ts';
 import { api, type PublicTestimonial } from '../lib/api.ts';
 import { FAQ } from '../lib/faq.ts';
 import { GUIDES, KIND_LABEL, type GuideKind } from '../../seo/guides.ts';
@@ -11,6 +13,7 @@ import { Capacitor } from '@capacitor/core';
 import { PUBLIC_SITE } from '../lib/referral.ts';
 
 import { LANG, t } from '../i18n.ts';
+import { CATALOG, isProTemplate, settingsForTemplate } from '../pdf/catalog.ts';
 // Dans l'application Android, les guides s'ouvrent sur le site.
 const GUIDE_BASE = Capacitor.isNativePlatform() ? PUBLIC_SITE.replace(/\/$/, '') : '';
 const GUIDE_GROUPS: { kind: GuideKind; icon: typeof Target }[] = [
@@ -67,12 +70,88 @@ function Marquee({ items, reverse = false, duration }: { items: string[]; revers
 }
 
 
-function SectionTitle({ title, subtitle }: { title: string; subtitle?: string }) {
+/** Titre où le passage entre *astérisques* est mis en couleur (« Des modèles de CV *professionnels* »). */
+function Accented({ text, accent = 'text-brand-600' }: { text: string; accent?: string }) {
   return (
-    <div className="mb-6 text-center">
-      <h2 className="text-2xl font-bold tracking-tight text-slate-900 sm:text-3xl">{title}</h2>
-      {subtitle && <p className="mt-1.5 text-slate-600">{subtitle}</p>}
+    <>
+      {text.split('*').map((part, i) =>
+        i % 2 ? (
+          <span key={i} className={accent}>
+            {part}
+          </span>
+        ) : (
+          part
+        ),
+      )}
+    </>
+  );
+}
+
+function SectionTitle({ title, subtitle, dark = false }: { title: string; subtitle?: string; dark?: boolean }) {
+  return (
+    <div className="mx-auto mb-8 max-w-2xl text-center">
+      <h2 className={cx('font-display text-[1.75rem] leading-tight font-bold tracking-tight sm:text-4xl', dark ? 'text-white' : 'text-ink')}>
+        <Accented text={title} accent={dark ? 'text-sun-400' : 'text-brand-600'} />
+      </h2>
+      {subtitle && <p className={cx('mt-2 text-base', dark ? 'text-slate-300' : 'text-slate-600')}>{subtitle}</p>}
     </div>
+  );
+}
+
+/** Nos vrais modèles, en images (remplis avec un exemple, sans nom réel ni photo) : on choisit, on commence. */
+function TemplatesShowcase({ onNavigate }: { onNavigate: (t: Tab) => void }) {
+  const updateCv = useStore((s) => s.updateCv);
+  const cv = useActiveCv();
+  const strip = useRef<HTMLDivElement>(null);
+  const scroll = (dir: 1 | -1) => strip.current?.scrollBy({ left: dir * strip.current.clientWidth * 0.8, behavior: 'smooth' });
+  const choose = (entry: (typeof CATALOG)[number]) => {
+    updateCv((c) => ({ ...c, settings: { ...c.settings, ...settingsForTemplate(entry) } }));
+    onNavigate(isCvEmpty(cv) ? 'infos' : 'apercu');
+  };
+  return (
+    <section className="bg-brand-50/70 py-14" aria-labelledby="modeles-titre">
+      <div className="px-4">
+        <div id="modeles-titre">
+          <SectionTitle title={t('Des modèles de CV *professionnels*')} subtitle={t('Pensés pour chaque métier et chaque pays. Changez de modèle quand vous voulez : votre contenu ne bouge pas.')} />
+        </div>
+      </div>
+      <div className="relative mx-auto max-w-6xl">
+        <div ref={strip} className="flex snap-x snap-mandatory gap-4 overflow-x-auto scroll-smooth px-4 pb-4 [scrollbar-width:none] sm:gap-5 [&::-webkit-scrollbar]:hidden">
+          {CATALOG.map((e) => (
+            <article key={e.id} className="w-[68%] max-w-[250px] shrink-0 snap-center sm:w-[240px]">
+              <button type="button" onClick={() => choose(e)} className="group block w-full text-left" aria-label={t('Utiliser le modèle {0}', [e.name])}>
+                <img
+                  src={`${import.meta.env.BASE_URL}modeles/${e.id}.webp`}
+                  alt=""
+                  loading="lazy"
+                  width={560}
+                  height={792}
+                  className="aspect-[560/792] w-full rounded-xl bg-white shadow-[0_18px_40px_-18px_rgba(16,26,74,0.45)] ring-1 ring-slate-200 transition group-hover:-translate-y-1"
+                />
+              </button>
+              <div className="mt-3 flex items-center gap-2">
+                <h3 className="font-semibold text-ink">{e.name}</h3>
+                <span className={cx('rounded-full px-2 py-0.5 text-xs font-semibold', isProTemplate(e.id) ? 'bg-sun-100 text-sun-900' : 'bg-emerald-100 text-emerald-900')}>
+                  {isProTemplate(e.id) ? 'Pro' : t('Gratuit')}
+                </span>
+              </div>
+              <p className="mt-0.5 text-sm text-slate-600">{e.idealFor}</p>
+              <Button size="sm" variant="secondary" className="mt-2" onClick={() => choose(e)}>
+                {t('Utiliser ce modèle')}
+              </Button>
+            </article>
+          ))}
+        </div>
+        <div className="mt-2 hidden justify-center gap-2 lg:flex">
+          <button type="button" onClick={() => scroll(-1)} aria-label={t('Modèles précédents')} className="flex size-11 items-center justify-center rounded-full bg-white text-ink shadow ring-1 ring-slate-200 hover:bg-slate-50">
+            <ChevronLeft className="size-5" />
+          </button>
+          <button type="button" onClick={() => scroll(1)} aria-label={t('Modèles suivants')} className="flex size-11 items-center justify-center rounded-full bg-white text-ink shadow ring-1 ring-slate-200 hover:bg-slate-50">
+            <ChevronRight className="size-5" />
+          </button>
+        </div>
+      </div>
+    </section>
   );
 }
 
@@ -131,33 +210,46 @@ export function LandingPage({ onNavigate }: { onNavigate: (t: Tab) => void }) {
   return (
     <div className="-mx-4 -mt-4">
       <section className="bg-white px-4 pt-8 pb-12 sm:pt-14 lg:pb-16">
-        {/* Téléphone : titre, scène, puis texte et boutons. Ordinateur : titre et texte à gauche, scène à droite. */}
+        {/* Téléphone : titre, texte et boutons, puis scène. Ordinateur : titre et texte à gauche, scène à droite. */}
         <div className="mx-auto grid max-w-6xl items-center gap-x-14 gap-y-6 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.05fr)] lg:grid-rows-[auto_auto]">
-          <h1 className="text-center text-[2.4rem] leading-[1.02] font-bold text-ink sm:text-6xl lg:self-end lg:text-left lg:text-[4.4rem]">{t('Votre CV prêt en quelques minutes.')}</h1>
-          <div className="relative overflow-hidden rounded-[28px] bg-ink px-4 pt-6 pb-5 sm:px-8 sm:pt-9 lg:col-start-2 lg:row-span-2 lg:row-start-1">
+          <h1 className="text-center text-[2.4rem] leading-[1.02] font-bold text-ink sm:text-6xl lg:self-end lg:text-left lg:text-[4.4rem]"><Accented text={t('Votre CV *prêt* en quelques minutes.')} /></h1>
+          <div className="relative overflow-hidden rounded-[28px] bg-ink px-4 pt-6 pb-5 sm:px-8 sm:pt-9 order-3 lg:order-none lg:col-start-2 lg:row-span-2 lg:row-start-1">
             {/* Trame de points discrète : la scène se détache sans dégradé décoratif. */}
             <div className="pointer-events-none absolute inset-0 opacity-[0.12] [background-image:radial-gradient(#fff_1px,transparent_1px)] [background-size:18px_18px]" />
             <div className="relative">
               <HeroScene />
             </div>
           </div>
-          <div className="text-center lg:self-start lg:text-left">
+          <div className="order-2 text-center lg:order-none lg:self-start lg:text-left">
             <p className="mx-auto max-w-xl text-base text-slate-600 sm:text-lg lg:mx-0">
               {t('Importez votre ancien CV, écrivez quelques lignes ou dictez si vous préférez : votre parcours est rangé, reformulé et mis en page, puis adapté à chaque offre. Créer et télécharger son CV est gratuit.')}</p>
-            <div className="mt-7 flex flex-col items-center justify-center gap-3 sm:flex-row lg:justify-start">
+            <div className="mt-7 flex flex-col items-stretch justify-center gap-3 sm:flex-row sm:items-center lg:justify-start">
               <Button size="lg" onClick={start} icon={<ArrowRight className="size-5" />}>
                 {t('Créer mon CV gratuitement')}</Button>
-              <Button size="lg" variant="secondary" onClick={() => onNavigate('offre')}>
-                {t('J’ai déjà une offre')}</Button>
+              <Button size="lg" variant="secondary" onClick={start} icon={<FileUp className="size-5" />}>
+                {t('Importer mon ancien CV')}</Button>
             </div>
-            <p className="mt-3 text-sm text-slate-500">{t('Sans compte pour créer et télécharger son CV. Première adaptation offerte.')}</p>
-            <a href="#tutoriel" onClick={(e) => { e.preventDefault(); document.getElementById('tutoriel')?.scrollIntoView({ behavior: 'smooth', block: 'center' }); }} className="mt-2 inline-flex min-h-11 items-center gap-2 px-2 text-sm font-semibold text-brand-700 hover:text-brand-800 lg:-ml-2">
+            <ul className="mt-4 flex flex-wrap justify-center gap-x-4 gap-y-1.5 text-sm font-medium text-slate-700 lg:justify-start">
+              {[t('Gratuit'), t('Sans compte'), t('Lu par les logiciels des recruteurs')].map((x) => (
+                <li key={x} className="flex items-center gap-1.5">
+                  <Check className="size-4 text-emerald-600" aria-hidden="true" /> {x}
+                </li>
+              ))}
+            </ul>
+            <div className="mt-3 flex flex-wrap items-center justify-center gap-x-5 lg:justify-start">
+            <button type="button" onClick={() => onNavigate('offre')} className="inline-flex min-h-11 items-center gap-1.5 text-sm font-semibold text-brand-700 hover:text-brand-800">
+              {t('J’ai déjà une offre d’emploi')} <ArrowRight className="size-4" aria-hidden="true" />
+            </button>
+            <a href="#tutoriel" onClick={(e) => { e.preventDefault(); document.getElementById('tutoriel')?.scrollIntoView({ behavior: 'smooth', block: 'center' }); }} className="inline-flex min-h-11 items-center gap-2 text-sm font-semibold text-slate-600 hover:text-slate-900">
               <PlayCircle className="size-5" /> {' '}{t('Voir le tutoriel en vidéo (2 min)')}</a>
+            </div>
           </div>
         </div>
       </section>
 
-      <section className="space-y-3 border-y border-slate-200 bg-slate-50 py-6" aria-label={t('Métiers et villes')}>
+      <TemplatesShowcase onNavigate={onNavigate} />
+
+      <section className="space-y-3 border-b border-slate-200 bg-white py-6" aria-label={t('Métiers et villes')}>
         <p className="px-4 text-center text-sm font-semibold text-slate-600">{t('Un CV adapté à votre métier, pour postuler où vous voulez')}</p>
         <Marquee items={JOBS} duration="55s" />
         <Marquee items={PLACES} reverse duration="45s" />
@@ -165,17 +257,18 @@ export function LandingPage({ onNavigate }: { onNavigate: (t: Tab) => void }) {
 
       <Testimonials />
 
-      <section className="mx-auto max-w-5xl px-4 py-12">
-        <SectionTitle title={t('Comment ça marche')} />
+      <section className="bg-ink px-4 py-14">
+       <div className="mx-auto max-w-5xl">
+        <SectionTitle dark title={t('Votre CV en *3 étapes simples*')} />
         <ol className="grid gap-4 sm:grid-cols-3">
           {STEPS.map((s, i) => (
-            <li key={s.title} className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+            <li key={s.title} className="rounded-2xl bg-white/[0.06] p-5 ring-1 ring-white/10">
               <div className="flex items-center gap-3">
-                <span className="flex size-9 items-center justify-center rounded-full bg-brand-600 text-sm font-bold text-white">{i + 1}</span>
-                <s.icon className="size-5 text-brand-600" />
+                <span className="font-display text-4xl leading-none font-bold text-sun-400">{i + 1}</span>
+                <s.icon className="size-5 text-white/80" aria-hidden="true" />
               </div>
-              <h3 className="mt-3 font-semibold text-slate-900">{s.title}</h3>
-              <p className="mt-1 text-sm leading-relaxed text-slate-600">{s.text}</p>
+              <h3 className="mt-3 text-lg font-semibold text-white">{s.title}</h3>
+              <p className="mt-1 text-sm leading-relaxed text-slate-300">{s.text}</p>
             </li>
           ))}
         </ol>
@@ -186,19 +279,20 @@ export function LandingPage({ onNavigate }: { onNavigate: (t: Tab) => void }) {
             preload="none"
             poster={`${import.meta.env.BASE_URL}tutoriel/poster.jpg`}
             src={`${import.meta.env.BASE_URL}tutoriel/tutoriel.mp4`}
-            className="aspect-video w-full rounded-2xl bg-slate-900 shadow-lg ring-1 ring-slate-200"
+            className="aspect-video w-full rounded-2xl bg-slate-900 shadow-lg ring-1 ring-white/15"
           >
             {t('Votre navigateur ne lit pas cette vidéo.')}</video>
-          <figcaption className="mt-2 text-center text-sm text-slate-500">{t('Le tutoriel complet : CV, modèle, offre, lettre, scanner et documents, pas à pas.')}</figcaption>
+          <figcaption className="mt-2 text-center text-sm text-slate-400">{t('Le tutoriel complet : CV, modèle, offre, lettre, scanner et documents, pas à pas.')}</figcaption>
         </figure>
+       </div>
       </section>
 
       <section className="bg-white px-4 py-12">
         <div className="mx-auto max-w-5xl">
-          <SectionTitle title={t('Ce que vous pouvez faire')} />
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          <SectionTitle title={t('Tout pour *décrocher le poste*')} subtitle={t('Du CV à l’entretien, au même endroit.')} />
+          <div className="-mx-4 flex snap-x snap-mandatory gap-4 overflow-x-auto px-4 pb-3 [scrollbar-width:none] sm:mx-0 sm:grid sm:grid-cols-2 sm:overflow-visible sm:px-0 lg:grid-cols-3 [&::-webkit-scrollbar]:hidden">
             {FEATURES.map((f) => (
-              <div key={f.title} className="rounded-2xl border border-slate-100 bg-slate-50/60 p-5">
+              <div key={f.title} className="w-[78%] shrink-0 snap-center rounded-2xl border border-slate-100 bg-slate-50/60 p-5 sm:w-auto">
                 <span className="flex size-10 items-center justify-center rounded-xl bg-brand-50 text-brand-700">
                   <f.icon className="size-5" />
                 </span>
