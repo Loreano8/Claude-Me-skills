@@ -1,5 +1,6 @@
 import { Fragment, useEffect, useLayoutEffect, useRef, useState, type CSSProperties } from 'react';
 import { FileDown, FileText, Keyboard, Mic } from 'lucide-react';
+import { cx } from './ui.tsx';
 
 /**
  * Scène d'accueil : le parcours arrive (ancien CV importé, texte écrit, ou dicté au micro : une façon par boucle, dans
@@ -10,13 +11,15 @@ import { FileDown, FileText, Keyboard, Mic } from 'lucide-react';
 
 const W = 420;
 const H = 520;
-const LOOP = 14;
+// Boucle courte : les trois façons (ancien CV, écrit, micro) défilent en moins de 25 secondes.
+const LOOP = 8;
 
 // Le parcours, selon la façon de le donner ; les morceaux qui ont un `to` rejoignent le CV.
 type Piece = { text: string; to?: number };
-const SOURCES: { icon: typeof Mic; active: string; idle: string; pieces: Piece[] }[] = [
+const SOURCES: { icon: typeof Mic; short: string; active: string; idle: string; pieces: Piece[] }[] = [
   {
     icon: FileText,
+    short: 'Ancien CV',
     active: 'Lecture de ancien-cv.pdf…',
     idle: 'Ancien CV lu',
     pieces: [
@@ -33,6 +36,7 @@ const SOURCES: { icon: typeof Mic; active: string; idle: string; pieces: Piece[]
   },
   {
     icon: Keyboard,
+    short: 'Écrit',
     active: 'Vous écrivez…',
     idle: 'Écrit',
     pieces: [
@@ -48,6 +52,7 @@ const SOURCES: { icon: typeof Mic; active: string; idle: string; pieces: Piece[]
   },
   {
     icon: Mic,
+    short: 'Micro',
     active: 'Vous parlez…',
     idle: 'Noté',
     pieces: [
@@ -75,14 +80,14 @@ const LINES = [
 
 // Calendrier de la boucle, en secondes.
 const T = {
-  bubble: [0.2, 0.8],
-  type: [0.8, 4.4],
-  sheet: [3.6, 4.6],
-  mark: (i: number) => [4.6 + i * 0.28, 5.0 + i * 0.28] as const,
-  straighten: [5.6, 6.2],
-  fly: (i: number) => [6.0 + i * 0.6, 7.2 + i * 0.6] as const,
-  done: [9.4, 9.9],
-  out: [12.8, 13.6],
+  bubble: [0.1, 0.4],
+  type: [0.4, 2.2],
+  sheet: [1.8, 2.4],
+  mark: (i: number) => [2.4 + i * 0.15, 2.7 + i * 0.15] as const,
+  straighten: [3.0, 3.4],
+  fly: (i: number) => [3.2 + i * 0.35, 3.9 + i * 0.35] as const,
+  done: [5.0, 5.3],
+  out: [7.4, 7.9],
 };
 
 const clamp = (v: number) => Math.min(1, Math.max(0, v));
@@ -117,7 +122,7 @@ export function HeroScene() {
   // Horloge de la boucle, arrêtée hors de l'écran (batterie) ; image finale fixe si les animations sont réduites.
   useEffect(() => {
     if (reduce) {
-      setElapsed(11);
+      setElapsed(6);
       return;
     }
     let raf = 0;
@@ -191,6 +196,22 @@ export function HeroScene() {
   });
 
   return (
+    <div>
+      {/* Les trois façons de commencer, visibles d'un coup d'œil ; celle en cours est mise en avant. */}
+      <ul className="mb-4 flex justify-center gap-2" aria-label="Trois façons de commencer">
+        {SOURCES.map((s) => (
+          <li
+            key={s.short}
+            className={cx(
+              'inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-sm font-semibold transition-colors duration-300',
+              s === source ? 'bg-sun-400 text-ink' : 'bg-white/10 text-white/75',
+            )}
+          >
+            <s.icon className="size-4" aria-hidden="true" />
+            {s.short}
+          </li>
+        ))}
+      </ul>
     <div ref={host} className="relative w-full" style={{ height: H * scale }} aria-hidden="true">
       <div ref={stage} className="absolute top-0 left-1/2 origin-top" style={{ width: W, height: H, transform: `translateX(-50%) scale(${scale})`, opacity: fade }}>
         {/* La parole */}
@@ -288,6 +309,7 @@ export function HeroScene() {
           <FileDown className="size-4 text-sun-400" /> PDF prêt à envoyer
         </div>
       </div>
+    </div>
     </div>
   );
 }
