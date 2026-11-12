@@ -32,6 +32,27 @@ const post = (app: ReturnType<typeof createApp>, path: string, body: unknown, ip
   });
 
 describe('API', () => {
+  it('interface en anglais : moteur anglais et messages d’erreur en anglais', async () => {
+    const fr = fakeAi();
+    const en = fakeAi();
+    const app = createApp({ ai: fr, aiEn: en, allowedOrigins: [], rateLimitPerHour: 50 });
+    const call = (path: string, body: unknown, lang?: string) =>
+      app.request(path, { method: 'POST', headers: { 'content-type': 'application/json', 'x-device-id': `lang-${++deviceSeq}`, ...(lang ? { 'x-lang': lang } : {}) }, body: JSON.stringify(body) });
+
+    const bad = await call('/api/ai/structure', { text: '  ' }, 'en');
+    expect((await bad.json()).error).toBe('Write a few details or attach an old CV.');
+    expect((await (await call('/api/ai/structure', { text: '  ' })).json()).error).toBe('Écrivez quelques informations ou joignez un ancien CV.');
+
+    await call('/api/ai/structure', { text: 'Accountant' }, 'en');
+    expect(en.structure).toHaveBeenCalledTimes(1);
+    expect(fr.structure).not.toHaveBeenCalled();
+
+    const letter = { recipientName: '', recipientCompany: 'Groupe X', recipientAddress: '', subject: 'Candidature', salutation: 'Madame, Monsieur,', paragraphs: ['Bonjour.'], closing: 'Cordialement,' };
+    const res = await call('/api/ai/translate-letter', { letter, targetLang: 'en' }, 'en');
+    expect(res.status).toBe(200);
+    expect((await res.json()).language).toBe('en');
+  });
+
   it('indique si l’IA est configurée', async () => {
     const app = createApp({ ai: null, allowedOrigins: [], rateLimitPerHour: 5 });
     expect(await (await app.request('/api/health')).json()).toMatchObject({ ok: true, ai: false, accounts: false });

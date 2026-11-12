@@ -10,7 +10,7 @@ import { GUIDES, KIND_LABEL, type GuideKind } from '../../seo/guides.ts';
 import { Capacitor } from '@capacitor/core';
 import { PUBLIC_SITE } from '../lib/referral.ts';
 
-import { t } from '../i18n.ts';
+import { LANG, t } from '../i18n.ts';
 // Dans l'application Android, les guides s'ouvrent sur le site.
 const GUIDE_BASE = Capacitor.isNativePlatform() ? PUBLIC_SITE.replace(/\/$/, '') : '';
 const GUIDE_GROUPS: { kind: GuideKind; icon: typeof Target }[] = [
@@ -240,6 +240,8 @@ export function LandingPage({ onNavigate }: { onNavigate: (t: Tab) => void }) {
         <p className="mt-4 text-center text-sm text-slate-500">{t('Sans abonnement · MTN MoMo ou Moov Money · Crédit rendu en cas d’échec')}</p>
       </section>
 
+      {/* Les guides sont écrits en français : on ne les met pas en avant dans la version anglaise. */}
+      {LANG === 'fr' && (
       <section className="px-4 py-12">
         <div className="mx-auto max-w-5xl">
           <SectionTitle title={t('Conseils et exemples')} subtitle={t('Des guides concrets, métier par métier, pays par pays.')} />
@@ -279,6 +281,7 @@ export function LandingPage({ onNavigate }: { onNavigate: (t: Tab) => void }) {
           </p>
         </div>
       </section>
+      )}
 
       <section className="bg-white px-4 py-12">
         <div className="mx-auto max-w-3xl">
@@ -302,7 +305,7 @@ export function LandingPage({ onNavigate }: { onNavigate: (t: Tab) => void }) {
       <p className="px-4 pt-8 text-center text-sm text-slate-600">
         {t('Une autre question ?')}{' '}
         <button type="button" className="hit font-semibold text-brand-700 underline" onClick={() => onNavigate('contact')}>
-          Écrivez-nous
+          {t('Écrivez-nous')}
         </button>
         {t(', nous répondons dans l’appli.')}</p>
 

@@ -14,6 +14,7 @@ import { appendSpoken, MicButton } from '../components/MicButton.tsx';
 import { ProOffer } from '../components/ProUnlock.tsx';
 import { Button, Card, Cost, Field, Notice, Select, TextArea, Toggle } from '../components/ui.tsx';
 import { SendApplication } from '../components/SendApplication.tsx';
+import { TranslateLetter } from '../components/TranslateLetter.tsx';
 import { NextSteps } from '../components/NextSteps.tsx';
 import type { Tab } from '../App.tsx';
 
@@ -260,6 +261,7 @@ export function LetterPage({ onNavigate }: { onNavigate: (t: Tab) => void }) {
         </Card>
         {letter.body.trim() && <NaturalReview hits={letterCliches(letter)} edit={t('Corrigez directement dans « Corps de la lettre » ci-dessus.')} />}
         {letter.body.trim() && <SendApplication />}
+        {letter.body.trim() && <TranslateLetter />}
         {letter.body.trim() && (
           <NextSteps
             id="apres-lettre"

@@ -27,6 +27,8 @@ export function SendApplication() {
       subtitle={t('Le message à mettre dans l’e-mail, avec votre CV et votre lettre en pièces jointes.')}
     >
       <EmailCard
+        // Nouvelle lettre ou lettre traduite : l'e-mail repart du nouveau brouillon (dans la langue de la lettre).
+        key={`${letter.lang ?? 'fr'}-${letter.subject}`}
         draft={draft}
         hint={t('Pensez à joindre votre CV et votre lettre en PDF (boutons « PDF » ci-dessus). Une fois envoyée, la candidature passe en « Envoyée » dans le suivi : nous vous proposerons une relance dans 7 jours.')}
         onUsed={(to) => app && updateApplication(app.id, { status: app.status === 'preparation' ? 'envoyee' : app.status, contactEmail: to || app.contactEmail })}

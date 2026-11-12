@@ -5,7 +5,7 @@ import type { Tab } from '../App.tsx';
 import { PUBLIC_SITE } from '../lib/referral.ts';
 import { useSupportBadge } from '../lib/supportBadge.ts';
 
-import { t } from '../i18n.ts';
+import { LANG, t } from '../i18n.ts';
 // Les guides sont des pages du site : depuis l'application Android, ils s'ouvrent sur cvcasa.com.
 const SITE = Capacitor.isNativePlatform() ? PUBLIC_SITE : '';
 
@@ -33,7 +33,7 @@ const GROUPS: { title: string; entries: Entry[] }[] = [
     title: t('Aide'),
     entries: [
       { icon: PlayCircle, title: t('Tutoriel en vidéo'), text: t('Tout CVCasa expliqué en 2 minutes.'), href: `${SITE}/tutoriel/tutoriel.mp4` },
-      { icon: BookOpen, title: t('Guides et exemples'), text: t('Conseils de CV par métier, par pays, et pour la lettre.'), href: `${SITE}/guides/` },
+      { icon: BookOpen, title: t('Guides et exemples'), text: LANG === 'en' ? 'CV tips by job, by country, and for the letter (in French).' : 'Conseils de CV par métier, par pays, et pour la lettre.', href: `${SITE}/guides/` },
       { icon: MessageCircle, title: t('Nous contacter'), text: t('Une question, un souci : nous répondons ici.'), tab: 'contact' },
       { icon: ShieldCheck, title: t('Confidentialité'), text: t('Ce que deviennent vos données.'), tab: 'confidentialite' },
     ],
