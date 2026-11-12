@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useSharedOffer } from './lib/shareInbox.ts';
-import { ArrowLeft, Check, LayoutGrid } from 'lucide-react';
+import { ArrowLeft, LayoutGrid } from 'lucide-react';
 import { useActiveCv, useStore } from './store.ts';
 import { CvSwitcher } from './components/CvSwitcher.tsx';
 import { AccountButton, AccountDialogs } from './components/AccountDialogs.tsx';
@@ -80,7 +80,7 @@ function useDoneSteps(): Record<Section, boolean> {
 }
 
 /** Pastille d'une entrée de navigation : numéro de l'étape, coche si elle est faite, ou icône de « Plus ». */
-function StepMark({ step, done, active, unread, big = false }: { step?: number; done: boolean; active: boolean; unread: number; big?: boolean }) {
+function StepMark({ step, active, unread, big = false }: { step?: number; active: boolean; unread: number; big?: boolean }) {
   if (!step) {
     return (
       <span className={cx('relative flex items-center justify-center', big ? 'size-7' : 'size-6')}>
@@ -94,10 +94,11 @@ function StepMark({ step, done, active, unread, big = false }: { step?: number; 
       className={cx(
         'flex items-center justify-center rounded-full font-bold',
         big ? 'size-7 text-sm' : 'size-6 text-xs',
-        done ? 'bg-emerald-600 text-white' : active ? 'bg-brand-600 text-white' : 'bg-slate-200 text-slate-700',
+        // Toujours le numéro : une étape « faite » peut être reprise, une coche donnait l'impression qu'elle était fermée.
+        active ? 'bg-brand-600 text-white' : 'bg-slate-200 text-slate-700',
       )}
     >
-      {done ? <Check className={cx(big ? 'size-4' : 'size-3.5', 'stroke-[3]')} aria-hidden="true" /> : step}
+      {step}
     </span>
   );
 }
@@ -221,7 +222,7 @@ export default function App() {
                   section === n.id ? 'bg-brand-50 text-brand-800' : 'text-slate-700 hover:bg-slate-100',
                 )}
               >
-                <StepMark step={n.step} done={done[n.id]} active={section === n.id} unread={unread} big />
+                <StepMark step={n.step} active={section === n.id} unread={unread} big />
                 {n.short}
               </button>
             ))}
@@ -272,7 +273,7 @@ export default function App() {
             onClick={() => setTab(n.tab)}
             className={cx('flex min-h-15 flex-col items-center justify-center gap-1 py-2 text-xs font-semibold', section === n.id ? 'text-brand-800' : 'text-slate-600')}
           >
-            <StepMark step={n.step} done={done[n.id]} active={section === n.id} unread={unread} />
+            <StepMark step={n.step} active={section === n.id} unread={unread} />
             {n.short}
           </button>
         ))}
