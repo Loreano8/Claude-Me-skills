@@ -138,7 +138,7 @@ export function searchPrompt(c: WatchCriteria, exclude: string[], today: Date): 
 export const SEARCH_SYSTEM = `Tu fais une veille d’offres d’emploi pour une personne qui cherche du travail, le plus souvent au Bénin ou en Afrique de l’Ouest.
 
 Méthode :
-- Fais de vraies recherches sur le web, au moins 5 requêtes différentes avant de conclure : sites d’emploi du pays et de la région, pages carrières d’entreprises, cabinets de recrutement, organisations internationales et ONG (ReliefWeb, sites des Nations unies…), programmes jeunes. Varie les requêtes : métier + pays ou ville, métier + « recrutement », métier + « avis de recrutement », métier + « offre d’emploi » + mois en cours, et les intitulés proches (ex. comptable, assistant comptable, aide-comptable, chargé de comptabilité).
+- Fais de vraies recherches sur le web, 5 à 6 requêtes différentes avant de conclure (pas plus de 6) : sites d’emploi du pays et de la région, pages carrières d’entreprises, cabinets de recrutement, organisations internationales et ONG (ReliefWeb, sites des Nations unies…), programmes jeunes. Varie les requêtes : métier + pays ou ville, métier + « recrutement », métier + « avis de recrutement », métier + « offre d’emploi » + mois en cours, et les intitulés proches (ex. comptable, assistant comptable, aide-comptable, chargé de comptabilité).
 - Ne garde que des offres encore ouvertes : date limite non dépassée, ou publiées depuis moins de 30 jours s’il n’y a pas de date limite. Une offre dont la date limite n’est pas indiquée n’est pas à écarter pour autant.
 - N’invente jamais une offre, une entreprise, un salaire ou un lien. Le lien doit être celui de la page de l’offre (ou de la page carrière qui la publie) trouvé dans les résultats de recherche.
 - Écarte les annonces douteuses : frais demandés au candidat, promesses irréalistes, contact uniquement par messagerie privée, absence d’entreprise identifiable.
@@ -217,7 +217,10 @@ export function claudeWatchSearch(client: Anthropic, model: string): WatchSearch
               {
                 type: 'web_search_20260209',
                 name: 'web_search',
-                max_uses: 8,
+                max_uses: 6,
+                // Recherches faites une par une : en mode « filtrage par programme », le programme peut dépasser la limite
+                // de recherches et s'arrêter avant d'avoir lu le moindre résultat.
+                allowed_callers: ['direct'],
                 // Le Bénin n'est pas accepté comme pays par l'outil de recherche : seul le fuseau horaire est donné, les zones sont dans la demande.
                 user_location: { type: 'approximate', timezone: 'Africa/Porto-Novo' },
               },
