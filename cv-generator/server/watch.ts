@@ -218,7 +218,8 @@ export function claudeWatchSearch(client: Anthropic, model: string): WatchSearch
                 type: 'web_search_20260209',
                 name: 'web_search',
                 max_uses: 5,
-                user_location: { type: 'approximate', country: 'BJ', city: 'Cotonou', timezone: 'Africa/Porto-Novo' },
+                // Le Bénin n'est pas accepté comme pays par l'outil de recherche : seul le fuseau horaire est donné, les zones sont dans la demande.
+                user_location: { type: 'approximate', timezone: 'Africa/Porto-Novo' },
               },
               OFFERS_TOOL,
             ],
