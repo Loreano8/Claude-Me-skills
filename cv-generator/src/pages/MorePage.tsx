@@ -1,4 +1,4 @@
-import { BookOpen, ChevronRight, ClipboardList, CreditCard, FileStack, FolderOpen, Link2, Mail, MessageCircle, Mic, PlayCircle, ScanLine, ShieldCheck, Bitcoin } from 'lucide-react';
+import { BellRing, BookOpen, ChevronRight, ClipboardList, CreditCard, FileStack, FolderOpen, Link2, Mail, MessageCircle, Mic, PlayCircle, ScanLine, ShieldCheck, Bitcoin } from 'lucide-react';
 import { Capacitor } from '@capacitor/core';
 import type { Tab } from '../App.tsx';
 import { PUBLIC_SITE } from '../lib/referral.ts';
@@ -21,6 +21,7 @@ const GROUPS: { title: string; entries: Entry[] }[] = [
   {
     title: 'Votre recherche',
     entries: [
+      { icon: BellRing, title: 'Veille emploi', text: 'Les offres qui vous correspondent, envoyées chaque matin. La première recherche est offerte.', tab: 'veille' },
       { icon: ClipboardList, title: 'Suivi et relances', text: 'Où vous avez postulé, et un message prêt pour relancer au bout d’une semaine.', tab: 'suivi' },
       { icon: Link2, title: 'Partager mon CV', text: 'Un lien et un QR code à donner à un recruteur.', tab: 'apercu' },
       { icon: Mail, title: 'E-mail de candidature', text: 'Le message à envoyer avec votre CV et votre lettre, prêt à copier.', tab: 'lettre' },

@@ -112,6 +112,37 @@ create table if not exists rate_hits (
 );
 create index if not exists rate_hits_lookup on rate_hits (bucket, key, at);
 
+-- Veille emploi : critères cochés par la personne (une veille par compte), envois, et recherches du jour partagées
+-- entre personnes aux critères identiques (moins de recherches payantes).
+create table if not exists job_watches (
+  user_id integer primary key references users(id) on delete cascade,
+  criteria jsonb not null,
+  profile text not null default '',
+  frequency text not null check (frequency in ('daily', 'weekly')),
+  active boolean not null default false,
+  paid_until timestamptz,
+  next_run_at timestamptz,
+  running_since timestamptz,
+  free_run_used boolean not null default false,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now()
+);
+create index if not exists job_watches_due on job_watches (next_run_at) where active;
+create table if not exists job_watch_runs (
+  id serial primary key,
+  user_id integer not null references users(id) on delete cascade,
+  offers jsonb not null,
+  note text not null default '',
+  created_at timestamptz not null default now()
+);
+create index if not exists job_watch_runs_user on job_watch_runs (user_id, id desc);
+create table if not exists job_search_cache (
+  key text primary key,
+  offers jsonb not null,
+  note text not null default '',
+  created_at timestamptz not null default now()
+);
+
 -- Offre de retour (4 crédits pour le prix de 3) : ouverte pour 72 heures quand la personne revient après une absence, une seule fois.
 alter table users add column if not exists return_offer_until timestamptz;
 

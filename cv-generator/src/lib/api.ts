@@ -25,6 +25,9 @@ import type {
   LetterQuestionsResult,
   KeywordsRequest,
   KeywordsResult,
+  WatchRun,
+  WatchSaveRequest,
+  WatchState,
 } from '../../shared/schema.ts';
 import { styleForAi } from './writingStyle.ts';
 import { pendingSource } from './source.ts';
@@ -74,7 +77,7 @@ async function request<T>(method: 'GET' | 'POST', path: string, body?: unknown, 
     const message = typeof data?.error === 'string' ? data.error : null;
     // Pas de réponse de notre API : site publié sans serveur (ex. version de démonstration).
     if (!message) throw new ApiError('Les fonctions en ligne ne sont pas encore activées sur ce site.');
-    if (res.status === 401 && (path.startsWith('/api/ai/') || path.startsWith('/api/vault/') || path === '/api/unlock' || path === '/api/dossier/unlock')) {
+    if (res.status === 401 && (path.startsWith('/api/ai/') || path.startsWith('/api/vault/') || path === '/api/unlock' || path === '/api/dossier/unlock' || path.startsWith('/api/watch'))) {
       account.logout();
       account.open('account', message);
     }
@@ -107,6 +110,11 @@ export const api = {
   shareCv: (cvKey: string, name: string, pdf: string) => post<SharedCv>('/api/share', { cvKey, name, pdf }),
   shareStatus: (cvKey: string) => post<{ share: SharedCv | null }>('/api/share/status', { cvKey }),
   shareStop: (cvKey: string) => post<{ ok: true }>('/api/share/stop', { cvKey }),
+  watchGet: () => request<{ available: boolean; watch: WatchState | null; runs: WatchRun[] }>('GET', '/api/watch'),
+  watchSave: (req: WatchSaveRequest) => post<{ watch: WatchState }>('/api/watch', req),
+  watchRun: () => post<{ run: WatchRun; credits: number | null; free: boolean }>('/api/watch/run', {}),
+  watchStart: () => post<{ watch: WatchState; credits: number }>('/api/watch/start', {}),
+  watchStop: () => post<{ ok: true }>('/api/watch/stop', {}),
   fetchJob: (url: string) => post<JobFetchResult>('/api/job/fetch', { url }),
   transcribe: (req: TranscribeRequest) => post<TranscribeResult>('/api/ai/transcribe', req),
   dossierUnlock: () => post<{ credits: number | null }>('/api/dossier/unlock', {}),

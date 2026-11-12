@@ -21,6 +21,7 @@ import { LandingPage } from './pages/LandingPage.tsx';
 import { ContactPage } from './pages/ContactPage.tsx';
 import { AdminPage } from './pages/AdminPage.tsx';
 import { DossierPage } from './pages/DossierPage.tsx';
+import { WatchPage } from './pages/WatchPage.tsx';
 import { MorePage } from './pages/MorePage.tsx';
 import { FollowUpNudge } from './components/FollowUps.tsx';
 import { isCvEmpty } from './lib/cv.ts';
@@ -28,7 +29,7 @@ import { DocumentsPage } from './pages/DocumentsPage.tsx';
 import { PrivacyPage } from './pages/PrivacyPage.tsx';
 import { refreshSupportBadge, useSupportBadge } from './lib/supportBadge.ts';
 
-export type Tab = 'accueil' | 'infos' | 'apercu' | 'offre' | 'lettre' | 'plus' | 'suivi' | 'documents' | 'dossier' | 'scanner' | 'confidentialite' | 'contact' | 'admin';
+export type Tab = 'accueil' | 'infos' | 'apercu' | 'offre' | 'lettre' | 'plus' | 'suivi' | 'veille' | 'documents' | 'dossier' | 'scanner' | 'confidentialite' | 'contact' | 'admin';
 
 // La navigation suit le parcours : 1. le CV, 2. l'offre, 3. la lettre. Tout le reste est rangé dans « Plus ».
 type Section = 'cv' | 'offre' | 'lettre' | 'plus';
@@ -36,10 +37,10 @@ const NAV: { id: Section; tab: Tab; label: string; short: string; step?: number;
   { id: 'cv', tab: 'infos', label: 'Mon CV', short: 'Mon CV', step: 1, tabs: ['infos', 'apercu'] },
   { id: 'offre', tab: 'offre', label: 'Adapter à une offre', short: 'Offre', step: 2, tabs: ['offre'] },
   { id: 'lettre', tab: 'lettre', label: 'Lettre de motivation', short: 'Lettre', step: 3, tabs: ['lettre'] },
-  { id: 'plus', tab: 'plus', label: 'Scanner, documents, suivi, aide', short: 'Plus', tabs: ['plus', 'suivi', 'documents', 'dossier', 'scanner', 'contact', 'confidentialite'] },
+  { id: 'plus', tab: 'plus', label: 'Scanner, documents, suivi, aide', short: 'Plus', tabs: ['plus', 'suivi', 'veille', 'documents', 'dossier', 'scanner', 'contact', 'confidentialite'] },
 ];
 /** Pages ouvertes depuis « Plus » : elles affichent un retour vers ce menu. */
-const MORE_PAGES: Tab[] = ['suivi', 'documents', 'dossier', 'scanner', 'contact', 'confidentialite'];
+const MORE_PAGES: Tab[] = ['suivi', 'veille', 'documents', 'dossier', 'scanner', 'contact', 'confidentialite'];
 const ALL_TABS: Tab[] = ['accueil', 'admin', ...NAV.flatMap((n) => n.tabs)];
 
 const isTab = (v: string): v is Tab => ALL_TABS.includes(v as Tab);
@@ -251,6 +252,7 @@ export default function App() {
         {tab === 'offre' && <JobPage onNavigate={setTab} />}
         {tab === 'lettre' && <LetterPage onNavigate={setTab} />}
         {tab === 'suivi' && <ApplicationsPage onNavigate={setTab} />}
+        {tab === 'veille' && <WatchPage onNavigate={setTab} />}
         {tab === 'documents' && <DocumentsPage onNavigate={setTab} />}
         {tab === 'dossier' && <DossierPage key="dossier" onNavigate={setTab} />}
         {tab === 'scanner' && <DossierPage key="scanner" mode="scanner" onNavigate={setTab} />}

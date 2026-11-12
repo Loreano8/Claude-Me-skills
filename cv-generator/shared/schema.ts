@@ -383,3 +383,72 @@ export const LetterQuestionsResult = z.object({
     .describe('1 ou 2 questions ; liste vide si les notes suffisent déjà'),
 });
 export type LetterQuestionsResult = z.infer<typeof LetterQuestionsResult>;
+
+// ---- Veille emploi ----------------------------------------------------------
+
+export const WATCH_CONTRACTS = ['cdi', 'cdd', 'stage', 'freelance', 'teletravail', 'programme'] as const;
+export const WATCH_ZONES = ['benin', 'afrique-ouest', 'afrique', 'international'] as const;
+export const WATCH_LEVELS = ['debutant', 'confirme', 'tous'] as const;
+
+/** Ce que la personne coche et remplit : aucune consigne à écrire. */
+export const WatchCriteria = z.object({
+  jobs: z.array(z.string().trim().min(2).max(60)).min(1).max(5),
+  contracts: z.array(z.enum(WATCH_CONTRACTS)).min(1).max(WATCH_CONTRACTS.length),
+  zones: z.array(z.enum(WATCH_ZONES)).min(1).max(WATCH_ZONES.length),
+  level: z.enum(WATCH_LEVELS),
+  /** Salaire mensuel minimum en FCFA (0 = peu importe). */
+  minSalary: z.number().int().min(0).max(100_000_000),
+  keywords: z.string().max(200),
+  email: z.string().trim().max(120),
+});
+export type WatchCriteria = z.infer<typeof WatchCriteria>;
+
+export const WatchFrequency = z.enum(['daily', 'weekly']);
+export type WatchFrequency = z.infer<typeof WatchFrequency>;
+
+/** Crédits débités pour 7 jours de veille. */
+export const WATCH_PRICE: Record<WatchFrequency, number> = { weekly: 1, daily: 4 };
+
+export const WatchSaveRequest = z.object({
+  criteria: WatchCriteria,
+  /** Résumé du CV (métier, compétences, langues, postes) : sert à dire pourquoi une offre correspond. */
+  profile: z.string().max(2_000),
+  frequency: WatchFrequency,
+});
+export type WatchSaveRequest = z.infer<typeof WatchSaveRequest>;
+
+export const WatchOffer = z.object({
+  title: z.string(),
+  company: z.string(),
+  location: z.string(),
+  contract: z.string(),
+  salary: z.string(),
+  experience: z.string(),
+  beninEligible: z.enum(['oui', 'non', 'à vérifier']),
+  deadline: z.string(),
+  url: z.string(),
+  summary: z.string(),
+  skills: z.array(z.string()),
+  /** Calculés par le serveur à partir du CV : part des compétences demandées présentes, compétences en commun / à renforcer. */
+  match: z.number(),
+  matched: z.array(z.string()),
+  missing: z.array(z.string()),
+});
+export type WatchOffer = z.infer<typeof WatchOffer>;
+
+export interface WatchRun {
+  id: number;
+  createdAt: string;
+  offers: WatchOffer[];
+  note: string;
+}
+
+export interface WatchState {
+  criteria: WatchCriteria;
+  profile: string;
+  frequency: WatchFrequency;
+  active: boolean;
+  paidUntil: string | null;
+  nextRunAt: string | null;
+  freeRunUsed: boolean;
+}

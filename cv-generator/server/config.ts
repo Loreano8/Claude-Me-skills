@@ -11,6 +11,7 @@ import { createSupport, notifier } from './support.ts';
 import { createVault, resendMailer } from './vault.ts';
 import { createRecovery } from './recovery.ts';
 import { createSources } from './sources.ts';
+import { claudeWatchSearch, createWatches, type Watches } from './watch.ts';
 
 export type Settings = Record<string, string | undefined>;
 
@@ -26,7 +27,8 @@ export async function createServer(env: Settings, opts: { db?: Db; migrate?: boo
   const hasDb = Boolean(opts.db || env.DATABASE_URL);
   const aiAllowed = Boolean(env.ANTHROPIC_API_KEY) && (!production || hasDb);
   if (env.ANTHROPIC_API_KEY && !aiAllowed) console.warn('IA désactivée : DATABASE_URL manquante en production.');
-  const ai = aiAllowed ? createAi(new Anthropic({ apiKey: env.ANTHROPIC_API_KEY }), model) : null;
+  const client = aiAllowed ? new Anthropic({ apiKey: env.ANTHROPIC_API_KEY }) : null;
+  const ai = client ? createAi(client, model) : null;
 
   // Comptes et crédits : actifs dès qu'une base de données est configurée.
   let accounts = null;
@@ -38,6 +40,7 @@ export async function createServer(env: Settings, opts: { db?: Db; migrate?: boo
   let sources = null;
   let authLimiter: RateLimiter | null = null;
   let shares: Shares | null = null;
+  let watches: Watches | null = null;
   if (hasDb) {
     if (!env.SESSION_SECRET) throw new Error('SESSION_SECRET est obligatoire avec une base de données.');
     // DATABASE_SSL=true pour une base externe (Supabase…) ; inutile pour la base interne de Render.
@@ -54,6 +57,8 @@ export async function createServer(env: Settings, opts: { db?: Db; migrate?: boo
     sources = createSources(db);
     authLimiter = dbRateLimiter(db, 'auth', 20);
     shares = createShares(db);
+    // Veille emploi : même modèle que le reste, sauf réglage WATCH_MODEL (ex. un modèle plus léger pour baisser le coût).
+    watches = createWatches(db, accounts, client ? claudeWatchSearch(client, env.WATCH_MODEL || model) : null, resendMailer(env), env.PUBLIC_URL ?? '');
     if (env.FEDAPAY_SECRET_KEY) {
       payments = createPayments(db, accounts, fedapay(env.FEDAPAY_SECRET_KEY, env.FEDAPAY_ENV === 'live' ? 'live' : 'sandbox'));
     }
@@ -63,6 +68,8 @@ export async function createServer(env: Settings, opts: { db?: Db; migrate?: boo
     ai,
     authLimiter,
     shares,
+    watches,
+    cronSecret: env.CRON_SECRET ?? '',
     accounts,
     payments,
     testimonials,

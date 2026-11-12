@@ -9,6 +9,34 @@ import { createPayments } from '../server/payments.ts';
 import { createTestimonials } from '../server/testimonials.ts';
 import { createSources } from '../server/sources.ts';
 import { createShares } from '../server/shares.ts';
+import { createWatches, type WatchSearch } from '../server/watch.ts';
+
+// Veille emploi de démonstration : offres fictives (aucune recherche réelle, aucun nom de personne).
+const demoSearch: WatchSearch = async (criteria) => {
+  await new Promise((r) => setTimeout(r, 1500));
+  const job = criteria.jobs[0] ?? 'Comptable';
+  const mk = (n: number, company: string, location: string, contract: string, salary: string, skills: string[], beninEligible: 'oui' | 'à vérifier' = 'oui') => ({
+    title: n === 1 ? job : n === 2 ? `${job} junior` : `Assistant ${job.toLowerCase()}`,
+    company,
+    location,
+    contract,
+    salary,
+    experience: n === 2 ? '0 à 2 ans' : '2 ans',
+    beninEligible,
+    deadline: n === 3 ? '' : `${20 + n}/12/2026`,
+    url: `https://emplois.example.com/offre/${Date.now()}-${n}`,
+    summary: 'Tenue de la comptabilité générale, préparation de la paie et des déclarations fiscales.',
+    skills,
+  });
+  return {
+    note: '3 nouvelles offres correspondent à vos critères.',
+    offers: [
+      mk(1, 'Société de logistique', 'Cotonou, Bénin', 'CDI', '250 000 FCFA / mois', ['Excel', 'Sage', 'Paie', 'Fiscalité']),
+      mk(2, 'Cabinet d’expertise comptable', 'Abomey-Calavi, Bénin', 'CDD 12 mois', '', ['Excel', 'Saisie comptable', 'Rigueur']),
+      mk(3, 'ONG internationale', 'Lomé, Togo', 'CDD', '', ['Anglais', 'Excel', 'Rapports financiers'], 'à vérifier'),
+    ],
+  };
+};
 import { createSupport } from '../server/support.ts';
 import { testDb } from './pglite.ts';
 import { sampleAdapt, sampleInterview, sampleLetter, sampleRevise, sampleTemplateAnalysis, sampleTranslation, sampleClarify, sampleTranscript, sampleStyle, sampleLetterQuestions, sampleKeywords } from './fixtures.ts';
@@ -53,7 +81,7 @@ const ai = {
 // E-mails simulés : le code s'affiche dans la console du serveur de démo.
 const support = createSupport(db, async (t) => console.log('[notification]', t));
 const vault = createVault(db, accounts, async (to, subject, text) => console.log('[e-mail]', to, subject, text.replace(/\n/g, ' ')));
-const app = createApp({ ai, accounts, payments, vault, testimonials: createTestimonials(db), support, recovery: createRecovery(db, accounts, support), sources: createSources(db), shares: createShares(db), sessionSecret: 'dev', adminToken: 'demo', publicUrl: 'http://localhost:5173', allowedOrigins: [], rateLimitPerHour: 100 });
+const app = createApp({ ai, accounts, payments, vault, testimonials: createTestimonials(db), support, recovery: createRecovery(db, accounts, support), sources: createSources(db), shares: createShares(db), watches: createWatches(db, accounts, demoSearch, null, 'http://localhost:5173'), cronSecret: 'demo', sessionSecret: 'dev', adminToken: 'demo', publicUrl: 'http://localhost:5173', allowedOrigins: [], rateLimitPerHour: 100 });
 // Fausse page de paiement : « payer » puis revenir comme le ferait FedaPay.
 app.get('/fake-pay', (c) => { paid.add(c.req.query('id')!); return c.redirect(`/api/payments/return?id=${c.req.query('id')}&status=approved`); });
 serve({ fetch: app.fetch, port: 8787 }, () => console.log('e2e server ready'));

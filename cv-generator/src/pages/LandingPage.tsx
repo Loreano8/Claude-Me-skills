@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { ArrowRight, BadgeCheck, Briefcase, Check, ClipboardList, FileDown, FileStack, Globe2, GraduationCap, Languages, Link2, Mail, MessagesSquare, PenLine, PlayCircle, Send, ShieldCheck, Target, UserRound } from 'lucide-react';
+import { ArrowRight, BadgeCheck, BellRing, Briefcase, Check, ClipboardList, FileDown, FileStack, Globe2, GraduationCap, Languages, Link2, Mail, MessagesSquare, PenLine, PlayCircle, Send, ShieldCheck, Target, UserRound } from 'lucide-react';
 import { PACKS } from '../../server/payments.ts';
 import { HeroScene } from '../components/HeroScene.tsx';
 import type { Tab } from '../App.tsx';
@@ -35,6 +35,7 @@ const FEATURES: { icon: typeof Target; title: string; text: string }[] = [
   { icon: Languages, title: 'CV en anglais', text: 'Traduit et mis aux normes du pays visé, pour postuler dans une entreprise internationale ou à l’étranger.' },
   { icon: ClipboardList, title: 'Suivi des candidatures', text: 'Envoyée, entretien, réponse : toutes vos offres au même endroit, avec le bon CV pour chacune.' },
   { icon: Globe2, title: 'Aux normes de chaque pays', text: 'Photo, date de naissance ou nationalité seulement quand elles sont attendues, CV en français ou en anglais. Paiement simple par Mobile Money.' },
+  { icon: BellRing, title: 'Veille emploi', text: 'Cochez votre métier, vos contrats et vos zones : les nouvelles offres arrivent chaque matin par e-mail, avec un bouton pour y adapter votre CV. Première recherche offerte.' },
   { icon: Send, title: 'Envoyer et relancer', text: 'L’e-mail de candidature prêt à copier, et un message de relance proposé au bout d’une semaine sans réponse. Gratuit.' },
   { icon: Link2, title: 'Votre CV en lien et QR code', text: 'Un lien à envoyer à un recruteur, ou un QR code à imprimer pour les salons et forums emploi. Gratuit.' },
   { icon: UserRound, title: 'Photo sur fond uni', text: 'Le fond de votre photo devient blanc, gris ou bleu clair, comme chez le photographe. Fait sur votre téléphone, gratuit.' },

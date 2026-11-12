@@ -15,6 +15,8 @@ import type { Sources } from './sources.ts';
 import { RecoveryInput, type Recovery } from './recovery.ts';
 import { memoryRateLimiter, type RateLimiter } from './rateLimit.ts';
 import { ShareError, type Shares } from './shares.ts';
+import { WatchError, type Watches } from './watch.ts';
+import { WatchSaveRequest } from '../shared/schema.ts';
 import { createHash, timingSafeEqual } from 'node:crypto';
 
 export interface AppOptions {
@@ -27,6 +29,10 @@ export interface AppOptions {
   authLimiter?: RateLimiter | null;
   /** CV partagés par lien ou QR code. */
   shares?: Shares | null;
+  /** Veille emploi (recherche d'offres chaque matin ou chaque semaine). */
+  watches?: Watches | null;
+  /** Secret des appels automatiques (planificateur de la base) qui lancent les veilles. */
+  cronSecret?: string;
   /** Comptes et crédits. Sans base de données (développement local), l'IA est en accès libre. */
   accounts?: Accounts | null;
   payments?: Payments | null;
@@ -63,7 +69,7 @@ const Credentials = z.object({
   source: z.string().max(60).optional(),
 });
 
-export function createApp({ fetchPage = fetchJobPage, ai, allowedOrigins, rateLimitPerHour, accounts = null, payments = null, testimonials = null, support = null, vault = null, recovery = null, sources = null, sessionSecret = '', publicUrl = '', apiPublicUrl = '', adminToken = '', authLimiter = null, shares = null }: AppOptions) {
+export function createApp({ fetchPage = fetchJobPage, ai, allowedOrigins, rateLimitPerHour, accounts = null, payments = null, testimonials = null, support = null, vault = null, recovery = null, sources = null, sessionSecret = '', publicUrl = '', apiPublicUrl = '', adminToken = '', authLimiter = null, shares = null, watches = null, cronSecret = '' }: AppOptions) {
   const app = new Hono();
   const allow = memoryRateLimiter(rateLimitPerHour);
   const allowAuth = authLimiter ?? memoryRateLimiter(20);
@@ -429,6 +435,71 @@ export function createApp({ fetchPage = fetchJobPage, ai, allowedOrigins, rateLi
     if (!user) return c.json({ error: 'Connectez-vous.', code: 'auth' }, 401);
     await shares.stop(user.id, String((await body(c)).cvKey ?? ''));
     return c.json({ ok: true });
+  });
+
+  // ---- Veille emploi ----------------------------------------------------------
+
+  const watchError = (c: Context, error: unknown) => {
+    if (error instanceof WatchError) return c.json({ error: error.message, code: error.code || undefined }, error.status);
+    return accountError(c, error);
+  };
+  const watchUser = async (c: Context) => (watches && watches.enabled ? currentUser(c) : null);
+
+  app.get('/api/watch', async (c) => {
+    if (!watches?.enabled) return c.json({ available: false, watch: null, runs: [] });
+    const user = await currentUser(c);
+    if (!user) return c.json({ available: true, watch: null, runs: [] });
+    return c.json({ available: true, ...(await watches.get(user.id)) });
+  });
+
+  app.post('/api/watch', async (c) => {
+    const user = await watchUser(c);
+    if (!watches?.enabled) return c.json({ error: 'La veille emploi n’est pas disponible.' }, 503);
+    if (!user) return c.json({ error: 'Créez un compte gratuit ou connectez-vous pour lancer votre veille.', code: 'auth' }, 401);
+    const parsed = WatchSaveRequest.safeParse(await c.req.json().catch(() => null));
+    if (!parsed.success) return c.json({ error: 'Cochez au moins un métier, un type de contrat et une zone.' }, 400);
+    return c.json({ watch: await watches.save(user.id, parsed.data) });
+  });
+
+  app.post('/api/watch/run', async (c) => {
+    const user = await watchUser(c);
+    if (!watches?.enabled) return c.json({ error: 'La veille emploi n’est pas disponible.' }, 503);
+    if (!user) return c.json({ error: 'Créez un compte gratuit ou connectez-vous pour lancer votre veille.', code: 'auth' }, 401);
+    if (!(await allow(clientKey(c)))) return c.json({ error: 'Trop de demandes en peu de temps. Réessayez dans une heure.' }, 429);
+    try {
+      const out = await watches.runNow(user);
+      if (out.credits !== null) c.header('X-Credits-Remaining', String(out.credits));
+      return c.json(out);
+    } catch (error) {
+      return watchError(c, error);
+    }
+  });
+
+  app.post('/api/watch/start', async (c) => {
+    const user = await watchUser(c);
+    if (!watches?.enabled) return c.json({ error: 'La veille emploi n’est pas disponible.' }, 503);
+    if (!user) return c.json({ error: 'Connectez-vous.', code: 'auth' }, 401);
+    try {
+      const out = await watches.start(user);
+      c.header('X-Credits-Remaining', String(out.credits));
+      return c.json(out);
+    } catch (error) {
+      return watchError(c, error);
+    }
+  });
+
+  app.post('/api/watch/stop', async (c) => {
+    const user = await watchUser(c);
+    if (!watches?.enabled || !user) return c.json({ ok: true });
+    await watches.stop(user.id);
+    return c.json({ ok: true });
+  });
+
+  // Appelé toutes les 15 minutes par le planificateur de la base, avec un secret partagé.
+  app.post('/api/watch/cron', async (c) => {
+    const given = c.req.header('x-cron-secret') ?? '';
+    if (!watches?.enabled || !cronSecret || !timingSafeEqual(digest(given), digest(cronSecret))) return c.json({ error: 'Non autorisé.' }, 401);
+    return c.json(await watches.runDue());
   });
 
   // Lecture publique : le nom (pour la page de présentation) puis le PDF.
