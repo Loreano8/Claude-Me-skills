@@ -43,7 +43,7 @@ export function AppUpdateCard() {
       <h2 id="update-title" className="flex items-center gap-2 font-semibold text-slate-900">
         <RefreshCw className="size-5 text-brand-600" aria-hidden="true" /> {t('Version et mises à jour')}
       </h2>
-  <p className="mt-1 text-sm text-slate-600">{t('Version {0}', [__BUILD_ID__.slice(0, 7)])}</p>
+      <p className="mt-1 text-sm text-slate-600">{t('Version {0}', [__BUILD_ID__.slice(0, 7)])}</p>
       <p className="mt-1 text-xs text-slate-500">{t('L’appli se met à jour toute seule. Vous pouvez aussi vérifier vous-même.')}</p>
       {state.kind === 'available' ? (
         <div className="mt-3 space-y-2">
