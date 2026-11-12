@@ -7,6 +7,8 @@ import {
   type AdaptResult,
   ClarifyResult,
   type ClarifyRequest,
+  KeywordsResult,
+  type KeywordsRequest,
   TranscribeResult,
   type TranscribeRequest,
   CoverLetterResult,
@@ -29,7 +31,7 @@ import {
   StyleResult,
   type StyleRequest,
 } from '../shared/schema.ts';
-import { adaptSystem, analyzeTemplateSystem, clarifySystem, letterQuestionsSystem, styleSystem, transcribeSystem, coverLetterSystem, interviewSystem, reviseSystem, structureSystem, translateSystem } from './prompts.ts';
+import { adaptSystem, analyzeTemplateSystem, clarifySystem, keywordsSystem, letterQuestionsSystem, styleSystem, transcribeSystem, coverLetterSystem, interviewSystem, reviseSystem, structureSystem, translateSystem } from './prompts.ts';
 
 type ContentBlock = Anthropic.Beta.BetaContentBlockParam;
 type Effort = 'low' | 'medium' | 'high';
@@ -177,6 +179,11 @@ export function createAi(client: Anthropic, model = DEFAULT_MODEL) {
         { type: 'text', text: 'Quelles questions poser au candidat avant d’adapter son CV à cette offre ?' } as ContentBlock,
       ];
       return run(ClarifyResult, clarifySystem(), content, 'low');
+    },
+
+    keywords(req: KeywordsRequest): Promise<KeywordsResult> {
+      const content = [...jobBlocks(req.job), { type: 'text', text: 'Quels sont les mots-clés de cette offre ?' } as ContentBlock];
+      return run(KeywordsResult, keywordsSystem(), content, 'low');
     },
 
     coverLetter(req: CoverLetterRequest): Promise<CoverLetterResult> {

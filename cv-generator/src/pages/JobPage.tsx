@@ -5,6 +5,10 @@ import { useActiveCv, useStore } from '../store.ts';
 import { api } from '../lib/api.ts';
 import { useAccount } from '../lib/account.ts';
 import { isCvEmpty, toAiContent } from '../lib/cv.ts';
+import { jobKey as makeJobKey } from '../lib/jobKey.ts';
+import { KeywordCheck } from '../components/KeywordCheck.tsx';
+import { ChangeReview } from '../components/ChangeReview.tsx';
+import type { CvDocument } from '../types.ts';
 import { JobInputCard } from '../components/JobInputCard.tsx';
 import { InterviewSheet } from '../components/InterviewSheet.tsx';
 import { Button, Card, Cost, Chip, Notice } from '../components/ui.tsx';
@@ -199,9 +203,13 @@ export function JobPage({ onNavigate }: { onNavigate: (t: Tab) => void }) {
   const [busy, setBusy] = useState<'adapt' | 'letter' | 'interview' | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [result, setResult] = useState<AdaptResult | null>(null);
+  // CV d'origine et version adaptée, pour garder ou annuler chaque modification.
+  const [review, setReview] = useState<{ base: CvDocument; adapted: CvDocument } | null>(null);
+  const savedKeywords = useStore((s) => s.jobKeywords);
+  const setJobKeywords = useStore((s) => s.setJobKeywords);
 
   // Questions posées sur l'offre et réponses du candidat, valables tant que l'offre ne change pas.
-  const jobKey = `${job.text.length}:${job.text.slice(0, 200)}:${job.file?.name ?? ''}:${job.file?.data.length ?? 0}`;
+  const jobKey = makeJobKey(job);
   const [questions, setQuestions] = useState<Question[] | null>(null);
   const [questionsFor, setQuestionsFor] = useState('');
   const [clarified, setClarified] = useState<{ key: string; answers: string } | null>(null);
@@ -218,8 +226,18 @@ export function JobPage({ onNavigate }: { onNavigate: (t: Tab) => void }) {
       const res = await api.adapt({ cv: toAiContent(cv), job: { ...jobBody, answers: withAnswers }, lang: null });
       setClarified({ key: jobKey, answers: withAnswers });
       setQuestions(null);
-      addAdaptedCv(cv, res);
+      const base = structuredClone(cv);
+      const adaptedId = addAdaptedCv(cv, res);
+      const adapted = useStore.getState().cvs.find((c) => c.id === adaptedId);
+      setReview(adapted ? { base, adapted: structuredClone(adapted) } : null);
       setResult(res);
+      // Mots-clés de l'offre (gratuit), pour suivre l'effet de chaque choix ; sans eux, la revue marche quand même.
+      if (savedKeywords?.key !== jobKey) {
+        api
+          .keywords({ job: { ...jobBody, answers: '' } })
+          .then((k) => setJobKeywords({ key: jobKey, result: k }))
+          .catch(() => {});
+      }
     } catch (e) {
       setError((e as Error).message);
     } finally {
@@ -288,6 +306,7 @@ export function JobPage({ onNavigate }: { onNavigate: (t: Tab) => void }) {
   return (
     <div className="mx-auto max-w-3xl space-y-4">
       <JobInputCard />
+      {hasJob && !empty && <KeywordCheck cv={cv} />}
 
       <Card
         tour="apply"
@@ -327,6 +346,7 @@ export function JobPage({ onNavigate }: { onNavigate: (t: Tab) => void }) {
         <ClarifyCard key={jobKey} questions={questions} busy={busy === 'adapt'} onDone={(a) => void runAdapt(a)} onSkip={() => void runAdapt('')} />
       )}
 
+      {review && <ChangeReview base={review.base} adapted={review.adapted} keywords={savedKeywords?.key === jobKey ? savedKeywords.result.keywords : null} />}
       {shown && <AnalysisCard result={shown} onNavigate={onNavigate} />}
 
       {(interview ?? linkedApplication?.interview) && (

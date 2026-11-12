@@ -216,6 +216,22 @@ export const ClarifyResult = z.object({
 });
 export type ClarifyResult = z.infer<typeof ClarifyResult>;
 
+/** Mots-clés d'une offre : gratuit. La présence dans le CV est vérifiée sur l'appareil (voir src/lib/keywords.ts). */
+export const KeywordsRequest = z.object({ job: JobInput });
+export type KeywordsRequest = z.output<typeof KeywordsRequest>;
+
+export const Keyword = z.object({
+  term: z.string().describe('Le mot-clé tel qu’il est écrit dans l’offre, court (1 à 4 mots)'),
+  variants: z.array(z.string()).describe('2 à 5 autres façons courantes de l’écrire dans un CV (synonyme, sigle, forme développée, singulier/pluriel, anglais)'),
+});
+export type Keyword = z.infer<typeof Keyword>;
+
+export const KeywordsResult = z.object({
+  job: z.object({ title: z.string(), company: z.string() }),
+  keywords: z.array(Keyword).describe('8 à 15 mots-clés, du plus important au moins important'),
+});
+export type KeywordsResult = z.infer<typeof KeywordsResult>;
+
 export const JobFetchRequest = z.object({ url: z.string().min(8).max(2_000) });
 export const JobFetchResult = z.object({ url: z.string(), title: z.string(), text: z.string() });
 export type JobFetchResult = z.infer<typeof JobFetchResult>;

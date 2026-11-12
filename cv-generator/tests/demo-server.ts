@@ -10,7 +10,7 @@ import { createTestimonials } from '../server/testimonials.ts';
 import { createSources } from '../server/sources.ts';
 import { createSupport } from '../server/support.ts';
 import { testDb } from './pglite.ts';
-import { sampleAdapt, sampleInterview, sampleLetter, sampleRevise, sampleTemplateAnalysis, sampleTranslation, sampleClarify, sampleTranscript, sampleStyle, sampleLetterQuestions } from './fixtures.ts';
+import { sampleAdapt, sampleInterview, sampleLetter, sampleRevise, sampleTemplateAnalysis, sampleTranslation, sampleClarify, sampleTranscript, sampleStyle, sampleLetterQuestions, sampleKeywords } from './fixtures.ts';
 const db = await testDb();
 const accounts = createAccounts(db, { freeCredits: 1, freeIpCooldownDays: 0 });
 const paid = new Set<string>();
@@ -23,13 +23,22 @@ const payments = createPayments(db, accounts, {
 const wait = () => new Promise((r) => setTimeout(r, Number(process.env.DEMO_DELAY_MS ?? 0)));
 const ai = {
   structure: async () => (await wait(), ({ cv: sampleAdapt.cv, suggestions: ['Ajoutez un lien LinkedIn'], language: 'fr' as const })),
-  adapt: async () => (await wait(), sampleAdapt),
+  // Version adaptée qui diffère vraiment du CV de départ (titre, une réalisation, une compétence), pour la revue des modifications.
+  adapt: async () => {
+    await wait();
+    const cv = structuredClone(sampleAdapt.cv);
+    cv.personal.title = 'Responsable comptable SYSCOHADA';
+    cv.experiences[0].achievements = ['Tenir la comptabilité selon le SYSCOHADA révisé et préparer les clôtures mensuelles', ...cv.experiences[0].achievements];
+    cv.skills = [...cv.skills, 'Clôtures mensuelles'];
+    return { ...sampleAdapt, cv };
+  },
   coverLetter: async () => (await wait(), sampleLetter),
   translate: async () => (await wait(), sampleTranslation),
   interview: async () => (await wait(), sampleInterview),
   revise: async () => (await wait(), sampleRevise),
   analyzeTemplate: async () => (await wait(), sampleTemplateAnalysis),
   clarify: async () => (await wait(), sampleClarify),
+  keywords: async () => (await wait(), sampleKeywords),
   transcribe: async () => (await wait(), sampleTranscript),
   style: async () => (await wait(), sampleStyle),
   letterQuestions: async () => (await wait(), sampleLetterQuestions),

@@ -1,4 +1,4 @@
-import type { AdaptResult, ClarifyResult, TranscribeResult, CoverLetterResult, InterviewResult, TranslateResult, ReviseResult, TemplateAnalysis } from '../shared/schema.ts';
+import type { AdaptResult, ClarifyResult, KeywordsResult, TranscribeResult, CoverLetterResult, InterviewResult, TranslateResult, ReviseResult, TemplateAnalysis } from '../shared/schema.ts';
 import type { CvDocument } from '../src/types.ts';
 import { defaultSettings } from '../src/lib/cv.ts';
 
@@ -202,6 +202,20 @@ export const sampleTemplateAnalysis: TemplateAnalysis = {
 export const sampleClarify: ClarifyResult = {
   job: { title: '', company: 'Groupe Sahel' },
   questions: [{ question: 'La publication propose deux postes : lequel vous intéresse ?', options: ['Comptable', 'Contrôleur de gestion'] }],
+};
+
+export const sampleKeywords: KeywordsResult = {
+  job: { title: 'Responsable comptable', company: 'Groupe Logistique Ouest' },
+  keywords: [
+    { term: 'Responsable comptable', variants: ['comptable', 'chef comptable'] },
+    { term: 'SYSCOHADA', variants: ['OHADA', 'système comptable OHADA'] },
+    { term: 'Déclarations fiscales', variants: ['fiscalité', 'déclaration fiscale', 'TVA'] },
+    { term: 'Clôtures mensuelles', variants: ['clôture mensuelle', 'arrêtés mensuels', 'clôture des comptes'] },
+    { term: 'Encadrement d’équipe', variants: ['management', 'encadrer', 'manager une équipe'] },
+    { term: 'ERP', variants: ['progiciel de gestion', 'SAP', 'Odoo'] },
+    { term: 'Bac+5', variants: ['master', 'bac + 5'] },
+    { term: 'Sage', variants: ['Sage 100', 'Saari'] },
+  ],
 };
 
 export const sampleTranscript: TranscribeResult = {

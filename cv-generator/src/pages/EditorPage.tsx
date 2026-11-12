@@ -415,7 +415,7 @@ function ExperienceSection({ cv, update }: { cv: CvDocument; update: Update }) {
                 onChange={(achievements) => ops.patch(e.id, { achievements })}
                 rows={4}
                 placeholder={'Gérer la paie de 120 salariés chaque mois\nRéduire de 30 % les retards de paiement fournisseurs'}
-                hint="Commencez par un verbe d’action et chiffrez quand c’est possible."
+                hint="Une ligne = ce que vous avez fait, pour qui, et le résultat. Ex. « Former 20 nouveaux employés aux règles d’hygiène, sans aucun écart au contrôle ». 3 ou 4 lignes suffisent."
               />
             </div>
           </ItemShell>

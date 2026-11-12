@@ -309,6 +309,10 @@ export function TemplateGallery({ cv, set }: { cv: CvDocument; set: (patch: Part
 
   return (
     <div>
+      <p className="mb-3 text-sm text-slate-600">
+        Vous postulez sur un site de recrutement ou par formulaire ? Préférez <strong>Classique ATS</strong> : une seule colonne, c’est le modèle le mieux lu par les
+        logiciels de tri.
+      </p>
       <div className="-mx-1 mb-3 flex gap-1.5 overflow-x-auto px-1 pb-1">
         {(['all', ...Object.keys(CATEGORY_LABELS)] as (TemplateCategory | 'all')[]).map((c) => (
           <button

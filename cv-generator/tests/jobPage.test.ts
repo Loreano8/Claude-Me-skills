@@ -5,7 +5,7 @@ import { createAccounts } from '../server/accounts.ts';
 import { signToken } from '../server/auth.ts';
 import type { Ai } from '../server/ai.ts';
 import { toAiContent } from '../src/lib/cv.ts';
-import { sampleClarify, sampleCv } from './fixtures.ts';
+import { sampleClarify, sampleCv, sampleKeywords } from './fixtures.ts';
 import { testDb } from './pglite.ts';
 
 const LONG = 'Missions : tenue de la comptabilité générale, déclarations fiscales, paie de 120 salariés. '.repeat(5);
@@ -143,5 +143,35 @@ describe('services payants du scanner', () => {
 
     const unlock = await app.request('/api/dossier/unlock', { method: 'POST', headers: auth });
     expect(await unlock.json()).toEqual({ credits: 2 });
+  });
+});
+
+describe('mots-clés de l’offre', () => {
+  it('sont gratuits mais demandent un compte', async () => {
+    const accounts = createAccounts(await testDb(), { freeCredits: 1, freeIpCooldownDays: 30 });
+    const keywords = vi.fn(async () => sampleKeywords);
+    const app = createApp({ ai: { keywords } as unknown as Ai, accounts, sessionSecret: 's', allowedOrigins: [], rateLimitPerHour: 5 });
+    const call = (auth?: string, text = LONG) =>
+      app.request('/api/ai/keywords', { method: 'POST', headers: { 'content-type': 'application/json', ...(auth ? { authorization: `Bearer ${auth}` } : {}) }, body: JSON.stringify({ job: { text } }) });
+    expect((await call()).status).toBe(401);
+    const user = await accounts.register({ identifier: 'k@x.co', password: 'secret12', ip: '9.9.9.8', device: 'device-keywords-1' });
+    const token = signToken(user.id, 's');
+    expect((await call(token, '   ')).status).toBe(400);
+    const res = await call(token);
+    expect(res.status).toBe(200);
+    expect((await res.json()).keywords).toHaveLength(8);
+    expect((await accounts.get(user.id))?.credits).toBe(1);
+  });
+
+  it('sont retrouvés dans le CV par leur forme ou une variante, sans tenir compte des accents', async () => {
+    const { coverage } = await import('../src/lib/keywords.ts');
+    const cv = sampleCv();
+    cv.personal.title = 'Comptable';
+    cv.skills = ['Fiscalité', 'Sage 100'];
+    cv.experiences = [{ ...cv.experiences[0], achievements: 'Préparer la cloture mensuelle des comptes\nEncadrer une équipe de 3 personnes' }];
+    const c = coverage(cv, sampleKeywords.keywords);
+    expect(c.present.map((k) => k.term)).toEqual(expect.arrayContaining(['Responsable comptable', 'Déclarations fiscales', 'Clôtures mensuelles', 'Sage']));
+    expect(c.missing.map((k) => k.term)).toEqual(expect.arrayContaining(['SYSCOHADA', 'ERP']));
+    expect(c.percent).toBe(Math.round((c.present.length / 8) * 100));
   });
 });

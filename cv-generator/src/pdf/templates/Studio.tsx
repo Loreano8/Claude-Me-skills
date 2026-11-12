@@ -3,7 +3,7 @@ import { Document, Page, Text, View } from '@react-pdf/renderer';
 import type { Style } from '@react-pdf/types';
 import type { TemplateStyle } from '../../../shared/schema.ts';
 import type { CvDocument } from '../../types.ts';
-import { achievementsList, fullName } from '../../lib/cv.ts';
+import { achievementsList, educationFirst, fullName } from '../../lib/cv.ts';
 import { LABELS, type Labels } from '../labels.ts';
 import { Bullets, Photo, SignatureBlock, FreeMark } from '../parts.tsx';
 import { FONT, SERIF, contactItems, dateRange, tint } from '../theme.ts';
@@ -211,7 +211,7 @@ function mainBlocks(c: Ctx, p: Palette): Block[] {
   const edu: Block | false = cv.education.length > 0 && { key: 'edu', title: L.education, node: <Educations c={c} p={p} /> };
   return [
     !!cv.summary && { key: 'sum', title: L.profile, node: <Summary c={c} p={p} /> },
-    ...(c.st.educationFirst ? [edu, exp] : [exp, edu]),
+    ...(c.st.educationFirst || educationFirst(cv) ? [edu, exp] : [exp, edu]),
     cv.certifications.length > 0 && { key: 'cert', title: L.certifications, node: <Certifications c={c} /> },
   ].filter((b): b is Block => Boolean(b));
 }

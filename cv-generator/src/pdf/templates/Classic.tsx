@@ -1,3 +1,4 @@
+import { orderMain } from '../order.ts';
 import { Document, Page, StyleSheet, Text, View } from '@react-pdf/renderer';
 import type { CvDocument } from '../../types.ts';
 import { achievementsList, fullName } from '../../lib/cv.ts';
@@ -57,8 +58,8 @@ export function ClassicTemplate({ cv }: { cv: CvDocument }) {
           </View>
         ) : null}
 
-        {cv.experiences.length > 0 && (
-          <View>
+        {orderMain(cv, cv.experiences.length > 0 && (
+          <View key="exp">
             <Text minPresenceAhead={60} style={heading}>
               {L.experience}
             </Text>
@@ -75,10 +76,8 @@ export function ClassicTemplate({ cv }: { cv: CvDocument }) {
               </View>
             ))}
           </View>
-        )}
-
-        {cv.education.length > 0 && (
-          <View>
+        ), cv.education.length > 0 && (
+          <View key="edu">
             <Text minPresenceAhead={40} style={heading}>
               {L.education}
             </Text>
@@ -93,7 +92,7 @@ export function ClassicTemplate({ cv }: { cv: CvDocument }) {
               </View>
             ))}
           </View>
-        )}
+        ))}
 
         {(cv.skills.length > 0 || cv.softSkills.length > 0 || cv.languages.length > 0) && (
           <View wrap={false}>

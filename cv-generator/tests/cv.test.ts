@@ -86,3 +86,61 @@ describe('version traduite', () => {
     expect(next.personal.phone).toBe(cv.personal.phone);
   });
 });
+
+describe('conseils de rédaction des réalisations', () => {
+  const withLines = (achievements: string) => {
+    const cv = sampleCv();
+    cv.experiences = [{ ...cv.experiences[0], achievements }];
+    return checkCv(cv).map((c) => c.text).join('\n');
+  };
+  it('repère les formules qui décrivent une fonction', () => {
+    expect(withLines('Responsable de la paie de 120 salariés')).toMatch(/verbe d’action plutôt que « Responsable de »/);
+    expect(withLines('Chargée des relations clients')).toMatch(/plutôt que « Chargée des »/);
+    expect(withLines('Géré la paie de 120 salariés')).not.toMatch(/verbe d’action plutôt/);
+  });
+  it('repère les pronoms, les lignes trop longues et les listes trop longues', () => {
+    expect(withLines('J’ai géré la paie de 120 salariés')).toMatch(/Retirez « je »/);
+    expect(withLines('Géré la paie de 120 salariés')).not.toMatch(/Retirez « je »/);
+    expect(withLines('Géré ' + 'la paie et les déclarations sociales '.repeat(6))).toMatch(/dépasse deux lignes/);
+    expect(withLines(Array.from({ length: 7 }, (_, i) => `Réalisé la tâche ${i + 1}`).join('\n'))).toMatch(/7 lignes pour/);
+  });
+  it('signale « Références disponibles sur demande »', () => {
+    const cv = sampleCv();
+    cv.interests = [...cv.interests, 'Références disponibles sur demande'];
+    expect(checkCv(cv).some((c) => /Références disponibles/.test(c.text))).toBe(true);
+  });
+});
+
+describe('ordre formation / expériences', () => {
+  it('met la formation d’abord seulement pour un jeune diplômé', async () => {
+    const { educationFirst } = await import('../src/lib/cv.ts');
+    const cv = sampleCv();
+    expect(educationFirst(cv)).toBe(false);
+    expect(educationFirst({ ...cv, experiences: [] })).toBe(true);
+    expect(educationFirst({ ...cv, experiences: [{ ...cv.experiences[0], position: 'Stagiaire comptable' }] })).toBe(true);
+    expect(educationFirst({ ...cv, education: [], experiences: [] })).toBe(false);
+  });
+});
+
+describe('revue des modifications de l’adaptation', () => {
+  it('liste les parties modifiées et permet de revenir à l’original partie par partie', async () => {
+    const { listChanges, choose } = await import('../src/lib/review.ts');
+    const base = sampleCv();
+    const adapted = structuredClone(base);
+    adapted.id = 'adapte';
+    adapted.personal.title = 'Responsable comptable';
+    adapted.experiences = adapted.experiences.map((e, i) => ({ ...e, id: `n${i}`, achievements: i === 0 ? 'Tenir la comptabilité SYSCOHADA\n' + e.achievements : e.achievements }));
+    adapted.skills = [...base.skills, 'SYSCOHADA'];
+
+    const changes = listChanges(base, adapted);
+    expect(changes.map((c) => c.key)).toEqual(['title', 'exp:n0', 'skills']);
+
+    let cv = choose(adapted, base, adapted, 'title', false);
+    expect(cv.personal.title).toBe(base.personal.title);
+    cv = choose(cv, base, adapted, 'exp:n0', false);
+    expect(cv.experiences[0].achievements).toBe(base.experiences[0].achievements);
+    expect(cv.skills).toEqual(adapted.skills);
+    cv = choose(cv, base, adapted, 'exp:n0', true);
+    expect(cv.experiences[0].achievements).toBe(adapted.experiences[0].achievements);
+  });
+});

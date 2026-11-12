@@ -99,6 +99,18 @@ export function achievementsList(text: string): string[] {
   return lines(text);
 }
 
+/** Postes qui ne valent pas une première expérience professionnelle. */
+const STUDENT_JOB = /(stag|intern|alternan|apprenti|b[ée]n[ée]vol|job [ée]tudiant|volunteer|trainee)/i;
+
+/**
+ * La formation passe avant les expériences pour un jeune diplômé : aucune expérience, ou seulement des stages,
+ * de l'alternance ou du bénévolat (usage recommandé par France Travail, Choisir le service public et l'UPenn).
+ */
+export function educationFirst(cv: CvDocument): boolean {
+  if (cv.education.length === 0) return false;
+  return cv.experiences.length === 0 || cv.experiences.every((e) => STUDENT_JOB.test(`${e.position} ${e.company}`));
+}
+
 /** Contenu du CV tel qu'envoyé à l'IA (sans photo, signature ni réglages). */
 export function toAiContent(cv: CvDocument): AiCvContent {
   return {

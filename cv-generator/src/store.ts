@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
-import type { AdaptResult, CoverLetterResult, InterviewResult, Lang, Market, TranslateResult } from '../shared/schema.ts';
+import type { AdaptResult, CoverLetterResult, InterviewResult, KeywordsResult, Lang, Market, TranslateResult } from '../shared/schema.ts';
 import type { Application, CoverLetter, CvDocument, JobPostingDraft, SavedLetter } from './types.ts';
 import { applyAiContent, emptyCv, emptyLetter, letterDate, uid } from './lib/cv.ts';
 
@@ -13,6 +13,8 @@ interface State {
   letters: SavedLetter[];
   activeLetterId: string | null;
   job: JobPostingDraft;
+  /** Mots-clés de l'offre en cours (vérificateur gratuit), pour l'offre de clé `key`. */
+  jobKeywords: { key: string; result: KeywordsResult } | null;
   applications: Application[];
 
   updateCv: (recipe: (cv: CvDocument) => CvDocument) => void;
@@ -26,6 +28,7 @@ interface State {
   addAdaptedCv: (base: CvDocument, result: AdaptResult) => string;
   addTranslatedCv: (base: CvDocument, result: TranslateResult, lang: Lang, market: Market) => string;
   setJob: (job: JobPostingDraft) => void;
+  setJobKeywords: (value: { key: string; result: KeywordsResult } | null) => void;
   addApplication: (fields: Partial<Application> & Pick<Application, 'title'>) => string;
   updateApplication: (id: string, patch: Partial<Application>) => void;
   deleteApplication: (id: string) => void;
@@ -67,6 +70,7 @@ export const useStore = create<State>()(
       letters: [],
       activeLetterId: null,
       job: { text: '', file: null },
+      jobKeywords: null,
       applications: [],
 
       updateCv: (recipe) =>
@@ -138,6 +142,7 @@ export const useStore = create<State>()(
       },
 
       setJob: (job) => set({ job }),
+      setJobKeywords: (jobKeywords) => set({ jobKeywords }),
 
       addApplication: (fields) => {
         const now = Date.now();
@@ -233,6 +238,7 @@ export const useStore = create<State>()(
         letters: s.letters,
         activeLetterId: s.activeLetterId,
         job: { text: s.job.text, file: null },
+        jobKeywords: s.jobKeywords,
         applications: s.applications,
       }),
     },

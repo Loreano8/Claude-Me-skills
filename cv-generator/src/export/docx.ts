@@ -17,7 +17,7 @@ import {
   type ISectionOptions,
 } from 'docx';
 import type { CoverLetter, CvDocument } from '../types.ts';
-import { achievementsList, fullName } from '../lib/cv.ts';
+import { achievementsList, fullName, educationFirst } from '../lib/cv.ts';
 import { LABELS } from '../pdf/labels.ts';
 import { resolveStyle } from '../pdf/catalog.ts';
 import { letterParagraphs } from '../pdf/letterText.ts';
@@ -169,29 +169,40 @@ export function buildCvDocx(cv: CvDocument): Document {
     children.push(sectionHeading(L.profile, accent), new Paragraph({ alignment: AlignmentType.JUSTIFIED, text: cv.summary }));
   }
 
+  const experiences = () => {
   if (cv.experiences.length) {
-    children.push(sectionHeading(L.experience, accent));
-    for (const e of cv.experiences) {
-      children.push(
-        titleWithDates(e.position, dateRange(e.startDate, e.endDate, e.current, L)),
-        new Paragraph({
-          spacing: { after: 40 },
-          children: [new TextRun({ text: [e.company, e.location].filter(Boolean).join(', '), italics: true, color: color(accent) })],
-        }),
-        ...achievementsList(e.achievements).map(bullet),
-      );
+      children.push(sectionHeading(L.experience, accent));
+      for (const e of cv.experiences) {
+        children.push(
+          titleWithDates(e.position, dateRange(e.startDate, e.endDate, e.current, L)),
+          new Paragraph({
+            spacing: { after: 40 },
+            children: [new TextRun({ text: [e.company, e.location].filter(Boolean).join(', '), italics: true, color: color(accent) })],
+          }),
+          ...achievementsList(e.achievements).map(bullet),
+        );
+      }
     }
-  }
-
+  };
+  const education = () => {
   if (cv.education.length) {
-    children.push(sectionHeading(L.education, accent));
-    for (const e of cv.education) {
-      children.push(
-        titleWithDates(e.degree, dateRange(e.startDate, e.endDate, false, L)),
-        new Paragraph({ children: [new TextRun({ text: [e.school, e.location].filter(Boolean).join(', '), italics: true, color: color(accent) })] }),
-      );
-      if (e.details) children.push(new Paragraph({ text: e.details }));
+      children.push(sectionHeading(L.education, accent));
+      for (const e of cv.education) {
+        children.push(
+          titleWithDates(e.degree, dateRange(e.startDate, e.endDate, false, L)),
+          new Paragraph({ children: [new TextRun({ text: [e.school, e.location].filter(Boolean).join(', '), italics: true, color: color(accent) })] }),
+        );
+        if (e.details) children.push(new Paragraph({ text: e.details }));
+      }
     }
+  };
+  // Jeune diplômé : la formation d'abord.
+  if (educationFirst(cv)) {
+    education();
+    experiences();
+  } else {
+    experiences();
+    education();
   }
 
   if (cv.skills.length || cv.softSkills.length || cv.languages.length) {

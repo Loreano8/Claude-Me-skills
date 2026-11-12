@@ -626,6 +626,113 @@ const BASE: Guide[] = [
     ],
   },
 
+  {
+    slug: 'cv-realisations',
+    kind: 'situation',
+    label: 'Écrire ses réalisations',
+    h1: 'Comment écrire ses réalisations sur un CV (avec exemples)',
+    title: 'Réalisations sur un CV : méthode et exemples | CVCasa',
+    description: 'Transformer une liste de tâches en réalisations qui convainquent : la méthode en trois temps, les verbes à utiliser, les formules à éviter et des exemples.',
+    intro: [
+      'Dans un CV, la partie qui convainc le plus est celle des réalisations : ce que vous avez fait, pour qui, et avec quel résultat. C’est aussi la plus souvent ratée, parce qu’on y recopie sa fiche de poste.',
+      'Les guides des services publics de l’emploi et des universités donnent tous la même méthode. La voici, avec des exemples.',
+    ],
+    sections: [
+      {
+        h: 'La méthode en trois temps',
+        list: [
+          'Ce que vous avez fait : un verbe d’action précis (gérer, former, réduire, organiser, vendre).',
+          'Pour qui ou sur quoi : le public, le volume, le périmètre (120 salariés, 80 points de vente, 3 sites).',
+          'Le résultat : un chiffre, un délai, une amélioration visible (30 % de retards en moins, aucun écart au contrôle).',
+        ],
+      },
+      {
+        h: 'Les formules à éviter',
+        list: [
+          '« Responsable de… », « Chargé de… », « En charge de… » : elles décrivent un poste, pas ce que vous avez fait.',
+          '« J’ai », « je », « nous » : la ligne commence directement par le verbe.',
+          '« Participation à… », « Aide à… » quand vous avez en réalité mené le travail : choisissez le verbe qui dit honnêtement votre rôle, ni plus, ni moins.',
+          'Des lignes de plus de deux lignes : une idée par ligne, la plus parlante.',
+        ],
+      },
+      {
+        h: 'Combien de lignes par expérience ?',
+        p: [
+          'Trois ou quatre suffisent pour une expérience importante, une ou deux pour une expérience ancienne ou éloignée du poste visé. Commencez toujours par la ligne la plus utile pour l’offre.',
+        ],
+      },
+      {
+        h: 'Et si je n’ai pas de chiffres ?',
+        p: [
+          'Donnez un ordre de grandeur que vous pouvez expliquer, un volume (nombre de clients, de dossiers, de personnes), une fréquence (chaque semaine, chaque mois) ou un résultat concret (procédure adoptée, client fidélisé). N’inventez jamais un chiffre : il sera vérifié en entretien.',
+        ],
+      },
+    ],
+    example: {
+      title: 'Avant / après',
+      lines: [
+        'Avant : Responsable de la formation des nouveaux employés',
+        'Après : Former 20 nouveaux employés aux règles d’hygiène, sans aucun écart au contrôle sanitaire',
+        'Avant : Chargée de la relation client',
+        'Après : Suivre un portefeuille de 150 clients et en fidéliser 9 sur 10 d’une année sur l’autre',
+      ],
+      note: 'CVCasa signale gratuitement ces formules dans votre CV, dans l’onglet « Modèle et téléchargement ».',
+    },
+    faq: [
+      { q: 'Faut-il écrire à l’infinitif ou au passé ?', a: 'Les deux se font. L’important est de garder la même forme dans tout le CV, sans mélanger verbes et noms d’une ligne à l’autre.' },
+      { q: 'Les qualités (rigoureux, autonome) ont-elles leur place ?', a: 'Elles convainquent mieux quand une réalisation les montre. Gardez-en trois ou quatre dans la rubrique dédiée et prouvez-les dans vos expériences.' },
+    ],
+  },
+  {
+    slug: 'type-de-cv',
+    kind: 'situation',
+    label: 'Quel type de CV choisir',
+    h1: 'CV chronologique, par compétences ou mixte : lequel choisir ?',
+    title: 'CV chronologique, par compétences ou mixte : choisir | CVCasa',
+    description: 'Les trois grands types de CV, à qui ils conviennent, l’ordre des rubriques et le bon modèle pour les logiciels de tri des recruteurs.',
+    intro: [
+      'Il n’existe pas un seul bon CV, mais un type de CV adapté à votre parcours. Le choix change l’ordre des rubriques et ce que le recruteur voit en premier.',
+    ],
+    sections: [
+      {
+        h: 'Le CV chronologique (le plus courant)',
+        p: [
+          'Les expériences de la plus récente à la plus ancienne, puis la formation. C’est le format que les recruteurs lisent le plus vite et que les logiciels de tri comprennent le mieux. À choisir dès que votre parcours suit une ligne claire.',
+        ],
+      },
+      {
+        h: 'Le CV par compétences',
+        p: [
+          'Des blocs de compétences (gestion, vente, encadrement…) illustrés par des réalisations, puis un historique court. Utile pour une reconversion ou un parcours avec des interruptions. À utiliser avec prudence : certains recruteurs s’en méfient s’ils ne retrouvent pas les dates.',
+        ],
+      },
+      {
+        h: 'Le CV mixte',
+        p: [
+          'Une courte section de compétences clés en haut, puis un parcours chronologique. C’est souvent le meilleur compromis : le recruteur voit tout de suite ce que vous savez faire, et retrouve les dates.',
+        ],
+      },
+      {
+        h: 'Formation ou expériences en premier ?',
+        list: [
+          'Jeune diplômé, étudiant ou seulement des stages : la formation d’abord.',
+          'Avec une vraie expérience professionnelle : les expériences d’abord, la formation ensuite, en plus court.',
+          'CVCasa choisit automatiquement le bon ordre selon votre parcours.',
+        ],
+      },
+      {
+        h: 'Une ou deux colonnes ?',
+        p: [
+          'Pour un dépôt sur un site de recrutement ou par formulaire, une seule colonne est plus sûre : certains logiciels de tri lisent mal les colonnes, les tableaux et les zones de texte. Pour un envoi par e-mail ou en main propre, un modèle à deux colonnes reste un bon choix.',
+        ],
+      },
+    ],
+    faq: [
+      { q: 'Un CV de deux pages, c’est trop ?', a: 'Une page jusqu’à environ cinq ans d’expérience. Au-delà, deux pages si chaque ligne apporte quelque chose au poste visé.' },
+      { q: 'Faut-il un CV différent pour chaque offre ?', a: 'Oui : gardez une version complète, puis adaptez-la à chaque offre en reprenant ses mots-clés et en mettant en avant ce qui correspond. C’est ce que fait « Adapter mon CV » dans CVCasa.' },
+    ],
+  },
+
   // ——— Lettres de motivation ———
   {
     slug: 'lettre-motivation-stage',

@@ -280,6 +280,18 @@ Les fautes d'orthographe et de grammaire ne font pas partie du style : ne les d�
 ${UNTRUSTED_INPUT_RULE}`;
 }
 
+export function keywordsSystem(): string {
+  return `Tu es un recruteur. On te donne une offre d'emploi (texte d'une annonce, d'une publication ou d'une page web, PDF ou image).
+Relève les mots-clés qu'un recruteur ou un logiciel de tri chercherait dans un CV pour ce poste : intitulé du poste, compétences métier, logiciels et outils, normes et méthodes, diplômes ou niveaux exigés, langues, permis ou certifications.
+
+Règles :
+- 8 à 15 mots-clés, du plus important au moins important, chacun court (1 à 4 mots), écrit comme dans l'offre.
+- Pas de qualités vagues (« dynamique », « motivé », « rigoureux »), pas de mots sans contenu (« profil », « mission », « poste », « candidature »), pas le nom de l'entreprise ni la ville.
+- Pour chaque mot-clé, 2 à 5 variantes qu'un candidat pourrait avoir écrites à la place dans son CV : sigle et forme développée (« ERP », « progiciel de gestion »), synonyme métier, singulier/pluriel, équivalent anglais courant. Pas de variante plus large que le mot-clé.
+- Si plusieurs postes sont proposés, prends le premier et donne son intitulé dans job.title.
+- Si le texte n'est pas une offre d'emploi, renvoie une liste vide.`;
+}
+
 export function letterQuestionsSystem(): string {
   return `Tu es un conseiller en recrutement. On te donne le CV d'un candidat (JSON), l'offre d'emploi s'il y en a une, et ses notes.
 Avant d'écrire sa lettre de motivation, tu poses 1 ou 2 questions courtes dont les réponses rendront la lettre personnelle et impossible à confondre avec une lettre générique.

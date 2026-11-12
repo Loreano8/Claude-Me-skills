@@ -23,6 +23,8 @@ import type {
   StyleResult,
   LetterQuestionsRequest,
   LetterQuestionsResult,
+  KeywordsRequest,
+  KeywordsResult,
 } from '../../shared/schema.ts';
 import { styleForAi } from './writingStyle.ts';
 import { pendingSource } from './source.ts';
@@ -93,6 +95,7 @@ export const api = {
   letterQuestions: (req: LetterQuestionsRequest) => post<LetterQuestionsResult>('/api/ai/letter-questions', req),
   analyzeTemplate: (req: AnalyzeTemplateRequest) => post<TemplateAnalysis>('/api/ai/analyze-template', req),
   clarify: (req: ClarifyRequest) => post<ClarifyResult>('/api/ai/clarify', req),
+  keywords: (req: KeywordsRequest) => post<KeywordsResult>('/api/ai/keywords', req),
   fetchJob: (url: string) => post<JobFetchResult>('/api/job/fetch', { url }),
   transcribe: (req: TranscribeRequest) => post<TranscribeResult>('/api/ai/transcribe', req),
   dossierUnlock: () => post<{ credits: number | null }>('/api/dossier/unlock', {}),

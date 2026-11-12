@@ -2,7 +2,7 @@ import { Hono, type Context } from 'hono';
 import { cors } from 'hono/cors';
 import { bodyLimit } from 'hono/body-limit';
 import { z } from 'zod';
-import { AdaptRequest, AnalyzeTemplateRequest, ClarifyRequest, LetterQuestionsRequest, StyleRequest, TranscribeRequest, CoverLetterRequest, JobFetchRequest, InterviewRequest, ReviseRequest, StructureRequest, TranslateRequest } from '../shared/schema.ts';
+import { AdaptRequest, AnalyzeTemplateRequest, ClarifyRequest, KeywordsRequest, LetterQuestionsRequest, StyleRequest, TranscribeRequest, CoverLetterRequest, JobFetchRequest, InterviewRequest, ReviseRequest, StructureRequest, TranslateRequest } from '../shared/schema.ts';
 import { AiError, type Ai } from './ai.ts';
 import { AccountError, DOSSIER_COST, REFERRAL_BONUS, UNLOCK_COST, type Accounts, type User } from './accounts.ts';
 import { signToken, verifyToken } from './auth.ts';
@@ -584,6 +584,18 @@ export function createApp({ fetchPage = fetchJobPage, ai, allowedOrigins, rateLi
       'clarify',
       ClarifyRequest,
       (ai, body) => ai.clarify(body),
+      (body) => (!body.job.text.trim() && !body.job.file ? 'Collez le texte de l’offre ou joignez le fichier de l’annonce.' : null),
+      true,
+    ),
+  );
+
+  // Mots-clés de l'offre (vérificateur gratuit) : la présence dans le CV est calculée sur l'appareil.
+  app.post(
+    '/api/ai/keywords',
+    aiRoute(
+      'keywords',
+      KeywordsRequest,
+      (ai, body) => ai.keywords(body),
       (body) => (!body.job.text.trim() && !body.job.file ? 'Collez le texte de l’offre ou joignez le fichier de l’annonce.' : null),
       true,
     ),
