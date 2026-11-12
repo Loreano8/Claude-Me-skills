@@ -121,7 +121,7 @@ function TemplatesShowcase({ onNavigate }: { onNavigate: (t: Tab) => void }) {
             <article key={e.id} className="w-[68%] max-w-[250px] shrink-0 snap-center sm:w-[240px]">
               <button type="button" onClick={() => choose(e)} className="group block w-full text-left" aria-label={t('Utiliser le modèle {0}', [e.name])}>
                 <img
-                  src={`${import.meta.env.BASE_URL}modeles/${e.id}.webp`}
+                  src={`${import.meta.env.BASE_URL}modeles/${LANG === 'en' ? 'en/' : ''}${e.id}.webp`}
                   alt=""
                   loading="lazy"
                   width={560}
