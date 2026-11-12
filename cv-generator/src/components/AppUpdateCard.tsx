@@ -14,6 +14,8 @@ type State = { kind: 'idle' } | { kind: 'checking' } | { kind: 'ok' } | { kind: 
 export function AppUpdateCard() {
   const native = Capacitor.isNativePlatform();
   const [state, setState] = useState<State>({ kind: 'idle' });
+  // Sur le site, rien à faire : chaque visite charge déjà la dernière version.
+  if (!native) return null;
 
   async function check() {
     setState({ kind: 'checking' });
@@ -41,30 +43,24 @@ export function AppUpdateCard() {
       <h2 id="update-title" className="flex items-center gap-2 font-semibold text-slate-900">
         <RefreshCw className="size-5 text-brand-600" aria-hidden="true" /> {t('Version et mises à jour')}
       </h2>
-      <p className="mt-1 text-sm text-slate-600">{t('Version {0}', [__BUILD_ID__.slice(0, 7)])}</p>
-      {!native ? (
-        <p className="mt-1 text-xs text-slate-500">{t('Le site est toujours à jour.')}</p>
+  <p className="mt-1 text-sm text-slate-600">{t('Version {0}', [__BUILD_ID__.slice(0, 7)])}</p>
+      <p className="mt-1 text-xs text-slate-500">{t('L’appli se met à jour toute seule. Vous pouvez aussi vérifier vous-même.')}</p>
+      {state.kind === 'available' ? (
+        <div className="mt-3 space-y-2">
+          <p className="text-sm font-semibold text-emerald-800">{t('Une nouvelle version est disponible.')}</p>
+          <Button icon={<RefreshCw className="size-4" />} onClick={() => void install(state.latest)}>
+            {t('Installer maintenant')}
+          </Button>
+          <p className="text-xs text-slate-500">{t('Sinon, elle s’installera toute seule au prochain lancement.')}</p>
+        </div>
       ) : (
-        <>
-          <p className="mt-1 text-xs text-slate-500">{t('L’appli se met à jour toute seule. Vous pouvez aussi vérifier vous-même.')}</p>
-          {state.kind === 'available' ? (
-            <div className="mt-3 space-y-2">
-              <p className="text-sm font-semibold text-emerald-800">{t('Une nouvelle version est disponible.')}</p>
-              <Button icon={<RefreshCw className="size-4" />} onClick={() => void install(state.latest)}>
-                {t('Installer maintenant')}
-              </Button>
-              <p className="text-xs text-slate-500">{t('Sinon, elle s’installera toute seule au prochain lancement.')}</p>
-            </div>
-          ) : (
-            <div className="mt-3">
-              <Button variant="secondary" icon={<RefreshCw className="size-4" />} loading={state.kind === 'checking' || state.kind === 'installing'} onClick={() => void check()}>
-                {state.kind === 'installing' ? t('Installation…') : t('Vérifier les mises à jour')}
-              </Button>
-              {state.kind === 'ok' && <p className="mt-2 text-sm font-semibold text-emerald-800">{t('Votre appli est à jour.')}</p>}
-              {state.kind === 'error' && <p className="mt-2 text-sm text-red-700">{t('Vérification impossible pour le moment. Vérifiez votre connexion internet.')}</p>}
-            </div>
-          )}
-        </>
+        <div className="mt-3">
+          <Button variant="secondary" icon={<RefreshCw className="size-4" />} loading={state.kind === 'checking' || state.kind === 'installing'} onClick={() => void check()}>
+            {state.kind === 'installing' ? t('Installation…') : t('Vérifier les mises à jour')}
+          </Button>
+          {state.kind === 'ok' && <p className="mt-2 text-sm font-semibold text-emerald-800">{t('Votre appli est à jour.')}</p>}
+          {state.kind === 'error' && <p className="mt-2 text-sm text-red-700">{t('Vérification impossible pour le moment. Vérifiez votre connexion internet.')}</p>}
+        </div>
       )}
     </section>
   );

@@ -1115,7 +1115,6 @@ export const EN: Record<string, string> = {
   "CV : {0}": "CV: {0}",
   "Chauffeur-livreur": "Delivery driver",
   "Version {0}": "Version {0}",
-  "Le site est toujours à jour.": "The website is always up to date.",
   "L’appli se met à jour toute seule. Vous pouvez aussi vérifier vous-même.": "The app updates itself. You can also check yourself.",
   "Une nouvelle version est disponible.": "A new version is available.",
   "Installer maintenant": "Install now",
@@ -1127,6 +1126,7 @@ export const EN: Record<string, string> = {
   "Réglages": "Settings",
   "Langue de l’appli, version et mises à jour.": "App language, version and updates.",
   "Version et mises à jour": "Version and updates",
+  "Langue du site.": "Site language.",
 
   // Messages du serveur (erreurs, veille) : traduits à l’envoi quand l’interface est en anglais.
   "Fichier trop volumineux (15 Mo maximum).": "File too large (15 MB maximum).",
