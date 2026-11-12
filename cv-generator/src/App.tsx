@@ -106,6 +106,112 @@ function StepMark({ step, active, unread, big = false }: { step?: number; active
   );
 }
 
+type NavProps = { section: Section | undefined; done: Record<string, boolean>; unread: number; onGo: (t: Tab) => void };
+
+/**
+ * Ordinateur : le parcours 1 → 2 → 3 sous forme de rail. Une pastille de couleur glisse sous l'étape ouverte,
+ * et le trait entre deux étapes se remplit quand la précédente a du contenu (sans coche : on peut toujours y revenir).
+ */
+function DesktopNav({ section, done, unread, onGo }: NavProps) {
+  const refs = useRef<Record<string, HTMLButtonElement | null>>({});
+  const [pill, setPill] = useState<{ left: number; width: number } | null>(null);
+  useEffect(() => {
+    const place = () => {
+      const el = section ? refs.current[section] : null;
+      setPill(el ? { left: el.offsetLeft, width: el.offsetWidth } : null);
+    };
+    place();
+    window.addEventListener('resize', place);
+    document.fonts?.ready.then(place).catch(() => {});
+    return () => window.removeEventListener('resize', place);
+  }, [section]);
+
+  return (
+    <nav className="relative hidden min-w-0 items-center rounded-full bg-slate-100/80 p-1 ring-1 ring-slate-200/70 lg:flex" aria-label={t('Navigation principale')}>
+      <span
+        aria-hidden="true"
+        className={cx(
+          'absolute top-1 bottom-1 rounded-full bg-brand-600 shadow-[0_8px_20px_-8px_rgba(37,70,235,0.7)] motion-safe:transition-[left,width,opacity] motion-safe:duration-300 motion-safe:ease-[cubic-bezier(.3,1.4,.5,1)]',
+          pill ? 'opacity-100' : 'opacity-0',
+        )}
+        style={pill ? { left: pill.left, width: pill.width } : undefined}
+      />
+      {NAV.map((n, i) => {
+        const active = section === n.id;
+        const next = NAV[i + 1];
+        return (
+          <div key={n.id} className="flex items-center">
+            <button
+              ref={(el) => {
+                refs.current[n.id] = el;
+              }}
+              type="button"
+              aria-label={navLabel(n, done[n.id])}
+              aria-current={active ? 'page' : undefined}
+              onClick={() => onGo(n.tab)}
+              className={cx(
+                'group relative z-10 flex min-h-11 items-center gap-2 rounded-full py-1.5 pr-4 pl-1.5 text-[0.95rem] font-semibold whitespace-nowrap transition-colors duration-200',
+                !n.step && 'pl-3',
+                active ? 'text-white' : 'text-slate-700 hover:text-ink',
+              )}
+            >
+              {n.step ? (
+                <span
+                  className={cx(
+                    'flex size-8 items-center justify-center rounded-full font-display text-sm font-bold transition-all duration-300 group-hover:scale-110',
+                    active ? 'bg-white text-brand-700' : done[n.id] ? 'bg-brand-100 text-brand-700' : 'bg-white text-slate-600 ring-1 ring-slate-200',
+                  )}
+                >
+                  {n.step}
+                </span>
+              ) : (
+                <span className="relative flex size-6 items-center justify-center transition-transform duration-300 group-hover:rotate-90">
+                  <LayoutGrid className={cx('size-5', active && 'stroke-[2.4]')} aria-hidden="true" />
+                  {unread > 0 && <span className="absolute -top-0.5 -right-1 size-2.5 rounded-full bg-red-600 ring-2 ring-white" />}
+                </span>
+              )}
+              {n.short}
+            </button>
+            {next && (
+              // Trait entre deux étapes : plein quand l'étape d'avant a du contenu.
+              <span aria-hidden="true" className={cx('mx-0.5 h-0.5 w-5 overflow-hidden rounded-full', next.step ? 'bg-slate-300' : 'w-px h-5 bg-slate-300')}>
+                {next.step && <span className={cx('block h-full bg-brand-500 motion-safe:transition-[width] motion-safe:duration-500', done[n.id] ? 'w-full' : 'w-0')} />}
+              </span>
+            )}
+          </div>
+        );
+      })}
+    </nav>
+  );
+}
+
+/** Téléphone : barre du bas avec une pastille colorée derrière l'icône de l'étape ouverte. */
+function MobileNav({ section, done, unread, onGo }: NavProps) {
+  return (
+    <nav className="fixed inset-x-0 bottom-0 z-20 grid grid-cols-4 border-t border-slate-200 bg-white/95 pb-[env(safe-area-inset-bottom)] backdrop-blur lg:hidden" aria-label={t('Navigation principale')}>
+      {NAV.map((n) => {
+        const active = section === n.id;
+        return (
+          <button
+            key={n.id}
+            type="button"
+            aria-label={navLabel(n, done[n.id])}
+            aria-current={active ? 'page' : undefined}
+            onClick={() => onGo(n.tab)}
+            className={cx('relative flex min-h-15 flex-col items-center justify-center gap-1 py-2 text-xs font-semibold transition-colors', active ? 'text-brand-800' : 'text-slate-600')}
+          >
+            <span aria-hidden="true" className={cx('absolute top-0 h-[3px] rounded-b-full bg-brand-600 motion-safe:transition-all motion-safe:duration-300', active ? 'w-10 opacity-100' : 'w-0 opacity-0')} />
+            <span className={cx('flex h-8 w-14 items-center justify-center rounded-full motion-safe:transition-all motion-safe:duration-300', active ? 'bg-brand-100 scale-100' : 'scale-90')}>
+              <StepMark step={n.step} active={active} unread={unread} />
+            </span>
+            {n.short}
+          </button>
+        );
+      })}
+    </nav>
+  );
+}
+
 /** Dans « Mon CV » : remplir, ou voir et télécharger. */
 function CvTabs({ tab, onNavigate }: { tab: Tab; onNavigate: (t: Tab) => void }) {
   return (
@@ -234,24 +340,7 @@ export default function App() {
       <header className="sticky top-0 z-20 border-b border-slate-200 bg-white/90 backdrop-blur pt-[env(safe-area-inset-top)]">
         <div className="mx-auto flex max-w-7xl items-center justify-between gap-2 px-3 py-2.5 sm:gap-3 sm:px-4 lg:py-3">
           <Logo onClick={() => setTab('accueil')} />
-          <nav className="hidden min-w-0 gap-1.5 lg:flex" aria-label={t('Navigation principale')}>
-            {NAV.map((n) => (
-              <button
-                key={n.id}
-                type="button"
-                aria-label={navLabel(n, done[n.id])}
-                aria-current={section === n.id ? 'page' : undefined}
-                onClick={() => setTab(n.tab)}
-                className={cx(
-                  'flex min-h-12 items-center gap-2.5 rounded-2xl px-4 text-base font-semibold whitespace-nowrap transition-colors',
-                  section === n.id ? 'bg-brand-50 text-brand-800' : 'text-slate-700 hover:bg-slate-100',
-                )}
-              >
-                <StepMark step={n.step} active={section === n.id} unread={unread} big />
-                {n.short}
-              </button>
-            ))}
-          </nav>
+          <DesktopNav section={section} done={done} unread={unread} onGo={setTab} />
           <div className="flex min-w-0 shrink-0 items-center gap-1.5 sm:gap-2">
             <span id="tour-slot" className="contents" />
             <LangButton />
@@ -289,21 +378,7 @@ export default function App() {
       </main>
       <Tour key={tab} tab={tab} />
 
-      <nav className="fixed inset-x-0 bottom-0 z-20 grid grid-cols-4 border-t border-slate-200 bg-white pb-[env(safe-area-inset-bottom)] lg:hidden" aria-label={t('Navigation principale')}>
-        {NAV.map((n) => (
-          <button
-            key={n.id}
-            type="button"
-            aria-label={navLabel(n, done[n.id])}
-            aria-current={section === n.id ? 'page' : undefined}
-            onClick={() => setTab(n.tab)}
-            className={cx('flex min-h-15 flex-col items-center justify-center gap-1 py-2 text-xs font-semibold', section === n.id ? 'text-brand-800' : 'text-slate-600')}
-          >
-            <StepMark step={n.step} active={section === n.id} unread={unread} />
-            {n.short}
-          </button>
-        ))}
-      </nav>
+      <MobileNav section={section} done={done} unread={unread} onGo={setTab} />
     </div>
   );
 }
