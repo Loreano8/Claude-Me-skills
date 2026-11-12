@@ -13,6 +13,7 @@ import { letterCliches } from '../lib/naturalCheck.ts';
 import { appendSpoken, MicButton } from '../components/MicButton.tsx';
 import { ProOffer } from '../components/ProUnlock.tsx';
 import { Button, Card, Cost, Field, Notice, Select, TextArea, Toggle } from '../components/ui.tsx';
+import { SendApplication } from '../components/SendApplication.tsx';
 import type { Tab } from '../App.tsx';
 
 function GenerateCard({ onNavigate }: { onNavigate: (t: Tab) => void }) {
@@ -261,6 +262,7 @@ export function LetterPage({ onNavigate }: { onNavigate: (t: Tab) => void }) {
           </div>
         </Card>
         {letter.body.trim() && <NaturalReview hits={letterCliches(letter)} edit="Corrigez directement dans « Corps de la lettre » ci-dessus." />}
+        {letter.body.trim() && <SendApplication />}
       </div>
 
       <div className="space-y-3 lg:sticky lg:top-20 lg:self-start">

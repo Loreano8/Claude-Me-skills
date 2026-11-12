@@ -14,6 +14,7 @@ import type { Vault } from './vault.ts';
 import type { Sources } from './sources.ts';
 import { RecoveryInput, type Recovery } from './recovery.ts';
 import { memoryRateLimiter, type RateLimiter } from './rateLimit.ts';
+import { ShareError, type Shares } from './shares.ts';
 import { createHash, timingSafeEqual } from 'node:crypto';
 
 export interface AppOptions {
@@ -24,6 +25,8 @@ export interface AppOptions {
   rateLimitPerHour: number;
   /** Limite des tentatives de connexion et de codes (en base quand elle existe, pour survivre aux redémarrages). */
   authLimiter?: RateLimiter | null;
+  /** CV partagés par lien ou QR code. */
+  shares?: Shares | null;
   /** Comptes et crédits. Sans base de données (développement local), l'IA est en accès libre. */
   accounts?: Accounts | null;
   payments?: Payments | null;
@@ -60,7 +63,7 @@ const Credentials = z.object({
   source: z.string().max(60).optional(),
 });
 
-export function createApp({ fetchPage = fetchJobPage, ai, allowedOrigins, rateLimitPerHour, accounts = null, payments = null, testimonials = null, support = null, vault = null, recovery = null, sources = null, sessionSecret = '', publicUrl = '', apiPublicUrl = '', adminToken = '', authLimiter = null }: AppOptions) {
+export function createApp({ fetchPage = fetchJobPage, ai, allowedOrigins, rateLimitPerHour, accounts = null, payments = null, testimonials = null, support = null, vault = null, recovery = null, sources = null, sessionSecret = '', publicUrl = '', apiPublicUrl = '', adminToken = '', authLimiter = null, shares = null }: AppOptions) {
   const app = new Hono();
   const allow = memoryRateLimiter(rateLimitPerHour);
   const allowAuth = authLimiter ?? memoryRateLimiter(20);
@@ -390,6 +393,62 @@ export function createApp({ fetchPage = fetchJobPage, ai, allowedOrigins, rateLi
   });
 
   // ---- Témoignages -----------------------------------------------------------
+
+  // ---- CV partagés par lien ou QR code -------------------------------------------
+  const shareError = (c: Context, error: unknown) => {
+    if (error instanceof ShareError) return c.json({ error: error.message }, error.status);
+    console.error('Partage', error);
+    return c.json({ error: 'Partage impossible pour le moment.' }, 500);
+  };
+  const shareLink = (token: string) => `${(publicUrl || '').replace(/\/$/, '')}/v/#${token}`;
+
+  app.post('/api/share', async (c) => {
+    if (!shares) return c.json({ error: 'Partage indisponible.' }, 503);
+    const user = await currentUser(c);
+    if (!user) return c.json({ error: 'Créez un compte gratuit ou connectez-vous pour partager votre CV.', code: 'auth' }, 401);
+    const b = await body(c);
+    try {
+      const share = await shares.publish(user.id, String(b.cvKey ?? ''), String(b.name ?? ''), String(b.pdf ?? ''));
+      return c.json({ ...share, url: shareLink(share.token) });
+    } catch (error) {
+      return shareError(c, error);
+    }
+  });
+
+  app.post('/api/share/status', async (c) => {
+    if (!shares) return c.json({ share: null });
+    const user = await currentUser(c);
+    if (!user) return c.json({ share: null });
+    const share = await shares.current(user.id, String((await body(c)).cvKey ?? ''));
+    return c.json({ share: share ? { ...share, url: shareLink(share.token) } : null });
+  });
+
+  app.post('/api/share/stop', async (c) => {
+    if (!shares) return c.json({ ok: true });
+    const user = await currentUser(c);
+    if (!user) return c.json({ error: 'Connectez-vous.', code: 'auth' }, 401);
+    await shares.stop(user.id, String((await body(c)).cvKey ?? ''));
+    return c.json({ ok: true });
+  });
+
+  // Lecture publique : le nom (pour la page de présentation) puis le PDF.
+  app.get('/api/cv/:token/info', async (c) => {
+    const found = shares && (await shares.open(c.req.param('token')));
+    return found ? c.json({ name: found.name }) : c.json({ error: 'Ce lien a expiré ou a été arrêté.' }, 404);
+  });
+  app.get('/api/cv/:token', async (c) => {
+    const found = shares && (await shares.open(c.req.param('token')));
+    if (!found) return c.text('Ce lien a expiré ou a été arrêté.', 404);
+    const file = `${found.name.replace(/[^\p{L}\p{N}]+/gu, '_') || 'CV'}.pdf`;
+    return new Response(new Uint8Array(found.pdf), {
+      headers: {
+        'content-type': 'application/pdf',
+        'content-disposition': `inline; filename="${encodeURIComponent(file)}"`,
+        'cache-control': 'private, max-age=300',
+        'x-robots-tag': 'noindex',
+      },
+    });
+  });
 
   app.get('/api/testimonials', async (c) => c.json({ testimonials: testimonials ? await testimonials.listApproved() : [] }));
 

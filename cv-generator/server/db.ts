@@ -92,6 +92,18 @@ create table if not exists visits (
   primary key (day, source)
 );
 
+-- CV partagés par lien ou QR code : PDF publié volontairement, lien aléatoire, 90 jours au plus.
+create table if not exists shared_cvs (
+  token text primary key,
+  user_id integer not null references users(id) on delete cascade,
+  cv_key text not null,
+  name text not null default '',
+  pdf bytea not null,
+  created_at timestamptz not null default now(),
+  expires_at timestamptz not null
+);
+create unique index if not exists shared_cvs_owner on shared_cvs (user_id, cv_key);
+
 -- Tentatives de connexion et de codes, par adresse (empreinte, jamais l'adresse elle-même) : la limite survit aux redémarrages.
 create table if not exists rate_hits (
   bucket text not null,

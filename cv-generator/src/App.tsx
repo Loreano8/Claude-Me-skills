@@ -22,6 +22,7 @@ import { ContactPage } from './pages/ContactPage.tsx';
 import { AdminPage } from './pages/AdminPage.tsx';
 import { DossierPage } from './pages/DossierPage.tsx';
 import { MorePage } from './pages/MorePage.tsx';
+import { FollowUpNudge } from './components/FollowUps.tsx';
 import { isCvEmpty } from './lib/cv.ts';
 import { DocumentsPage } from './pages/DocumentsPage.tsx';
 import { PrivacyPage } from './pages/PrivacyPage.tsx';
@@ -236,6 +237,7 @@ export default function App() {
 
       <main className="mx-auto max-w-7xl px-4 pt-4 pb-28 lg:pb-10">
         {BANNER_TABS.includes(tab) && <ReturnBanner onAdapt={() => setTab('offre')} />}
+        {['infos', 'apercu', 'offre', 'lettre', 'plus'].includes(tab) && <FollowUpNudge onNavigate={setTab} />}
         {MORE_PAGES.includes(tab) && (
           <button type="button" onClick={() => setTab('plus')} className="mb-3 inline-flex min-h-11 items-center gap-1.5 rounded-xl pr-3 text-sm font-semibold text-slate-600 hover:text-slate-900">
             <ArrowLeft className="size-4" aria-hidden="true" /> Plus

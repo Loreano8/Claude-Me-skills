@@ -1,0 +1,66 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex">
+<meta name="referrer" content="no-referrer">
+<title>CV partagé | CVCasa</title>
+<link rel="icon" href="/icons/icon.svg" type="image/svg+xml">
+<style>
+  :root { --brand:#2549eb; --ink:#101a4a; --sun:#ffc933; --text:#334155; --muted:#64748b; }
+  * { box-sizing: border-box; }
+  body { margin:0; min-height:100dvh; display:flex; flex-direction:column; background:#f8fafc; color:var(--text); font:16px/1.6 system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif; }
+  header { padding:14px 16px; border-bottom:1px solid #e2e8f0; background:#fff; }
+  header a { display:inline-flex; align-items:center; gap:8px; color:var(--ink); font-weight:800; text-decoration:none; font-size:18px; }
+  header img { width:30px; height:30px; } header b { color:var(--brand); }
+  main { flex:1; display:flex; align-items:center; justify-content:center; padding:24px 16px; }
+  .card { width:100%; max-width:440px; background:#fff; border:1px solid #e2e8f0; border-radius:20px; padding:28px 22px; text-align:center; box-shadow:0 18px 40px -24px rgba(16,26,74,.45); }
+  .doc { width:64px; height:80px; margin:0 auto 14px; border-radius:8px; background:var(--ink); position:relative; }
+  .doc::after { content:""; position:absolute; left:12px; right:12px; top:16px; height:6px; border-radius:3px; background:var(--sun); box-shadow:0 14px 0 #fff, 0 26px 0 #fff, 0 38px 0 #94a3b8; }
+  h1 { margin:0 0 6px; color:var(--ink); font-size:24px; line-height:1.2; }
+  p { margin:0 0 18px; color:var(--muted); }
+  .btn { display:flex; align-items:center; justify-content:center; min-height:48px; border-radius:14px; font-weight:700; text-decoration:none; margin-top:10px; }
+  .primary { background:var(--brand); color:#fff; } .primary:hover { background:#1d37d8; }
+  .secondary { border:1px solid #cbd5e1; color:var(--ink); }
+  footer { padding:18px 16px 28px; text-align:center; font-size:14px; color:var(--muted); }
+  footer a { color:var(--brand); font-weight:700; }
+  a:focus-visible { outline:2px solid var(--brand); outline-offset:2px; }
+  [hidden] { display:none !important; }
+</style>
+</head>
+<body>
+<header><a href="/?src=cv-partage"><img src="/icons/icon.svg" alt=""><span>CV<b>Casa</b></span></a></header>
+<main>
+  <div class="card" id="ok" hidden>
+    <div class="doc" aria-hidden="true"></div>
+    <h1 id="name">CV</h1>
+    <p>Ce CV vous a été partagé.</p>
+    <a class="btn primary" id="view" href="#">Voir le CV</a>
+    <a class="btn secondary" id="get" href="#" download>Télécharger le PDF</a>
+  </div>
+  <div class="card" id="ko" hidden>
+    <h1>Lien expiré</h1>
+    <p>Ce lien n’est plus valable : la personne a arrêté le partage, ou il date de plus de 90 jours. Demandez-lui un nouveau lien.</p>
+  </div>
+  <div class="card" id="wait"><p>Chargement…</p></div>
+</main>
+<footer>Ce CV a été préparé avec CVCasa. <a href="/?src=cv-partage">Faites le vôtre gratuitement</a></footer>
+<script>
+  (function () {
+    var api = location.hostname === 'localhost' || location.hostname === '127.0.0.1' ? '' : 'https://clgmqhyzyiswnekmoygw.supabase.co/functions/v1';
+    var token = location.hash.slice(1);
+    var show = function (id) { ['ok', 'ko', 'wait'].forEach(function (x) { document.getElementById(x).hidden = x !== id; }); };
+    if (!/^[A-Za-z0-9_-]{20,40}$/.test(token)) return show('ko');
+    var pdf = api + '/api/cv/' + token;
+    fetch(pdf + '/info').then(function (r) { return r.ok ? r.json() : Promise.reject(); }).then(function (d) {
+      document.getElementById('name').textContent = d.name;
+      document.title = d.name + ' | CVCasa';
+      document.getElementById('view').href = pdf;
+      document.getElementById('get').href = pdf;
+      show('ok');
+    }).catch(function () { show('ko'); });
+  })();
+</script>
+</body>
+</html>

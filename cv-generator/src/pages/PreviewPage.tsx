@@ -12,6 +12,7 @@ import { isRecommended, recommendedDisplay } from '../lib/recommended.ts';
 import { exportCvDocx, exportCvPdf } from '../export/exporters.ts';
 import { Preview } from '../components/Preview.tsx';
 import { TemplateGallery } from '../components/TemplateGallery.tsx';
+import { ShareCv } from '../components/ShareCv.tsx';
 import { ProOffer } from '../components/ProUnlock.tsx';
 import { isProTemplate } from '../pdf/catalog.ts';
 import { ReviseCard } from '../components/ReviseCard.tsx';
@@ -242,11 +243,16 @@ export function PreviewPage() {
   const cv = useActiveCv();
   return (
     // Sur téléphone : export, puis aperçu, puis réglages. Sur grand écran : réglages à gauche, aperçu à droite.
-    <div className="grid grid-cols-[minmax(0,1fr)] gap-4 lg:grid-cols-[360px_minmax(0,1fr)] lg:grid-rows-[auto_auto_auto_auto_1fr]">
+    <div className="grid grid-cols-[minmax(0,1fr)] gap-4 lg:grid-cols-[360px_minmax(0,1fr)] lg:grid-rows-[auto_auto_auto_auto_auto_1fr]">
       <Card tour="export" title="Télécharger mon CV" className="lg:col-start-1">
         <ExportButtons cv={cv} />
       </Card>
-      <div data-tour="preview" className="lg:sticky lg:top-20 lg:col-start-2 lg:row-span-5 lg:row-start-1 lg:self-start">
+      {!isCvEmpty(cv) && (
+        <div className="lg:col-start-1">
+          <ShareCv cv={cv} />
+        </div>
+      )}
+      <div data-tour="preview" className="lg:sticky lg:top-20 lg:col-start-2 lg:row-span-6 lg:row-start-1 lg:self-start">
         <div className="mx-auto max-w-[700px]">
           <Preview source={{ kind: 'cv', cv }} />
         </div>

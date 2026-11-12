@@ -162,7 +162,14 @@ export const useStore = create<State>()(
       },
 
       updateApplication: (id, patch) =>
-        set((s) => ({ applications: s.applications.map((a) => (a.id === id ? { ...a, ...patch, updatedAt: Date.now() } : a)) })),
+        set((s) => ({
+          applications: s.applications.map((a) => {
+            if (a.id !== id) return a;
+            // Passage à « Envoyée » : on retient la date, pour proposer la relance une semaine plus tard.
+            const sent = patch.status === 'envoyee' && a.status !== 'envoyee' ? { sentAt: Date.now(), followedUpAt: undefined } : {};
+            return { ...a, ...patch, ...sent, updatedAt: Date.now() };
+          }),
+        })),
 
       deleteApplication: (id) => set((s) => ({ applications: s.applications.filter((a) => a.id !== id) })),
 

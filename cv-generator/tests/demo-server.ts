@@ -8,6 +8,7 @@ import { createAccounts } from '../server/accounts.ts';
 import { createPayments } from '../server/payments.ts';
 import { createTestimonials } from '../server/testimonials.ts';
 import { createSources } from '../server/sources.ts';
+import { createShares } from '../server/shares.ts';
 import { createSupport } from '../server/support.ts';
 import { testDb } from './pglite.ts';
 import { sampleAdapt, sampleInterview, sampleLetter, sampleRevise, sampleTemplateAnalysis, sampleTranslation, sampleClarify, sampleTranscript, sampleStyle, sampleLetterQuestions, sampleKeywords } from './fixtures.ts';
@@ -21,12 +22,18 @@ const payments = createPayments(db, accounts, {
 });
 // DEMO_DELAY_MS : simule le temps de réponse réel (vidéos de démonstration).
 const wait = () => new Promise((r) => setTimeout(r, Number(process.env.DEMO_DELAY_MS ?? 0)));
+const anonymous = (cv: typeof sampleAdapt.cv) => {
+  const copy = structuredClone(cv);
+  copy.personal = { ...copy.personal, firstName: 'Prénom', lastName: 'Nom', email: 'prenom.nom@email.com', linkedin: '' };
+  return copy;
+};
 const ai = {
-  structure: async () => (await wait(), ({ cv: sampleAdapt.cv, suggestions: ['Ajoutez un lien LinkedIn'], language: 'fr' as const })),
+  // CV de démonstration sans nom de personne réelle (vidéos et captures).
+  structure: async () => (await wait(), ({ cv: anonymous(sampleAdapt.cv), suggestions: ['Ajoutez un lien LinkedIn'], language: 'fr' as const })),
   // Version adaptée qui diffère vraiment du CV de départ (titre, une réalisation, une compétence), pour la revue des modifications.
   adapt: async () => {
     await wait();
-    const cv = structuredClone(sampleAdapt.cv);
+    const cv = anonymous(sampleAdapt.cv);
     cv.personal.title = 'Responsable comptable SYSCOHADA';
     cv.experiences[0].achievements = ['Tenir la comptabilité selon le SYSCOHADA révisé et préparer les clôtures mensuelles', ...cv.experiences[0].achievements];
     cv.skills = [...cv.skills, 'Clôtures mensuelles'];
@@ -46,7 +53,7 @@ const ai = {
 // E-mails simulés : le code s'affiche dans la console du serveur de démo.
 const support = createSupport(db, async (t) => console.log('[notification]', t));
 const vault = createVault(db, accounts, async (to, subject, text) => console.log('[e-mail]', to, subject, text.replace(/\n/g, ' ')));
-const app = createApp({ ai, accounts, payments, vault, testimonials: createTestimonials(db), support, recovery: createRecovery(db, accounts, support), sources: createSources(db), sessionSecret: 'dev', adminToken: 'demo', publicUrl: 'http://localhost:5173', allowedOrigins: [], rateLimitPerHour: 100 });
+const app = createApp({ ai, accounts, payments, vault, testimonials: createTestimonials(db), support, recovery: createRecovery(db, accounts, support), sources: createSources(db), shares: createShares(db), sessionSecret: 'dev', adminToken: 'demo', publicUrl: 'http://localhost:5173', allowedOrigins: [], rateLimitPerHour: 100 });
 // Fausse page de paiement : « payer » puis revenir comme le ferait FedaPay.
 app.get('/fake-pay', (c) => { paid.add(c.req.query('id')!); return c.redirect(`/api/payments/return?id=${c.req.query('id')}&status=approved`); });
 serve({ fetch: app.fetch, port: 8787 }, () => console.log('e2e server ready'));

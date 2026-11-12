@@ -140,6 +140,12 @@ export interface Application {
   updatedAt: number;
   /** Date d'envoi, d'entretien… saisie librement (ex. 12/11). */
   date: string;
+  /** Moment où la candidature est passée à « Envoyée » (pour proposer la relance une semaine après). */
+  sentAt?: number;
+  /** Relance faite (copiée ou ouverte dans la messagerie) : on ne la propose plus. */
+  followedUpAt?: number;
+  /** Adresse du recruteur, trouvée dans l'offre ou saisie. */
+  contactEmail?: string;
   notes: string;
   /** CV adapté à cette offre, s'il existe. */
   cvId?: string;

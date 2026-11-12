@@ -1,4 +1,4 @@
-import { ChevronRight, ClipboardList, FileStack, FolderOpen, MessageCircle, PlayCircle, ScanLine, ShieldCheck, BookOpen } from 'lucide-react';
+import { BookOpen, ChevronRight, ClipboardList, CreditCard, FileStack, FolderOpen, Link2, Mail, MessageCircle, Mic, PlayCircle, ScanLine, ShieldCheck, Bitcoin } from 'lucide-react';
 import { Capacitor } from '@capacitor/core';
 import type { Tab } from '../App.tsx';
 import { PUBLIC_SITE } from '../lib/referral.ts';
@@ -20,7 +20,11 @@ const GROUPS: { title: string; entries: Entry[] }[] = [
   },
   {
     title: 'Votre recherche',
-    entries: [{ icon: ClipboardList, title: 'Suivi des candidatures', text: 'Où vous avez postulé, et où vous en êtes.', tab: 'suivi' }],
+    entries: [
+      { icon: ClipboardList, title: 'Suivi et relances', text: 'Où vous avez postulé, et un message prêt pour relancer au bout d’une semaine.', tab: 'suivi' },
+      { icon: Link2, title: 'Partager mon CV', text: 'Un lien et un QR code à donner à un recruteur.', tab: 'apercu' },
+      { icon: Mail, title: 'E-mail de candidature', text: 'Le message à envoyer avec votre CV et votre lettre, prêt à copier.', tab: 'lettre' },
+    ],
   },
   {
     title: 'Aide',
@@ -31,6 +35,13 @@ const GROUPS: { title: string; entries: Entry[] }[] = [
       { icon: ShieldCheck, title: 'Confidentialité', text: 'Ce que deviennent vos données.', tab: 'confidentialite' },
     ],
   },
+];
+
+/** Ce qui arrive bientôt : annoncé, pas encore cliquable. */
+const SOON: { icon: typeof Mic; title: string; text: string }[] = [
+  { icon: Mic, title: 'Entraînement à l’entretien, à l’oral', text: 'L’appli vous pose les questions du recruteur, vous répondez au micro, elle vous conseille.' },
+  { icon: CreditCard, title: 'Paiement par carte bancaire', text: 'En plus du Mobile Money, pour payer depuis l’étranger.' },
+  { icon: Bitcoin, title: 'Paiement en crypto', text: 'Pour payer depuis n’importe quel pays.' },
 ];
 
 /** « Plus » : tout ce qui ne fait pas partie du parcours CV → offre → lettre, rangé au même endroit. */
@@ -80,6 +91,25 @@ export function MorePage({ onNavigate }: { onNavigate: (t: Tab) => void }) {
           </ul>
         </section>
       ))}
+      <section>
+        <h2 className="mb-2 px-1 font-display text-lg font-semibold text-ink">Bientôt</h2>
+        <ul className="divide-y divide-slate-100 overflow-hidden rounded-2xl border border-dashed border-slate-300 bg-white/60">
+          {SOON.map((e) => (
+            <li key={e.title} className="flex min-h-16 items-center gap-3 px-4 py-3">
+              <span className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-slate-100 text-slate-500">
+                <e.icon className="size-5" aria-hidden="true" />
+              </span>
+              <span className="min-w-0 flex-1">
+                <span className="flex items-center gap-2 font-semibold text-slate-700">
+                  {e.title}
+                  <span className="rounded-full bg-sun-100 px-2 py-0.5 text-xs font-semibold text-sun-900">Bientôt</span>
+                </span>
+                <span className="block text-sm text-slate-600">{e.text}</span>
+              </span>
+            </li>
+          ))}
+        </ul>
+      </section>
     </div>
   );
 }

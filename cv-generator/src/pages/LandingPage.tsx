@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { ArrowRight, BadgeCheck, Briefcase, GraduationCap, Check, ClipboardList, FileDown, FileStack, Globe2, Languages, Mail, MessagesSquare, PenLine, PlayCircle, ShieldCheck, Target } from 'lucide-react';
+import { ArrowRight, BadgeCheck, Briefcase, Check, ClipboardList, FileDown, FileStack, Globe2, GraduationCap, Languages, Link2, Mail, MessagesSquare, PenLine, PlayCircle, Send, ShieldCheck, Target, UserRound } from 'lucide-react';
 import { PACKS } from '../../server/payments.ts';
 import { HeroScene } from '../components/HeroScene.tsx';
 import type { Tab } from '../App.tsx';
@@ -35,6 +35,9 @@ const FEATURES: { icon: typeof Target; title: string; text: string }[] = [
   { icon: Languages, title: 'CV en anglais', text: 'Traduit et mis aux normes du pays visé, pour postuler dans une entreprise internationale ou à l’étranger.' },
   { icon: ClipboardList, title: 'Suivi des candidatures', text: 'Envoyée, entretien, réponse : toutes vos offres au même endroit, avec le bon CV pour chacune.' },
   { icon: Globe2, title: 'Aux normes de chaque pays', text: 'Photo, date de naissance ou nationalité seulement quand elles sont attendues, CV en français ou en anglais. Paiement simple par Mobile Money.' },
+  { icon: Send, title: 'Envoyer et relancer', text: 'L’e-mail de candidature prêt à copier, et un message de relance proposé au bout d’une semaine sans réponse. Gratuit.' },
+  { icon: Link2, title: 'Votre CV en lien et QR code', text: 'Un lien à envoyer à un recruteur, ou un QR code à imprimer pour les salons et forums emploi. Gratuit.' },
+  { icon: UserRound, title: 'Photo sur fond uni', text: 'Le fond de votre photo devient blanc, gris ou bleu clair, comme chez le photographe. Fait sur votre téléphone, gratuit.' },
 ];
 
 const JOBS = [
@@ -207,6 +210,10 @@ export function LandingPage({ onNavigate }: { onNavigate: (t: Tab) => void }) {
               </div>
             ))}
           </div>
+          <p className="mt-5 text-center text-sm text-slate-600">
+            <span className="mr-1.5 rounded-full bg-sun-100 px-2 py-0.5 text-xs font-semibold text-sun-900">Bientôt</span>
+            L’entraînement à l’entretien à l’oral, et le paiement par carte bancaire ou en crypto.
+          </p>
         </div>
       </section>
 

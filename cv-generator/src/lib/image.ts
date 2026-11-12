@@ -1,6 +1,6 @@
 import { readAsDataUrl } from './files.ts';
 
-function loadImage(src: string): Promise<HTMLImageElement> {
+export function loadImage(src: string): Promise<HTMLImageElement> {
   return new Promise((resolve, reject) => {
     const img = new Image();
     img.onload = () => resolve(img);

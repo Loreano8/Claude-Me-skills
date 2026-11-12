@@ -33,6 +33,14 @@ import { deviceId } from './device.ts';
 
 // Sur le web, l'API est servie par le même domaine. Dans l'application Android,
 // VITE_API_URL pointe vers le serveur en ligne.
+/** CV partagé par lien : `url` mène à la page de présentation, qui ouvre le PDF. */
+export interface SharedCv {
+  token: string;
+  name: string;
+  url: string;
+  expiresAt: string;
+}
+
 const API_BASE = (import.meta.env.VITE_API_URL as string | undefined)?.replace(/\/$/, '') ?? '';
 
 export class ApiError extends Error {}
@@ -96,6 +104,9 @@ export const api = {
   analyzeTemplate: (req: AnalyzeTemplateRequest) => post<TemplateAnalysis>('/api/ai/analyze-template', req),
   clarify: (req: ClarifyRequest) => post<ClarifyResult>('/api/ai/clarify', req),
   keywords: (req: KeywordsRequest) => post<KeywordsResult>('/api/ai/keywords', req),
+  shareCv: (cvKey: string, name: string, pdf: string) => post<SharedCv>('/api/share', { cvKey, name, pdf }),
+  shareStatus: (cvKey: string) => post<{ share: SharedCv | null }>('/api/share/status', { cvKey }),
+  shareStop: (cvKey: string) => post<{ ok: true }>('/api/share/stop', { cvKey }),
   fetchJob: (url: string) => post<JobFetchResult>('/api/job/fetch', { url }),
   transcribe: (req: TranscribeRequest) => post<TranscribeResult>('/api/ai/transcribe', req),
   dossierUnlock: () => post<{ credits: number | null }>('/api/dossier/unlock', {}),

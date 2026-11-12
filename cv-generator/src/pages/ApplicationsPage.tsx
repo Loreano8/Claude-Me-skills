@@ -6,6 +6,8 @@ import type { Application, ApplicationStatus } from '../types.ts';
 import { InterviewSheet } from '../components/InterviewSheet.tsx';
 import { Button, Card, cx, Field, Notice, TextArea, Toggle } from '../components/ui.tsx';
 import type { Tab } from '../App.tsx';
+import { FollowUps } from '../components/FollowUps.tsx';
+import { daysSince, FOLLOW_UP_DAYS } from '../lib/emails.ts';
 
 export const STATUSES: { id: ApplicationStatus; label: string; tone: string }[] = [
   { id: 'preparation', label: 'En préparation', tone: 'bg-slate-100 text-slate-700' },
@@ -159,6 +161,14 @@ function ApplicationCard({ app, onNavigate }: { app: Application; onNavigate: (t
         ))}
       </div>
 
+      {app.status === 'envoyee' && app.sentAt && (
+        <p className="mt-3 text-sm text-slate-600">
+          Envoyée il y a {daysSince(app.sentAt)} jour{daysSince(app.sentAt) > 1 ? 's' : ''}.
+          {daysSince(app.sentAt) < FOLLOW_UP_DAYS && ` Sans réponse, une relance vous sera proposée dans ${FOLLOW_UP_DAYS - daysSince(app.sentAt)} jour${FOLLOW_UP_DAYS - daysSince(app.sentAt) > 1 ? 's' : ''}.`}
+          {app.followedUpAt && ' Relance faite.'}
+        </p>
+      )}
+
       {app.status === 'offre' && <HiredPanel app={app} />}
 
       {app.score && (
@@ -273,6 +283,8 @@ export function ApplicationsPage({ onNavigate }: { onNavigate: (t: Tab) => void 
           })}
         </div>
       </Card>
+
+      <FollowUps />
 
       {applications.length === 0 && (
         <Notice tone="info">
