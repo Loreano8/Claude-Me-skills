@@ -128,19 +128,12 @@ function QuickFill() {
           <PenLine className="size-5 text-brand-600" /> Saisie rapide
         </span>
       }
-      subtitle="Racontez votre parcours à voix haute, écrivez-le en vrac ou importez votre ancien CV : CVCasa range tout et le met aux normes actuelles."
+      subtitle="Partez de votre ancien CV ou de quelques lignes : CVCasa range tout et le met aux normes actuelles."
     >
-      <div className="mb-3" data-tour="mic">
-        <MicButton
-          onText={(t) => setText((cur) => appendSpoken(cur, t))}
-          lang={cv.settings.headingLang}
-          label="Raconter mon parcours"
-          hint="Parlez de vos études, vos emplois, vos compétences… dans le désordre."
-        />
-      </div>
-      <TextArea value={text} onChange={setText} rows={6} placeholder={QUICK_PLACEHOLDER} />
-
-      <div className="mt-3 flex flex-wrap items-center gap-2">
+      {/* Ordre voulu : l'ancien CV d'abord, puis l'écrit ; la dictée n'est qu'une aide pour écrire, pas le point de départ. */}
+      <div className="rounded-xl bg-white p-3 ring-1 ring-slate-200">
+        <p className="text-sm font-semibold text-slate-900">Vous avez déjà un CV ?</p>
+        <p className="mt-0.5 text-xs text-slate-500">En PDF, en image, ou sur papier : prenez chaque page en photo, bien à plat et avec un bon éclairage ({MAX_QUICK_FILES} documents maximum).</p>
         <input
           ref={fileInput}
           type="file"
@@ -165,28 +158,43 @@ function QuickFill() {
             e.target.value = '';
           }}
         />
-        {files.map((f, i) => (
-          <span key={i} className="inline-flex max-w-full items-center gap-2 rounded-xl bg-white px-3 py-2 text-sm ring-1 ring-slate-200">
-            <Paperclip className="size-4 shrink-0 text-slate-500" />
-            <span className="truncate">{f.mediaType.startsWith('image/') ? `Photo ${i + 1}` : f.name}</span>
-            <button type="button" onClick={() => setFiles((cur) => cur.filter((_, j) => j !== i))} aria-label="Retirer ce document" className="text-slate-400 hover:text-slate-700">
-              <X className="size-4" />
-            </button>
-          </span>
-        ))}
-        {files.length < MAX_QUICK_FILES && (
-          <>
-            <Button variant="secondary" size="sm" icon={<Camera className="size-4" />} onClick={() => cameraInput.current?.click()}>
-              {files.length ? 'Ajouter une photo' : 'Prendre en photo'}
-            </Button>
-            <Button variant="secondary" size="sm" data-tour="import" icon={<Paperclip className="size-4" />} onClick={() => fileInput.current?.click()}>
-              {files.length ? 'Ajouter un fichier' : 'Importer des fichiers (PDF ou images)'}
-            </Button>
-          </>
-        )}
-        <p className="w-full text-xs text-slate-500">
-          Ancien CV papier ou parcours écrit à la main : prenez chaque page en photo, bien à plat et avec un bon éclairage ({MAX_QUICK_FILES} documents maximum).
-        </p>
+        <div className="mt-2.5 flex flex-wrap items-center gap-2">
+          {files.map((f, i) => (
+            <span key={i} className="inline-flex max-w-full items-center gap-2 rounded-xl bg-slate-50 px-3 py-2 text-sm ring-1 ring-slate-200">
+              <Paperclip className="size-4 shrink-0 text-slate-500" />
+              <span className="truncate">{f.mediaType.startsWith('image/') ? `Photo ${i + 1}` : f.name}</span>
+              <button type="button" onClick={() => setFiles((cur) => cur.filter((_, j) => j !== i))} aria-label="Retirer ce document" className="text-slate-400 hover:text-slate-700">
+                <X className="size-4" />
+              </button>
+            </span>
+          ))}
+          {files.length < MAX_QUICK_FILES && (
+            <>
+              <Button data-tour="import" variant={files.length ? 'secondary' : 'primary'} icon={<Paperclip className="size-4" />} onClick={() => fileInput.current?.click()}>
+                {files.length ? 'Ajouter un fichier' : 'Importer mon ancien CV'}
+              </Button>
+              <Button variant="secondary" icon={<Camera className="size-4" />} onClick={() => cameraInput.current?.click()}>
+                {files.length ? 'Ajouter une photo' : 'Le prendre en photo'}
+              </Button>
+            </>
+          )}
+        </div>
+      </div>
+
+      <div className="mt-3 rounded-xl bg-white p-3 ring-1 ring-slate-200">
+        <label htmlFor="quick-text" className="text-sm font-semibold text-slate-900">
+          {files.length ? 'Quelque chose à ajouter ? (facultatif)' : 'Pas de CV ? Écrivez votre parcours en quelques lignes'}
+        </label>
+        <p className="mt-0.5 mb-2 text-xs text-slate-500">Dans le désordre, sans phrases parfaites : vos études, vos emplois, ce que vous savez faire.</p>
+        <TextArea id="quick-text" value={text} onChange={setText} rows={6} placeholder={QUICK_PLACEHOLDER} />
+        <div className="mt-2" data-tour="mic">
+          <MicButton
+            onText={(t) => setText((cur) => appendSpoken(cur, t))}
+            lang={cv.settings.headingLang}
+            label="Dicter au lieu d’écrire"
+            hint="Facultatif : parlez, le texte s’écrit tout seul."
+          />
+        </div>
       </div>
 
       {hasContent && (

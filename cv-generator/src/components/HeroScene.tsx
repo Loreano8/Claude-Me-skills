@@ -1,10 +1,10 @@
 import { Fragment, useEffect, useLayoutEffect, useRef, useState, type CSSProperties } from 'react';
-import { FileDown, Mic } from 'lucide-react';
+import { FileDown, FileText, Keyboard, Mic } from 'lucide-react';
 
 /**
- * Scène d'accueil : la personne raconte son parcours au micro, la phrase s'écrit, les passages utiles sont surlignés
- * puis rejoignent une feuille de CV qui se remplit, déjà reformulés. Une seule séquence, en boucle, qui dit ce que fait
- * CVCasa. Aucun nom réel : le CV porte « Votre nom ».
+ * Scène d'accueil : le parcours arrive (ancien CV importé, texte écrit, ou dicté au micro : une façon par boucle, dans
+ * cet ordre), les passages utiles sont surlignés puis rejoignent une feuille de CV qui se remplit, déjà reformulés.
+ * Le micro n'est qu'une des trois façons, pas la première montrée. Aucun nom réel : le CV porte « Votre nom ».
  * Tout est dessiné dans un espace fixe (W × H) mis à l'échelle : les trajets se calculent dans le même repère.
  */
 
@@ -12,19 +12,57 @@ const W = 420;
 const H = 520;
 const LOOP = 14;
 
-// La phrase dite, découpée en morceaux ; ceux qui ont un `to` rejoignent le CV.
-const SPOKEN: { text: string; to?: number }[] = [
-  { text: 'Bon… je suis ' },
-  { text: 'comptable', to: 0 },
-  { text: ' depuis 2021, dans une société de transport. Je gère ' },
-  { text: 'la paie de 120 salariés', to: 1 },
-  { text: ', et j’ai ' },
-  { text: 'réduit les retards de paiement de 30 %', to: 2 },
-  { text: '. Avant ça, un ' },
-  { text: 'Master en finance', to: 3 },
-  { text: '.' },
+// Le parcours, selon la façon de le donner ; les morceaux qui ont un `to` rejoignent le CV.
+type Piece = { text: string; to?: number };
+const SOURCES: { icon: typeof Mic; active: string; idle: string; pieces: Piece[] }[] = [
+  {
+    icon: FileText,
+    active: 'Lecture de ancien-cv.pdf…',
+    idle: 'Ancien CV lu',
+    pieces: [
+      { text: 'CV 2019 – ' },
+      { text: 'Comptable', to: 0 },
+      { text: ', société de transport (2021 – ). Missions : ' },
+      { text: 'la paie de 120 salariés', to: 1 },
+      { text: ' ; ' },
+      { text: 'réduit les retards de paiement de 30 %', to: 2 },
+      { text: '. Diplôme : ' },
+      { text: 'Master en finance', to: 3 },
+      { text: '.' },
+    ],
+  },
+  {
+    icon: Keyboard,
+    active: 'Vous écrivez…',
+    idle: 'Écrit',
+    pieces: [
+      { text: 'je suis ' },
+      { text: 'comptable', to: 0 },
+      { text: ' depuis 2021 dans une société de transport, je fais ' },
+      { text: 'la paie de 120 salariés', to: 1 },
+      { text: ', j’ai ' },
+      { text: 'réduit les retards de paiement de 30 %', to: 2 },
+      { text: '. avant : ' },
+      { text: 'Master en finance', to: 3 },
+    ],
+  },
+  {
+    icon: Mic,
+    active: 'Vous parlez…',
+    idle: 'Noté',
+    pieces: [
+      { text: 'Bon… je suis ' },
+      { text: 'comptable', to: 0 },
+      { text: ' depuis 2021, dans une société de transport. Je gère ' },
+      { text: 'la paie de 120 salariés', to: 1 },
+      { text: ', et j’ai ' },
+      { text: 'réduit les retards de paiement de 30 %', to: 2 },
+      { text: '. Avant ça, un ' },
+      { text: 'Master en finance', to: 3 },
+      { text: '.' },
+    ],
+  },
 ];
-const FULL = SPOKEN.map((s) => s.text).join('');
 
 // Où chaque passage atterrit sur la feuille (repère de la scène) et ce qu'il y devient.
 const SHEET = { x: 104, y: 214, w: 300, h: 290 };
@@ -59,7 +97,11 @@ export function HeroScene() {
   const stage = useRef<HTMLDivElement>(null);
   const marks = useRef<(HTMLSpanElement | null)[]>([]);
   const [scale, setScale] = useState(1);
-  const [t, setT] = useState(0);
+  const [elapsed, setElapsed] = useState(0);
+  const t = elapsed % LOOP;
+  const source = SOURCES[Math.floor(elapsed / LOOP) % SOURCES.length];
+  const SPOKEN = source.pieces;
+  const FULL = SPOKEN.map((p) => p.text).join('');
   const [from, setFrom] = useState<Box[]>([]);
   const reduce = typeof window !== 'undefined' && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
@@ -75,7 +117,7 @@ export function HeroScene() {
   // Horloge de la boucle, arrêtée hors de l'écran (batterie) ; image finale fixe si les animations sont réduites.
   useEffect(() => {
     if (reduce) {
-      setT(11);
+      setElapsed(11);
       return;
     }
     let raf = 0;
@@ -83,7 +125,7 @@ export function HeroScene() {
     let start = performance.now();
     let pausedAt = 0;
     const tick = (now: number) => {
-      setT(((now - start) / 1000) % LOOP);
+      setElapsed(Math.max(0, (now - start) / 1000));
       raf = requestAnimationFrame(tick);
     };
     const io = new IntersectionObserver(([e]) => {
@@ -118,7 +160,7 @@ export function HeroScene() {
       }),
     );
   }, [allTyped, from.length, scale]);
-  useEffect(() => setFrom([]), [scale]);
+  useEffect(() => setFrom([]), [scale, source]);
 
   const fade = 1 - prog(t, T.out);
   const bubble = ease(prog(t, T.bubble));
@@ -159,9 +201,9 @@ export function HeroScene() {
           <div className="mb-2 flex items-center gap-2.5">
             <span className="relative flex size-9 items-center justify-center rounded-full bg-sun-400 text-ink">
               {talking && <span className="absolute inset-0 animate-ping rounded-full bg-sun-400/60" />}
-              <Mic className="relative size-4.5" />
+              <source.icon className="relative size-4.5" />
             </span>
-            <span className="flex h-6 items-center gap-[3px]">
+            <span className="flex h-6 items-center gap-[3px]" style={{ visibility: source.icon === Mic ? 'visible' : 'hidden' }}>
               {Array.from({ length: 16 }, (_, i) => (
                 <span
                   key={i}
@@ -170,7 +212,7 @@ export function HeroScene() {
                 />
               ))}
             </span>
-            <span className="ml-auto text-xs font-medium text-slate-500">{talking ? 'Vous parlez…' : 'Noté'}</span>
+            <span className="ml-auto text-xs font-medium text-slate-500">{talking ? source.active : source.idle}</span>
           </div>
           <p className="min-h-[110px] text-[15px] leading-[1.55] text-slate-800">
             {spoken}

@@ -14,9 +14,9 @@ type Step = { target: string; title: string; text: string };
 
 export const TOURS: Partial<Record<Tab, Step[]>> = {
   infos: [
-    { target: 'quickfill', title: 'Commencez ici', text: 'Pas besoin de remplir les cases une par une. Racontez votre parcours, écrivez-le en vrac ou importez votre ancien CV.' },
-    { target: 'mic', title: 'Parlez, c’est noté', text: 'Appuyez sur le micro et racontez : vos études, vos postes, ce que vous savez faire. Le texte s’écrit tout seul.' },
+    { target: 'quickfill', title: 'Commencez ici', text: 'Pas besoin de remplir les cases une par une. Importez votre ancien CV ou écrivez votre parcours en vrac.' },
     { target: 'import', title: 'Votre ancien CV', text: 'Un CV en PDF, ou une photo d’un CV papier : tout est repris.' },
+    { target: 'mic', title: 'Pas envie d’écrire ?', text: 'Vous pouvez aussi dicter : appuyez sur le micro et parlez, le texte s’écrit tout seul.' },
     { target: 'generate', title: 'Générer mon CV', text: 'CVCasa range chaque information dans la bonne rubrique et soigne la rédaction. Rien n’est inventé.' },
     { target: 'style', title: 'Écrire comme moi', text: 'Montrez un texte que vous avez écrit vous-même : vos CV et lettres garderont votre façon d’écrire.' },
     { target: 'sections', title: 'Vérifiez et complétez', text: 'Toutes les rubriques restent modifiables à la main. Ouvrez-en une pour la corriger.' },

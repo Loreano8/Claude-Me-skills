@@ -22,7 +22,7 @@ const GUIDE_GROUPS: { kind: GuideKind; icon: typeof Target }[] = [
 const fcfa = (n: number) => `${n.toLocaleString('fr-FR')} FCFA`;
 
 const STEPS = [
-  { icon: PenLine, title: 'Écrivez comme vous parlez', text: 'Tapez ou dictez votre parcours en vrac, ou importez votre ancien CV (PDF ou photo). CVCasa range tout et le met en forme proprement, avec vos vraies expériences.' },
+  { icon: PenLine, title: 'Partez de ce que vous avez', text: 'Importez votre ancien CV (PDF ou photo), ou écrivez votre parcours en vrac, au clavier ou au micro. CVCasa range tout et le met en forme proprement, avec vos vraies expériences.' },
   { icon: Target, title: 'Collez l’offre', text: 'Lien de l’annonce, texte copié, PDF ou capture d’écran : vous obtenez un CV adapté au poste et un score de compatibilité.' },
   { icon: FileDown, title: 'Téléchargez et postulez', text: 'PDF prêt pour les logiciels de tri des recruteurs (gratuit), ou version Pro sans mention avec le Word. Avec la lettre de motivation qui va avec.' },
 ];
@@ -131,7 +131,7 @@ export function LandingPage({ onNavigate }: { onNavigate: (t: Tab) => void }) {
       <section className="bg-white px-4 pt-8 pb-12 sm:pt-14 lg:pb-16">
         {/* Téléphone : titre, scène, puis texte et boutons. Ordinateur : titre et texte à gauche, scène à droite. */}
         <div className="mx-auto grid max-w-6xl items-center gap-x-14 gap-y-6 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.05fr)] lg:grid-rows-[auto_auto]">
-          <h1 className="text-center text-[2.4rem] leading-[1.02] font-bold text-ink sm:text-6xl lg:self-end lg:text-left lg:text-[4.4rem]">Vous racontez. CVCasa écrit votre CV.</h1>
+          <h1 className="text-center text-[2.4rem] leading-[1.02] font-bold text-ink sm:text-6xl lg:self-end lg:text-left lg:text-[4.4rem]">Votre CV prêt en quelques minutes.</h1>
           <div className="relative overflow-hidden rounded-[28px] bg-ink px-4 pt-6 pb-5 sm:px-8 sm:pt-9 lg:col-start-2 lg:row-span-2 lg:row-start-1">
             {/* Trame de points discrète : la scène se détache sans dégradé décoratif. */}
             <div className="pointer-events-none absolute inset-0 opacity-[0.12] [background-image:radial-gradient(#fff_1px,transparent_1px)] [background-size:18px_18px]" />
@@ -141,7 +141,7 @@ export function LandingPage({ onNavigate }: { onNavigate: (t: Tab) => void }) {
           </div>
           <div className="text-center lg:self-start lg:text-left">
             <p className="mx-auto max-w-xl text-base text-slate-600 sm:text-lg lg:mx-0">
-              À l’écrit ou au micro, dans le désordre : votre parcours est rangé, reformulé et mis en page, puis adapté à chaque offre. Créer et télécharger son CV est gratuit.
+              Importez votre ancien CV, écrivez quelques lignes ou dictez si vous préférez : votre parcours est rangé, reformulé et mis en page, puis adapté à chaque offre. Créer et télécharger son CV est gratuit.
             </p>
             <div className="mt-7 flex flex-col items-center justify-center gap-3 sm:flex-row lg:justify-start">
               <Button size="lg" onClick={start} icon={<ArrowRight className="size-5" />}>

@@ -163,6 +163,7 @@ export function TextArea({
   rows = 4,
   hint,
   className,
+  id: givenId,
 }: {
   label?: string;
   value: string;
@@ -171,8 +172,10 @@ export function TextArea({
   rows?: number;
   hint?: ReactNode;
   className?: string;
+  id?: string;
 }) {
-  const id = useId();
+  const autoId = useId();
+  const id = givenId ?? autoId;
   return (
     <div className={className}>
       {label && (

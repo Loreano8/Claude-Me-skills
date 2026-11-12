@@ -209,7 +209,7 @@ ${topBar(from)}
 ${g.intro.slice(1).map((p) => `<p>${esc(p)}</p>`).join('')}
 ${blocks.slice(0, middle).join('\n')}
 ${exampleBlock(g)}
-${cta(g, g.kind === 'lettre' ? 'Une lettre personnalisée pour chaque offre, à partir de votre CV et de vos réponses.' : 'Racontez votre parcours en vrac, à l’écrit ou au micro : CVCasa le met en forme dans un CV clair. Gratuit, sans compte.')}
+${cta(g, g.kind === 'lettre' ? 'Une lettre personnalisée pour chaque offre, à partir de votre CV et de vos réponses.' : 'Importez votre ancien CV ou écrivez votre parcours en vrac : CVCasa le met en forme dans un CV clair. Gratuit, sans compte.')}
 ${blocks.slice(middle).join('\n')}
 <h2 id="questions-frequentes">Questions fréquentes</h2>
 ${faq}
@@ -269,8 +269,8 @@ function landingStatic(): string {
       .join('')}</ul>`,
   ).join('');
   return `<div id="seo-static" style="max-width:760px;margin:0 auto;padding:40px 16px;font:16px/1.6 system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;color:#334155">
-<h1 style="color:#0f172a;font-size:30px;font-weight:800;line-height:1.2;margin:0 0 12px">Vous racontez. CVCasa écrit votre CV.</h1>
-<p>À l’écrit ou au micro, dans le désordre : votre parcours est rangé, reformulé et mis en page, puis adapté à chaque offre. Créer et télécharger son CV est gratuit.</p>
+<h1 style="color:#0f172a;font-size:30px;font-weight:800;line-height:1.2;margin:0 0 12px">Votre CV prêt en quelques minutes.</h1>
+<p>Importez votre ancien CV, écrivez quelques lignes ou dictez si vous préférez : votre parcours est rangé, reformulé et mis en page, puis adapté à chaque offre. Créer et télécharger son CV est gratuit.</p>
 <p style="margin:16px 0"><a href="/#infos" style="display:inline-block;background:#2549eb;color:#fff;text-decoration:none;font-weight:700;border-radius:12px;padding:12px 20px">Créer mon CV gratuitement</a></p>
 <h2 style="color:#0f172a;font-size:21px;font-weight:700;margin:28px 0 8px">Comment ça marche</h2>
 <ol style="list-style:decimal;padding-left:22px"><li>Écrivez ou dictez votre parcours, ou importez votre ancien CV (PDF ou photo).</li><li>Collez l’offre : vous obtenez un CV adapté au poste et un score de compatibilité.</li><li>Téléchargez en PDF et postulez, avec la lettre de motivation qui va avec.</li></ol>
