@@ -142,12 +142,12 @@ export const api = {
   forgotPassword: (identifier: string) => post<{ ok: true; to: string | null }>('/api/auth/forgot', { identifier }),
   resetPassword: (identifier: string, code: string, password: string) => post<Session>('/api/auth/reset', { identifier, code, password }),
 
-  register: (identifier: string, password: string, name: string, referralCode?: string | null) =>
-    post<Session>('/api/auth/register', { identifier, password, name, ...(referralCode ? { referralCode } : {}), ...(pendingSource() ? { source: pendingSource() } : {}) }),
+  register: (identifier: string, password: string, name: string, referralCode?: string | null, captcha = '') =>
+    post<Session>('/api/auth/register', { identifier, password, name, captcha, ...(referralCode ? { referralCode } : {}), ...(pendingSource() ? { source: pendingSource() } : {}) }),
   referral: () => request<{ code: string; invited: number; rewarded: number; bonus: number }>('GET', '/api/referral'),
   login: (identifier: string, password: string) => post<Session>('/api/auth/login', { identifier, password }),
   me: () => request<{ user: AccountUser }>('GET', '/api/me'),
-  health: () => request<{ ai: boolean; accounts: boolean; payments: boolean; email?: boolean }>('GET', '/api/health'),
+  health: () => request<{ ai: boolean; accounts: boolean; payments: boolean; email?: boolean; captcha?: string | null }>('GET', '/api/health'),
   packs: () => request<{ packs: Pack[]; payments: boolean }>('GET', '/api/packs'),
   offer: () => request<ReturnOffer>('GET', '/api/offer'),
   unlock: () => post<{ credits: number | null }>('/api/unlock', {}),
@@ -155,7 +155,7 @@ export const api = {
 
   support: () => request<{ messages: SupportMessage[] }>('GET', '/api/support', undefined, supportHeaders()),
   supportUnread: () => request<{ unread: number }>('GET', '/api/support/unread', undefined, supportHeaders()),
-  supportPost: (m: { body: string; name?: string; contact?: string }) =>
+  supportPost: (m: { body: string; name?: string; contact?: string; captcha?: string }) =>
     request<{ secret?: string; messages: SupportMessage[] }>('POST', '/api/support', m, supportHeaders()),
 
   testimonials: () => request<{ testimonials: PublicTestimonial[] }>('GET', '/api/testimonials'),

@@ -26,14 +26,15 @@ const siteOrigin = (() => {
 export const BUILD_ID = (process.env.RENDER_GIT_COMMIT || process.env.GITHUB_SHA || 'dev').slice(0, 12);
 export const CSP = [
   "default-src 'self'",
-  "script-src 'self' 'wasm-unsafe-eval'",
+  // Vérification anti-robot (Cloudflare Turnstile) : son script et son cadre, sur l'inscription et le contact.
+  "script-src 'self' 'wasm-unsafe-eval' https://challenges.cloudflare.com",
   "style-src 'self' 'unsafe-inline'",
   "img-src 'self' data: blob:",
   "font-src 'self' data:",
   "media-src 'self' blob:",
   "worker-src 'self' blob:",
-  `connect-src 'self' ${apiOrigin} ${siteOrigin} blob: data:`,
-  "frame-src 'none'",
+  `connect-src 'self' ${apiOrigin} ${siteOrigin} https://challenges.cloudflare.com blob: data:`,
+  "frame-src https://challenges.cloudflare.com",
   "object-src 'none'",
   "base-uri 'self'",
   "form-action 'self'",

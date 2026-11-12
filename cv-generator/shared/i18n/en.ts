@@ -1237,4 +1237,5 @@ export const EN: Record<string, string> = {
   "Réponse inattendue. Réessayez.": "Unexpected response. Try again.",
   "Pas de nouvelle offre depuis le dernier envoi. La veille continue.": "No new offers since the last email. Your alerts keep running.",
   "Indiquez un prénom (60 caractères au plus).": "Enter a first name (60 characters at most).",
+  "La vérification anti-robot n’a pas abouti. Réessayez.": "The anti-robot check didn’t go through. Try again.",
 };

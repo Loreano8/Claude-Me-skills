@@ -5,6 +5,7 @@ import { useAccount, type Pack } from '../lib/account.ts';
 import { api, refreshAccount } from '../lib/api.ts';
 import { clearReferral, pendingReferral, referralLink } from '../lib/referral.ts';
 import { Button, cx, Field, Notice } from './ui.tsx';
+import { Captcha } from './Captcha.tsx';
 
 import { LOCALE, t } from '../i18n.ts';
 export function Modal({ title, onClose, children }: { title: string; onClose: () => void; children: ReactNode }) {
@@ -348,8 +349,18 @@ function AccountDialog() {
   const { dialogReason, close, setSession } = useAccount();
   const [mode, setMode] = useState<'register' | 'login' | 'forgot' | 'secure'>('register');
   const [emailOn, setEmailOn] = useState(false);
+  // Clé publique de la vérification anti-robot (null : pas de vérification sur ce serveur).
+  const [captchaKey, setCaptchaKey] = useState<string | null>(null);
+  const [captcha, setCaptcha] = useState('');
+  const [captchaRound, setCaptchaRound] = useState(0);
   useEffect(() => {
-    void api.health().then((h) => setEmailOn(!!h.email), () => {});
+    void api.health().then(
+      (h) => {
+        setEmailOn(!!h.email);
+        setCaptchaKey(h.captcha ?? null);
+      },
+      () => {},
+    );
   }, []);
   const [name, setName] = useState('');
   const [identifier, setIdentifier] = useState('');
@@ -363,7 +374,7 @@ function AccountDialog() {
     setBusy(true);
     setError(null);
     try {
-      const session = mode === 'register' ? await api.register(identifier, password, name, invitedBy) : await api.login(identifier, password);
+      const session = mode === 'register' ? await api.register(identifier, password, name, invitedBy, captcha) : await api.login(identifier, password);
       setSession(session.token, session.user);
       if (mode === 'register') {
         clearReferral();
@@ -374,6 +385,8 @@ function AccountDialog() {
       close();
     } catch (err) {
       setError((err as Error).message);
+      // Un jeton anti-robot ne sert qu'une fois : nouveau jeton pour le prochain essai.
+      if (mode === 'register') setCaptchaRound((n) => n + 1);
     } finally {
       setBusy(false);
     }
@@ -433,7 +446,8 @@ function AccountDialog() {
             {t('Mot de passe oublié ?')}</button>
         )}
         {error && <Notice tone="error">{error}</Notice>}
-        <Button type="submit" size="lg" className="w-full" loading={busy} disabled={!identifier.trim() || !password}>
+        {mode === 'register' && captchaKey && <Captcha siteKey={captchaKey} onToken={setCaptcha} resetKey={captchaRound} />}
+        <Button type="submit" size="lg" className="w-full" loading={busy} disabled={!identifier.trim() || !password || (mode === 'register' && Boolean(captchaKey) && !captcha)}>
           {mode === 'register' ? t('Créer mon compte') : t('Me connecter')}
         </Button>
       </form>

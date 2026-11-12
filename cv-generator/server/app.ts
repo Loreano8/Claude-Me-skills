@@ -15,6 +15,7 @@ import type { Sources } from './sources.ts';
 import { RecoveryInput, type Recovery } from './recovery.ts';
 import { memoryRateLimiter, type RateLimiter } from './rateLimit.ts';
 import { ShareError, type Shares } from './shares.ts';
+import type { Turnstile } from './turnstile.ts';
 import { WatchError, type Watches } from './watch.ts';
 import { LetterTranslateRequest, WatchSaveRequest } from '../shared/schema.ts';
 import { isUiLang, translate, type UiLang } from '../shared/i18n.ts';
@@ -56,6 +57,8 @@ export interface AppOptions {
   apiPublicUrl?: string;
   /** Jeton secret de l'administrateur (ajout manuel de crédits). */
   adminToken?: string;
+  /** Vérification anti-robot (inscription, message sans compte). Absente : pas de vérification. */
+  turnstile?: Turnstile | null;
 }
 
 // Limite simple en mémoire : suffisante pour une seule instance du serveur.
@@ -78,7 +81,7 @@ const Credentials = z.object({
   source: z.string().max(60).optional(),
 });
 
-export function createApp({ fetchPage = fetchJobPage, ai, aiEn = null, allowedOrigins, rateLimitPerHour, accounts = null, payments = null, testimonials = null, support = null, vault = null, recovery = null, sources = null, sessionSecret = '', publicUrl = '', apiPublicUrl = '', adminToken = '', authLimiter = null, shares = null, watches = null, cronSecret = '' }: AppOptions) {
+export function createApp({ fetchPage = fetchJobPage, ai, aiEn = null, allowedOrigins, rateLimitPerHour, accounts = null, payments = null, testimonials = null, support = null, vault = null, recovery = null, sources = null, sessionSecret = '', publicUrl = '', apiPublicUrl = '', adminToken = '', authLimiter = null, shares = null, watches = null, cronSecret = '', turnstile = null }: AppOptions) {
   const app = new Hono();
   const allow = memoryRateLimiter(rateLimitPerHour);
   const allowAuth = authLimiter ?? memoryRateLimiter(20);
@@ -108,7 +111,7 @@ export function createApp({ fetchPage = fetchJobPage, ai, aiEn = null, allowedOr
     // Appelée chaque jour par une tâche automatique : la requête à la base empêche la mise en veille du projet.
     const db = accounts ? await accounts.ping().catch(() => false) : null;
     return c.json(
-      { ok: db !== false, ai: ai !== null, accounts: accounts !== null, payments: payments !== null, email: vault?.emailEnabled ?? false, db },
+      { ok: db !== false, ai: ai !== null, accounts: accounts !== null, payments: payments !== null, email: vault?.emailEnabled ?? false, db, captcha: turnstile?.siteKey ?? null },
       db === false ? 503 : 200,
     );
   });
@@ -135,8 +138,12 @@ export function createApp({ fetchPage = fetchJobPage, ai, aiEn = null, allowedOr
   app.post('/api/auth/register', async (c) => {
     if (!accounts) return c.json({ error: 'Les comptes ne sont pas activés sur ce serveur.' }, 503);
     if (!(await allowAuth(clientKey(c)))) return c.json({ error: 'Trop de tentatives. Réessayez plus tard.' }, 429);
-    const parsed = Credentials.safeParse(await c.req.json().catch(() => null));
+    const raw = (await c.req.json().catch(() => null)) as { captcha?: unknown } | null;
+    const parsed = Credentials.safeParse(raw);
     if (!parsed.success) return c.json({ error: 'Requête invalide.' }, 400);
+    if (turnstile && !(await turnstile.verify(String(raw?.captcha ?? ''), clientKey(c)))) {
+      return c.json({ error: 'La vérification anti-robot n’a pas abouti. Réessayez.', code: 'captcha' }, 400);
+    }
     try {
       const user = await accounts.register({ ...parsed.data, ip: clientKey(c), device: c.req.header('x-device-id') ?? '' });
       return c.json({ token: signToken(user.id, sessionSecret), user: publicUser(user) });
@@ -623,9 +630,14 @@ export function createApp({ fetchPage = fetchJobPage, ai, aiEn = null, allowedOr
   app.post('/api/support', async (c) => {
     if (!support) return supportOff(c);
     if (!(await allowAuth(clientKey(c)))) return c.json({ error: 'Trop de messages en peu de temps. Réessayez plus tard.' }, 429);
-    const parsed = SupportMessageInput.safeParse(await c.req.json().catch(() => null));
+    const raw = (await c.req.json().catch(() => null)) as { captcha?: unknown } | null;
+    const parsed = SupportMessageInput.safeParse(raw);
     if (!parsed.success) return c.json({ error: 'Écrivez votre message (2 000 caractères maximum).' }, 400);
     const who = await supportIdentity(c);
+    // Sans compte, un message demande la vérification anti-robot (contre le spam).
+    if (turnstile && !(await currentUser(c)) && !(await turnstile.verify(String(raw?.captcha ?? ''), clientKey(c)))) {
+      return c.json({ error: 'La vérification anti-robot n’a pas abouti. Réessayez.', code: 'captcha' }, 400);
+    }
     const { threadId: _thread, ...res } = await support.post(who, parsed.data);
     return c.json({ ...res, messages: await support.thread({ ...who, secret: res.secret ?? who.secret }) });
   });

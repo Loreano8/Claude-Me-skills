@@ -4,6 +4,7 @@ import { api, saveSupportSecret, type SupportMessage } from '../lib/api.ts';
 import { useAccount } from '../lib/account.ts';
 import { useSupportBadge } from '../lib/supportBadge.ts';
 import { Button, Card, cx, Field, Notice, TextArea } from '../components/ui.tsx';
+import { Captcha } from '../components/Captcha.tsx';
 
 import { LOCALE, t } from '../i18n.ts';
 const time = (iso: string) =>
@@ -19,6 +20,15 @@ export function ContactPage() {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const end = useRef<HTMLDivElement>(null);
+  // Sans compte : vérification anti-robot (si le serveur l'a activée), contre le spam.
+  const [captchaKey, setCaptchaKey] = useState<string | null>(null);
+  const [captcha, setCaptcha] = useState('');
+  const [captchaRound, setCaptchaRound] = useState(0);
+  useEffect(() => {
+    if (user) return;
+    void api.health().then((h) => setCaptchaKey(h.captcha ?? null), () => {});
+  }, [user]);
+  const needCaptcha = !user && Boolean(captchaKey);
 
   const load = () =>
     api.support().then(
@@ -42,12 +52,14 @@ export function ContactPage() {
     setBusy(true);
     setError(null);
     try {
-      const res = await api.supportPost({ body, name, contact });
+      const res = await api.supportPost({ body, name, contact, ...(needCaptcha ? { captcha } : {}) });
       if (res.secret) saveSupportSecret(res.secret);
       setMessages(res.messages);
       setBody('');
+      if (needCaptcha) setCaptchaRound((n) => n + 1);
     } catch (e) {
       setError((e as Error).message);
+      if (needCaptcha) setCaptchaRound((n) => n + 1);
     } finally {
       setBusy(false);
     }
@@ -102,8 +114,9 @@ export function ContactPage() {
             </div>
           )}
           <TextArea value={body} onChange={setBody} rows={3} placeholder={t('Votre message…')} />
+          {needCaptcha && captchaKey && <Captcha siteKey={captchaKey} onToken={setCaptcha} resetKey={captchaRound} />}
           {error && <Notice tone="error">{error}</Notice>}
-          <Button icon={<Send className="size-4" />} loading={busy} disabled={busy || !body.trim()} onClick={send}>
+          <Button icon={<Send className="size-4" />} loading={busy} disabled={busy || !body.trim() || (needCaptcha && !captcha)} onClick={send}>
             {t('Envoyer')}</Button>
         </div>
       </Card>

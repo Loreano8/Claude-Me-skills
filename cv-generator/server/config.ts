@@ -11,6 +11,7 @@ import { createSupport, notifier } from './support.ts';
 import { createVault, resendMailer } from './vault.ts';
 import { createRecovery } from './recovery.ts';
 import { createSources } from './sources.ts';
+import { createTurnstile } from './turnstile.ts';
 import { claudeWatchSearch, createWatches, type Watches } from './watch.ts';
 
 export type Settings = Record<string, string | undefined>;
@@ -73,6 +74,7 @@ export async function createServer(env: Settings, opts: { db?: Db; migrate?: boo
     shares,
     watches,
     cronSecret: env.CRON_SECRET ?? '',
+    turnstile: createTurnstile(env),
     accounts,
     payments,
     testimonials,
