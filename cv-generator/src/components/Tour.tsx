@@ -4,6 +4,7 @@ import { HelpCircle, X } from 'lucide-react';
 import type { Tab } from '../App.tsx';
 import { Button, cx } from './ui.tsx';
 
+import { t } from '../i18n.ts';
 /**
  * Guide de première visite : à la première ouverture d'une page, des bulles montrent
  * pas à pas les éléments utiles (« Suivant », « Passer »). On peut le relancer avec le bouton « Guide ».
@@ -14,46 +15,46 @@ type Step = { target: string; title: string; text: string };
 
 export const TOURS: Partial<Record<Tab, Step[]>> = {
   infos: [
-    { target: 'quickfill', title: 'Commencez ici', text: 'Pas besoin de remplir les cases une par une. Importez votre ancien CV ou écrivez votre parcours en vrac.' },
-    { target: 'import', title: 'Votre ancien CV', text: 'Un CV en PDF, ou une photo d’un CV papier : tout est repris.' },
-    { target: 'mic', title: 'Pas envie d’écrire ?', text: 'Vous pouvez aussi dicter : appuyez sur le micro et parlez, le texte s’écrit tout seul.' },
-    { target: 'generate', title: 'Générer mon CV', text: 'CVCasa range chaque information dans la bonne rubrique et soigne la rédaction. Rien n’est inventé.' },
-    { target: 'style', title: 'Écrire comme moi', text: 'Montrez un texte que vous avez écrit vous-même : vos CV et lettres garderont votre façon d’écrire.' },
-    { target: 'sections', title: 'Vérifiez et complétez', text: 'Toutes les rubriques restent modifiables à la main. Ouvrez-en une pour la corriger.' },
-    { target: 'live', title: 'Le résultat en direct', text: 'Votre CV se met à jour à chaque modification. Téléchargez-le en PDF quand il vous plaît.' },
+    { target: 'quickfill', title: t('Commencez ici'), text: t('Pas besoin de remplir les cases une par une. Importez votre ancien CV ou écrivez votre parcours en vrac.') },
+    { target: 'import', title: t('Votre ancien CV'), text: t('Un CV en PDF, ou une photo d’un CV papier : tout est repris.') },
+    { target: 'mic', title: t('Pas envie d’écrire ?'), text: t('Vous pouvez aussi dicter : appuyez sur le micro et parlez, le texte s’écrit tout seul.') },
+    { target: 'generate', title: t('Générer mon CV'), text: t('CVCasa range chaque information dans la bonne rubrique et soigne la rédaction. Rien n’est inventé.') },
+    { target: 'style', title: t('Écrire comme moi'), text: t('Montrez un texte que vous avez écrit vous-même : vos CV et lettres garderont votre façon d’écrire.') },
+    { target: 'sections', title: t('Vérifiez et complétez'), text: t('Toutes les rubriques restent modifiables à la main. Ouvrez-en une pour la corriger.') },
+    { target: 'live', title: t('Le résultat en direct'), text: t('Votre CV se met à jour à chaque modification. Téléchargez-le en PDF quand il vous plaît.') },
   ],
   apercu: [
-    { target: 'export', title: 'Télécharger', text: 'Votre CV en PDF, prêt à envoyer ou à imprimer.' },
-    { target: 'preview', title: 'L’aperçu', text: 'Voici exactement ce que recevra le recruteur.' },
-    { target: 'templates', title: 'Changer de modèle', text: 'Un modèle par métier et par pays. Le contenu reste le même, seule la présentation change.' },
-    { target: 'options', title: 'Réglages conseillés', text: 'Pas sûr de mettre la photo ou l’âge ? « Recommandé » règle tout selon l’usage.' },
-    { target: 'translate', title: 'Dans une autre langue', text: 'Votre CV traduit, gardé à côté de l’original.' },
-    { target: 'checks', title: 'Les conseils', text: 'Ce qu’il reste à améliorer pour un CV complet et actuel.' },
+    { target: 'export', title: t('Télécharger'), text: t('Votre CV en PDF, prêt à envoyer ou à imprimer.') },
+    { target: 'preview', title: t('L’aperçu'), text: t('Voici exactement ce que recevra le recruteur.') },
+    { target: 'templates', title: t('Changer de modèle'), text: t('Un modèle par métier et par pays. Le contenu reste le même, seule la présentation change.') },
+    { target: 'options', title: t('Réglages conseillés'), text: t('Pas sûr de mettre la photo ou l’âge ? « Recommandé » règle tout selon l’usage.') },
+    { target: 'translate', title: t('Dans une autre langue'), text: t('Votre CV traduit, gardé à côté de l’original.') },
+    { target: 'checks', title: t('Les conseils'), text: t('Ce qu’il reste à améliorer pour un CV complet et actuel.') },
   ],
   offre: [
-    { target: 'job-link', title: 'Le lien de l’annonce', text: 'Collez le lien de l’offre : CVCasa lit la page pour vous.' },
-    { target: 'job-text', title: 'Ou son texte', text: 'Le lien ne marche pas ? Copiez-collez simplement le texte de l’annonce ici.' },
-    { target: 'job-import', title: 'Ou une capture', text: 'Une annonce en PDF ou une capture d’écran fonctionne aussi.' },
-    { target: 'apply', title: 'Postuler', text: 'Un CV adapté à cette offre, la lettre, ou la préparation de l’entretien. Votre CV d’origine ne change pas.' },
+    { target: 'job-link', title: t('Le lien de l’annonce'), text: t('Collez le lien de l’offre : CVCasa lit la page pour vous.') },
+    { target: 'job-text', title: t('Ou son texte'), text: t('Le lien ne marche pas ? Copiez-collez simplement le texte de l’annonce ici.') },
+    { target: 'job-import', title: t('Ou une capture'), text: t('Une annonce en PDF ou une capture d’écran fonctionne aussi.') },
+    { target: 'apply', title: t('Postuler'), text: t('Un CV adapté à cette offre, la lettre, ou la préparation de l’entretien. Votre CV d’origine ne change pas.') },
   ],
   lettre: [
-    { target: 'letter-generate', title: 'Rédiger la lettre', text: 'Quelques questions rapides d’abord, puis une lettre écrite pour l’offre choisie.' },
-    { target: 'style', title: 'Avec vos mots', text: 'Activez « Écrire comme moi » pour une lettre qui sonne comme vous.' },
-    { target: 'letter-body', title: 'Relisez', text: 'Tout est modifiable : destinataire, objet, chaque paragraphe.' },
-    { target: 'letter-export', title: 'Télécharger', text: 'La lettre en PDF, assortie à votre CV.' },
+    { target: 'letter-generate', title: t('Rédiger la lettre'), text: t('Quelques questions rapides d’abord, puis une lettre écrite pour l’offre choisie.') },
+    { target: 'style', title: t('Avec vos mots'), text: t('Activez « Écrire comme moi » pour une lettre qui sonne comme vous.') },
+    { target: 'letter-body', title: t('Relisez'), text: t('Tout est modifiable : destinataire, objet, chaque paragraphe.') },
+    { target: 'letter-export', title: t('Télécharger'), text: t('La lettre en PDF, assortie à votre CV.') },
   ],
-  suivi: [{ target: 'applications', title: 'Vos candidatures', text: 'Notez où vous avez postulé et où vous en êtes, pour ne relancer personne deux fois.' }],
+  suivi: [{ target: 'applications', title: t('Vos candidatures'), text: t('Notez où vous avez postulé et où vous en êtes, pour ne relancer personne deux fois.') }],
   documents: [
-    { target: 'doc-tabs', title: 'Vos documents', text: 'Vos créations d’un côté, le coffre-fort de vos papiers de l’autre.' },
-    { target: 'creations', title: 'Tout est ici', text: 'Chaque CV, version adaptée ou traduite, et chaque lettre. Rouvrez-les quand vous voulez.' },
+    { target: 'doc-tabs', title: t('Vos documents'), text: t('Vos créations d’un côté, le coffre-fort de vos papiers de l’autre.') },
+    { target: 'creations', title: t('Tout est ici'), text: t('Chaque CV, version adaptée ou traduite, et chaque lettre. Rouvrez-les quand vous voulez.') },
   ],
   scanner: [
-    { target: 'scan', title: 'Scanner', text: 'Prenez une page en photo : elle devient un PDF propre, comme passé au scanner.' },
-    { target: 'add-files', title: 'Depuis vos fichiers', text: 'Des photos déjà prises ou des PDF ? Ajoutez-les ici, puis créez le PDF.' },
+    { target: 'scan', title: t('Scanner'), text: t('Prenez une page en photo : elle devient un PDF propre, comme passé au scanner.') },
+    { target: 'add-files', title: t('Depuis vos fichiers'), text: t('Des photos déjà prises ou des PDF ? Ajoutez-les ici, puis créez le PDF.') },
   ],
   dossier: [
-    { target: 'dossier', title: 'Un seul PDF', text: 'CV, lettre, diplômes, pièce d’identité : tout dans un fichier, dans l’ordre voulu.' },
-    { target: 'scan', title: 'Ajouter un papier', text: 'Prenez-le en photo ou ajoutez un fichier, puis créez le dossier.' },
+    { target: 'dossier', title: t('Un seul PDF'), text: t('CV, lettre, diplômes, pièce d’identité : tout dans un fichier, dans l’ordre voulu.') },
+    { target: 'scan', title: t('Ajouter un papier'), text: t('Prenez-le en photo ou ajoutez un fichier, puis créez le dossier.') },
   ],
 };
 
@@ -208,7 +209,7 @@ export function Tour({ tab }: { tab: Tab }) {
       {!active &&
         slot &&
         createPortal(
-          <button type="button" onClick={start} className="hit flex size-9 items-center justify-center rounded-xl text-slate-600 hover:bg-slate-100" aria-label="Revoir le guide de cette page" title="Guide de cette page">
+          <button type="button" onClick={start} className="hit flex size-9 items-center justify-center rounded-xl text-slate-600 hover:bg-slate-100" aria-label={t('Revoir le guide de cette page')} title={t('Guide de cette page')}>
             <HelpCircle className="size-5" aria-hidden="true" />
           </button>,
           slot,
@@ -239,13 +240,13 @@ export function Tour({ tab }: { tab: Tab }) {
             <div className="flex items-start gap-3">
               <div className="min-w-0 flex-1">
                 <p className="text-xs font-semibold text-brand-700">
-                  Étape {index + 1} sur {visible.length}
+                  {t('Étape {0} sur {1}', [index + 1, visible.length])}
                 </p>
                 <h2 id="tour-title" className="mt-0.5 text-base font-semibold text-slate-900">
                   {step.title}
                 </h2>
               </div>
-              <button type="button" onClick={close} aria-label="Fermer le guide" className="-mt-2 -mr-2 rounded-lg p-2.5 text-slate-500 hover:bg-slate-100 hover:text-slate-700">
+              <button type="button" onClick={close} aria-label={t('Fermer le guide')} className="-mt-2 -mr-2 rounded-lg p-2.5 text-slate-500 hover:bg-slate-100 hover:text-slate-700">
                 <X className="size-4" />
               </button>
             </div>
@@ -260,17 +261,15 @@ export function Tour({ tab }: { tab: Tab }) {
             <div className="mt-3 flex items-center gap-2">
               {!last && (
                 <button type="button" onClick={close} className="min-h-9 px-1 text-sm font-medium text-slate-600 hover:text-slate-900">
-                  Passer
-                </button>
+                  {t('Passer')}</button>
               )}
               <div className="ml-auto flex gap-2">
                 {index > 0 && (
                   <Button variant="secondary" size="sm" onClick={() => setIndex(index - 1)}>
-                    Précédent
-                  </Button>
+                    {t('Précédent')}</Button>
                 )}
                 <Button data-next size="sm" onClick={() => (last ? close() : setIndex(index + 1))}>
-                  {last ? 'Terminer' : 'Suivant'}
+                  {last ? t('Terminer') : t('Suivant')}
                 </Button>
               </div>
             </div>

@@ -5,6 +5,7 @@ import { formatSize } from '../lib/dossier.ts';
 import { Modal } from './AccountDialogs.tsx';
 import { Button, Notice } from './ui.tsx';
 
+import { t } from '../i18n.ts';
 /** Appli Android : « Enregistrer sur le téléphone » (dossier au choix) ou « Envoyer » (WhatsApp, e-mail…). */
 export function SaveDialog() {
   const pending = useSaveDialog((s) => s.pending);
@@ -38,22 +39,20 @@ export function SaveDialog() {
   }
 
   return (
-    <Modal title="Votre fichier est prêt" onClose={close}>
+    <Modal title={t('Votre fichier est prêt')} onClose={close}>
       <p className="mb-4 truncate text-sm text-slate-600">
         {pending.fileName} · {formatSize(pending.blob.size)}
       </p>
       <div className="grid gap-2">
         <Button size="lg" icon={<FileDown className="size-5" />} loading={busy === 'save'} disabled={busy !== null} onClick={() => void run('save')}>
-          Enregistrer sur le téléphone
-        </Button>
+          {t('Enregistrer sur le téléphone')}</Button>
         <Button size="lg" variant="secondary" icon={<Share2 className="size-5" />} loading={busy === 'share'} disabled={busy !== null} onClick={() => void run('share')}>
-          Envoyer (WhatsApp, e-mail…)
-        </Button>
+          {t('Envoyer (WhatsApp, e-mail…)')}</Button>
       </div>
-      <p className="mt-2 text-xs text-slate-500">« Enregistrer » vous laisse choisir le dossier : Téléchargements, Documents, carte SD, Drive…</p>
+      <p className="mt-2 text-xs text-slate-500">{t('« Enregistrer » vous laisse choisir le dossier : Téléchargements, Documents, carte SD, Drive…')}</p>
       {saved && (
         <div className="mt-3">
-          <Notice tone="success">Fichier enregistré. Vous le retrouverez dans l’appli « Fichiers » de votre téléphone.</Notice>
+          <Notice tone="success">{t('Fichier enregistré. Vous le retrouverez dans l’appli « Fichiers » de votre téléphone.')}</Notice>
         </div>
       )}
       {error && (
@@ -62,7 +61,7 @@ export function SaveDialog() {
         </div>
       )}
       <Button className="mt-3 w-full" variant="ghost" onClick={close}>
-        {saved ? 'Terminé' : 'Fermer'}
+        {saved ? t('Terminé') : t('Fermer')}
       </Button>
     </Modal>
   );

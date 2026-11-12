@@ -6,6 +6,7 @@ import { api, refreshAccount } from '../lib/api.ts';
 import { clearReferral, pendingReferral, referralLink } from '../lib/referral.ts';
 import { Button, cx, Field, Notice } from './ui.tsx';
 
+import { LOCALE, t } from '../i18n.ts';
 export function Modal({ title, onClose, children }: { title: string; onClose: () => void; children: ReactNode }) {
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => e.key === 'Escape' && onClose();
@@ -17,7 +18,7 @@ export function Modal({ title, onClose, children }: { title: string; onClose: ()
       <div role="dialog" aria-modal="true" aria-label={title} className="max-h-[92dvh] w-full overflow-y-auto rounded-t-3xl bg-white p-5 pb-[max(1.25rem,env(safe-area-inset-bottom))] shadow-2xl sm:max-w-md sm:rounded-3xl">
         <div className="mb-4 flex items-center justify-between">
           <h2 className="text-lg font-semibold text-slate-900">{title}</h2>
-          <button type="button" onClick={onClose} aria-label="Fermer" className="hit rounded-full p-2 text-slate-500 hover:bg-slate-100">
+          <button type="button" onClick={onClose} aria-label={t('Fermer')} className="hit rounded-full p-2 text-slate-500 hover:bg-slate-100">
             <X className="size-5" />
           </button>
         </div>
@@ -68,8 +69,7 @@ function RecoveryForm({ initial, onBack }: { initial: string; onBack: () => void
     return (
       <div className="space-y-3">
         <Notice tone="success">
-          Votre demande est bien prise en compte. Nous vérifions vos réponses et vous envoyons un mot de passe provisoire dans « Nous contacter », en général dans la journée.
-        </Notice>
+          {t('Votre demande est bien prise en compte. Nous vérifions vos réponses et vous envoyons un mot de passe provisoire dans « Nous contacter », en général dans la journée.')}</Notice>
         <Button
           className="w-full"
           onClick={() => {
@@ -77,42 +77,39 @@ function RecoveryForm({ initial, onBack }: { initial: string; onBack: () => void
             window.location.hash = 'contact';
           }}
         >
-          Voir ma demande
-        </Button>
+          {t('Voir ma demande')}</Button>
       </div>
     );
   }
 
   return (
     <div className="space-y-3">
-      <p className="text-sm text-slate-600">Répondez à ces questions : elles nous permettent de vérifier que le compte est bien le vôtre.</p>
-      <Field label="E-mail ou téléphone du compte" value={identifier} onChange={setIdentifier} autoComplete="username" />
-      <Field label="Prénom indiqué sur le compte" value={name} onChange={setName} autoComplete="given-name" />
+      <p className="text-sm text-slate-600">{t('Répondez à ces questions : elles nous permettent de vérifier que le compte est bien le vôtre.')}</p>
+      <Field label={t('E-mail ou téléphone du compte')} value={identifier} onChange={setIdentifier} autoComplete="username" />
+      <Field label={t('Prénom indiqué sur le compte')} value={name} onChange={setName} autoComplete="given-name" />
       <Field
-        label={question ? `Votre question secrète : ${question}` : 'Votre phrase secrète'}
+        label={question ? t('Votre question secrète : {0}', [question]) : t('Votre phrase secrète')}
         value={phrase}
         onChange={setPhrase}
-        hint={question ? 'Majuscules et accents ne comptent pas.' : 'Si vous en avez défini une dans « Mes crédits ». Majuscules et accents ne comptent pas.'}
+        hint={question ? t('Majuscules et accents ne comptent pas.') : t('Si vous en avez défini une dans « Mes crédits ». Majuscules et accents ne comptent pas.')}
       />
       <label className="block">
-        <span className="mb-1 block text-sm font-medium text-slate-700">Votre dernier achat de crédits</span>
+        <span className="mb-1 block text-sm font-medium text-slate-700">{t('Votre dernier achat de crédits')}</span>
         <select value={lastPurchase} onChange={(e) => setLastPurchase(e.target.value)} className="w-full rounded-xl bg-white px-3 py-2.5 text-sm ring-1 ring-slate-300">
-          <option value="unknown">Je ne sais plus</option>
-          <option value="none">Je n’ai jamais acheté</option>
-          <option value="500">500 FCFA</option>
-          <option value="1500">1 500 FCFA</option>
-          <option value="3000">3 000 FCFA</option>
+          <option value="unknown">{t('Je ne sais plus')}</option>
+          <option value="none">{t('Je n’ai jamais acheté')}</option>
+          <option value="500">{t('500 FCFA')}</option>
+          <option value="1500">{t('1 500 FCFA')}</option>
+          <option value="3000">{t('3 000 FCFA')}</option>
         </select>
       </label>
-      <Field label="Crédits qu’il vous restait (environ, facultatif)" type="number" value={credits} onChange={setCredits} />
-      <Field label="Autre précision (facultatif)" value={note} onChange={setNote} />
+      <Field label={t('Crédits qu’il vous restait (environ, facultatif)')} type="number" value={credits} onChange={setCredits} />
+      <Field label={t('Autre précision (facultatif)')} value={note} onChange={setNote} />
       {error && <Notice tone="error">{error}</Notice>}
       <Button className="w-full" loading={busy} disabled={busy || identifier.trim().length < 3} onClick={() => void send()}>
-        Envoyer ma demande
-      </Button>
+        {t('Envoyer ma demande')}</Button>
       <button type="button" className="w-full text-center text-sm font-semibold text-brand-700" onClick={onBack}>
-        Retour à la connexion
-      </button>
+        {t('Retour à la connexion')}</button>
     </div>
   );
 }
@@ -161,49 +158,46 @@ function ForgotPassword({ initial, emailOn, onBack }: { initial: string; emailOn
     <div className="space-y-3">
       {!sent ? (
         <>
-          <p className="text-sm text-slate-600">Indiquez l’e-mail de votre compte : nous vous envoyons un code pour choisir un nouveau mot de passe.</p>
-          <Field label="E-mail du compte" value={identifier} onChange={setIdentifier} autoComplete="username" />
+          <p className="text-sm text-slate-600">{t('Indiquez l’e-mail de votre compte : nous vous envoyons un code pour choisir un nouveau mot de passe.')}</p>
+          <Field label={t('E-mail du compte')} value={identifier} onChange={setIdentifier} autoComplete="username" />
           <Button className="w-full" loading={busy} disabled={busy || !identifier.includes('@')} onClick={() => void send()}>
-            M’envoyer un code
-          </Button>
+            {t('M’envoyer un code')}</Button>
         </>
       ) : (
         <>
-          <Notice tone="info">Si un compte existe avec cette adresse, un code vient d’y être envoyé (pensez aux spams).</Notice>
-          <Field label="Code reçu (6 chiffres)" value={code} onChange={(v) => setCode(v.replace(/\D/g, '').slice(0, 6))} />
-          <Field label="Nouveau mot de passe" type="password" value={password} onChange={setPassword} autoComplete="new-password" hint="8 caractères minimum." />
+          <Notice tone="info">{t('Si un compte existe avec cette adresse, un code vient d’y être envoyé (pensez aux spams).')}</Notice>
+          <Field label={t('Code reçu (6 chiffres)')} value={code} onChange={(v) => setCode(v.replace(/\D/g, '').slice(0, 6))} />
+          <Field label={t('Nouveau mot de passe')} type="password" value={password} onChange={setPassword} autoComplete="new-password" hint={t('8 caractères minimum.')} />
           <Button className="w-full" loading={busy} disabled={busy || code.length !== 6 || password.length < 8} onClick={() => void reset()}>
-            Changer mon mot de passe
-          </Button>
+            {t('Changer mon mot de passe')}</Button>
         </>
       )}
       {error && <Notice tone="error">{error}</Notice>}
       <button type="button" className="w-full text-center text-sm text-slate-600" onClick={() => setForm(true)}>
-        Plus accès à cet e-mail, ou compte avec un numéro de téléphone ? <span className="font-semibold text-brand-700">Faire une demande</span>
+        {t('Plus accès à cet e-mail, ou compte avec un numéro de téléphone ?')}{' '}<span className="font-semibold text-brand-700">{t('Faire une demande')}</span>
       </button>
       <button type="button" className="w-full text-center text-sm font-semibold text-brand-700" onClick={onBack}>
-        Retour à la connexion
-      </button>
+        {t('Retour à la connexion')}</button>
     </div>
   );
 }
 
 const QUESTIONS = [
-  'Quel est le prénom de votre grand-mère ?',
-  'Quel était le nom de votre premier animal ?',
-  'Dans quelle ville est né votre père ?',
-  'Quel est le nom de votre école primaire ?',
-  'Quel était votre plat préféré quand vous étiez enfant ?',
-  'Quel est le surnom que vous donnait votre famille ?',
+  t('Quel est le prénom de votre grand-mère ?'),
+  t('Quel était le nom de votre premier animal ?'),
+  t('Dans quelle ville est né votre père ?'),
+  t('Quel est le nom de votre école primaire ?'),
+  t('Quel était votre plat préféré quand vous étiez enfant ?'),
+  t('Quel est le surnom que vous donnait votre famille ?'),
 ];
 
 /** Ce que coûte chaque action, en une ligne chacune. */
 const PRICES: [string, string][] = [
-  ['Remplir son CV à la main et le télécharger en PDF', 'Gratuit'],
-  ['Une action : générer ou corriger le CV, l’adapter à une offre, la lettre, la fiche entretien, la traduction', '1 crédit'],
-  ['Version Pro d’un CV, pour toujours : sans mention, 13 modèles, Word', '2 crédits'],
-  ['Scanner ou dossier PDF : gratuit jusqu’à 2 pages ou 2 pièces, puis', '1 crédit'],
-  ['Texte écrit à la main tapé au propre, par page', '1 crédit'],
+  [t('Remplir son CV à la main et le télécharger en PDF'), t('Gratuit')],
+  [t('Une action : générer ou corriger le CV, l’adapter à une offre, la lettre, la fiche entretien, la traduction'), t('1 crédit')],
+  [t('Version Pro d’un CV, pour toujours : sans mention, 13 modèles, Word'), t('2 crédits')],
+  [t('Scanner ou dossier PDF : gratuit jusqu’à 2 pages ou 2 pièces, puis'), t('1 crédit')],
+  [t('Texte écrit à la main tapé au propre, par page'), t('1 crédit')],
 ];
 
 /** « Mes crédits » : phrase ou question secrète (récupération du compte) et changement de mot de passe. */
@@ -252,34 +246,30 @@ function AccountSecurity({ onboarding = false, onSaved }: { onboarding?: boolean
     <div className={onboarding ? '' : 'mt-5 rounded-2xl border border-slate-200 p-4'}>
       {!onboarding && (
         <p className="flex items-center gap-2 font-semibold text-slate-900">
-          <ShieldCheck className="size-5 text-emerald-600" /> Sécurité du compte
-        </p>
+          <ShieldCheck className="size-5 text-emerald-600" /> {' '}{t('Sécurité du compte')}</p>
       )}
       {secretSet === false && !onboarding && (
         <p className="mt-1 text-sm text-amber-800">
-          Définissez une phrase ou une question secrète : elle vous permettra de récupérer votre compte si vous oubliez votre mot de passe.
-        </p>
+          {t('Définissez une phrase ou une question secrète : elle vous permettra de récupérer votre compte si vous oubliez votre mot de passe.')}</p>
       )}
       {secretSet && (
         <p className="mt-1 text-sm text-emerald-800">
-          {savedQuestion ? `Question secrète définie : « ${savedQuestion} ».` : 'Phrase secrète définie.'} Gardez la réponse en mémoire, ne la donnez à personne.
-        </p>
+          {t('{0} Gardez la réponse en mémoire, ne la donnez à personne.', [savedQuestion ? t('Question secrète définie : « {0} ».', [savedQuestion]) : t('Phrase secrète définie.')])}</p>
       )}
       <div className={cx('mt-3 flex flex-wrap gap-2', onboarding && 'hidden')}>
         <Button size="sm" variant={secretSet ? 'secondary' : 'primary'} onClick={() => setOpen(open === 'phrase' ? null : 'phrase')}>
-          {secretSet ? 'Changer ma phrase ou question secrète' : 'Définir ma phrase ou question secrète'}
+          {secretSet ? t('Changer ma phrase ou question secrète') : t('Définir ma phrase ou question secrète')}
         </Button>
         <Button size="sm" variant="secondary" onClick={() => setOpen(open === 'password' ? null : 'password')}>
-          Changer mon mot de passe
-        </Button>
+          {t('Changer mon mot de passe')}</Button>
       </div>
       {open === 'phrase' && (
         <div className="mt-3 space-y-2">
           <div className="grid grid-cols-2 gap-1 rounded-xl bg-slate-100 p-1">
             {(
               [
-                ['phrase', 'Phrase secrète'],
-                ['question', 'Question secrète'],
+                ['phrase', t('Phrase secrète')],
+                ['question', t('Question secrète')],
               ] as const
             ).map(([id, label]) => (
               <button
@@ -295,27 +285,27 @@ function AccountSecurity({ onboarding = false, onSaved }: { onboarding?: boolean
           {kind === 'question' && (
             <>
               <label className="block">
-                <span className="mb-1 block text-sm font-medium text-slate-700">Question</span>
+                <span className="mb-1 block text-sm font-medium text-slate-700">{t('Question')}</span>
                 <select value={choice} onChange={(e) => setChoice(e.target.value)} className="w-full rounded-xl bg-white px-3 py-2.5 text-sm ring-1 ring-slate-300">
                   {QUESTIONS.map((q) => (
                     <option key={q} value={q}>
                       {q}
                     </option>
                   ))}
-                  <option value="">Écrire ma propre question…</option>
+                  <option value="">{t('Écrire ma propre question…')}</option>
                 </select>
               </label>
-              {choice === '' && <Field label="Ma question" value={custom} onChange={setCustom} hint="Une question dont vous seul connaissez la réponse." />}
+              {choice === '' && <Field label={t('Ma question')} value={custom} onChange={setCustom} hint={t('Une question dont vous seul connaissez la réponse.')} />}
             </>
           )}
           <Field
-            label={kind === 'question' ? 'Réponse' : 'Phrase secrète'}
+            label={kind === 'question' ? t('Réponse') : t('Phrase secrète')}
             value={phrase}
             onChange={setPhrase}
             hint={
               kind === 'question'
-                ? 'Majuscules et accents ne comptent pas.'
-                : 'Un mot ou quelques mots faciles à retenir pour vous, difficiles à deviner pour les autres. Plus c’est long, plus c’est sûr.'
+                ? t('Majuscules et accents ne comptent pas.')
+                : t('Un mot ou quelques mots faciles à retenir pour vous, difficiles à deviner pour les autres. Plus c’est long, plus c’est sûr.')
             }
           />
           <Button
@@ -330,21 +320,19 @@ function AccountSecurity({ onboarding = false, onSaved }: { onboarding?: boolean
                     setSecretSet(true);
                     setSavedQuestion(q);
                   }),
-                q ? 'Question secrète enregistrée.' : 'Phrase secrète enregistrée.',
+                q ? t('Question secrète enregistrée.') : t('Phrase secrète enregistrée.'),
               );
             }}
           >
-            Enregistrer
-          </Button>
+            {t('Enregistrer')}</Button>
         </div>
       )}
       {open === 'password' && (
         <div className="mt-3 space-y-2">
-          <Field label="Mot de passe actuel (ou provisoire)" type="password" value={current} onChange={setCurrent} autoComplete="current-password" />
-          <Field label="Nouveau mot de passe" type="password" value={next} onChange={setNext} autoComplete="new-password" hint="8 caractères minimum." />
-          <Button size="sm" loading={busy} disabled={busy || !current || next.length < 8} onClick={() => void run(() => api.changePassword(current, next), 'Mot de passe changé.')}>
-            Changer
-          </Button>
+          <Field label={t('Mot de passe actuel (ou provisoire)')} type="password" value={current} onChange={setCurrent} autoComplete="current-password" />
+          <Field label={t('Nouveau mot de passe')} type="password" value={next} onChange={setNext} autoComplete="new-password" hint={t('8 caractères minimum.')} />
+          <Button size="sm" loading={busy} disabled={busy || !current || next.length < 8} onClick={() => void run(() => api.changePassword(current, next), t('Mot de passe changé.'))}>
+            {t('Changer')}</Button>
         </div>
       )}
       {message && (
@@ -393,31 +381,29 @@ function AccountDialog() {
 
   if (mode === 'secure') {
     return (
-      <Modal title="Sécurisez votre compte" onClose={close}>
+      <Modal title={t('Sécurisez votre compte')} onClose={close}>
         <div className="mb-3">
-          <Notice tone="success">Compte créé ! Dernière étape, 10 secondes :</Notice>
+          <Notice tone="success">{t('Compte créé ! Dernière étape, 10 secondes :')}</Notice>
         </div>
         <p className="mb-3 text-sm text-slate-600">
-          Choisissez une phrase ou une question secrète. Si un jour vous oubliez votre mot de passe, elle nous permettra de vérifier que le compte est bien le vôtre.
-        </p>
+          {t('Choisissez une phrase ou une question secrète. Si un jour vous oubliez votre mot de passe, elle nous permettra de vérifier que le compte est bien le vôtre.')}</p>
         <AccountSecurity onboarding onSaved={close} />
         <button type="button" onClick={close} className="mt-4 w-full text-center text-sm text-slate-500">
-          Plus tard (dans « Mes crédits »)
-        </button>
+          {t('Plus tard (dans « Mes crédits »)')}</button>
       </Modal>
     );
   }
 
   if (mode === 'forgot') {
     return (
-      <Modal title="Mot de passe oublié" onClose={close}>
+      <Modal title={t('Mot de passe oublié')} onClose={close}>
         <ForgotPassword initial={identifier} emailOn={emailOn} onBack={() => setMode('login')} />
       </Modal>
     );
   }
 
   return (
-    <Modal title={mode === 'register' ? 'Créer mon compte' : 'Me connecter'} onClose={close}>
+    <Modal title={mode === 'register' ? t('Créer mon compte') : t('Me connecter')} onClose={close}>
       {dialogReason && (
         <div className="mb-3">
           <Notice tone="info">{dialogReason}</Notice>
@@ -425,47 +411,44 @@ function AccountDialog() {
       )}
       {mode === 'register' && (
         <div className="mb-4 flex items-center gap-2 rounded-xl bg-brand-50 px-3 py-2.5 text-sm text-brand-900">
-          <Gift className="size-4 shrink-0" /> Gratuit : votre premier crédit est offert.
-        </div>
+          <Gift className="size-4 shrink-0" /> {' '}{t('Gratuit : votre premier crédit est offert.')}</div>
       )}
       {mode === 'register' && invitedBy && (
         <div className="mb-4 flex items-center gap-2 rounded-xl bg-emerald-50 px-3 py-2.5 text-sm text-emerald-900">
-          <Gift className="size-4 shrink-0" /> Invité par un ami : 1 crédit en plus à votre premier achat.
-        </div>
+          <Gift className="size-4 shrink-0" /> {' '}{t('Invité par un ami : 1 crédit en plus à votre premier achat.')}</div>
       )}
       <form onSubmit={submit} className="space-y-3">
-        {mode === 'register' && <Field label="Prénom" value={name} onChange={setName} autoComplete="given-name" />}
-        <Field label="E-mail ou numéro de téléphone" value={identifier} onChange={setIdentifier} autoComplete="username" />
+        {mode === 'register' && <Field label={t('Prénom')} value={name} onChange={setName} autoComplete="given-name" />}
+        <Field label={t('E-mail ou numéro de téléphone')} value={identifier} onChange={setIdentifier} autoComplete="username" />
         <Field
-          label="Mot de passe"
+          label={t('Mot de passe')}
           type="password"
           value={password}
           onChange={setPassword}
           autoComplete={mode === 'register' ? 'new-password' : 'current-password'}
-          hint={mode === 'register' ? '8 caractères minimum.' : undefined}
+          hint={mode === 'register' ? t('8 caractères minimum.') : undefined}
         />
         {mode === 'login' && (
           <button type="button" className="hit min-h-8 text-sm font-medium text-brand-700" onClick={() => (setMode('forgot'), setError(null))}>
-            Mot de passe oublié ?
-          </button>
+            {t('Mot de passe oublié ?')}</button>
         )}
         {error && <Notice tone="error">{error}</Notice>}
         <Button type="submit" size="lg" className="w-full" loading={busy} disabled={!identifier.trim() || !password}>
-          {mode === 'register' ? 'Créer mon compte' : 'Me connecter'}
+          {mode === 'register' ? t('Créer mon compte') : t('Me connecter')}
         </Button>
       </form>
       <p className="mt-4 text-center text-sm text-slate-600">
-        {mode === 'register' ? 'Déjà un compte ?' : 'Pas encore de compte ?'}{' '}
+        {mode === 'register' ? t('Déjà un compte ?') : t('Pas encore de compte ?')}{' '}
         <button type="button" className="hit min-h-8 font-semibold text-brand-700" onClick={() => (setMode(mode === 'register' ? 'login' : 'register'), setError(null))}>
-          {mode === 'register' ? 'Se connecter' : 'Créer un compte'}
+          {mode === 'register' ? t('Se connecter') : t('Créer un compte')}
         </button>
       </p>
-      <p className="mt-3 text-center text-xs text-slate-500">Vos CV restent sur votre appareil. Le compte sert uniquement à gérer vos crédits.</p>
+      <p className="mt-3 text-center text-xs text-slate-500">{t('Vos CV restent sur votre appareil. Le compte sert uniquement à gérer vos crédits.')}</p>
     </Modal>
   );
 }
 
-const fcfa = (n: number) => `${n.toLocaleString('fr-FR')} FCFA`;
+const fcfa = (n: number) => `${n.toLocaleString(LOCALE)} FCFA`;
 
 /** « Invite tes amis » : lien personnel, partage WhatsApp, et résultats. */
 function ReferralCard() {
@@ -476,7 +459,7 @@ function ReferralCard() {
   }, []);
   if (!info) return null;
   const link = referralLink(info.code);
-  const message = `J’ai fait mon CV avec CVCasa : il s’adapte à chaque offre d’emploi. Essaie gratuitement : ${link}`;
+  const message = t('J’ai fait mon CV avec CVCasa : il s’adapte à chaque offre d’emploi. Essaie gratuitement : {0}', [link]);
 
   async function share() {
     if (Capacitor.isNativePlatform()) {
@@ -492,16 +475,14 @@ function ReferralCard() {
   return (
     <div className="mt-5 rounded-2xl border border-emerald-200 bg-emerald-50 p-4">
       <p className="flex items-center gap-2 font-semibold text-emerald-900">
-        <Gift className="size-5" /> Invite tes amis, gagne des crédits
-      </p>
+        <Gift className="size-5" /> {' '}{t('Invite tes amis, gagne des crédits')}</p>
       <p className="mt-1 text-sm text-emerald-900">
-        Quand un ami inscrit avec ton lien achète son premier pack, vous recevez chacun {info.bonus} crédit offert.
-      </p>
+        {t('Quand un ami inscrit avec ton lien achète son premier pack, vous recevez chacun {0} crédit offert.', [info.bonus])}</p>
       <div className="mt-3 flex items-center gap-2 rounded-xl bg-white px-3 py-2 ring-1 ring-emerald-200">
         <span className="min-w-0 flex-1 truncate text-sm text-slate-700">{link}</span>
         <button
           type="button"
-          aria-label="Copier le lien"
+          aria-label={t('Copier le lien')}
           className="shrink-0 rounded-lg p-1.5 text-emerald-700 hover:bg-emerald-50"
           onClick={() => {
             void navigator.clipboard?.writeText(link).then(() => {
@@ -515,11 +496,10 @@ function ReferralCard() {
       </div>
       <div className="mt-3 flex flex-wrap items-center gap-2">
         <Button size="sm" icon={<Share2 className="size-4" />} onClick={() => void share()}>
-          Partager (WhatsApp…)
-        </Button>
+          {t('Partager (WhatsApp…)')}</Button>
         <span className="text-xs text-emerald-900">
-          Code <strong className="tracking-wider">{info.code}</strong> · {info.invited} ami{info.invited > 1 ? 's' : ''} inscrit{info.invited > 1 ? 's' : ''} ·{' '}
-          {info.rewarded} récompense{info.rewarded > 1 ? 's' : ''}
+          {t('Code')}{' '}<strong className="tracking-wider">{info.code}</strong> {' '}{t('· {0} ami{1} inscrit{2} ·', [info.invited, info.invited > 1 ? 's' : '', info.invited > 1 ? 's' : ''])}{' '}
+          {t('{0} récompense{1}', [info.rewarded, info.rewarded > 1 ? 's' : ''])}
         </span>
       </div>
     </div>
@@ -529,7 +509,7 @@ function ReferralCard() {
 /** « jeudi 30 octobre à 14 h » */
 export function offerEnd(iso: string): string {
   const d = new Date(iso);
-  return `${d.toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long' })} à ${d.getHours()} h`;
+  return t('{0} à {1} h', [d.toLocaleDateString(LOCALE, { weekday: 'long', day: 'numeric', month: 'long' }), d.getHours()]);
 }
 
 function CreditsDialog() {
@@ -576,7 +556,7 @@ function CreditsDialog() {
   const offerOpen = offer && new Date(offer.expiresAt).getTime() > Date.now() ? offer : null;
 
   return (
-    <Modal title="Mes crédits" onClose={close}>
+    <Modal title={t('Mes crédits')} onClose={close}>
       {user && (
         <div className="mb-4 flex items-center gap-3 rounded-2xl bg-brand-50 p-3">
           <span className="flex size-11 items-center justify-center rounded-full bg-brand-600 text-white">
@@ -584,7 +564,7 @@ function CreditsDialog() {
           </span>
           <div className="flex-1">
             <p className="text-2xl font-bold text-slate-900">
-              {user.credits} <span className="text-sm font-medium text-slate-600">crédit{user.credits > 1 ? 's' : ''}</span>
+              {user.credits} <span className="text-sm font-medium text-slate-600">{t('crédit{0}', [user.credits > 1 ? 's' : ''])}</span>
             </p>
             <p className="truncate text-xs text-slate-500">{user.identifier}</p>
           </div>
@@ -596,7 +576,7 @@ function CreditsDialog() {
         </div>
       )}
       <table className="mb-3 w-full text-sm">
-        <caption className="sr-only">Ce que coûte chaque action</caption>
+        <caption className="sr-only">{t('Ce que coûte chaque action')}</caption>
         <tbody className="divide-y divide-slate-100">
           {PRICES.map(([what, price]) => (
             <tr key={what}>
@@ -613,9 +593,9 @@ function CreditsDialog() {
           <div className="flex items-center gap-3 rounded-2xl border-2 border-amber-400 bg-amber-50 p-3">
             <div className="flex-1">
               <p className="font-semibold text-slate-900">
-                {offerOpen.pack.credits} crédits <span className="ml-1 rounded-full bg-amber-200 px-2 py-0.5 text-xs font-semibold text-amber-900">Offre de retour</span>
+                {t('{0} crédits', [offerOpen.pack.credits])}{' '}<span className="ml-1 rounded-full bg-amber-200 px-2 py-0.5 text-xs font-semibold text-amber-900">{t('Offre de retour')}</span>
               </p>
-              <p className="text-sm text-slate-600">1 crédit offert en plus, jusqu’au {offerEnd(offerOpen.expiresAt)}. Une seule fois.</p>
+              <p className="text-sm text-slate-600">{t('1 crédit offert en plus, jusqu’au {0}. Une seule fois.', [offerEnd(offerOpen.expiresAt)])}</p>
             </div>
             <Button size="sm" loading={busy === offerOpen.pack.id} disabled={!paymentsOn || busy !== null} onClick={() => buy(offerOpen.pack)}>
               {fcfa(offerOpen.pack.price)}
@@ -626,12 +606,11 @@ function CreditsDialog() {
           <div key={p.id} className={cx('flex items-center gap-3 rounded-2xl border-2 p-3', p.id === best ? 'border-brand-500' : 'border-slate-200')}>
             <div className="flex-1">
               <p className="font-semibold text-slate-900">
-                {p.credits} crédits{' '}
-                {p.id === best && <span className="ml-1 rounded-full bg-brand-100 px-2 py-0.5 text-xs font-semibold text-brand-800">Le plus choisi</span>}
+                {t('{0} crédits', [p.credits])}{' '}
+                {p.id === best && <span className="ml-1 rounded-full bg-brand-100 px-2 py-0.5 text-xs font-semibold text-brand-800">{t('Le plus choisi')}</span>}
               </p>
               <p className="text-sm text-slate-500">
-                {p.name} · {fcfa(Math.round(p.price / p.credits))} le crédit
-              </p>
+                {t('{0} · {1} le crédit', [p.name, fcfa(Math.round(p.price / p.credits))])}</p>
             </div>
             <Button size="sm" loading={busy === p.id} disabled={!paymentsOn || busy !== null} onClick={() => buy(p)}>
               {fcfa(p.price)}
@@ -641,11 +620,10 @@ function CreditsDialog() {
         {!packs && !error && <div className="h-40 animate-pulse rounded-2xl bg-slate-100" />}
       </div>
       <p className="mt-3 flex items-center gap-1.5 text-xs text-slate-500">
-        <Check className="size-3.5" /> Paiement sécurisé par FedaPay : MTN MoMo ou Moov Money.
-      </p>
+        <Check className="size-3.5" /> {' '}{t('Paiement sécurisé par FedaPay : MTN MoMo ou Moov Money.')}</p>
       {!paymentsOn && (
         <div className="mt-3">
-          <Notice tone="info">Le paiement en ligne sera ouvert très bientôt.</Notice>
+          <Notice tone="info">{t('Le paiement en ligne sera ouvert très bientôt.')}</Notice>
         </div>
       )}
       {error && (
@@ -664,8 +642,7 @@ function CreditsDialog() {
           }}
           className="mt-5 flex items-center gap-1.5 text-sm text-slate-500 hover:text-slate-800"
         >
-          <LogOut className="size-4" /> Se déconnecter
-        </button>
+          <LogOut className="size-4" /> {' '}{t('Se déconnecter')}</button>
       )}
     </Modal>
   );
@@ -684,8 +661,8 @@ export function AccountButton() {
   if (!enabled) return null;
   if (!user) {
     return (
-      <button type="button" aria-label="Se connecter" onClick={() => open('account')} className="hit flex items-center gap-1.5 rounded-xl bg-brand-600 px-3 py-2 text-sm font-medium whitespace-nowrap text-white hover:bg-brand-700">
-        <UserRound className="size-4" /> <span className="hidden sm:inline">Se connecter</span>
+      <button type="button" aria-label={t('Se connecter')} onClick={() => open('account')} className="hit flex items-center gap-1.5 rounded-xl bg-brand-600 px-3 py-2 text-sm font-medium whitespace-nowrap text-white hover:bg-brand-700">
+        <UserRound className="size-4" /> <span className="hidden sm:inline">{t('Se connecter')}</span>
       </button>
     );
   }
@@ -693,7 +670,7 @@ export function AccountButton() {
     <button
       type="button"
       onClick={() => open('credits')}
-      title="Mes crédits"
+      title={t('Mes crédits')}
       className={cx('hit flex items-center gap-1 rounded-xl px-2.5 py-2 text-sm font-semibold', user.credits > 0 ? 'bg-brand-50 text-brand-800' : 'bg-amber-100 text-amber-900')}
     >
       <Zap className="size-4" /> {user.credits}

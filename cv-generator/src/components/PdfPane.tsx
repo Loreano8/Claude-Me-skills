@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
+import { t } from '../i18n.ts';
 // Version « legacy » : inclut les compléments nécessaires aux WebView Android un peu anciennes.
 import * as pdfjs from 'pdfjs-dist/legacy/build/pdf.mjs';
 import workerUrl from 'pdfjs-dist/legacy/build/pdf.worker.min.mjs?url';
@@ -63,7 +64,7 @@ export default function PdfPane({ source }: { source: PdfSource }) {
         setPages(canvases.length);
         setError(null);
       } catch (e) {
-        if (!cancelled) setError((e as Error).message || 'Aperçu indisponible');
+        if (!cancelled) setError((e as Error).message || t('Aperçu indisponible'));
       } finally {
         if (!cancelled) setBusy(false);
       }
@@ -80,11 +81,10 @@ export default function PdfPane({ source }: { source: PdfSource }) {
       <div ref={host} className="flex flex-col gap-4" />
       {busy && (
         <div className="absolute top-3 right-3 flex items-center gap-1.5 rounded-full bg-white/90 px-3 py-1 text-xs text-slate-600 shadow">
-          <Loader2 className="size-3.5 animate-spin" /> Mise à jour…
-        </div>
+          <Loader2 className="size-3.5 animate-spin" /> {' '}{t('Mise à jour…')}</div>
       )}
-      {!busy && pages > 1 && <p className="mt-2 text-center text-xs text-slate-500">{pages} pages</p>}
-      {error && <p className="mt-2 text-sm text-red-600">Erreur d’aperçu : {error}</p>}
+      {!busy && pages > 1 && <p className="mt-2 text-center text-xs text-slate-500">{t('{0} pages', [pages])}</p>}
+      {error && <p className="mt-2 text-sm text-red-600">{t('Erreur d’aperçu : {0}', [error])}</p>}
     </div>
   );
 }

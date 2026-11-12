@@ -8,26 +8,27 @@ import type { CvDocument } from '../types.ts';
 import { WATCH_PRICE, type WatchCriteria, type WatchFrequency, type WatchOffer, type WatchRun, type WatchState } from '../../shared/schema.ts';
 import { Button, Card, Cost, cx, Field, Notice } from '../components/ui.tsx';
 
+import { LANG, LOCALE, t } from '../i18n.ts';
 // Veille emploi : on coche, on remplit deux ou trois cases, et les offres arrivent toutes seules.
 
 const CONTRACTS: { id: WatchCriteria['contracts'][number]; label: string }[] = [
   { id: 'cdi', label: 'CDI' },
   { id: 'cdd', label: 'CDD' },
-  { id: 'stage', label: 'Stage' },
-  { id: 'freelance', label: 'Freelance, mission' },
-  { id: 'teletravail', label: 'Télétravail' },
-  { id: 'programme', label: 'Programmes jeunes, bourses' },
+  { id: 'stage', label: t('Stage') },
+  { id: 'freelance', label: t('Freelance, mission') },
+  { id: 'teletravail', label: t('Télétravail') },
+  { id: 'programme', label: t('Programmes jeunes, bourses') },
 ];
 const ZONES: { id: WatchCriteria['zones'][number]; label: string }[] = [
-  { id: 'benin', label: 'Bénin' },
-  { id: 'afrique-ouest', label: 'Afrique de l’Ouest' },
-  { id: 'afrique', label: 'Reste de l’Afrique' },
-  { id: 'international', label: 'Télétravail international' },
+  { id: 'benin', label: t('Bénin') },
+  { id: 'afrique-ouest', label: t('Afrique de l’Ouest') },
+  { id: 'afrique', label: t('Reste de l’Afrique') },
+  { id: 'international', label: t('Télétravail international') },
 ];
 const LEVELS: { id: WatchCriteria['level']; label: string }[] = [
-  { id: 'debutant', label: 'Débutant' },
-  { id: 'confirme', label: 'Confirmé' },
-  { id: 'tous', label: 'Peu importe' },
+  { id: 'debutant', label: t('Débutant') },
+  { id: 'confirme', label: t('Confirmé') },
+  { id: 'tous', label: t('Peu importe') },
 ];
 const SALARIES = [0, 50_000, 100_000, 200_000, 300_000, 500_000];
 
@@ -80,7 +81,7 @@ function Group({ title, hint, children }: { title: string; hint?: string; childr
 }
 
 const toggle = <T,>(list: T[], v: T) => (list.includes(v) ? list.filter((x) => x !== v) : [...list, v]);
-const day = (iso: string) => new Date(iso).toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long' });
+const day = (iso: string) => new Date(iso).toLocaleDateString(LOCALE, { weekday: 'long', day: 'numeric', month: 'long' });
 
 function OfferCard({ offer, onAdapt }: { offer: WatchOffer; onAdapt: () => void }) {
   const facts = [offer.location, offer.contract, offer.salary, offer.experience].filter(Boolean);
@@ -90,20 +91,20 @@ function OfferCard({ offer, onAdapt }: { offer: WatchOffer; onAdapt: () => void 
       {offer.company && <p className="text-sm text-slate-600">{offer.company}</p>}
       {facts.length > 0 && <p className="mt-1 text-sm text-slate-600">{facts.join(' · ')}</p>}
       <div className="mt-2 flex flex-wrap gap-1.5 text-xs font-semibold">
-        {offer.deadline && <span className="rounded-full bg-slate-100 px-2.5 py-1 text-slate-700">Date limite : {offer.deadline}</span>}
-        {offer.beninEligible === 'oui' && <span className="rounded-full bg-emerald-100 px-2.5 py-1 text-emerald-900">Ouvert depuis le Bénin</span>}
-        {offer.beninEligible === 'à vérifier' && <span className="rounded-full bg-sun-100 px-2.5 py-1 text-sun-900">Depuis le Bénin : à vérifier</span>}
-        {offer.beninEligible === 'non' && <span className="rounded-full bg-red-50 px-2.5 py-1 text-red-800">Pas ouvert depuis le Bénin</span>}
+        {offer.deadline && <span className="rounded-full bg-slate-100 px-2.5 py-1 text-slate-700">{t('Date limite : {0}', [offer.deadline])}</span>}
+        {offer.beninEligible === 'oui' && <span className="rounded-full bg-emerald-100 px-2.5 py-1 text-emerald-900">{t('Ouvert depuis le Bénin')}</span>}
+        {offer.beninEligible === 'à vérifier' && <span className="rounded-full bg-sun-100 px-2.5 py-1 text-sun-900">{t('Depuis le Bénin : à vérifier')}</span>}
+        {offer.beninEligible === 'non' && <span className="rounded-full bg-red-50 px-2.5 py-1 text-red-800">{t('Pas ouvert depuis le Bénin')}</span>}
       </div>
       {offer.summary && <p className="mt-2 text-sm leading-relaxed text-slate-700">{offer.summary}</p>}
       {offer.matched.length > 0 && (
         <p className="mt-2 text-sm text-emerald-800">
-          <span className="font-semibold">Vous avez déjà :</span> {offer.matched.join(', ')}
+          <span className="font-semibold">{t('Vous avez déjà :')}</span> {offer.matched.join(', ')}
         </p>
       )}
       {offer.missing.length > 0 && (
         <p className="mt-1 text-sm text-amber-800">
-          <span className="font-semibold">À mettre en avant ou à renforcer :</span> {offer.missing.join(', ')}
+          <span className="font-semibold">{t('À mettre en avant ou à renforcer :')}</span> {offer.missing.join(', ')}
         </p>
       )}
       <div className="mt-3 flex flex-wrap gap-2">
@@ -113,11 +114,9 @@ function OfferCard({ offer, onAdapt }: { offer: WatchOffer; onAdapt: () => void 
           rel="noopener noreferrer"
           className="inline-flex min-h-11 items-center gap-2 rounded-xl bg-white px-4 text-sm font-medium text-slate-800 ring-1 ring-slate-300 hover:bg-slate-50"
         >
-          <ExternalLink className="size-4" aria-hidden="true" /> Voir l’offre
-        </a>
+          <ExternalLink className="size-4" aria-hidden="true" /> {' '}{t('Voir l’offre')}</a>
         <Button icon={<Target className="size-4" />} onClick={onAdapt}>
-          Adapter mon CV à cette offre
-        </Button>
+          {t('Adapter mon CV à cette offre')}</Button>
       </div>
     </li>
   );
@@ -127,7 +126,7 @@ function RunList({ run, onAdapt }: { run: WatchRun; onAdapt: (o: WatchOffer) => 
   return (
     <div className="space-y-3">
       <p className="text-sm text-slate-600">
-        <span className="font-semibold text-slate-800">Le {day(run.createdAt)}</span>
+        <span className="font-semibold text-slate-800">{t('Le {0}', [day(run.createdAt)])}</span>
         {run.note ? ` · ${run.note}` : ''}
       </p>
       {run.offers.length ? (
@@ -137,7 +136,7 @@ function RunList({ run, onAdapt }: { run: WatchRun; onAdapt: (o: WatchOffer) => 
           ))}
         </ul>
       ) : (
-        <Notice>Rien de nouveau pour le moment. La veille garde vos critères et vous prévient dès qu’une offre sort.</Notice>
+        <Notice>{t('Rien de nouveau pour le moment. La veille garde vos critères et vous prévient dès qu’une offre sort.')}</Notice>
       )}
     </div>
   );
@@ -183,7 +182,7 @@ export function WatchPage({ onNavigate }: { onNavigate: (t: Tab) => void }) {
   }, [user]);
 
   const set = <K extends keyof WatchCriteria>(k: K, v: WatchCriteria[K]) => setCriteria((c) => ({ ...c, [k]: v }));
-  const missing = !criteria.jobs.length ? 'Ajoutez au moins un métier.' : !criteria.contracts.length ? 'Cochez au moins un type de contrat.' : !criteria.zones.length ? 'Cochez au moins une zone.' : null;
+  const missing = !criteria.jobs.length ? t('Ajoutez au moins un métier.') : !criteria.contracts.length ? t('Cochez au moins un type de contrat.') : !criteria.zones.length ? t('Cochez au moins une zone.') : null;
   const freeRun = !watch?.freeRunUsed;
   const latest = runs[0] ?? null;
   const older = useMemo(() => runs.slice(1, 6), [runs]);
@@ -196,14 +195,14 @@ export function WatchPage({ onNavigate }: { onNavigate: (t: Tab) => void }) {
   }
 
   async function save() {
-    const { watch: saved } = await api.watchSave({ criteria: { ...criteria, email: criteria.email.trim() }, profile: cvProfile(cv), frequency });
+    const { watch: saved } = await api.watchSave({ criteria: { ...criteria, email: criteria.email.trim(), lang: LANG }, profile: cvProfile(cv), frequency });
     setWatch(saved);
     return saved;
   }
 
   async function act(kind: 'run' | 'start' | 'stop') {
     if (!user) {
-      openAccount('account', 'Créez un compte gratuit pour lancer votre veille emploi : les offres vous attendront ici et dans vos e-mails.');
+      openAccount('account', t('Créez un compte gratuit pour lancer votre veille emploi : les offres vous attendront ici et dans vos e-mails.'));
       return;
     }
     setBusy(kind);
@@ -213,7 +212,7 @@ export function WatchPage({ onNavigate }: { onNavigate: (t: Tab) => void }) {
       if (kind === 'stop') {
         await api.watchStop();
         setWatch((w) => (w ? { ...w, active: false, nextRunAt: null } : w));
-        setMessage('Veille arrêtée. Vos critères restent enregistrés.');
+        setMessage(t('Veille arrêtée. Vos critères restent enregistrés.'));
         return;
       }
       await save();
@@ -225,24 +224,24 @@ export function WatchPage({ onNavigate }: { onNavigate: (t: Tab) => void }) {
       } else {
         const { watch: started } = await api.watchStart();
         setWatch(started);
-        setMessage(`C’est parti : prochain envoi ${started.nextRunAt ? day(started.nextRunAt) : 'bientôt'}, vers 7 h 30.`);
+        setMessage(t('C’est parti : prochain envoi {0}, vers 7 h 30.', [started.nextRunAt ? day(started.nextRunAt) : t('bientôt')]));
       }
     } catch (e) {
-      setError(e instanceof ApiError ? e.message : 'Une erreur est survenue. Réessayez.');
+      setError(e instanceof ApiError ? e.message : t('Une erreur est survenue. Réessayez.'));
     } finally {
       setBusy(null);
     }
   }
 
   function adapt(o: WatchOffer) {
-    setJob({ text: [`${o.title}${o.company ? ` – ${o.company}` : ''}`, [o.location, o.contract, o.salary].filter(Boolean).join(' · '), o.summary, o.skills.length ? `Compétences demandées : ${o.skills.join(', ')}` : ''].filter(Boolean).join('\n'), file: null });
+    setJob({ text: [`${o.title}${o.company ? ` – ${o.company}` : ''}`, [o.location, o.contract, o.salary].filter(Boolean).join(' · '), o.summary, o.skills.length ? t('Compétences demandées : {0}', [o.skills.join(', ')]) : ''].filter(Boolean).join('\n'), file: null });
     onNavigate('offre');
   }
 
   if (loaded && !available) {
     return (
       <div className="mx-auto max-w-2xl">
-        <Notice>La veille emploi n’est pas encore disponible ici. Réessayez un peu plus tard.</Notice>
+        <Notice>{t('La veille emploi n’est pas encore disponible ici. Réessayez un peu plus tard.')}</Notice>
       </div>
     );
   }
@@ -250,26 +249,25 @@ export function WatchPage({ onNavigate }: { onNavigate: (t: Tab) => void }) {
   return (
     <div className="mx-auto max-w-2xl space-y-4">
       <div className="px-1">
-        <h1 className="font-display text-2xl font-bold text-ink sm:text-3xl">Veille emploi</h1>
-        <p className="mt-1 text-slate-600">Cochez ce que vous cherchez. CVCasa cherche les offres sur internet et vous les envoie, chaque matin ou chaque semaine.</p>
+        <h1 className="font-display text-2xl font-bold text-ink sm:text-3xl">{t('Veille emploi')}</h1>
+        <p className="mt-1 text-slate-600">{t('Cochez ce que vous cherchez. CVCasa cherche les offres sur internet et vous les envoie, chaque matin ou chaque semaine.')}</p>
       </div>
 
       {watch?.active && (
         <div className="flex flex-wrap items-center gap-3 rounded-2xl bg-emerald-50 p-4 ring-1 ring-emerald-200">
           <BellRing className="size-5 shrink-0 text-emerald-700" aria-hidden="true" />
           <p className="min-w-0 flex-1 text-sm text-emerald-900">
-            <span className="font-semibold">Votre veille est active</span> ({watch.frequency === 'daily' ? 'chaque matin' : 'chaque semaine'}).
-            {watch.nextRunAt && ` Prochain envoi : ${day(watch.nextRunAt)}, vers 7 h 30.`}
+            <span className="font-semibold">{t('Votre veille est active')}</span> ({watch.frequency === 'daily' ? 'chaque matin' : 'chaque semaine'}).
+            {watch.nextRunAt && t(' Prochain envoi : {0}, vers 7 h 30.', [day(watch.nextRunAt)])}
           </p>
           <Button variant="ghost" size="sm" loading={busy === 'stop'} onClick={() => act('stop')}>
-            Arrêter
-          </Button>
+            {t('Arrêter')}</Button>
         </div>
       )}
 
-      <Card title="Ce que vous cherchez">
+      <Card title={t('Ce que vous cherchez')}>
         <div className="space-y-5">
-          <Group title="Métiers ou domaines" hint="Repris de votre CV. Ajoutez-en ou retirez-en (5 au plus).">
+          <Group title={t('Métiers ou domaines')} hint={t('Repris de votre CV. Ajoutez-en ou retirez-en (5 au plus).')}>
             {criteria.jobs.map((j) => (
               <span key={j} className="inline-flex min-h-11 items-center gap-1 rounded-full bg-brand-50 pr-1 pl-4 text-sm font-semibold text-brand-800 ring-1 ring-brand-200">
                 {j}
@@ -289,18 +287,17 @@ export function WatchPage({ onNavigate }: { onNavigate: (t: Tab) => void }) {
                 <input
                   value={newJob}
                   onChange={(e) => setNewJob(e.target.value)}
-                  placeholder="Ex. Comptable, Chauffeur, Développeur web"
-                  aria-label="Ajouter un métier"
+                  placeholder={t('Ex. Comptable, Chauffeur, Développeur web')}
+                  aria-label={t('Ajouter un métier')}
                   className="min-h-11 min-w-0 flex-1 rounded-xl border border-slate-300 px-3 text-sm sm:w-64"
                 />
                 <Button type="submit" variant="secondary" className="shrink-0" icon={<Plus className="size-4" />} disabled={newJob.trim().length < 2}>
-                  Ajouter
-                </Button>
+                  {t('Ajouter')}</Button>
               </form>
             )}
           </Group>
 
-          <Group title="Types de contrat">
+          <Group title={t('Types de contrat')}>
             {CONTRACTS.map((c) => (
               <Chip key={c.id} on={criteria.contracts.includes(c.id)} onClick={() => set('contracts', toggle(criteria.contracts, c.id))}>
                 {c.label}
@@ -308,7 +305,7 @@ export function WatchPage({ onNavigate }: { onNavigate: (t: Tab) => void }) {
             ))}
           </Group>
 
-          <Group title="Où ?">
+          <Group title={t('Où ?')}>
             {ZONES.map((z) => (
               <Chip key={z.id} on={criteria.zones.includes(z.id)} onClick={() => set('zones', toggle(criteria.zones, z.id))}>
                 {z.label}
@@ -316,7 +313,7 @@ export function WatchPage({ onNavigate }: { onNavigate: (t: Tab) => void }) {
             ))}
           </Group>
 
-          <Group title="Votre niveau">
+          <Group title={t('Votre niveau')}>
             {LEVELS.map((l) => (
               <Chip key={l.id} on={criteria.level === l.id} onClick={() => set('level', l.id)}>
                 {l.label}
@@ -327,8 +324,7 @@ export function WatchPage({ onNavigate }: { onNavigate: (t: Tab) => void }) {
           <div className="grid gap-4 sm:grid-cols-2">
             <div>
               <label htmlFor="watch-salary" className="mb-1 block text-sm font-semibold text-slate-900">
-                Salaire minimum par mois
-              </label>
+                {t('Salaire minimum par mois')}</label>
               <select
                 id="watch-salary"
                 value={criteria.minSalary}
@@ -337,44 +333,44 @@ export function WatchPage({ onNavigate }: { onNavigate: (t: Tab) => void }) {
               >
                 {SALARIES.map((s) => (
                   <option key={s} value={s}>
-                    {s ? `${s.toLocaleString('fr-FR')} FCFA` : 'Peu importe'}
+                    {s ? `${s.toLocaleString(LOCALE)} FCFA` : t('Peu importe')}
                   </option>
                 ))}
               </select>
             </div>
-            <Field label="Mots-clés en plus (facultatif)" value={criteria.keywords} onChange={(v) => set('keywords', v.slice(0, 200))} placeholder="Ex. ONG, banque, Excel" />
+            <Field label={t('Mots-clés en plus (facultatif)')} value={criteria.keywords} onChange={(v) => set('keywords', v.slice(0, 200))} placeholder={t('Ex. ONG, banque, Excel')} />
           </div>
           <Field
-            label="E-mail pour recevoir les offres"
+            label={t('E-mail pour recevoir les offres')}
             type="email"
             value={criteria.email}
             onChange={(v) => set('email', v.slice(0, 120))}
             placeholder="prenom.nom@email.com"
-            hint="Facultatif si vous regardez les offres ici. Rien d’autre ne sera envoyé à cette adresse."
+            hint={t('Facultatif si vous regardez les offres ici. Rien d’autre ne sera envoyé à cette adresse.')}
           />
         </div>
       </Card>
 
-      <Card title="Voir les offres">
-        <p className="text-sm text-slate-600">La recherche prend environ une minute. {freeRun ? 'La première est offerte.' : ''}</p>
+      <Card title={t('Voir les offres')}>
+        <p className="text-sm text-slate-600">{t('La recherche prend environ une minute. {0}', [freeRun ? t('La première est offerte.') : ''])}</p>
         <div className="mt-3">
           <Button size="lg" icon={<Search className="size-5" />} loading={busy === 'run'} disabled={busy !== null || Boolean(missing)} onClick={() => act('run')}>
-            Chercher maintenant <Cost free={freeRun} />
+            {t('Chercher maintenant')}{' '}<Cost free={freeRun} />
           </Button>
         </div>
-        {busy === 'run' && <p className="mt-3 text-sm text-brand-700">Recherche des offres sur internet… gardez la page ouverte.</p>}
+        {busy === 'run' && <p className="mt-3 text-sm text-brand-700">{t('Recherche des offres sur internet… gardez la page ouverte.')}</p>}
       </Card>
 
       {latest && (
         <section id="veille-resultats" className="scroll-mt-24 space-y-3">
-          <h2 className="px-1 font-display text-xl font-semibold text-ink">Vos offres</h2>
+          <h2 className="px-1 font-display text-xl font-semibold text-ink">{t('Vos offres')}</h2>
           <RunList run={latest} onAdapt={adapt} />
-          <p className="px-1 text-xs text-slate-500">Vérifiez toujours l’offre sur le site de l’employeur avant de postuler. Aucun recruteur sérieux ne demande d’argent.</p>
+          <p className="px-1 text-xs text-slate-500">{t('Vérifiez toujours l’offre sur le site de l’employeur avant de postuler. Aucun recruteur sérieux ne demande d’argent.')}</p>
         </section>
       )}
 
-      <Card title="Recevoir les offres automatiquement">
-        <div className="grid gap-2 sm:grid-cols-2" role="radiogroup" aria-label="Fréquence">
+      <Card title={t('Recevoir les offres automatiquement')}>
+        <div className="grid gap-2 sm:grid-cols-2" role="radiogroup" aria-label={t('Fréquence')}>
           {(['daily', 'weekly'] as const).map((f) => (
             <button
               key={f}
@@ -386,15 +382,14 @@ export function WatchPage({ onNavigate }: { onNavigate: (t: Tab) => void }) {
             >
               <CalendarClock className={cx('mt-0.5 size-5 shrink-0', frequency === f ? 'text-brand-700' : 'text-slate-500')} aria-hidden="true" />
               <span>
-                <span className="block font-semibold text-slate-900">{f === 'daily' ? 'Chaque matin, vers 7 h 30' : 'Une fois par semaine'}</span>
+                <span className="block font-semibold text-slate-900">{f === 'daily' ? t('Chaque matin, vers 7 h 30') : t('Une fois par semaine')}</span>
                 <span className="block text-sm text-slate-600">
-                  {WATCH_PRICE[f]} crédit{WATCH_PRICE[f] > 1 ? 's' : ''} pour 7 jours
-                </span>
+                  {t('{0} crédit{1} pour 7 jours', [WATCH_PRICE[f], WATCH_PRICE[f] > 1 ? 's' : ''])}</span>
               </span>
             </button>
           ))}
         </div>
-        <p className="mt-2 text-xs text-slate-500">Les offres arrivent ici et par e-mail. Seules les nouvelles offres sont envoyées. Arrêt possible à tout moment.</p>
+        <p className="mt-2 text-xs text-slate-500">{t('Les offres arrivent ici et par e-mail. Seules les nouvelles offres sont envoyées. Arrêt possible à tout moment.')}</p>
         <div className="mt-3">
           <Button
             icon={<BellRing className="size-4" />}
@@ -402,7 +397,7 @@ export function WatchPage({ onNavigate }: { onNavigate: (t: Tab) => void }) {
             disabled={busy !== null || Boolean(missing) || (watch?.active && watch.frequency === frequency)}
             onClick={() => act('start')}
           >
-            {watch?.active ? (watch.frequency === frequency ? 'Veille active' : 'Changer la fréquence') : 'Activer ma veille'}
+            {watch?.active ? (watch.frequency === frequency ? t('Veille active') : t('Changer la fréquence')) : t('Activer ma veille')}
             {!(watch?.active && watch.frequency === frequency) && <Cost n={WATCH_PRICE[frequency]} />}
           </Button>
         </div>
@@ -414,7 +409,7 @@ export function WatchPage({ onNavigate }: { onNavigate: (t: Tab) => void }) {
 
       {older.length > 0 && (
         <details className="rounded-2xl border border-slate-200 bg-white p-4">
-          <summary className="min-h-11 cursor-pointer content-center font-semibold text-slate-800">Envois précédents</summary>
+          <summary className="min-h-11 cursor-pointer content-center font-semibold text-slate-800">{t('Envois précédents')}</summary>
           <div className="mt-3 space-y-6">
             {older.map((r) => (
               <RunList key={r.id} run={r} onAdapt={adapt} />

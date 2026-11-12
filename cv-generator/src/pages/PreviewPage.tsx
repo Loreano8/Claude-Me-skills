@@ -20,6 +20,7 @@ import { ReviseCard } from '../components/ReviseCard.tsx';
 import { DossierLink } from './DossierPage.tsx';
 import { Button, Card, Cost, cx, Notice, Select, Toggle } from '../components/ui.tsx';
 
+import { t } from '../i18n.ts';
 export function DesignPanel({ cv }: { cv: CvDocument }) {
   const updateCv = useStore((s) => s.updateCv);
   const set = (patch: Partial<CvSettings>) => updateCv((c) => ({ ...c, settings: { ...c.settings, ...patch } }));
@@ -30,11 +31,11 @@ export function DesignPanel({ cv }: { cv: CvDocument }) {
 
   return (
     <div className="space-y-4">
-      <Card tour="templates" title="Modèle" subtitle="13 modèles pensés pour chaque métier et chaque pays, ou le style d’un CV que vous aimez.">
+      <Card tour="templates" title={t('Modèle')} subtitle={t('13 modèles pensés pour chaque métier et chaque pays, ou le style d’un CV que vous aimez.')}>
         <TemplateGallery cv={cv} set={set} />
       </Card>
 
-      <Card title="Couleur">
+      <Card title={t('Couleur')}>
         <div className="flex flex-wrap items-center gap-2">
           {ACCENTS.map((c) => (
             <button
@@ -46,7 +47,7 @@ export function DesignPanel({ cv }: { cv: CvDocument }) {
               style={{ backgroundColor: c }}
             />
           ))}
-          <label className="relative size-9 cursor-pointer overflow-hidden rounded-full bg-[conic-gradient(red,yellow,lime,aqua,blue,magenta,red)]" title="Autre couleur">
+          <label className="relative size-9 cursor-pointer overflow-hidden rounded-full bg-[conic-gradient(red,yellow,lime,aqua,blue,magenta,red)]" title={t('Autre couleur')}>
             <input type="color" value={st.accent} onChange={(e) => set({ accent: e.target.value })} className="absolute inset-0 opacity-0" />
           </label>
         </div>
@@ -54,26 +55,24 @@ export function DesignPanel({ cv }: { cv: CvDocument }) {
 
       <Card
         tour="options"
-        title="Options d’affichage"
+        title={t('Options d’affichage')}
         actions={
           recommended ? (
             <span className="flex items-center gap-1 text-xs font-medium text-emerald-700">
-              <CheckCircle2 className="size-4" /> Recommandé
-            </span>
+              <CheckCircle2 className="size-4" /> {' '}{t('Recommandé')}</span>
           ) : (
             <Button size="sm" variant="secondary" icon={<Check className="size-4" />} onClick={() => set(advice.settings)}>
-              Recommandé
-            </Button>
+              {t('Recommandé')}</Button>
           )
         }
       >
-        <p className="mb-2 text-xs text-slate-500">{recommended ? advice.reason : `Pas sûr de quoi afficher ? « Recommandé » règle tout selon l’usage. ${advice.reason}`}</p>
-        <Toggle label="Photo" checked={st.showPhoto} onChange={(showPhoto) => set({ showPhoto })} hint={cv.photo ? undefined : 'Ajoutez une photo dans « Mes infos ».'} />
-        <Toggle label="Date de naissance" checked={st.showBirthDate} onChange={(showBirthDate) => set({ showBirthDate })} />
-        <Toggle label="Nationalité" checked={st.showNationality} onChange={(showNationality) => set({ showNationality })} />
-        <Toggle label="Signature" checked={st.showSignature} onChange={(showSignature) => set({ showSignature })} hint={cv.signature ? undefined : 'Dessinez votre signature dans « Mes infos ».'} />
+        <p className="mb-2 text-xs text-slate-500">{recommended ? advice.reason : t('Pas sûr de quoi afficher ? « Recommandé » règle tout selon l’usage. {0}', [advice.reason])}</p>
+        <Toggle label={t('Photo')} checked={st.showPhoto} onChange={(showPhoto) => set({ showPhoto })} hint={cv.photo ? undefined : t('Ajoutez une photo dans « Mes infos ».')} />
+        <Toggle label={t('Date de naissance')} checked={st.showBirthDate} onChange={(showBirthDate) => set({ showBirthDate })} />
+        <Toggle label={t('Nationalité')} checked={st.showNationality} onChange={(showNationality) => set({ showNationality })} />
+        <Toggle label={t('Signature')} checked={st.showSignature} onChange={(showSignature) => set({ showSignature })} hint={cv.signature ? undefined : t('Dessinez votre signature dans « Mes infos ».')} />
         <div className="mt-2 flex items-center gap-2 text-sm">
-          <span className="font-medium text-slate-700">Titres des sections :</span>
+          <span className="font-medium text-slate-700">{t('Titres des sections :')}</span>
           {(['fr', 'en'] as const).map((l) => (
             <button
               key={l}
@@ -81,7 +80,7 @@ export function DesignPanel({ cv }: { cv: CvDocument }) {
               onClick={() => set({ headingLang: l })}
               className={cx('hit min-h-8 rounded-lg px-3 py-1.5 font-medium', st.headingLang === l ? 'bg-brand-600 text-white' : 'bg-slate-100 text-slate-700')}
             >
-              {l === 'fr' ? 'Français' : 'English'}
+              {l === 'fr' ? t('Français') : t('English')}
             </button>
           ))}
         </div>
@@ -120,16 +119,15 @@ export function ExportButtons({ cv }: { cv: CvDocument }) {
     <div className="space-y-2">
       <div className="grid grid-cols-2 gap-2">
         <Button size="lg" icon={<FileDown className="size-5" />} loading={busy === 'pdf'} onClick={() => run('pdf')}>
-          {pro ? 'PDF' : 'PDF gratuit'}
+          {pro ? 'PDF' : t('PDF gratuit')}
         </Button>
         <Button size="lg" variant="secondary" icon={pro ? <FileText className="size-5" /> : <Lock className="size-5" />} loading={busy === 'docx'} onClick={() => run('docx')}>
-          Word
-        </Button>
+          Word</Button>
       </div>
       <p className="text-xs text-slate-500">
         {pro
-          ? 'Le PDF garde exactement la mise en page. Le fichier Word se modifie facilement.'
-          : 'Le PDF gratuit porte une petite mention « Créé avec CVCasa » en bas de page.'}
+          ? t('Le PDF garde exactement la mise en page. Le fichier Word se modifie facilement.')
+          : t('Le PDF gratuit porte une petite mention « Créé avec CVCasa » en bas de page.')}
       </p>
       <ProOffer cv={cv} reason={needPro?.reason} onUnlocked={() => needPro && void run(needPro.kind, true)} />
       {error && <Notice tone="error">{error}</Notice>}
@@ -139,11 +137,11 @@ export function ExportButtons({ cv }: { cv: CvDocument }) {
 }
 
 const MARKETS: { value: Market; lang: 'fr' | 'en'; hint: string }[] = [
-  { value: 'international', lang: 'en', hint: 'Multinationales, ONG, organisations internationales.' },
-  { value: 'uk', lang: 'en', hint: 'Royaume-Uni : orthographe britannique, « CV ».' },
-  { value: 'us', lang: 'en', hint: 'États-Unis et Canada anglophone : « resume » très concis.' },
-  { value: 'france', lang: 'fr', hint: 'France : diplômes étrangers avec leur équivalent français.' },
-  { value: 'afrique', lang: 'fr', hint: 'Afrique francophone.' },
+  { value: 'international', lang: 'en', hint: t('Multinationales, ONG, organisations internationales.') },
+  { value: 'uk', lang: 'en', hint: t('Royaume-Uni : orthographe britannique, « CV ».') },
+  { value: 'us', lang: 'en', hint: t('États-Unis et Canada anglophone : « resume » très concis.') },
+  { value: 'france', lang: 'fr', hint: t('France : diplômes étrangers avec leur équivalent français.') },
+  { value: 'afrique', lang: 'fr', hint: t('Afrique francophone.') },
 ];
 
 function TranslateCard({ cv }: { cv: CvDocument }) {
@@ -171,16 +169,14 @@ function TranslateCard({ cv }: { cv: CvDocument }) {
       tour="translate"
       title={
         <span className="flex items-center gap-2">
-          <Languages className="size-5 text-brand-600" /> Mon CV dans une autre langue
-        </span>
+          <Languages className="size-5 text-brand-600" /> {' '}{t('Mon CV dans une autre langue')}</span>
       }
-      subtitle="CVCasa traduit tout votre CV (postes, diplômes, compétences…) et l’adapte aux usages du pays visé. Votre CV d’origine est conservé."
+      subtitle={t('CVCasa traduit tout votre CV (postes, diplômes, compétences…) et l’adapte aux usages du pays visé. Votre CV d’origine est conservé.')}
     >
       {cv.translation && (
         <div className="mb-3">
           <Notice tone="info">
-            Ce CV est la version « {MARKET_LABELS[cv.translation.market]} ».
-            {cv.translation.lang === 'en' && ' Photo, date de naissance, nationalité et signature sont masquées, comme le veut l’usage anglophone (vous pouvez les réactiver ci-dessous).'}
+            {t('Ce CV est la version « {0} ».', [MARKET_LABELS[cv.translation.market]])}{cv.translation.lang === 'en' && t(' Photo, date de naissance, nationalité et signature sont masquées, comme le veut l’usage anglophone (vous pouvez les réactiver ci-dessous).')}
             {cv.translation.notes.length > 0 && (
               <ul className="mt-1.5 list-disc pl-5">
                 {cv.translation.notes.map((n, i) => (
@@ -192,16 +188,16 @@ function TranslateCard({ cv }: { cv: CvDocument }) {
         </div>
       )}
       <Select
-        label="Version à créer"
+        label={t('Version à créer')}
         value={market}
         onChange={setMarket}
         options={MARKETS.map((m) => ({ value: m.value, label: MARKET_LABELS[m.value] }))}
       />
       <p className="mt-1 text-xs text-slate-500">{target.hint}</p>
       <Button className="mt-3" variant="ai" icon={<Languages className="size-4" />} loading={busy} disabled={isCvEmpty(cv)} onClick={run}>
-        Créer cette version <Cost />
+        {t('Créer cette version')}{' '}<Cost />
       </Button>
-      {busy && <p className="mt-2 text-sm text-brand-700">Traduction en cours… (jusqu’à une minute)</p>}
+      {busy && <p className="mt-2 text-sm text-brand-700">{t('Traduction en cours… (jusqu’à une minute)')}</p>}
       {error && (
         <div className="mt-3">
           <Notice tone="error">{error}</Notice>
@@ -218,8 +214,7 @@ function ChecksCard({ cv }: { cv: CvDocument }) {
       tour="checks"
       title={
         <span className="flex items-center gap-2">
-          <Lightbulb className="size-5 text-amber-500" /> Conseils pour un CV actuel
-        </span>
+          <Lightbulb className="size-5 text-amber-500" /> {' '}{t('Conseils pour un CV actuel')}</span>
       }
     >
       <ul className="space-y-2">
@@ -245,7 +240,7 @@ export function PreviewPage() {
   return (
     // Sur téléphone : export, puis aperçu, puis réglages. Sur grand écran : réglages à gauche, aperçu à droite.
     <div className="grid grid-cols-[minmax(0,1fr)] gap-4 lg:grid-cols-[360px_minmax(0,1fr)] lg:grid-rows-[auto_auto_auto_auto_auto_1fr]">
-      <Card tour="export" title="Télécharger mon CV" className="lg:col-start-1">
+      <Card tour="export" title={t('Télécharger mon CV')} className="lg:col-start-1">
         <ExportButtons cv={cv} />
       </Card>
       {!isCvEmpty(cv) && (
@@ -254,9 +249,9 @@ export function PreviewPage() {
           <NextSteps
             id="apercu"
             steps={[
-              { icon: Target, label: 'L’adapter à une offre', text: 'Un CV qui reprend les mots de l’annonce.', tab: 'offre' },
-              { icon: PenLine, label: 'Écrire la lettre', text: 'La lettre de motivation, à partir de ce CV.', tab: 'lettre' },
-              { icon: BellRing, label: 'Recevoir des offres', text: 'Les annonces qui vous correspondent, chaque matin.', tab: 'veille' },
+              { icon: Target, label: t('L’adapter à une offre'), text: t('Un CV qui reprend les mots de l’annonce.'), tab: 'offre' },
+              { icon: PenLine, label: t('Écrire la lettre'), text: t('La lettre de motivation, à partir de ce CV.'), tab: 'lettre' },
+              { icon: BellRing, label: t('Recevoir des offres'), text: t('Les annonces qui vous correspondent, chaque matin.'), tab: 'veille' },
             ]}
           />
         </div>
@@ -279,7 +274,7 @@ export function PreviewPage() {
       </div>
       <div className="space-y-4 lg:col-start-1">
         <ChecksCard cv={cv} />
-        {!isCvEmpty(cv) && <NaturalReview hits={cvCliches(cv)} edit="Corrigez directement dans « Mes infos », ou dites-la dans « Corriger mon CV en parlant »." />}
+        {!isCvEmpty(cv) && <NaturalReview hits={cvCliches(cv)} edit={t('Corrigez directement dans « Mes infos », ou dites-la dans « Corriger mon CV en parlant ».')} />}
       </div>
     </div>
   );

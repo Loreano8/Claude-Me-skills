@@ -1,6 +1,7 @@
 import type { CatalogTemplateId, TemplateStyle } from '../../shared/schema.ts';
 import type { CvSettings } from '../types.ts';
 
+import { t } from '../i18n.ts';
 export type TemplateCategory = 'polyvalent' | 'classique' | 'creatif' | 'international';
 
 export interface CatalogEntry {
@@ -20,10 +21,10 @@ export interface CatalogEntry {
 }
 
 export const CATEGORY_LABELS: Record<TemplateCategory, string> = {
-  polyvalent: 'Polyvalents',
-  classique: 'Sobres et classiques',
-  creatif: 'Créatifs',
-  international: 'International',
+  polyvalent: t('Polyvalents'),
+  classique: t('Sobres et classiques'),
+  creatif: t('Créatifs'),
+  international: t('International'),
 };
 
 const base: Omit<TemplateStyle, 'accent'> = {
@@ -41,91 +42,91 @@ const base: Omit<TemplateStyle, 'accent'> = {
 const style = (accent: string, s: Partial<TemplateStyle>): TemplateStyle => ({ ...base, ...s, accent });
 
 export const CATALOG: CatalogEntry[] = [
-  { id: 'moderne', name: 'Moderne', category: 'polyvalent', accent: '#1d4ed8', idealFor: 'La plupart des métiers. Colonne colorée avec photo.' },
-  { id: 'classique', name: 'Classique ATS', category: 'classique', accent: '#1f2937', idealFor: 'Grandes entreprises : le mieux lu par les logiciels de tri.' },
-  { id: 'elegant', name: 'Élégant', category: 'polyvalent', accent: '#0f766e', idealFor: 'Se démarquer avec sobriété. Bandeau et frise des dates.' },
+  { id: 'moderne', name: t('Moderne'), category: 'polyvalent', accent: '#1d4ed8', idealFor: t('La plupart des métiers. Colonne colorée avec photo.') },
+  { id: 'classique', name: t('Classique ATS'), category: 'classique', accent: '#1f2937', idealFor: t('Grandes entreprises : le mieux lu par les logiciels de tri.') },
+  { id: 'elegant', name: t('Élégant'), category: 'polyvalent', accent: '#0f766e', idealFor: t('Se démarquer avec sobriété. Bandeau et frise des dates.') },
   {
     id: 'finance',
-    name: 'Finance',
+    name: t('Finance'),
     category: 'classique',
     accent: '#1e3a5f',
-    idealFor: 'Banque, finance, audit, juridique. Sérieux et rigoureux.',
+    idealFor: t('Banque, finance, audit, juridique. Sérieux et rigoureux.'),
     style: style('#1e3a5f', { font: 'serif', headingStyle: 'underline', skillsStyle: 'inline', density: 'compact', photoShape: 'square' }),
   },
   {
     id: 'ingenieur',
-    name: 'Ingénieur',
+    name: t('Ingénieur'),
     category: 'polyvalent',
     accent: '#0e7490',
-    idealFor: 'Ingénierie, informatique, BTP, technique.',
+    idealFor: t('Ingénierie, informatique, BTP, technique.'),
     style: style('#0e7490', { layout: 'sidebar-right', sidebarTone: 'light', headingStyle: 'bar', skillsStyle: 'tags' }),
   },
   {
     id: 'creatif',
-    name: 'Créatif',
+    name: t('Créatif'),
     category: 'creatif',
     accent: '#e11d48',
-    idealFor: 'Communication, marketing, design, événementiel.',
+    idealFor: t('Communication, marketing, design, événementiel.'),
     style: style('#e11d48', { layout: 'banner', headingStyle: 'pill', skillsStyle: 'tags' }),
   },
   {
     id: 'canada',
-    name: 'Canada / USA',
+    name: t('Canada / USA'),
     category: 'international',
     accent: '#334155',
-    idealFor: 'Amérique du Nord : une page, sans photo ni date de naissance.',
+    idealFor: t('Amérique du Nord : une page, sans photo ni date de naissance.'),
     style: style('#334155', { headingStyle: 'caps', skillsStyle: 'inline', density: 'compact' }),
     settings: { showPhoto: false, showBirthDate: false, showNationality: false, showSignature: false },
-    settingsNote: 'Photo, date de naissance, nationalité et signature masquées : au Canada et aux États-Unis, elles sont à éviter.',
+    settingsNote: t('Photo, date de naissance, nationalité et signature masquées : au Canada et aux États-Unis, elles sont à éviter.'),
   },
   {
     id: 'europass',
-    name: 'Europe',
+    name: t('Europe'),
     category: 'international',
     accent: '#1d4ed8',
-    idealFor: 'Candidatures en Europe, programmes et bourses (inspiré d’Europass).',
+    idealFor: t('Candidatures en Europe, programmes et bourses (inspiré d’Europass).'),
     style: style('#1d4ed8', { layout: 'labels', headingStyle: 'plain', skillsStyle: 'inline', photoShape: 'square' }),
   },
   {
     id: 'concours',
-    name: 'Concours',
+    name: t('Concours'),
     category: 'classique',
     accent: '#14532d',
-    idealFor: 'Fonction publique, concours, administrations, ONG.',
+    idealFor: t('Fonction publique, concours, administrations, ONG.'),
     style: style('#14532d', { font: 'serif', headerAlign: 'center', headingStyle: 'caps', skillsStyle: 'inline', photoShape: 'square' }),
     settings: { showBirthDate: true, showNationality: true },
-    settingsNote: 'Date de naissance et nationalité affichées : elles sont souvent demandées pour les concours.',
+    settingsNote: t('Date de naissance et nationalité affichées : elles sont souvent demandées pour les concours.'),
   },
   {
     id: 'etudiant',
-    name: 'Premier emploi',
+    name: t('Premier emploi'),
     category: 'polyvalent',
     accent: '#7c3aed',
-    idealFor: 'Étudiants et jeunes diplômés : la formation passe en premier.',
+    idealFor: t('Étudiants et jeunes diplômés : la formation passe en premier.'),
     style: style('#7c3aed', { layout: 'sidebar-left', sidebarTone: 'light', headingStyle: 'bar', skillsStyle: 'tags', educationFirst: true }),
   },
   {
     id: 'executif',
-    name: 'Cadre dirigeant',
+    name: t('Cadre dirigeant'),
     category: 'classique',
     accent: '#1f2a44',
-    idealFor: 'Managers, directeurs, profils expérimentés.',
+    idealFor: t('Managers, directeurs, profils expérimentés.'),
     style: style('#1f2a44', { layout: 'banner', font: 'mixed', headingStyle: 'caps', skillsStyle: 'inline', density: 'compact' }),
   },
   {
     id: 'sante',
-    name: 'Santé & social',
+    name: t('Santé & social'),
     category: 'polyvalent',
     accent: '#0f766e',
-    idealFor: 'Santé, pharmacie, social, éducation.',
+    idealFor: t('Santé, pharmacie, social, éducation.'),
     style: style('#0f766e', { layout: 'sidebar-left', sidebarTone: 'accent', headingStyle: 'pill' }),
   },
   {
     id: 'minimal',
-    name: 'Minimaliste',
+    name: t('Minimaliste'),
     category: 'creatif',
     accent: '#111827',
-    idealFor: 'Un rendu épuré et très aéré, pour tous les métiers.',
+    idealFor: t('Un rendu épuré et très aéré, pour tous les métiers.'),
     style: style('#111827', { headerAlign: 'center', headingStyle: 'plain', skillsStyle: 'inline', density: 'normal', font: 'mixed' }),
   },
 ];

@@ -4,6 +4,7 @@ import { preparePhoto } from "../lib/image.ts";
 import { Button, Notice } from "./ui.tsx";
 import { ProPhoto } from "./ProPhoto.tsx";
 
+import { t } from '../i18n.ts';
 export function PhotoInput({
   value,
   onChange,
@@ -35,7 +36,7 @@ export function PhotoInput({
           {value ? (
             <img
               src={value}
-              alt="Photo du CV"
+              alt={t('Photo du CV')}
               className="size-full object-cover"
             />
           ) : (
@@ -57,7 +58,7 @@ export function PhotoInput({
               icon={<Camera className="size-4" />}
               onClick={() => input.current?.click()}
             >
-              {value ? "Changer la photo" : "Ajouter une photo"}
+              {value ? t('Changer la photo') : t('Ajouter une photo')}
             </Button>
             {value && (
               <Button
@@ -66,14 +67,11 @@ export function PhotoInput({
                 icon={<Trash2 className="size-4" />}
                 onClick={() => onChange(null)}
               >
-                Retirer
-              </Button>
+                {t('Retirer')}</Button>
             )}
           </div>
           <p className="text-xs text-slate-500">
-            Photo récente, fond neutre, de face. Elle est recadrée
-            automatiquement.
-          </p>
+            {t('Photo récente, fond neutre, de face. Elle est recadrée automatiquement.')}</p>
           {error && <Notice tone="error">{error}</Notice>}
         </div>
       </div>

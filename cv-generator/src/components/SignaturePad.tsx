@@ -3,6 +3,7 @@ import { Eraser, PenLine, Trash2, Upload } from 'lucide-react';
 import { prepareSignatureImage, trimCanvas } from '../lib/image.ts';
 import { Button, Notice } from './ui.tsx';
 
+import { t } from '../i18n.ts';
 /** Zone de signature au doigt ou à la souris, ou import d'une signature scannée. */
 export function SignaturePad({ value, onChange }: { value: string | null; onChange: (v: string | null) => void }) {
   const canvas = useRef<HTMLCanvasElement>(null);
@@ -90,15 +91,13 @@ export function SignaturePad({ value, onChange }: { value: string | null; onChan
     return (
       <div className="space-y-3">
         <div className="flex h-28 items-center justify-center rounded-xl border border-slate-200 bg-white">
-          <img src={value} alt="Signature" className="max-h-24 max-w-[80%] object-contain" />
+          <img src={value} alt={t('Signature')} className="max-h-24 max-w-[80%] object-contain" />
         </div>
         <div className="flex flex-wrap gap-2">
           <Button variant="secondary" size="sm" icon={<PenLine className="size-4" />} onClick={() => setEditing(true)}>
-            Refaire la signature
-          </Button>
+            {t('Refaire la signature')}</Button>
           <Button variant="danger" size="sm" icon={<Trash2 className="size-4" />} onClick={() => onChange(null)}>
-            Supprimer
-          </Button>
+            {t('Supprimer')}</Button>
         </div>
         {uploadInput}
       </div>
@@ -118,25 +117,20 @@ export function SignaturePad({ value, onChange }: { value: string | null; onChan
         />
         {!dirty && (
           <span className="pointer-events-none absolute inset-0 flex items-center justify-center text-sm text-slate-400">
-            Signez ici avec le doigt ou la souris
-          </span>
+            {t('Signez ici avec le doigt ou la souris')}</span>
         )}
         <div className="pointer-events-none absolute right-6 bottom-8 left-6 border-b border-slate-200" />
       </div>
       <div className="flex flex-wrap gap-2">
         <Button size="sm" icon={<PenLine className="size-4" />} onClick={save} disabled={!dirty}>
-          Valider la signature
-        </Button>
+          {t('Valider la signature')}</Button>
         <Button variant="secondary" size="sm" icon={<Eraser className="size-4" />} onClick={clear} disabled={!dirty}>
-          Effacer
-        </Button>
+          {t('Effacer')}</Button>
         <Button variant="ghost" size="sm" icon={<Upload className="size-4" />} onClick={() => upload.current?.click()}>
-          Importer une image
-        </Button>
+          {t('Importer une image')}</Button>
         {value && (
           <Button variant="ghost" size="sm" onClick={() => setEditing(false)}>
-            Annuler
-          </Button>
+            {t('Annuler')}</Button>
         )}
       </div>
       {uploadInput}

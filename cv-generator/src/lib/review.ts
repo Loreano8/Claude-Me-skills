@@ -1,6 +1,7 @@
 import type { CvDocument, Experience } from '../types.ts';
 import { achievementsList } from './cv.ts';
 
+import { t } from '../i18n.ts';
 /** Une partie du CV que l'adaptation a modifiée, et que l'on peut garder ou ramener à l'original. */
 export interface Change {
   key: string;
@@ -24,19 +25,19 @@ function originalOf(base: CvDocument, e: Experience): Experience | undefined {
 /** Les changements entre le CV d'origine et sa version adaptée, dans l'ordre du CV. */
 export function listChanges(base: CvDocument, adapted: CvDocument): Change[] {
   const out: Change[] = [];
-  if (!sameText(base.personal.title, adapted.personal.title)) out.push({ key: 'title', label: 'Titre du CV', before: [base.personal.title], after: [adapted.personal.title] });
-  if (!sameText(base.summary, adapted.summary)) out.push({ key: 'summary', label: 'Profil', before: [base.summary], after: [adapted.summary] });
+  if (!sameText(base.personal.title, adapted.personal.title)) out.push({ key: 'title', label: t('Titre du CV'), before: [base.personal.title], after: [adapted.personal.title] });
+  if (!sameText(base.summary, adapted.summary)) out.push({ key: 'summary', label: t('Profil'), before: [base.summary], after: [adapted.summary] });
   for (const e of adapted.experiences) {
     const o = originalOf(base, e);
     if (!o) continue;
     const before = achievementsList(o.achievements);
     const after = achievementsList(e.achievements);
     if (!sameList(before, after) || !sameText(o.position, e.position)) {
-      out.push({ key: `exp:${e.id}`, label: [e.position, e.company].filter(Boolean).join(' · ') || 'Expérience', before: [o.position, ...before], after: [e.position, ...after] });
+      out.push({ key: `exp:${e.id}`, label: [e.position, e.company].filter(Boolean).join(' · ') || t('Expérience'), before: [o.position, ...before], after: [e.position, ...after] });
     }
   }
-  if (!sameList(base.skills, adapted.skills)) out.push({ key: 'skills', label: 'Compétences', before: [base.skills.join(', ')], after: [adapted.skills.join(', ')] });
-  if (!sameList(base.softSkills, adapted.softSkills)) out.push({ key: 'softSkills', label: 'Qualités', before: [base.softSkills.join(', ')], after: [adapted.softSkills.join(', ')] });
+  if (!sameList(base.skills, adapted.skills)) out.push({ key: 'skills', label: t('Compétences'), before: [base.skills.join(', ')], after: [adapted.skills.join(', ')] });
+  if (!sameList(base.softSkills, adapted.softSkills)) out.push({ key: 'softSkills', label: t('Qualités'), before: [base.softSkills.join(', ')], after: [adapted.softSkills.join(', ')] });
   return out;
 }
 

@@ -37,7 +37,7 @@ export function maskEmail(email: string): string {
 }
 
 export function createVault(db: Db, accounts: Accounts, mailer: Mailer | null) {
-  async function sendCode(user: User, purpose: CodePurpose): Promise<{ to: string }> {
+  async function sendCode(user: User, purpose: CodePurpose, lang: 'fr' | 'en' = 'fr'): Promise<{ to: string }> {
     if (!mailer) throw new AccountError('L’envoi d’e-mails n’est pas encore activé.', 503);
     if (!user.identifier.includes('@')) {
       throw new AccountError('Votre compte utilise un numéro de téléphone : utilisez plutôt le mot de passe de votre compte.', 400);
@@ -50,12 +50,21 @@ export function createVault(db: Db, accounts: Accounts, mailer: Mailer | null) {
         [user.id, purpose, hash(code), CODE_TTL_MIN],
       );
     });
-    const what = purpose === 'vault' ? 'réinitialiser le code de votre coffre-fort' : 'choisir un nouveau mot de passe';
-    await mailer(
-      user.identifier,
-      `Votre code CVCasa : ${code}`,
-      `Bonjour${user.name ? ` ${user.name}` : ''},\n\nVoici votre code pour ${what} dans CVCasa :\n\n${code}\n\nIl est valable ${CODE_TTL_MIN} minutes. Si vous n’avez rien demandé, ignorez simplement cet e-mail.\n\nL’équipe CVCasa`,
-    );
+    if (lang === 'en') {
+      const what = purpose === 'vault' ? 'reset your safe’s code' : 'choose a new password';
+      await mailer(
+        user.identifier,
+        `Your CVCasa code: ${code}`,
+        `Hello${user.name ? ` ${user.name}` : ''},\n\nHere is your code to ${what} in CVCasa:\n\n${code}\n\nIt’s valid for ${CODE_TTL_MIN} minutes. If you didn’t ask for anything, just ignore this email.\n\nThe CVCasa team`,
+      );
+    } else {
+      const what = purpose === 'vault' ? 'réinitialiser le code de votre coffre-fort' : 'choisir un nouveau mot de passe';
+      await mailer(
+        user.identifier,
+        `Votre code CVCasa : ${code}`,
+        `Bonjour${user.name ? ` ${user.name}` : ''},\n\nVoici votre code pour ${what} dans CVCasa :\n\n${code}\n\nIl est valable ${CODE_TTL_MIN} minutes. Si vous n’avez rien demandé, ignorez simplement cet e-mail.\n\nL’équipe CVCasa`,
+      );
+    }
     return { to: maskEmail(user.identifier) };
   }
 
@@ -99,7 +108,7 @@ export function createVault(db: Db, accounts: Accounts, mailer: Mailer | null) {
       return key(user.id);
     },
 
-    sendVaultCode: (user: User) => sendCode(user, 'vault'),
+    sendVaultCode: (user: User, lang: 'fr' | 'en' = 'fr') => sendCode(user, 'vault', lang),
 
     async recoverWithCode(user: User, code: string): Promise<string> {
       await checkCode(user, 'vault', code);
@@ -107,12 +116,12 @@ export function createVault(db: Db, accounts: Accounts, mailer: Mailer | null) {
     },
 
     /** Mot de passe du compte oublié : code envoyé à l'e-mail du compte. */
-    async sendPasswordCode(rawIdentifier: string): Promise<{ to: string } | null> {
+    async sendPasswordCode(rawIdentifier: string, lang: 'fr' | 'en' = 'fr'): Promise<{ to: string } | null> {
       const identifier = normalizeIdentifier(rawIdentifier);
       const user = identifier ? await accounts.findByIdentifier(identifier) : null;
       // Pas de compte : on ne le dit pas (sinon on révélerait qui est inscrit).
       if (!user) return null;
-      return sendCode(user, 'password');
+      return sendCode(user, 'password', lang);
     },
 
     async resetPassword(rawIdentifier: string, code: string, password: string): Promise<User> {

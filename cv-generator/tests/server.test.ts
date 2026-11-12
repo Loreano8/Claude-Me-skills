@@ -18,6 +18,7 @@ function fakeAi(overrides: Partial<Ai> = {}): Ai {
     transcribe: vi.fn(async () => sampleTranscript),
     style: vi.fn(async () => sampleStyle),
     letterQuestions: vi.fn(async () => sampleLetterQuestions),
+    translateLetter: vi.fn(async () => ({ ...sampleLetter, language: 'en' as const })),
     ...overrides,
   };
 }

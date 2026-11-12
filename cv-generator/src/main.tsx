@@ -10,6 +10,9 @@ import { setupNative } from './native.ts';
 import { captureSource } from './lib/source.ts';
 import { captureReferral } from './lib/referral.ts';
 import { setupShareInbox } from './lib/shareInbox.ts';
+import { LANG } from './i18n.ts';
+
+document.documentElement.lang = LANG;
 
 captureReferral();
 captureSource();

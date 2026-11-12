@@ -1,6 +1,7 @@
 import { Fragment, useEffect, useLayoutEffect, useRef, useState, type CSSProperties } from 'react';
 import { FileDown, FileText, Keyboard, Mic } from 'lucide-react';
 import { cx } from './ui.tsx';
+import { LANG } from '../i18n.ts';
 
 /**
  * Scène d'accueil : le parcours arrive (ancien CV importé, texte écrit, ou dicté au micro : une façon par boucle, dans
@@ -16,7 +17,9 @@ const LOOP = 8;
 
 // Le parcours, selon la façon de le donner ; les morceaux qui ont un `to` rejoignent le CV.
 type Piece = { text: string; to?: number };
-const SOURCES: { icon: typeof Mic; short: string; active: string; idle: string; pieces: Piece[] }[] = [
+// Écrit en phrases entières dans chaque langue (pas mot à mot) : la scène doit se lire naturellement.
+type Source = { icon: typeof Mic; short: string; active: string; idle: string; pieces: Piece[] };
+const SOURCES_FR: Source[] = [
   {
     icon: FileText,
     short: 'Ancien CV',
@@ -69,13 +72,73 @@ const SOURCES: { icon: typeof Mic; short: string; active: string; idle: string; 
   },
 ];
 
+const SOURCES_EN: Source[] = [
+  {
+    icon: FileText,
+    short: 'Old CV',
+    active: 'Reading old-cv.pdf…',
+    idle: 'Old CV read',
+    pieces: [
+      { text: 'CV 2019 – ' },
+      { text: 'Accountant', to: 0 },
+      { text: ', transport company (2021 – ). Duties: ' },
+      { text: 'payroll for 120 staff', to: 1 },
+      { text: '; ' },
+      { text: 'cut late payments by 30%', to: 2 },
+      { text: '. Degree: ' },
+      { text: 'Master’s in Finance', to: 3 },
+      { text: '.' },
+    ],
+  },
+  {
+    icon: Keyboard,
+    short: 'Typed',
+    active: 'You type…',
+    idle: 'Typed',
+    pieces: [
+      { text: 'i’m an ' },
+      { text: 'accountant', to: 0 },
+      { text: ' at a transport company since 2021, i do ' },
+      { text: 'payroll for 120 staff', to: 1 },
+      { text: ', i ' },
+      { text: 'cut late payments by 30%', to: 2 },
+      { text: '. before: ' },
+      { text: 'Master’s in Finance', to: 3 },
+    ],
+  },
+  {
+    icon: Mic,
+    short: 'Voice',
+    active: 'You speak…',
+    idle: 'Got it',
+    pieces: [
+      { text: 'So… I’m an ' },
+      { text: 'accountant', to: 0 },
+      { text: ' at a transport company since 2021. I handle ' },
+      { text: 'payroll for 120 staff', to: 1 },
+      { text: ', and I ' },
+      { text: 'cut late payments by 30%', to: 2 },
+      { text: '. Before that, a ' },
+      { text: 'Master’s in Finance', to: 3 },
+      { text: '.' },
+    ],
+  },
+];
+const SOURCES = LANG === 'en' ? SOURCES_EN : SOURCES_FR;
+
+// Ce qui est écrit sur la feuille de CV.
+const SHEET_TEXT =
+  LANG === 'en'
+    ? { name: 'Your name', experience: 'Experience', company: 'Transport company', since: 'since 2021', education: 'Education', skills: 'Skills', ready: 'PDF ready to send', lines: ['Accountant', 'Ran payroll for 120 staff', 'Cut late payments by 30%', 'Master’s in Finance'], chips: ['Excel', 'Sage', 'Payroll', 'Tax'] }
+    : { name: 'Votre nom', experience: 'Expérience', company: 'Société de transport', since: 'depuis 2021', education: 'Formation', skills: 'Compétences', ready: 'PDF prêt à envoyer', lines: ['Comptable', 'Gérer la paie de 120 salariés', 'Réduire de 30 % les retards de paiement', 'Master en finance'], chips: ['Excel', 'Sage', 'Paie', 'Fiscalité'] };
+
 // Où chaque passage atterrit sur la feuille (repère de la scène) et ce qu'il y devient.
 const SHEET = { x: 104, y: 214, w: 300, h: 290 };
 const LINES = [
-  { x: SHEET.x + 60, y: SHEET.y + 40, text: 'Comptable', cls: 'text-[12px] font-semibold text-brand-700' },
-  { x: SHEET.x + 26, y: SHEET.y + 114, text: 'Gérer la paie de 120 salariés', cls: 'text-[11.5px] text-slate-800' },
-  { x: SHEET.x + 26, y: SHEET.y + 133, text: 'Réduire de 30 % les retards de paiement', cls: 'text-[11.5px] text-slate-800' },
-  { x: SHEET.x + 16, y: SHEET.y + 182, text: 'Master en finance', cls: 'text-[11.5px] font-semibold text-slate-900' },
+  { x: SHEET.x + 60, y: SHEET.y + 40, text: SHEET_TEXT.lines[0], cls: 'text-[12px] font-semibold text-brand-700' },
+  { x: SHEET.x + 26, y: SHEET.y + 114, text: SHEET_TEXT.lines[1], cls: 'text-[11.5px] text-slate-800' },
+  { x: SHEET.x + 26, y: SHEET.y + 133, text: SHEET_TEXT.lines[2], cls: 'text-[11.5px] text-slate-800' },
+  { x: SHEET.x + 16, y: SHEET.y + 182, text: SHEET_TEXT.lines[3], cls: 'text-[11.5px] font-semibold text-slate-900' },
 ];
 
 // Calendrier de la boucle, en secondes.
@@ -198,7 +261,7 @@ export function HeroScene() {
   return (
     <div>
       {/* Les trois façons de commencer, visibles d'un coup d'œil ; celle en cours est mise en avant. */}
-      <ul className="mb-4 flex justify-center gap-2" aria-label="Trois façons de commencer">
+      <ul className="mb-4 flex justify-center gap-2" aria-label={LANG === 'en' ? 'Three ways to start' : 'Trois façons de commencer'}>
         {SOURCES.map((s) => (
           <li
             key={s.short}
@@ -254,22 +317,22 @@ export function HeroScene() {
           }}
         >
           <div className="absolute top-4 left-4 size-9 rounded-full bg-slate-200" />
-          <p className="absolute top-4 left-[60px] font-display text-[16px] leading-none font-bold text-ink">Votre nom</p>
+          <p className="absolute top-4 left-[60px] font-display text-[16px] leading-none font-bold text-ink">{SHEET_TEXT.name}</p>
           <div className="absolute top-[60px] right-4 left-4 h-px bg-slate-200" />
-          <p className="absolute top-[74px] left-4 text-[10px] font-semibold text-brand-700">Expérience</p>
+          <p className="absolute top-[74px] left-4 text-[10px] font-semibold text-brand-700">{SHEET_TEXT.experience}</p>
           <div className="absolute top-[90px] right-4 left-4 flex items-baseline justify-between" style={{ opacity: landed(t, 1) }}>
-            <span className="text-[11.5px] font-semibold text-slate-900">Société de transport</span>
-            <span className="text-[10px] whitespace-nowrap text-slate-500">depuis 2021</span>
+            <span className="text-[11.5px] font-semibold text-slate-900">{SHEET_TEXT.company}</span>
+            <span className="text-[10px] whitespace-nowrap text-slate-500">{SHEET_TEXT.since}</span>
           </div>
           {[114, 133].map((y, i) => (
             <span key={y} className="absolute left-[16px] size-[5px] rounded-full bg-brand-600" style={{ top: y + 6, opacity: landed(t, i + 1) }} />
           ))}
-          <p className="absolute top-[160px] left-4 text-[10px] font-semibold text-brand-700">Formation</p>
+          <p className="absolute top-[160px] left-4 text-[10px] font-semibold text-brand-700">{SHEET_TEXT.education}</p>
           <p className="absolute top-[222px] left-4 text-[10px] font-semibold text-brand-700" style={{ opacity: done }}>
-            Compétences
+            {SHEET_TEXT.skills}
           </p>
           <div className="absolute top-[240px] left-4 flex gap-1.5" style={{ opacity: done }}>
-            {['Excel', 'Sage', 'Paie', 'Fiscalité'].map((s) => (
+            {SHEET_TEXT.chips.map((s) => (
               <span key={s} className="rounded-full bg-brand-50 px-2 py-0.5 text-[10px] font-medium text-brand-800">
                 {s}
               </span>
@@ -306,7 +369,7 @@ export function HeroScene() {
           className="absolute flex items-center gap-2 rounded-full bg-ink px-4 py-2 text-sm font-semibold text-white shadow-xl"
           style={{ right: 0, top: SHEET.y + SHEET.h - 18, opacity: done, transform: `scale(${0.8 + 0.2 * done})` }}
         >
-          <FileDown className="size-4 text-sun-400" /> PDF prêt à envoyer
+          <FileDown className="size-4 text-sun-400" /> {SHEET_TEXT.ready}
         </div>
       </div>
     </div>

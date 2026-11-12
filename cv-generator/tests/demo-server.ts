@@ -1,3 +1,4 @@
+import type { LetterTranslateRequest } from '../shared/schema.ts';
 import { createVault } from '../server/vault.ts';
 import { createRecovery } from '../server/recovery.ts';
 // Serveur de démonstration (npm run demo) : vraie base Postgres en mémoire, IA et paiement simulés.
@@ -77,6 +78,19 @@ const ai = {
   transcribe: async () => (await wait(), sampleTranscript),
   style: async () => (await wait(), sampleStyle),
   letterQuestions: async () => (await wait(), sampleLetterQuestions),
+  translateLetter: async (req: LetterTranslateRequest) => (
+    await wait(),
+    {
+      language: req.targetLang,
+      recipientName: req.letter.recipientName,
+      recipientCompany: req.letter.recipientCompany,
+      recipientAddress: req.letter.recipientAddress,
+      subject: req.targetLang === 'en' ? 'Application for the position of Accountant' : 'Candidature au poste de Comptable',
+      salutation: req.targetLang === 'en' ? 'Dear Hiring Manager,' : 'Madame, Monsieur,',
+      paragraphs: req.letter.paragraphs.map((p: string) => (req.targetLang === 'en' ? `[EN] ${p}` : `[FR] ${p}`)),
+      closing: req.targetLang === 'en' ? 'Yours sincerely,' : 'Je vous prie d’agréer, Madame, Monsieur, mes salutations distinguées.',
+    }
+  ),
 };
 // E-mails simulés : le code s'affiche dans la console du serveur de démo.
 const support = createSupport(db, async (t) => console.log('[notification]', t));

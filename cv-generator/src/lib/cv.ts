@@ -1,5 +1,6 @@
 import type { AiCvContent, Lang } from '../../shared/schema.ts';
 import type { CoverLetter, CvDocument, CvSettings, Personal } from '../types.ts';
+import { LANG, t } from '../i18n.ts';
 
 export const uid = (): string =>
   typeof crypto !== 'undefined' && 'randomUUID' in crypto
@@ -41,7 +42,8 @@ export function defaultSettings(): CvSettings {
   return {
     template: 'moderne',
     accent: ACCENTS[0],
-    headingLang: 'fr',
+    // Un nouveau CV commence dans la langue de l'interface ; il peut ensuite passer dans l'autre langue.
+    headingLang: LANG,
     showPhoto: true,
     photoShape: 'round',
     showBirthDate: false,
@@ -52,7 +54,7 @@ export function defaultSettings(): CvSettings {
   };
 }
 
-export function emptyCv(label = 'Mon CV'): CvDocument {
+export function emptyCv(label = t('Mon CV')): CvDocument {
   return {
     id: uid(),
     label,
@@ -72,20 +74,22 @@ export function emptyCv(label = 'Mon CV'): CvDocument {
   };
 }
 
-export function emptyLetter(): CoverLetter {
+/** Une nouvelle lettre commence dans la langue de l'interface (elle se change ensuite dans la page Lettre). */
+export function emptyLetter(lang: Lang = LANG): CoverLetter {
+  const en = lang === 'en';
   return {
     recipientName: '',
     recipientCompany: '',
     recipientAddress: '',
     place: '',
-    date: letterDate('fr'),
+    date: letterDate(lang),
     subject: '',
-    salutation: 'Madame, Monsieur,',
+    salutation: en ? 'Dear Hiring Manager,' : 'Madame, Monsieur,',
     body: '',
-    closing: "Je vous prie d'agréer, Madame, Monsieur, l'expression de mes salutations distinguées.",
+    closing: en ? 'Yours sincerely,' : "Je vous prie d'agréer, Madame, Monsieur, l'expression de mes salutations distinguées.",
     showSignature: true,
     accent: ACCENTS[0],
-    lang: 'fr',
+    lang,
   };
 }
 

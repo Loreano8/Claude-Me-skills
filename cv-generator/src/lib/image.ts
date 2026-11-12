@@ -1,10 +1,11 @@
 import { readAsDataUrl } from './files.ts';
 
+import { t } from '../i18n.ts';
 export function loadImage(src: string): Promise<HTMLImageElement> {
   return new Promise((resolve, reject) => {
     const img = new Image();
     img.onload = () => resolve(img);
-    img.onerror = () => reject(new Error('Image illisible.'));
+    img.onerror = () => reject(new Error(t('Image illisible.')));
     img.src = src;
   });
 }

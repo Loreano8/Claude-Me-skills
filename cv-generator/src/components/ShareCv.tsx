@@ -8,6 +8,7 @@ import { saveFile } from '../export/save.ts';
 import type { CvDocument } from '../types.ts';
 import { Button, Card, Cost, Notice } from './ui.tsx';
 
+import { LOCALE, t } from '../i18n.ts';
 const toBase64 = (blob: Blob) =>
   new Promise<string>((resolve, reject) => {
     const r = new FileReader();
@@ -73,12 +74,12 @@ export function ShareCv({ cv }: { cv: CvDocument }) {
 
   async function send() {
     if (!share) return;
-    const text = `Mon CV : ${share.url}`;
+    const text = t('Mon CV : {0}', [share.url]);
     if (Capacitor.isNativePlatform()) {
       const { Share } = await import('@capacitor/share');
-      await Share.share({ title: 'Mon CV', text, url: share.url, dialogTitle: 'Envoyer mon CV' }).catch(() => {});
+      await Share.share({ title: t('Mon CV'), text, url: share.url, dialogTitle: t('Envoyer mon CV') }).catch(() => {});
     } else if (navigator.share) {
-      await navigator.share({ title: 'Mon CV', text: 'Mon CV', url: share.url }).catch(() => {});
+      await navigator.share({ title: t('Mon CV'), text: t('Mon CV'), url: share.url }).catch(() => {});
     } else {
       await copy();
     }
@@ -94,47 +95,41 @@ export function ShareCv({ cv }: { cv: CvDocument }) {
     <Card
       title={
         <span className="flex items-center gap-2">
-          <Link2 className="size-5 text-brand-600" aria-hidden="true" /> Partager mon CV par lien <Cost free />
+          <Link2 className="size-5 text-brand-600" aria-hidden="true" /> {' '}{t('Partager mon CV par lien')}{' '}<Cost free />
         </span>
       }
-      subtitle="Un lien et un QR code à donner à un recruteur, à envoyer par message ou à imprimer."
+      subtitle={t('Un lien et un QR code à donner à un recruteur, à envoyer par message ou à imprimer.')}
     >
       {!share ? (
         <>
           <Button icon={<QrCode className="size-4" />} loading={busy === 'publish'} onClick={() => void publish()}>
-            Créer mon lien et mon QR code
-          </Button>
-          <p className="mt-2 text-xs text-slate-500">Seules les personnes qui ont le lien peuvent voir votre CV. Il marche 90 jours et vous pouvez l’arrêter quand vous voulez.</p>
+            {t('Créer mon lien et mon QR code')}</Button>
+          <p className="mt-2 text-xs text-slate-500">{t('Seules les personnes qui ont le lien peuvent voir votre CV. Il marche 90 jours et vous pouvez l’arrêter quand vous voulez.')}</p>
         </>
       ) : (
         <div className="space-y-3">
           <div className="flex flex-col items-center gap-3 sm:flex-row sm:items-start">
-            {qr && <img src={qr} alt="QR code vers votre CV" className="size-36 shrink-0 rounded-xl ring-1 ring-slate-200" />}
+            {qr && <img src={qr} alt={t('QR code vers votre CV')} className="size-36 shrink-0 rounded-xl ring-1 ring-slate-200" />}
             <div className="w-full min-w-0 space-y-2">
               <p className="truncate rounded-xl bg-slate-50 px-3 py-2 text-sm text-slate-700 ring-1 ring-slate-200">{share.url}</p>
               <div className="flex flex-wrap gap-2">
                 <Button icon={<Share2 className="size-4" />} onClick={() => void send()}>
-                  Envoyer le lien
-                </Button>
+                  {t('Envoyer le lien')}</Button>
                 <Button variant="secondary" icon={copied ? <Check className="size-4" /> : <Copy className="size-4" />} onClick={() => void copy()}>
-                  {copied ? 'Copié' : 'Copier'}
+                  {copied ? t('Copié') : t('Copier')}
                 </Button>
                 <Button variant="secondary" icon={<QrCode className="size-4" />} onClick={() => void saveQr()}>
-                  Enregistrer le QR code
-                </Button>
+                  {t('Enregistrer le QR code')}</Button>
               </div>
             </div>
           </div>
           <p className="text-xs text-slate-500">
-            Vous avez modifié votre CV ? Mettez le lien à jour : il reste le même. Valable jusqu’au {new Date(share.expiresAt).toLocaleDateString('fr-FR')}.
-          </p>
+            {t('Vous avez modifié votre CV ? Mettez le lien à jour : il reste le même. Valable jusqu’au {0}.', [new Date(share.expiresAt).toLocaleDateString(LOCALE)])}</p>
           <div className="flex flex-wrap gap-2">
             <Button variant="secondary" size="sm" loading={busy === 'publish'} onClick={() => void publish()}>
-              Mettre à jour le lien
-            </Button>
+              {t('Mettre à jour le lien')}</Button>
             <Button variant="danger" size="sm" loading={busy === 'stop'} onClick={() => void stop()}>
-              Arrêter le partage
-            </Button>
+              {t('Arrêter le partage')}</Button>
           </div>
         </div>
       )}

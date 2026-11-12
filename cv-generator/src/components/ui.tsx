@@ -1,6 +1,7 @@
 import { useId, useState, type ButtonHTMLAttributes, type ReactNode } from 'react';
 import { ChevronDown, Loader2 } from 'lucide-react';
 
+import { t } from '../i18n.ts';
 export function cx(...classes: (string | false | null | undefined)[]): string {
   return classes.filter(Boolean).join(' ');
 }
@@ -54,7 +55,7 @@ export function Button({
 export function Cost({ n = 1, free = false }: { n?: number; free?: boolean }) {
   return (
     <span className={cx('ml-1 rounded-full px-2 py-0.5 text-xs font-semibold whitespace-nowrap', free ? 'bg-emerald-100 text-emerald-900' : 'bg-sun-100 text-sun-900')}>
-      {free ? 'Gratuit' : `${n} crédit${n > 1 ? 's' : ''}`}
+      {free ? t('Gratuit') : t('{0} crédit{1}', [n, n > 1 ? 's' : ''])}
     </span>
   );
 }
@@ -263,7 +264,7 @@ export function Chip({ children, tone = 'slate', onRemove }: { children: ReactNo
     <span className={cx('inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-sm', tones[tone])}>
       {children}
       {onRemove && (
-        <button type="button" onClick={onRemove} className="hit -mr-1 rounded-full px-1.5 text-current opacity-60 hover:opacity-100" aria-label="Retirer">
+        <button type="button" onClick={onRemove} className="hit -mr-1 rounded-full px-1.5 text-current opacity-60 hover:opacity-100" aria-label={t('Retirer')}>
           ×
         </button>
       )}

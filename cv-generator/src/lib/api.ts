@@ -26,6 +26,7 @@ import type {
   KeywordsRequest,
   KeywordsResult,
   WatchRun,
+  LetterTranslateRequest,
   WatchSaveRequest,
   WatchState,
 } from '../../shared/schema.ts';
@@ -34,6 +35,7 @@ import { pendingSource } from './source.ts';
 import { useAccount, type AccountUser, type Pack, type ReturnOffer } from './account.ts';
 import { deviceId } from './device.ts';
 
+import { LANG, t } from '../i18n.ts';
 // Sur le web, l'API est servie par le même domaine. Dans l'application Android,
 // VITE_API_URL pointe vers le serveur en ligne.
 /** CV partagé par lien : `url` mène à la page de présentation, qui ouvre le PDF. */
@@ -50,7 +52,7 @@ export class ApiError extends Error {}
 
 async function request<T>(method: 'GET' | 'POST', path: string, body?: unknown, extraHeaders: Record<string, string> = {}): Promise<T> {
   if (!API_BASE && Capacitor.isNativePlatform()) {
-    throw new ApiError('Les fonctions en ligne ne sont pas encore activées dans cette version de l’application.');
+    throw new ApiError(t('Les fonctions en ligne ne sont pas encore activées dans cette version de l’application.'));
   }
   const account = useAccount.getState();
   let res: Response;
@@ -60,13 +62,15 @@ async function request<T>(method: 'GET' | 'POST', path: string, body?: unknown, 
       headers: {
         'Content-Type': 'application/json',
         'X-Device-Id': await deviceId(),
+        // Langue de l'interface : messages, conseils et questions du serveur dans cette langue.
+        'X-Lang': LANG,
         ...(account.token ? { Authorization: `Bearer ${account.token}` } : {}),
         ...extraHeaders,
       },
       body: body === undefined ? undefined : JSON.stringify(body),
     });
   } catch {
-    throw new ApiError('Impossible de joindre le serveur. Vérifiez votre connexion internet.');
+    throw new ApiError(t('Impossible de joindre le serveur. Vérifiez votre connexion internet.'));
   }
 
   const remaining = res.headers.get('X-Credits-Remaining');
@@ -76,7 +80,7 @@ async function request<T>(method: 'GET' | 'POST', path: string, body?: unknown, 
   if (!res.ok) {
     const message = typeof data?.error === 'string' ? data.error : null;
     // Pas de réponse de notre API : site publié sans serveur (ex. version de démonstration).
-    if (!message) throw new ApiError('Les fonctions en ligne ne sont pas encore activées sur ce site.');
+    if (!message) throw new ApiError(t('Les fonctions en ligne ne sont pas encore activées sur ce site.'));
     if (res.status === 401 && (path.startsWith('/api/ai/') || path.startsWith('/api/vault/') || path === '/api/unlock' || path === '/api/dossier/unlock' || path.startsWith('/api/watch'))) {
       account.logout();
       account.open('account', message);
@@ -115,6 +119,7 @@ export const api = {
   watchRun: () => post<{ run: WatchRun; credits: number | null; free: boolean }>('/api/watch/run', {}),
   watchStart: () => post<{ watch: WatchState; credits: number }>('/api/watch/start', {}),
   watchStop: () => post<{ ok: true }>('/api/watch/stop', {}),
+  translateLetter: (req: LetterTranslateRequest) => post<CoverLetterResult>('/api/ai/translate-letter', req),
   fetchJob: (url: string) => post<JobFetchResult>('/api/job/fetch', { url }),
   transcribe: (req: TranscribeRequest) => post<TranscribeResult>('/api/ai/transcribe', req),
   dossierUnlock: () => post<{ credits: number | null }>('/api/dossier/unlock', {}),
@@ -194,10 +199,10 @@ export async function adminRequest<T>(token: string, method: 'GET' | 'POST', pat
       body: body === undefined ? undefined : JSON.stringify(body),
     });
   } catch {
-    throw new ApiError('Impossible de joindre le serveur. Vérifiez votre connexion internet.');
+    throw new ApiError(t('Impossible de joindre le serveur. Vérifiez votre connexion internet.'));
   }
   const data = (await res.json().catch(() => null)) as { error?: unknown } | null;
-  if (!res.ok) throw new ApiError(typeof data?.error === 'string' ? data.error : 'Erreur du serveur.');
+  if (!res.ok) throw new ApiError(typeof data?.error === 'string' ? data.error : t('Erreur du serveur.'));
   return data as T;
 }
 

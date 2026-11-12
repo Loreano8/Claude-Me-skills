@@ -1,5 +1,6 @@
 import { create } from 'zustand';
 
+import { t } from '../i18n.ts';
 // Coffre-fort : documents personnels (pièce d'identité, diplômes…) gardés sur l'appareil, dans IndexedDB.
 // Chaque fichier est chiffré (AES-GCM) avec une clé propre au coffre. Avec un code, cette clé est elle-même
 // chiffrée par le code (PBKDF2) : sans le code, les fichiers sont illisibles, même en fouillant le téléphone.
@@ -7,10 +8,10 @@ import { create } from 'zustand';
 
 export type Category = 'identite' | 'diplome' | 'attestation' | 'autre';
 export const CATEGORIES: Record<Category, string> = {
-  identite: 'Identité',
-  diplome: 'Diplôme',
-  attestation: 'Attestation',
-  autre: 'Autre',
+  identite: t('Identité'),
+  diplome: t('Diplôme'),
+  attestation: t('Attestation'),
+  autre: t('Autre'),
 };
 
 export interface VaultDoc {
@@ -59,11 +60,11 @@ function openDb(): Promise<IDBDatabase> {
 async function tx<T>(stores: string[], mode: IDBTransactionMode, run: (t: IDBTransaction) => IDBRequest<T> | void): Promise<T> {
   const db = await openDb();
   return new Promise<T>((resolve, reject) => {
-    const t = db.transaction(stores, mode);
-    const req = run(t);
-    t.oncomplete = () => resolve(req ? req.result : (undefined as T));
-    t.onerror = () => reject(t.error);
-    t.onabort = () => reject(t.error ?? new Error('Stockage indisponible.'));
+    const trx = db.transaction(stores, mode);
+    const req = run(trx);
+    trx.oncomplete = () => resolve(req ? req.result : (undefined as T));
+    trx.onerror = () => reject(trx.error);
+    trx.onabort = () => reject(trx.error ?? new Error(t('Stockage indisponible.')));
   });
 }
 
@@ -145,7 +146,7 @@ export async function unlockVault(pin: string): Promise<void> {
   try {
     raw = b64(await open(await pinKey(pin, unb64(meta.salt)), unb64(meta.wrapped)));
   } catch {
-    throw new Error('Code incorrect.');
+    throw new Error(t('Code incorrect.'));
   }
   await opened(raw, true);
 }
@@ -164,7 +165,7 @@ export function lockVault(): void {
 
 export async function addToVault(blob: Blob, name: string, category: Category): Promise<void> {
   const { key } = useVault.getState();
-  if (!key) throw new Error('Ouvrez d’abord le coffre-fort.');
+  if (!key) throw new Error(t('Ouvrez d’abord le coffre-fort.'));
   const doc: VaultDoc = { id: crypto.randomUUID(), name, mime: blob.type || 'application/octet-stream', size: blob.size, category, createdAt: Date.now() };
   const data = await seal(key, await blob.arrayBuffer());
   await tx(['docs', 'files'], 'readwrite', (t) => {
@@ -176,9 +177,9 @@ export async function addToVault(blob: Blob, name: string, category: Category): 
 
 export async function readFromVault(doc: VaultDoc): Promise<Blob> {
   const { key } = useVault.getState();
-  if (!key) throw new Error('Ouvrez d’abord le coffre-fort.');
+  if (!key) throw new Error(t('Ouvrez d’abord le coffre-fort.'));
   const data = await tx<Uint8Array | undefined>(['files'], 'readonly', (t) => t.objectStore('files').get(doc.id));
-  if (!data) throw new Error('Document introuvable.');
+  if (!data) throw new Error(t('Document introuvable.'));
   return new Blob([await open(key, data)], { type: doc.mime });
 }
 

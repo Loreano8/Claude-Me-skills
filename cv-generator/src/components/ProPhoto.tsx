@@ -3,6 +3,7 @@ import { Sparkles, Undo2 } from 'lucide-react';
 import { BACKGROUNDS } from '../lib/background.ts';
 import { Button, Cost, cx, Notice } from './ui.tsx';
 
+import { t } from '../i18n.ts';
 /** « Fond uni » : la photo garde le visage, le fond devient une couleur unie, comme chez le photographe. */
 export function ProPhoto({ value, onChange }: { value: string; onChange: (v: string) => void }) {
   const [original, setOriginal] = useState<string | null>(null);
@@ -18,7 +19,7 @@ export function ProPhoto({ value, onChange }: { value: string; onChange: (v: str
       onChange(await plainBackground(source, color));
       setOriginal(source);
     } catch (e) {
-      setError((e as Error).message || 'Le fond n’a pas pu être changé sur cet appareil.');
+      setError((e as Error).message || t('Le fond n’a pas pu être changé sur cet appareil.'));
     } finally {
       setBusy(null);
     }
@@ -27,9 +28,9 @@ export function ProPhoto({ value, onChange }: { value: string; onChange: (v: str
   return (
     <div className="mt-3 rounded-xl bg-slate-50 p-3 ring-1 ring-slate-200">
       <p className="flex items-center gap-2 text-sm font-semibold text-slate-900">
-        <Sparkles className="size-4 text-brand-600" aria-hidden="true" /> Fond uni, comme chez le photographe <Cost free />
+        <Sparkles className="size-4 text-brand-600" aria-hidden="true" /> {' '}{t('Fond uni, comme chez le photographe')}{' '}<Cost free />
       </p>
-      <p className="mt-0.5 text-xs text-slate-600">Choisissez une couleur : le fond derrière vous est remplacé, votre visage ne change pas.</p>
+      <p className="mt-0.5 text-xs text-slate-600">{t('Choisissez une couleur : le fond derrière vous est remplacé, votre visage ne change pas.')}</p>
       <div className="mt-2 flex flex-wrap items-center gap-2">
         {BACKGROUNDS.map((b) => (
           <button
@@ -40,7 +41,7 @@ export function ProPhoto({ value, onChange }: { value: string; onChange: (v: str
             className={cx('flex min-h-10 items-center gap-2 rounded-full bg-white px-3 text-sm font-medium text-slate-800 ring-1 ring-slate-300 hover:ring-brand-400 disabled:opacity-60')}
           >
             <span className="size-4 rounded-full ring-1 ring-slate-300" style={{ backgroundColor: b.color }} aria-hidden="true" />
-            {busy === b.color ? 'Un instant…' : b.label}
+            {busy === b.color ? t('Un instant…') : b.label}
           </button>
         ))}
         {original && (
@@ -53,11 +54,10 @@ export function ProPhoto({ value, onChange }: { value: string; onChange: (v: str
               setOriginal(null);
             }}
           >
-            Photo d’origine
-          </Button>
+            {t('Photo d’origine')}</Button>
         )}
       </div>
-      {busy && <p className="mt-2 text-xs text-slate-500">La première fois, l’outil se charge (quelques secondes).</p>}
+      {busy && <p className="mt-2 text-xs text-slate-500">{t('La première fois, l’outil se charge (quelques secondes).')}</p>}
       {error && (
         <div className="mt-2">
           <Notice tone="error">{error}</Notice>

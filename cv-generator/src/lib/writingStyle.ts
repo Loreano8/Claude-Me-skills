@@ -2,6 +2,7 @@ import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import type { StyleResult } from '../../shared/schema.ts';
 
+import { t } from '../i18n.ts';
 /** « Écrire comme moi » : le style d'écriture de la personne, gardé sur ce téléphone. */
 export interface WritingStyle {
   profile: string;
@@ -39,6 +40,6 @@ export const useWritingStyle = create<StyleState>()(
 export function styleForAi(): string {
   const { style, enabled } = useWritingStyle.getState();
   if (!style || !enabled) return '';
-  const examples = style.examples.length ? `\nTournures typiques : ${style.examples.map((e) => `« ${e} »`).join(' ; ')}` : '';
+  const examples = style.examples.length ? t('\nTournures typiques : {0}', [style.examples.map((e) => `« ${e} »`).join(' ; ')]) : '';
   return `${style.profile}${examples}`.slice(0, 2_000);
 }

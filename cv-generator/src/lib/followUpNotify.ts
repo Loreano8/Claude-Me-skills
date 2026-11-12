@@ -3,6 +3,7 @@ import { useStore } from '../store.ts';
 import { FOLLOW_UP_DAYS } from './emails.ts';
 import type { Application } from '../types.ts';
 
+import { t } from '../i18n.ts';
 /** Identifiant de notification stable pour une candidature (plage réservée 5000-104999). */
 function notifyId(appId: string): number {
   let h = 0;
@@ -39,8 +40,8 @@ export async function syncFollowUpNotifications(): Promise<void> {
     await LocalNotifications.schedule({
       notifications: due.map((a) => ({
         id: notifyId(a.id),
-        title: 'Pensez à relancer',
-        body: `${[a.title, a.company].filter(Boolean).join(' chez ')} : sans réponse depuis une semaine. Le message de relance est prêt.`,
+        title: t('Pensez à relancer'),
+        body: t('{0} : sans réponse depuis une semaine. Le message de relance est prêt.', [[a.title, a.company].filter(Boolean).join(' – ')]),
         schedule: { at: followUpDate(a.sentAt!), allowWhileIdle: true },
         smallIcon: 'ic_stat_cvstudio',
         iconColor: '#2549eb',

@@ -1,5 +1,6 @@
 import type { CvDocument, CvSettings } from '../types.ts';
 
+import { t } from '../i18n.ts';
 type DisplaySettings = Pick<CvSettings, 'showPhoto' | 'showBirthDate' | 'showNationality' | 'showSignature'>;
 
 /**
@@ -27,8 +28,8 @@ export function recommendedDisplay(cv: CvDocument): { settings: DisplaySettings;
   return {
     settings: { showPhoto: true, showBirthDate: false, showNationality: false, showSignature: false },
     reason: cv.photo
-      ? 'Usage courant : une photo professionnelle, sans date de naissance ni nationalité (elles ne sont pas nécessaires et peuvent desservir).'
-      : 'Usage courant : pas de date de naissance ni de nationalité. Une photo professionnelle est un plus : ajoutez-la dans « Mes infos ».',
+      ? t('Usage courant : une photo professionnelle, sans date de naissance ni nationalité (elles ne sont pas nécessaires et peuvent desservir).')
+      : t('Usage courant : pas de date de naissance ni de nationalité. Une photo professionnelle est un plus : ajoutez-la dans « Mes infos ».'),
   };
 }
 

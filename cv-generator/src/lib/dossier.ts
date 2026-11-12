@@ -1,3 +1,4 @@
+import { t } from '../i18n.ts';
 // Dossier de candidature : réunit CV, lettre, pièces (PDF, photos, documents scannés) en un seul PDF.
 // Tout se passe sur l'appareil : les pièces d'identité et diplômes ne sont jamais envoyés au serveur.
 
@@ -40,7 +41,7 @@ export async function processPhoto(file: Blob, mode: ScanMode, rotation: 0 | 90 
   ctx.putImageData(img, 0, 0);
 
   const blob = await new Promise<Blob | null>((resolve) => canvas.toBlob(resolve, 'image/jpeg', mode === 'scan' ? 0.82 : 0.86));
-  if (!blob) throw new Error('Impossible de traiter cette photo.');
+  if (!blob) throw new Error(t('Impossible de traiter cette photo.'));
   return blob;
 }
 
@@ -48,7 +49,7 @@ export async function processPhoto(file: Blob, mode: ScanMode, rotation: 0 | 90 
 export async function orientedPhoto(file: Blob, rotation: 0 | 90 | 180 | 270): Promise<Blob> {
   const canvas = await orientedCanvas(file, rotation);
   const blob = await new Promise<Blob | null>((resolve) => canvas.toBlob(resolve, 'image/jpeg', 0.85));
-  if (!blob) throw new Error('Impossible de lire cette photo.');
+  if (!blob) throw new Error(t('Impossible de lire cette photo.'));
   return blob;
 }
 
@@ -220,7 +221,7 @@ export async function buildDossier(parts: DossierPart[]): Promise<Blob> {
       try {
         src = await PDFDocument.load(part.bytes, { ignoreEncryption: true });
       } catch {
-        throw new Error(`« ${part.name} » n’a pas pu être lu (PDF protégé ou abîmé). Enregistrez-le à nouveau ou prenez-le en photo.`);
+        throw new Error(t('« {0} » n’a pas pu être lu (PDF protégé ou abîmé). Enregistrez-le à nouveau ou prenez-le en photo.', [part.name]));
       }
       const pages = await out.copyPages(src, src.getPageIndices());
       pages.forEach((p) => out.addPage(p));
@@ -237,7 +238,7 @@ export async function buildDossier(parts: DossierPart[]): Promise<Blob> {
       page.drawImage(image, { x: (pw - w) / 2, y: (ph - h) / 2, width: w, height: h });
     }
   }
-  if (out.getPageCount() === 0) throw new Error('Ajoutez au moins un document.');
+  if (out.getPageCount() === 0) throw new Error(t('Ajoutez au moins un document.'));
   out.setCreator('CVCasa');
   out.setProducer('CVCasa');
   const bytes = await out.save();

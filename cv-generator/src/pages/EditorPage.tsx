@@ -16,16 +16,13 @@ import { SignaturePad } from '../components/SignaturePad.tsx';
 import { TagInput } from '../components/TagInput.tsx';
 import { Button, Card, Cost, Field, Notice, Section, Select, TextArea, Toggle } from '../components/ui.tsx';
 
+import { t } from '../i18n.ts';
 type Update = (recipe: (cv: CvDocument) => CvDocument) => void;
 
 // ---------------------------------------------------------------------------
 // Saisie rapide avec l'IA
 
-const QUICK_PLACEHOLDER = `Écrivez tout comme ça vous vient, dans le désordre. Par exemple :
-
-Prénom Nom, comptable, tél. 01 00 00 00 00, prenom.nom@email.com.
-Master en finance en 2020. Depuis 2021 comptable dans une société de transport : déclarations fiscales, paie de 120 salariés, j'ai réduit les retards de paiement de 30 %. Avant : stage de 6 mois dans un cabinet d'audit.
-Excel avancé, Sage. Français, anglais courant. J'aime le basket et le bénévolat.`;
+const QUICK_PLACEHOLDER = t('Écrivez tout comme ça vous vient, dans le désordre. Par exemple :\n\nPrénom Nom, comptable, tél. 01 00 00 00 00, prenom.nom@email.com.\nMaster en finance en 2020. Depuis 2021 comptable dans une société de transport : déclarations fiscales, paie de 120 salariés, j\'ai réduit les retards de paiement de 30 %. Avant : stage de 6 mois dans un cabinet d\'audit.\nExcel avancé, Sage. Français, anglais courant. J\'aime le basket et le bénévolat.');
 
 const MAX_QUICK_FILES = 8;
 /** Taille totale des documents (base64) : reste sous la limite d'envoi du serveur (15 Mo). */
@@ -54,7 +51,7 @@ function QuickFill() {
     setStyleBusy(true);
     try {
       const problem = await learnStyle(docs, '');
-      setStyleNote(problem ?? 'C’est noté : vos prochains CV et lettres reprendront votre façon d’écrire.');
+      setStyleNote(problem ?? t('C’est noté : vos prochains CV et lettres reprendront votre façon d’écrire.'));
       setStyleOffer(null);
     } catch (e) {
       setStyleNote((e as Error).message);
@@ -106,11 +103,11 @@ function QuickFill() {
       setFiles((cur) => {
         const next = [...cur, ...added];
         if (next.length > MAX_QUICK_FILES) {
-          setError(`${MAX_QUICK_FILES} documents maximum à la fois.`);
+          setError(t('{0} documents maximum à la fois.', [MAX_QUICK_FILES]));
           return cur;
         }
         if (next.reduce((n, a) => n + a.data.length, 0) > MAX_QUICK_BYTES) {
-          setError('Ces documents sont trop lourds ensemble. Envoyez-en moins à la fois.');
+          setError(t('Ces documents sont trop lourds ensemble. Envoyez-en moins à la fois.'));
           return cur;
         }
         return next;
@@ -126,15 +123,14 @@ function QuickFill() {
       tour="quickfill"
       title={
         <span className="flex items-center gap-2">
-          <PenLine className="size-5 text-brand-600" /> Saisie rapide
-        </span>
+          <PenLine className="size-5 text-brand-600" /> {' '}{t('Saisie rapide')}</span>
       }
-      subtitle="Partez de votre ancien CV ou de quelques lignes : CVCasa range tout et le met aux normes actuelles."
+      subtitle={t('Partez de votre ancien CV ou de quelques lignes : CVCasa range tout et le met aux normes actuelles.')}
     >
       {/* Ordre voulu : l'ancien CV d'abord, puis l'écrit ; la dictée n'est qu'une aide pour écrire, pas le point de départ. */}
       <div className="rounded-xl bg-white p-3 ring-1 ring-slate-200">
-        <p className="text-sm font-semibold text-slate-900">Vous avez déjà un CV ?</p>
-        <p className="mt-0.5 text-xs text-slate-500">En PDF, en image, ou sur papier : prenez chaque page en photo, bien à plat et avec un bon éclairage ({MAX_QUICK_FILES} documents maximum).</p>
+        <p className="text-sm font-semibold text-slate-900">{t('Vous avez déjà un CV ?')}</p>
+        <p className="mt-0.5 text-xs text-slate-500">{t('En PDF, en image, ou sur papier : prenez chaque page en photo, bien à plat et avec un bon éclairage ({0} documents maximum).', [MAX_QUICK_FILES])}</p>
         <input
           ref={fileInput}
           type="file"
@@ -164,7 +160,7 @@ function QuickFill() {
             <span key={i} className="inline-flex max-w-full items-center gap-2 rounded-xl bg-slate-50 px-3 py-2 text-sm ring-1 ring-slate-200">
               <Paperclip className="size-4 shrink-0 text-slate-500" />
               <span className="truncate">{f.mediaType.startsWith('image/') ? `Photo ${i + 1}` : f.name}</span>
-              <button type="button" onClick={() => setFiles((cur) => cur.filter((_, j) => j !== i))} aria-label="Retirer ce document" className="text-slate-400 hover:text-slate-700">
+              <button type="button" onClick={() => setFiles((cur) => cur.filter((_, j) => j !== i))} aria-label={t('Retirer ce document')} className="text-slate-400 hover:text-slate-700">
                 <X className="size-4" />
               </button>
             </span>
@@ -172,10 +168,10 @@ function QuickFill() {
           {files.length < MAX_QUICK_FILES && (
             <>
               <Button data-tour="import" variant={files.length ? 'secondary' : 'primary'} icon={<Paperclip className="size-4" />} onClick={() => fileInput.current?.click()}>
-                {files.length ? 'Ajouter un fichier' : 'Importer mon ancien CV'}
+                {files.length ? t('Ajouter un fichier') : t('Importer mon ancien CV')}
               </Button>
               <Button variant="secondary" icon={<Camera className="size-4" />} onClick={() => cameraInput.current?.click()}>
-                {files.length ? 'Ajouter une photo' : 'Le prendre en photo'}
+                {files.length ? t('Ajouter une photo') : t('Le prendre en photo')}
               </Button>
             </>
           )}
@@ -184,16 +180,16 @@ function QuickFill() {
 
       <div className="mt-3 rounded-xl bg-white p-3 ring-1 ring-slate-200">
         <label htmlFor="quick-text" className="text-sm font-semibold text-slate-900">
-          {files.length ? 'Quelque chose à ajouter ? (facultatif)' : 'Pas de CV ? Écrivez votre parcours en quelques lignes'}
+          {files.length ? t('Quelque chose à ajouter ? (facultatif)') : t('Pas de CV ? Écrivez votre parcours en quelques lignes')}
         </label>
-        <p className="mt-0.5 mb-2 text-xs text-slate-500">Dans le désordre, sans phrases parfaites : vos études, vos emplois, ce que vous savez faire.</p>
+        <p className="mt-0.5 mb-2 text-xs text-slate-500">{t('Dans le désordre, sans phrases parfaites : vos études, vos emplois, ce que vous savez faire.')}</p>
         <TextArea id="quick-text" value={text} onChange={setText} rows={6} placeholder={QUICK_PLACEHOLDER} />
         <div className="mt-2" data-tour="mic">
           <MicButton
             onText={(t) => setText((cur) => appendSpoken(cur, t))}
             lang={cv.settings.headingLang}
-            label="Dicter au lieu d’écrire"
-            hint="Facultatif : parlez, le texte s’écrit tout seul."
+            label={t('Dicter au lieu d’écrire')}
+            hint={t('Facultatif : parlez, le texte s’écrit tout seul.')}
           />
         </div>
       </div>
@@ -201,8 +197,8 @@ function QuickFill() {
       {hasContent && (
         <div className="mt-2">
           <Toggle
-            label="Compléter mon CV actuel"
-            hint={merge ? 'Les nouvelles informations seront ajoutées à celles déjà saisies.' : 'Attention : le CV actuel sera remplacé.'}
+            label={t('Compléter mon CV actuel')}
+            hint={merge ? t('Les nouvelles informations seront ajoutées à celles déjà saisies.') : t('Attention : le CV actuel sera remplacé.')}
             checked={merge}
             onChange={setMerge}
           />
@@ -211,11 +207,11 @@ function QuickFill() {
 
       <div className="mt-3 flex flex-wrap gap-2">
         <Button variant="ai" data-tour="generate" icon={<FileText className="size-4" />} loading={busy === 'fill'} disabled={busy !== null || (!text.trim() && !files.length)} onClick={() => run('fill')}>
-          Générer mon CV <Cost />
+          {t('Générer mon CV')}{' '}<Cost />
         </Button>
         {hasContent && (
           <Button variant="secondary" icon={<PenLine className="size-4" />} loading={busy === 'improve'} disabled={busy !== null} onClick={() => run('improve')}>
-            Améliorer la rédaction <Cost />
+            {t('Améliorer la rédaction')}{' '}<Cost />
           </Button>
         )}
         {undo && !busy && (
@@ -228,12 +224,11 @@ function QuickFill() {
               setSuggestions([]);
             }}
           >
-            Annuler
-          </Button>
+            {t('Annuler')}</Button>
         )}
       </div>
 
-      {busy && <p className="mt-3 text-sm text-brand-700">Rédaction de votre CV… cela peut prendre jusqu’à une minute.</p>}
+      {busy && <p className="mt-3 text-sm text-brand-700">{t('Rédaction de votre CV… cela peut prendre jusqu’à une minute.')}</p>}
       {error && (
         <div className="mt-3">
           <Notice tone="error">{error}</Notice>
@@ -241,7 +236,7 @@ function QuickFill() {
       )}
       {suggestions.length > 0 && (
         <div className="mt-4 rounded-xl bg-white p-3 ring-1 ring-brand-100">
-          <p className="mb-1.5 text-sm font-semibold text-slate-800">C’est fait ! Vérifiez les informations ci-dessous. Nos conseils :</p>
+          <p className="mb-1.5 text-sm font-semibold text-slate-800">{t('C’est fait ! Vérifiez les informations ci-dessous. Nos conseils :')}</p>
           <ul className="list-disc space-y-1 pl-5 text-sm text-slate-700">
             {suggestions.map((s, i) => (
               <li key={i}>{s}</li>
@@ -254,23 +249,21 @@ function QuickFill() {
           <NextSteps
             id="apres-cv"
             steps={[
-              { icon: Eye, label: 'Voir et télécharger', text: 'Votre CV en PDF, prêt à envoyer.', tab: 'apercu' },
-              { icon: Target, label: 'L’adapter à une offre', text: 'Collez une annonce : le CV reprend ses mots-clés.', tab: 'offre' },
-              { icon: BellRing, label: 'Recevoir des offres', text: 'La veille emploi vous envoie les annonces qui vous correspondent.', tab: 'veille' },
+              { icon: Eye, label: t('Voir et télécharger'), text: t('Votre CV en PDF, prêt à envoyer.'), tab: 'apercu' },
+              { icon: Target, label: t('L’adapter à une offre'), text: t('Collez une annonce : le CV reprend ses mots-clés.'), tab: 'offre' },
+              { icon: BellRing, label: t('Recevoir des offres'), text: t('La veille emploi vous envoie les annonces qui vous correspondent.'), tab: 'veille' },
             ]}
           />
         </div>
       )}
       {styleOffer && (
         <div className="mt-3 rounded-xl bg-white p-3 text-sm text-slate-700 ring-1 ring-brand-100">
-          <p>Cet ancien CV, c’est vous qui l’avez écrit ? CVCasa peut retenir votre façon d’écrire pour vos prochains CV et lettres (gratuit).</p>
+          <p>{t('Cet ancien CV, c’est vous qui l’avez écrit ? CVCasa peut retenir votre façon d’écrire pour vos prochains CV et lettres (gratuit).')}</p>
           <div className="mt-2 flex flex-wrap gap-2">
             <Button size="sm" icon={<PenLine className="size-4" />} loading={styleBusy} onClick={() => void keepStyle(styleOffer)}>
-              Oui, écrire comme moi
-            </Button>
+              {t('Oui, écrire comme moi')}</Button>
             <Button size="sm" variant="ghost" onClick={() => setStyleOffer(null)}>
-              Non merci
-            </Button>
+              {t('Non merci')}</Button>
           </div>
         </div>
       )}
@@ -309,13 +302,13 @@ function ItemShell({
     <div className="rounded-xl border border-slate-200 bg-slate-50/60 p-3 sm:p-4">
       <div className="mb-3 flex items-center gap-1">
         <p className="flex-1 truncate text-sm font-semibold text-slate-700">{title}</p>
-        <Button variant="ghost" size="sm" aria-label="Monter" disabled={index === 0} onClick={() => onMove(-1)}>
+        <Button variant="ghost" size="sm" aria-label={t('Monter')} disabled={index === 0} onClick={() => onMove(-1)}>
           <ArrowUp className="size-4" />
         </Button>
-        <Button variant="ghost" size="sm" aria-label="Descendre" disabled={index === count - 1} onClick={() => onMove(1)}>
+        <Button variant="ghost" size="sm" aria-label={t('Descendre')} disabled={index === count - 1} onClick={() => onMove(1)}>
           <ArrowDown className="size-4" />
         </Button>
-        <Button variant="danger" size="sm" aria-label="Supprimer" onClick={onDelete}>
+        <Button variant="danger" size="sm" aria-label={t('Supprimer')} onClick={onDelete}>
           <Trash2 className="size-4" />
         </Button>
       </div>
@@ -341,27 +334,27 @@ function PersonalSection({ cv, update }: { cv: CvDocument; update: Update }) {
   const p = cv.personal;
   const set = (key: keyof typeof p) => (v: string) => update((c) => ({ ...c, personal: { ...c.personal, [key]: v } }));
   return (
-    <Section title="Informations personnelles" icon={<User className="size-5" />} defaultOpen tour="sections">
+    <Section title={t('Informations personnelles')} icon={<User className="size-5" />} defaultOpen tour="sections">
       <div className="grid gap-3 sm:grid-cols-2">
-        <Field label="Prénom" value={p.firstName} onChange={set('firstName')} autoComplete="given-name" />
-        <Field label="Nom" value={p.lastName} onChange={set('lastName')} autoComplete="family-name" />
+        <Field label={t('Prénom')} value={p.firstName} onChange={set('firstName')} autoComplete="given-name" />
+        <Field label={t('Nom')} value={p.lastName} onChange={set('lastName')} autoComplete="family-name" />
         <Field
           className="sm:col-span-2"
-          label="Titre du CV (poste visé)"
+          label={t('Titre du CV (poste visé)')}
           value={p.title}
           onChange={set('title')}
-          placeholder="Ex. Comptable confirmée, Développeur web, Assistante de direction"
+          placeholder={t('Ex. Comptable confirmée, Développeur web, Assistante de direction')}
         />
         <Field label="E-mail" type="email" value={p.email} onChange={set('email')} autoComplete="email" />
-        <Field label="Téléphone" type="tel" value={p.phone} onChange={set('phone')} autoComplete="tel" hint="Avec l’indicatif du pays si vous postulez à l’étranger." />
-        <Field className="sm:col-span-2" label="Adresse" value={p.address} onChange={set('address')} placeholder="Quartier, rue (facultatif)" />
-        <Field label="Ville" value={p.city} onChange={set('city')} />
-        <Field label="Pays" value={p.country} onChange={set('country')} />
-        <Field label="Date de naissance" value={p.birthDate} onChange={set('birthDate')} placeholder="JJ/MM/AAAA" hint="Affichée seulement si vous l’activez dans l’aperçu." />
-        <Field label="Nationalité" value={p.nationality} onChange={set('nationality')} hint="Idem : à afficher si l’offre le demande." />
-        <Field label="Permis de conduire" value={p.drivingLicense} onChange={set('drivingLicense')} placeholder="Ex. Permis B" />
-        <Field label="LinkedIn" value={p.linkedin} onChange={set('linkedin')} placeholder="linkedin.com/in/votre-nom" />
-        <Field className="sm:col-span-2" label="Site web / portfolio" value={p.website} onChange={set('website')} />
+        <Field label={t('Téléphone')} type="tel" value={p.phone} onChange={set('phone')} autoComplete="tel" hint={t('Avec l’indicatif du pays si vous postulez à l’étranger.')} />
+        <Field className="sm:col-span-2" label={t('Adresse')} value={p.address} onChange={set('address')} placeholder={t('Quartier, rue (facultatif)')} />
+        <Field label={t('Ville')} value={p.city} onChange={set('city')} />
+        <Field label={t('Pays')} value={p.country} onChange={set('country')} />
+        <Field label={t('Date de naissance')} value={p.birthDate} onChange={set('birthDate')} placeholder={t('JJ/MM/AAAA')} hint={t('Affichée seulement si vous l’activez dans l’aperçu.')} />
+        <Field label={t('Nationalité')} value={p.nationality} onChange={set('nationality')} hint={t('Idem : à afficher si l’offre le demande.')} />
+        <Field label={t('Permis de conduire')} value={p.drivingLicense} onChange={set('drivingLicense')} placeholder={t('Ex. Permis B')} />
+        <Field label="LinkedIn" value={p.linkedin} onChange={set('linkedin')} placeholder={t('linkedin.com/in/votre-nom')} />
+        <Field className="sm:col-span-2" label={t('Site web / portfolio')} value={p.website} onChange={set('website')} />
       </div>
     </Section>
   );
@@ -370,17 +363,17 @@ function PersonalSection({ cv, update }: { cv: CvDocument; update: Update }) {
 function PhotoSection({ cv, update }: { cv: CvDocument; update: Update }) {
   const setSettings = (patch: Partial<CvDocument['settings']>) => update((c) => ({ ...c, settings: { ...c.settings, ...patch } }));
   return (
-    <Section title="Photo" icon={<Camera className="size-5" />} badge={cv.photo ? count(1) : null}>
+    <Section title={t('Photo')} icon={<Camera className="size-5" />} badge={cv.photo ? count(1) : null}>
       <PhotoInput value={cv.photo} onChange={(photo) => update((c) => ({ ...c, photo }))} round={cv.settings.photoShape === 'round'} />
       <div className="mt-4 grid gap-2 sm:grid-cols-2">
-        <Toggle label="Afficher la photo sur le CV" checked={cv.settings.showPhoto} onChange={(showPhoto) => setSettings({ showPhoto })} />
+        <Toggle label={t('Afficher la photo sur le CV')} checked={cv.settings.showPhoto} onChange={(showPhoto) => setSettings({ showPhoto })} />
         <Select
-          label="Forme"
+          label={t('Forme')}
           value={cv.settings.photoShape}
           onChange={(photoShape) => setSettings({ photoShape })}
           options={[
-            { value: 'round', label: 'Ronde' },
-            { value: 'square', label: 'Carrée' },
+            { value: 'round', label: t('Ronde') },
+            { value: 'square', label: t('Carrée') },
           ]}
         />
       </div>
@@ -391,13 +384,13 @@ function PhotoSection({ cv, update }: { cv: CvDocument; update: Update }) {
 function SummarySection({ cv, update }: { cv: CvDocument; update: Update }) {
   const n = cv.summary.length;
   return (
-    <Section title="Profil / accroche" icon={<AlignLeft className="size-5" />} badge={n ? count(1) : null}>
+    <Section title={t('Profil / accroche')} icon={<AlignLeft className="size-5" />} badge={n ? count(1) : null}>
       <TextArea
         value={cv.summary}
         onChange={(summary) => update((c) => ({ ...c, summary }))}
         rows={4}
-        placeholder="Ex. Comptable avec 5 ans d’expérience en entreprise de transport, spécialisée en fiscalité et en paie. Rigoureuse et autonome, je fiabilise les clôtures mensuelles et réduis les délais de paiement."
-        hint={<span className={n > 650 ? 'text-amber-700' : ''}>2 à 4 phrases : votre métier, votre expérience, ce que vous apportez. {n} caractères.</span>}
+        placeholder={t('Ex. Comptable avec 5 ans d’expérience en entreprise de transport, spécialisée en fiscalité et en paie. Rigoureuse et autonome, je fiabilise les clôtures mensuelles et réduis les délais de paiement.')}
+        hint={<span className={n > 650 ? 'text-amber-700' : ''}>{t('2 à 4 phrases : votre métier, votre expérience, ce que vous apportez. {0} caractères.', [n])}</span>}
       />
     </Section>
   );
@@ -407,43 +400,42 @@ function ExperienceSection({ cv, update }: { cv: CvDocument; update: Update }) {
   const ops = listOps(update, 'experiences');
   const blank = (): Experience => ({ id: uid(), position: '', company: '', location: '', startDate: '', endDate: '', current: false, achievements: '' });
   return (
-    <Section title="Expériences professionnelles" icon={<Briefcase className="size-5" />} badge={count(cv.experiences.length)}>
+    <Section title={t('Expériences professionnelles')} icon={<Briefcase className="size-5" />} badge={count(cv.experiences.length)}>
       <div className="space-y-3">
         {cv.experiences.map((e, i) => (
           <ItemShell
             key={e.id}
-            title={e.position || e.company || `Expérience ${i + 1}`}
+            title={e.position || e.company || t('Expérience {0}', [i + 1])}
             index={i}
             count={cv.experiences.length}
             onMove={(d) => ops.move(i, d)}
             onDelete={() => ops.remove(e.id)}
           >
             <div className="grid gap-3 sm:grid-cols-2">
-              <Field label="Poste" value={e.position} onChange={(position) => ops.patch(e.id, { position })} />
-              <Field label="Entreprise / organisation" value={e.company} onChange={(company) => ops.patch(e.id, { company })} />
-              <Field label="Lieu" value={e.location} onChange={(location) => ops.patch(e.id, { location })} />
+              <Field label={t('Poste')} value={e.position} onChange={(position) => ops.patch(e.id, { position })} />
+              <Field label={t('Entreprise / organisation')} value={e.company} onChange={(company) => ops.patch(e.id, { company })} />
+              <Field label={t('Lieu')} value={e.location} onChange={(location) => ops.patch(e.id, { location })} />
               <div className="grid grid-cols-2 gap-2">
-                <Field label="Début" value={e.startDate} onChange={(startDate) => ops.patch(e.id, { startDate })} placeholder="MM/AAAA" />
-                {!e.current && <Field label="Fin" value={e.endDate} onChange={(endDate) => ops.patch(e.id, { endDate })} placeholder="MM/AAAA" />}
+                <Field label={t('Début')} value={e.startDate} onChange={(startDate) => ops.patch(e.id, { startDate })} placeholder={t('MM/AAAA')} />
+                {!e.current && <Field label={t('Fin')} value={e.endDate} onChange={(endDate) => ops.patch(e.id, { endDate })} placeholder={t('MM/AAAA')} />}
               </div>
               <div className="sm:col-span-2">
-                <Toggle label="J’occupe ce poste actuellement" checked={e.current} onChange={(current) => ops.patch(e.id, { current })} />
+                <Toggle label={t('J’occupe ce poste actuellement')} checked={e.current} onChange={(current) => ops.patch(e.id, { current })} />
               </div>
               <TextArea
                 className="sm:col-span-2"
-                label="Réalisations (une par ligne)"
+                label={t('Réalisations (une par ligne)')}
                 value={e.achievements}
                 onChange={(achievements) => ops.patch(e.id, { achievements })}
                 rows={4}
-                placeholder={'Gérer la paie de 120 salariés chaque mois\nRéduire de 30 % les retards de paiement fournisseurs'}
-                hint="Une ligne = ce que vous avez fait, pour qui, et le résultat. Ex. « Former 20 nouveaux employés aux règles d’hygiène, sans aucun écart au contrôle ». 3 ou 4 lignes suffisent."
+                placeholder={t('Gérer la paie de 120 salariés chaque mois\nRéduire de 30 % les retards de paiement fournisseurs')}
+                hint={t('Une ligne = ce que vous avez fait, pour qui, et le résultat. Ex. « Former 20 nouveaux employés aux règles d’hygiène, sans aucun écart au contrôle ». 3 ou 4 lignes suffisent.')}
               />
             </div>
           </ItemShell>
         ))}
         <Button variant="secondary" icon={<Plus className="size-4" />} onClick={() => ops.add(blank())}>
-          Ajouter une expérience
-        </Button>
+          {t('Ajouter une expérience')}</Button>
       </div>
     </Section>
   );
@@ -453,7 +445,7 @@ function EducationSection({ cv, update }: { cv: CvDocument; update: Update }) {
   const ops = listOps(update, 'education');
   const blank = (): Education => ({ id: uid(), degree: '', school: '', location: '', startDate: '', endDate: '', details: '' });
   return (
-    <Section title="Formation" icon={<GraduationCap className="size-5" />} badge={count(cv.education.length)}>
+    <Section title={t('Formation')} icon={<GraduationCap className="size-5" />} badge={count(cv.education.length)}>
       <div className="space-y-3">
         {cv.education.map((e, i) => (
           <ItemShell
@@ -465,26 +457,25 @@ function EducationSection({ cv, update }: { cv: CvDocument; update: Update }) {
             onDelete={() => ops.remove(e.id)}
           >
             <div className="grid gap-3 sm:grid-cols-2">
-              <Field label="Diplôme" value={e.degree} onChange={(degree) => ops.patch(e.id, { degree })} placeholder="Ex. Master en finance" />
-              <Field label="École / université" value={e.school} onChange={(school) => ops.patch(e.id, { school })} />
-              <Field label="Lieu" value={e.location} onChange={(location) => ops.patch(e.id, { location })} />
+              <Field label={t('Diplôme')} value={e.degree} onChange={(degree) => ops.patch(e.id, { degree })} placeholder={t('Ex. Master en finance')} />
+              <Field label={t('École / université')} value={e.school} onChange={(school) => ops.patch(e.id, { school })} />
+              <Field label={t('Lieu')} value={e.location} onChange={(location) => ops.patch(e.id, { location })} />
               <div className="grid grid-cols-2 gap-2">
-                <Field label="Début" value={e.startDate} onChange={(startDate) => ops.patch(e.id, { startDate })} placeholder="AAAA" />
-                <Field label="Fin" value={e.endDate} onChange={(endDate) => ops.patch(e.id, { endDate })} placeholder="AAAA" />
+                <Field label={t('Début')} value={e.startDate} onChange={(startDate) => ops.patch(e.id, { startDate })} placeholder={t('AAAA')} />
+                <Field label={t('Fin')} value={e.endDate} onChange={(endDate) => ops.patch(e.id, { endDate })} placeholder={t('AAAA')} />
               </div>
               <Field
                 className="sm:col-span-2"
-                label="Précisions (facultatif)"
+                label={t('Précisions (facultatif)')}
                 value={e.details}
                 onChange={(details) => ops.patch(e.id, { details })}
-                placeholder="Mention, spécialité, mémoire…"
+                placeholder={t('Mention, spécialité, mémoire…')}
               />
             </div>
           </ItemShell>
         ))}
         <Button variant="secondary" icon={<Plus className="size-4" />} onClick={() => ops.add(blank())}>
-          Ajouter une formation
-        </Button>
+          {t('Ajouter une formation')}</Button>
       </div>
     </Section>
   );
@@ -492,50 +483,53 @@ function EducationSection({ cv, update }: { cv: CvDocument; update: Update }) {
 
 function SkillsSection({ cv, update }: { cv: CvDocument; update: Update }) {
   return (
-    <Section title="Compétences" icon={<Wrench className="size-5" />} badge={count(cv.skills.length + cv.softSkills.length)}>
+    <Section title={t('Compétences')} icon={<Wrench className="size-5" />} badge={count(cv.skills.length + cv.softSkills.length)}>
       <div className="space-y-4">
         <TagInput
-          label="Compétences techniques / métier"
+          label={t('Compétences techniques / métier')}
           values={cv.skills}
           onChange={(skills) => update((c) => ({ ...c, skills }))}
-          placeholder="Ex. Excel avancé, Sage, Fiscalité… (Entrée pour ajouter)"
-          hint="Les mots-clés de votre métier : logiciels, techniques, normes."
+          placeholder={t('Ex. Excel avancé, Sage, Fiscalité… (Entrée pour ajouter)')}
+          hint={t('Les mots-clés de votre métier : logiciels, techniques, normes.')}
         />
         <TagInput
-          label="Qualités personnelles"
+          label={t('Qualités personnelles')}
           values={cv.softSkills}
           onChange={(softSkills) => update((c) => ({ ...c, softSkills }))}
-          placeholder="Ex. Rigueur, Travail en équipe…"
+          placeholder={t('Ex. Rigueur, Travail en équipe…')}
         />
       </div>
     </Section>
   );
 }
 
-const LEVELS = ['Langue maternelle', 'Bilingue', 'Courant (C1)', 'Avancé (B2)', 'Intermédiaire (B1)', 'Notions (A2)', 'Débutant (A1)'];
+// Ces niveaux s'écrivent dans le CV : ils suivent la langue du CV, pas celle de l'interface.
+const LEVELS: Record<'fr' | 'en', string[]> = {
+  fr: ['Langue maternelle', 'Bilingue', 'Courant (C1)', 'Avancé (B2)', 'Intermédiaire (B1)', 'Notions (A2)', 'Débutant (A1)'],
+  en: ['Native', 'Bilingual', 'Fluent (C1)', 'Advanced (B2)', 'Intermediate (B1)', 'Basic (A2)', 'Beginner (A1)'],
+};
 
 function LanguagesSection({ cv, update }: { cv: CvDocument; update: Update }) {
   const ops = listOps(update, 'languages');
   return (
-    <Section title="Langues" icon={<Languages className="size-5" />} badge={count(cv.languages.length)}>
+    <Section title={t('Langues')} icon={<Languages className="size-5" />} badge={count(cv.languages.length)}>
       <datalist id="language-levels">
-        {LEVELS.map((l) => (
+        {LEVELS[cv.settings.headingLang].map((l) => (
           <option key={l} value={l} />
         ))}
       </datalist>
       <div className="space-y-2">
         {cv.languages.map((l: LanguageSkill) => (
           <div key={l.id} className="flex items-end gap-2">
-            <Field className="flex-1" label="Langue" value={l.name} onChange={(name) => ops.patch(l.id, { name })} />
-            <Field className="flex-1" label="Niveau" value={l.level} onChange={(level) => ops.patch(l.id, { level })} list="language-levels" />
-            <Button variant="danger" size="sm" className="mb-1.5" aria-label="Supprimer" onClick={() => ops.remove(l.id)}>
+            <Field className="flex-1" label={t('Langue')} value={l.name} onChange={(name) => ops.patch(l.id, { name })} />
+            <Field className="flex-1" label={t('Niveau')} value={l.level} onChange={(level) => ops.patch(l.id, { level })} list="language-levels" />
+            <Button variant="danger" size="sm" className="mb-1.5" aria-label={t('Supprimer')} onClick={() => ops.remove(l.id)}>
               <Trash2 className="size-4" />
             </Button>
           </div>
         ))}
         <Button variant="secondary" icon={<Plus className="size-4" />} onClick={() => ops.add({ id: uid(), name: '', level: '' })}>
-          Ajouter une langue
-        </Button>
+          {t('Ajouter une langue')}</Button>
       </div>
     </Section>
   );
@@ -544,21 +538,20 @@ function LanguagesSection({ cv, update }: { cv: CvDocument; update: Update }) {
 function CertificationsSection({ cv, update }: { cv: CvDocument; update: Update }) {
   const ops = listOps(update, 'certifications');
   return (
-    <Section title="Certifications (facultatif)" icon={<Award className="size-5" />} badge={count(cv.certifications.length)}>
+    <Section title={t('Certifications (facultatif)')} icon={<Award className="size-5" />} badge={count(cv.certifications.length)}>
       <div className="space-y-2">
         {cv.certifications.map((c: Certification) => (
           <div key={c.id} className="grid grid-cols-[1fr_auto] items-end gap-2 sm:grid-cols-[2fr_1.5fr_1fr_auto]">
-            <Field label="Certification" value={c.name} onChange={(name) => ops.patch(c.id, { name })} />
-            <Field className="max-sm:order-3" label="Organisme" value={c.issuer} onChange={(issuer) => ops.patch(c.id, { issuer })} />
-            <Field className="max-sm:order-4" label="Année" value={c.date} onChange={(date) => ops.patch(c.id, { date })} />
-            <Button variant="danger" size="sm" className="mb-1.5 max-sm:order-2" aria-label="Supprimer" onClick={() => ops.remove(c.id)}>
+            <Field label={t('Certification')} value={c.name} onChange={(name) => ops.patch(c.id, { name })} />
+            <Field className="max-sm:order-3" label={t('Organisme')} value={c.issuer} onChange={(issuer) => ops.patch(c.id, { issuer })} />
+            <Field className="max-sm:order-4" label={t('Année')} value={c.date} onChange={(date) => ops.patch(c.id, { date })} />
+            <Button variant="danger" size="sm" className="mb-1.5 max-sm:order-2" aria-label={t('Supprimer')} onClick={() => ops.remove(c.id)}>
               <Trash2 className="size-4" />
             </Button>
           </div>
         ))}
         <Button variant="secondary" icon={<Plus className="size-4" />} onClick={() => ops.add({ id: uid(), name: '', issuer: '', date: '' })}>
-          Ajouter une certification
-        </Button>
+          {t('Ajouter une certification')}</Button>
       </div>
     </Section>
   );
@@ -566,13 +559,13 @@ function CertificationsSection({ cv, update }: { cv: CvDocument; update: Update 
 
 function InterestsSection({ cv, update }: { cv: CvDocument; update: Update }) {
   return (
-    <Section title="Centres d’intérêt" icon={<Heart className="size-5" />} badge={count(cv.interests.length)}>
+    <Section title={t('Centres d’intérêt')} icon={<Heart className="size-5" />} badge={count(cv.interests.length)}>
       <TagInput
-        label="Loisirs, engagements"
+        label={t('Loisirs, engagements')}
         values={cv.interests}
         onChange={(interests) => update((c) => ({ ...c, interests }))}
-        placeholder="Ex. Basket (club amateur), Bénévolat…"
-        hint="Restez précis : « Course à pied (semi-marathon) » dit plus que « Sport »."
+        placeholder={t('Ex. Basket (club amateur), Bénévolat…')}
+        hint={t('Restez précis : « Course à pied (semi-marathon) » dit plus que « Sport ».')}
       />
     </Section>
   );
@@ -581,19 +574,19 @@ function InterestsSection({ cv, update }: { cv: CvDocument; update: Update }) {
 function SignatureSection({ cv, update }: { cv: CvDocument; update: Update }) {
   const setSettings = (patch: Partial<CvDocument['settings']>) => update((c) => ({ ...c, settings: { ...c.settings, ...patch } }));
   return (
-    <Section title="Signature" icon={<PenLine className="size-5" />} badge={cv.signature ? count(1) : null}>
+    <Section title={t('Signature')} icon={<PenLine className="size-5" />} badge={cv.signature ? count(1) : null}>
       <SignaturePad value={cv.signature} onChange={(signature) => update((c) => ({ ...c, signature }))} />
       <div className="mt-4 space-y-3">
         <Toggle
-          label="Ajouter la signature au bas du CV"
-          hint="Utile pour certains concours et administrations. Elle est toujours proposée sur la lettre de motivation."
+          label={t('Ajouter la signature au bas du CV')}
+          hint={t('Utile pour certains concours et administrations. Elle est toujours proposée sur la lettre de motivation.')}
           checked={cv.settings.showSignature}
           onChange={(showSignature) => setSettings({ showSignature })}
         />
         {cv.settings.showSignature && (
           <div className="grid gap-3 sm:grid-cols-2">
-            <Field label="Fait à" value={cv.settings.signaturePlace} onChange={(signaturePlace) => setSettings({ signaturePlace })} placeholder={cv.personal.city || 'Ville'} />
-            <Field label="Le" value={cv.settings.signatureDate} onChange={(signatureDate) => setSettings({ signatureDate })} placeholder="JJ/MM/AAAA" />
+            <Field label={t('Fait à')} value={cv.settings.signaturePlace} onChange={(signaturePlace) => setSettings({ signaturePlace })} placeholder={cv.personal.city || t('Ville')} />
+            <Field label={t('Le')} value={cv.settings.signatureDate} onChange={(signatureDate) => setSettings({ signatureDate })} placeholder={t('JJ/MM/AAAA')} />
           </div>
         )}
       </div>
@@ -610,15 +603,13 @@ export function EditorPage() {
     <div className="space-y-3">
       {cv.adaptation && (
         <Notice tone="info">
-          Vous modifiez la version adaptée à l’offre <strong>{[cv.adaptation.job.title, cv.adaptation.job.company].filter(Boolean).join(' – ')}</strong>. Votre CV d’origine n’est pas modifié.
-        </Notice>
+          {t('Vous modifiez la version adaptée à l’offre')}{' '}<strong>{[cv.adaptation.job.title, cv.adaptation.job.company].filter(Boolean).join(' – ')}</strong>{t('. Votre CV d’origine n’est pas modifié.')}</Notice>
       )}
       <QuickFill />
       {/* Tant que le CV est vide, une seule chose à faire : la saisie rapide. Le reste attend derrière un lien. */}
       {empty && !manual && (
         <button type="button" onClick={() => setManual(true)} className="flex min-h-11 w-full items-center justify-center gap-2 rounded-2xl border border-dashed border-slate-300 px-4 text-sm font-semibold text-slate-700 hover:bg-white">
-          <ListChecks className="size-4" aria-hidden="true" /> Je préfère remplir rubrique par rubrique
-        </button>
+          <ListChecks className="size-4" aria-hidden="true" /> {' '}{t('Je préfère remplir rubrique par rubrique')}</button>
       )}
       {(!empty || manual) && <EditorSections cv={cv} update={update} empty={empty} />}
     </div>

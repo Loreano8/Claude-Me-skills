@@ -1,12 +1,13 @@
 import { loadImage } from './image.ts';
 
+import { t } from '../i18n.ts';
 // Photo pro : le fond de la photo est remplacé par une couleur unie, directement sur l'appareil.
 // Le modèle de détourage de portrait (MediaPipe, licence Apache 2.0) n'est chargé qu'au premier usage.
 
 export const BACKGROUNDS = [
-  { id: 'blanc', label: 'Blanc', color: '#ffffff' },
-  { id: 'gris', label: 'Gris clair', color: '#e9edf2' },
-  { id: 'bleu', label: 'Bleu clair', color: '#dbe6f5' },
+  { id: 'blanc', label: t('Blanc'), color: '#ffffff' },
+  { id: 'gris', label: t('Gris clair'), color: '#e9edf2' },
+  { id: 'bleu', label: t('Bleu clair'), color: '#dbe6f5' },
 ] as const;
 
 type Segmenter = import('@mediapipe/tasks-vision').ImageSegmenter;
@@ -40,7 +41,7 @@ export async function plainBackground(photo: string, color: string): Promise<str
   const h = img.naturalHeight;
   const result = seg.segment(img);
   const mask = result.confidenceMasks?.[0];
-  if (!mask) throw new Error('Impossible de détourer cette photo. Essayez une photo de face, bien éclairée.');
+  if (!mask) throw new Error(t('Impossible de détourer cette photo. Essayez une photo de face, bien éclairée.'));
   const values = mask.getAsFloat32Array();
   const mw = mask.width;
   const mh = mask.height;
@@ -58,7 +59,7 @@ export async function plainBackground(photo: string, color: string): Promise<str
     if (a > 0.5) person++;
     data.data[i * 4 + 3] = Math.round(a * 255);
   }
-  if (person < values.length * 0.05) throw new Error('Aucun visage n’a été trouvé sur cette photo. Essayez une photo de face, bien éclairée.');
+  if (person < values.length * 0.05) throw new Error(t('Aucun visage n’a été trouvé sur cette photo. Essayez une photo de face, bien éclairée.'));
   mctx.putImageData(data, 0, 0);
 
   const personCanvas = document.createElement('canvas');

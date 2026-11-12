@@ -8,6 +8,7 @@ import { useStore } from '../store.ts';
 import type { CvDocument } from '../types.ts';
 import { Button, Card, Cost, cx, Notice } from './ui.tsx';
 
+import { t } from '../i18n.ts';
 /**
  * Vérificateur gratuit : les mots-clés de l'offre déjà présents dans le CV, et ceux qui manquent.
  * Le serveur relève les mots-clés une fois par offre ; la comparaison avec le CV se fait sur l'appareil et suit chaque modification.
@@ -42,15 +43,14 @@ export function KeywordCheck({ cv }: { cv: CvDocument }) {
       tour="keywords"
       title={
         <span className="flex items-center gap-2">
-          <ScanSearch className="size-5 text-brand-600" aria-hidden="true" /> Votre CV contient-il les mots de l’offre ?
-        </span>
+          <ScanSearch className="size-5 text-brand-600" aria-hidden="true" /> {' '}{t('Votre CV contient-il les mots de l’offre ?')}</span>
       }
-      subtitle="Les recruteurs et leurs logiciels cherchent ces mots dans les CV."
+      subtitle={t('Les recruteurs et leurs logiciels cherchent ces mots dans les CV.')}
     >
       {!result && (
         <>
           <Button variant="secondary" loading={busy} onClick={() => void check()}>
-            Vérifier mes mots-clés <Cost free />
+            {t('Vérifier mes mots-clés')}{' '}<Cost free />
           </Button>
           {error && (
             <div className="mt-3">
@@ -62,13 +62,13 @@ export function KeywordCheck({ cv }: { cv: CvDocument }) {
       {c && result && (
         <div>
           {result.keywords.length === 0 ? (
-            <Notice tone="warn">Aucun mot-clé trouvé : ce texte ne ressemble pas à une offre d’emploi. Vérifiez l’annonce collée ci-dessus.</Notice>
+            <Notice tone="warn">{t('Aucun mot-clé trouvé : ce texte ne ressemble pas à une offre d’emploi. Vérifiez l’annonce collée ci-dessus.')}</Notice>
           ) : (
             <>
               <p className="font-display text-2xl font-semibold text-ink">
-                {c.present.length} sur {result.keywords.length} <span className="text-base font-normal text-slate-600">mots-clés de l’offre sont dans votre CV</span>
+                {t('{0} sur {1}', [c.present.length, result.keywords.length])}{' '}<span className="text-base font-normal text-slate-600">{t('mots-clés de l’offre sont dans votre CV')}</span>
               </p>
-              <div className="mt-2 h-2 overflow-hidden rounded-full bg-slate-100" role="progressbar" aria-valuemin={0} aria-valuemax={100} aria-valuenow={c.percent} aria-label="Mots-clés présents">
+              <div className="mt-2 h-2 overflow-hidden rounded-full bg-slate-100" role="progressbar" aria-valuemin={0} aria-valuemax={100} aria-valuenow={c.percent} aria-label={t('Mots-clés présents')}>
                 <div className={cx('h-full rounded-full', c.percent >= 70 ? 'bg-emerald-600' : c.percent >= 40 ? 'bg-sun-400' : 'bg-red-500')} style={{ width: `${c.percent}%` }} />
               </div>
               <ul className="mt-3 flex flex-wrap gap-2">
@@ -78,15 +78,14 @@ export function KeywordCheck({ cv }: { cv: CvDocument }) {
                     <li key={k.term} className={cx('inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-sm', ok ? 'bg-emerald-50 text-emerald-900' : 'bg-amber-50 text-amber-900')}>
                       {ok ? <CheckCircle2 className="size-4" aria-hidden="true" /> : <CircleDashed className="size-4" aria-hidden="true" />}
                       {k.term}
-                      <span className="sr-only">{ok ? ' : présent' : ' : absent'}</span>
+                      <span className="sr-only">{ok ? t(' : présent') : ' : absent'}</span>
                     </li>
                   );
                 })}
               </ul>
               {c.missing.length > 0 && (
                 <p className="mt-3 text-sm text-slate-600">
-                  N’ajoutez que ce que vous maîtrisez vraiment. « Adapter mon CV » reprend ces mots là où votre parcours les justifie, sans rien inventer.
-                </p>
+                  {t('N’ajoutez que ce que vous maîtrisez vraiment. « Adapter mon CV » reprend ces mots là où votre parcours les justifie, sans rien inventer.')}</p>
               )}
             </>
           )}

@@ -4,13 +4,14 @@ import { useStore } from '../store.ts';
 import { useAccount, type ReturnOffer } from './account.ts';
 import type { CvDocument } from '../types.ts';
 
+import { t } from '../i18n.ts';
 // Rappel « Une nouvelle offre ? » pour faire revenir la personne à chaque candidature :
 // une bannière dans l'appli au retour, et sur Android une notification après quelques jours sans visite.
 
-export const REMINDER_TITLE = 'Une nouvelle offre d’emploi ?';
-export const REMINDER_TEXT = 'Adaptez votre CV à l’annonce en 1 crédit, et la lettre suit si besoin.';
-export const OFFER_TITLE = 'Une offre pour votre retour';
-export const OFFER_TEXT = '4 crédits pour 500 F au lieu de 3, pendant 3 jours. Une seule fois.';
+export const REMINDER_TITLE = t('Une nouvelle offre d’emploi ?');
+export const REMINDER_TEXT = t('Adaptez votre CV à l’annonce en 1 crédit, et la lettre suit si besoin.');
+export const OFFER_TITLE = t('Une offre pour votre retour');
+export const OFFER_TEXT = t('4 crédits pour 500 F au lieu de 3, pendant 3 jours. Une seule fois.');
 
 const LAST_VISIT_KEY = 'cv-studio-last-visit';
 const SNOOZE_KEY = 'cv-studio-reminder-snooze';

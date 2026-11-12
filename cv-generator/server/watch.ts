@@ -3,6 +3,7 @@ import Anthropic from '@anthropic-ai/sdk';
 import type { Db } from './db.ts';
 import { AccountError, type Accounts, type User } from './accounts.ts';
 import type { Mailer } from './vault.ts';
+import { translate } from '../shared/i18n.ts';
 import { WATCH_PRICE, type WatchCriteria, type WatchFrequency, type WatchOffer, type WatchRun, type WatchSaveRequest, type WatchState } from '../shared/schema.ts';
 
 export { WATCH_PRICE };
@@ -70,7 +71,7 @@ export function matchOffer(offer: RawOffer, profile: string): Pick<WatchOffer, '
 
 export function cacheKey(c: WatchCriteria): string {
   const sorted = (a: string[]) => [...a].map(norm).sort();
-  const key = { j: sorted(c.jobs), c: sorted(c.contracts), z: sorted(c.zones), l: c.level, s: c.minSalary, k: norm(c.keywords) };
+  const key = { j: sorted(c.jobs), c: sorted(c.contracts), z: sorted(c.zones), l: c.level, s: c.minSalary, k: norm(c.keywords), lang: c.lang ?? 'fr' };
   return createHash('sha256').update(JSON.stringify(key)).digest('hex').slice(0, 32);
 }
 
@@ -131,6 +132,9 @@ export function searchPrompt(c: WatchCriteria, exclude: string[], today: Date): 
     c.minSalary ? `Rémunération minimale : ${c.minSalary.toLocaleString('fr-FR')} FCFA par mois (garder une offre sans salaire indiqué, l’écarter si le salaire affiché est plus bas).` : '',
     c.keywords.trim() ? `Mots-clés en plus : ${c.keywords.trim()}.` : '',
     exclude.length ? `Liens déjà envoyés, à ne pas reproposer :\n${exclude.slice(0, 60).join('\n')}` : '',
+    c.lang === 'en'
+      ? 'La personne lit l’anglais : écris summary, skills et note en anglais (garde le titre du poste et le nom de l’entreprise tels qu’ils sont publiés).'
+      : 'Écris summary, skills et note en français (garde le titre du poste et le nom de l’entreprise tels qu’ils sont publiés).',
   ];
   return lines.filter(Boolean).join('\n');
 }
@@ -281,35 +285,42 @@ const recipient = (user: Pick<User, 'identifier'>, c: WatchCriteria) => {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) ? email : null;
 };
 
-export function offersEmail(offers: WatchOffer[], note: string, appUrl: string): { subject: string; text: string } {
+export function offersEmail(offers: WatchOffer[], note: string, appUrl: string, lang: 'fr' | 'en' = 'fr'): { subject: string; text: string } {
+  const en = lang === 'en';
   if (!offers.length) {
-    return {
-      subject: 'Votre veille emploi : rien de nouveau aujourd’hui',
-      text: `Bonjour,\n\nPas de nouvelle offre correspondant à vos critères pour le moment. ${note}\n\nVos critères : ${appUrl}\n\nCVCasa`,
-    };
+    return en
+      ? { subject: 'Your job alerts: nothing new today', text: `Hello,\n\nNo new offer matching your criteria for now. ${note}\n\nYour criteria: ${appUrl}\n\nCVCasa` }
+      : { subject: 'Votre veille emploi : rien de nouveau aujourd’hui', text: `Bonjour,\n\nPas de nouvelle offre correspondant à vos critères pour le moment. ${note}\n\nVos critères : ${appUrl}\n\nCVCasa` };
   }
   const list = offers
     .map((o, i) =>
       [
         `${i + 1}. ${o.title}${o.company ? ` – ${o.company}` : ''}`,
         [o.location, o.contract, o.salary].filter(Boolean).join(' · '),
-        o.deadline ? `Date limite : ${o.deadline}` : '',
+        o.deadline ? (en ? `Deadline: ${o.deadline}` : `Date limite : ${o.deadline}`) : '',
         o.summary,
-        o.matched.length ? `Vous avez déjà : ${o.matched.join(', ')}` : '',
-        `Voir l’offre : ${o.url}`,
+        o.matched.length ? (en ? `You already have: ${o.matched.join(', ')}` : `Vous avez déjà : ${o.matched.join(', ')}`) : '',
+        en ? `See the offer: ${o.url}` : `Voir l’offre : ${o.url}`,
       ]
         .filter(Boolean)
         .join('\n'),
     )
     .join('\n\n');
-  return {
-    subject: `Votre veille emploi : ${offers.length} offre${offers.length > 1 ? 's' : ''} pour vous`,
-    text: `Bonjour,\n\n${note ? `${note}\n\n` : ''}${list}\n\nPour adapter votre CV à l’une de ces offres en un clic : ${appUrl}\n\nCVCasa – vérifiez toujours l’offre sur le site de l’employeur avant de postuler. Aucun recruteur sérieux ne demande d’argent.`,
-  };
+  const n = offers.length;
+  return en
+    ? {
+        subject: `Your job alerts: ${n} offer${n > 1 ? 's' : ''} for you`,
+        text: `Hello,\n\n${note ? `${note}\n\n` : ''}${list}\n\nTo tailor your CV to one of these offers in one tap: ${appUrl}\n\nCVCasa – always check the offer on the employer’s site before applying. No serious recruiter asks for money.`,
+      }
+    : {
+        subject: `Votre veille emploi : ${n} offre${n > 1 ? 's' : ''} pour vous`,
+        text: `Bonjour,\n\n${note ? `${note}\n\n` : ''}${list}\n\nPour adapter votre CV à l’une de ces offres en un clic : ${appUrl}\n\nCVCasa – vérifiez toujours l’offre sur le site de l’employeur avant de postuler. Aucun recruteur sérieux ne demande d’argent.`,
+      };
 }
 
 export function createWatches(db: Db, accounts: Accounts, search: WatchSearch | null, mailer: Mailer | null, publicUrl: string) {
-  const appUrl = `${publicUrl.replace(/\/$/, '')}/#veille`;
+  // Le lien de l'e-mail rouvre l'application dans la langue de la personne.
+  const appUrlFor = (lang: 'fr' | 'en' | undefined) => `${publicUrl.replace(/\/$/, '')}/${lang === 'en' ? '?lang=en' : ''}#veille`;
 
   const row = async (userId: number) => (await db.query<WatchRow>('select * from job_watches where user_id = $1', [userId]))[0] ?? null;
 
@@ -343,14 +354,14 @@ export function createWatches(db: Db, accounts: Accounts, search: WatchSearch | 
     const fresh = cleanOffers(found.offers, new Set(), new Set(sent.map(normalizeUrl)));
     const offers: WatchOffer[] = fresh.map((o) => ({ ...o, ...matchOffer(o, `${w.profile} ${w.criteria.jobs.join(' ')}`) }));
     // Recherche sans résultat : on garde l'explication de la recherche ; offres trouvées mais déjà envoyées : message simple.
-    const note = offers.length || !found.offers.length ? found.note : 'Pas de nouvelle offre depuis le dernier envoi. La veille continue.';
+    const note = offers.length || !found.offers.length ? found.note : translate(w.criteria.lang ?? 'fr', 'Pas de nouvelle offre depuis le dernier envoi. La veille continue.');
     const [saved] = await db.query<{ id: number; created_at: Date }>(
       'insert into job_watch_runs (user_id, offers, note) values ($1, $2, $3) returning id, created_at',
       [user.id, JSON.stringify(offers), note],
     );
     const to = recipient(user, w.criteria);
     if (sendMail && mailer && to) {
-      const mail = offersEmail(offers, note, appUrl);
+      const mail = offersEmail(offers, note, appUrlFor(w.criteria.lang), w.criteria.lang);
       await mailer(to, mail.subject, mail.text).catch((e) => console.error('Veille : e-mail', e));
     }
     return { id: saved.id, createdAt: new Date(saved.created_at).toISOString(), offers, note };
@@ -466,11 +477,12 @@ export function createWatches(db: Db, accounts: Accounts, search: WatchSearch | 
                 await db.query('update job_watches set active = false where user_id = $1', [w.user_id]);
                 const to = recipient(user, w.criteria);
                 if (mailer && to) {
-                  await mailer(
-                    to,
-                    'Votre veille emploi est en pause',
-                    `Bonjour,\n\nVotre veille emploi est en pause : il n’y a plus assez de crédits pour la semaine suivante (${WATCH_PRICE[w.frequency]} crédit${WATCH_PRICE[w.frequency] > 1 ? 's' : ''}).\n\nPour la relancer : ${appUrl}\n\nCVCasa`,
-                  ).catch((e) => console.error('Veille : e-mail', e));
+                  const price = WATCH_PRICE[w.frequency];
+                  const [subject, text] =
+                    w.criteria.lang === 'en'
+                      ? ['Your job alerts are paused', `Hello,\n\nYour job alerts are paused: there aren’t enough credits for next week (${price} credit${price > 1 ? 's' : ''}).\n\nTo restart them: ${appUrlFor('en')}\n\nCVCasa`]
+                      : ['Votre veille emploi est en pause', `Bonjour,\n\nVotre veille emploi est en pause : il n’y a plus assez de crédits pour la semaine suivante (${price} crédit${price > 1 ? 's' : ''}).\n\nPour la relancer : ${appUrlFor('fr')}\n\nCVCasa`];
+                  await mailer(to, subject, text).catch((e) => console.error('Veille : e-mail', e));
                 }
                 stats.paused++;
                 return;

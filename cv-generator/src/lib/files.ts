@@ -1,5 +1,6 @@
 import type { Attachment } from '../../shared/schema.ts';
 
+import { t } from '../i18n.ts';
 export const ACCEPTED_DOCS = 'application/pdf,image/png,image/jpeg,image/webp,text/plain';
 export const MAX_FILE_BYTES = 10 * 1024 * 1024;
 
@@ -49,11 +50,11 @@ export async function shrinkImage(file: File): Promise<File> {
 export async function fileToAttachment(original: File): Promise<Attachment & { size: number }> {
   const file = await shrinkImage(original);
   if (file.size > MAX_FILE_BYTES) {
-    throw new Error('Fichier trop lourd (10 Mo maximum).');
+    throw new Error(t('Fichier trop lourd (10 Mo maximum).'));
   }
   const mediaType = (file.type || (file.name.toLowerCase().endsWith('.pdf') ? 'application/pdf' : '')) as Attachment['mediaType'];
   if (!ACCEPTED_DOCS.split(',').includes(mediaType)) {
-    throw new Error('Format non pris en charge. Utilisez un PDF, une image (JPG, PNG) ou un fichier texte.');
+    throw new Error(t('Format non pris en charge. Utilisez un PDF, une image (JPG, PNG) ou un fichier texte.'));
   }
   const dataUrl = await readAsDataUrl(file);
   return { name: file.name, mediaType, data: dataUrl.slice(dataUrl.indexOf(',') + 1), size: file.size };

@@ -17,6 +17,7 @@ import { SendApplication } from '../components/SendApplication.tsx';
 import { NextSteps } from '../components/NextSteps.tsx';
 import type { Tab } from '../App.tsx';
 
+import { t } from '../i18n.ts';
 function GenerateCard({ onNavigate }: { onNavigate: (t: Tab) => void }) {
   const cv = useActiveCv();
   const job = useStore((s) => s.job);
@@ -87,72 +88,69 @@ function GenerateCard({ onNavigate }: { onNavigate: (t: Tab) => void }) {
       tour="letter-generate"
       title={
         <span className="flex items-center gap-2">
-          <Mail className="size-5 text-brand-600" /> Rédiger ma lettre
-        </span>
+          <Mail className="size-5 text-brand-600" /> {' '}{t('Rédiger ma lettre')}</span>
       }
       subtitle={
         hasJob ? (
-          'La lettre sera personnalisée pour l’offre saisie dans l’onglet « Offre ».'
+          t('La lettre sera personnalisée pour l’offre saisie dans l’onglet « Offre ».')
         ) : (
           <>
-            Aucune offre saisie : ce sera une candidature spontanée.{' '}
+            {t('Aucune offre saisie : ce sera une candidature spontanée.')}{' '}
             <button type="button" className="hit font-medium text-brand-700 underline" onClick={() => onNavigate('offre')}>
-              Ajouter une offre
-            </button>
+              {t('Ajouter une offre')}</button>
           </>
         )
       }
     >
       <div className="grid gap-3 sm:grid-cols-2">
         <Select
-          label="Ton"
+          label={t('Ton')}
           value={tone}
           onChange={setTone}
           options={[
-            { value: 'formel', label: 'Formel' },
-            { value: 'dynamique', label: 'Dynamique' },
-            { value: 'chaleureux', label: 'Chaleureux' },
+            { value: 'formel', label: t('Formel') },
+            { value: 'dynamique', label: t('Dynamique') },
+            { value: 'chaleureux', label: t('Chaleureux') },
           ]}
         />
         <Select
-          label="Longueur"
+          label={t('Longueur')}
           value={length}
           onChange={setLength}
           options={[
-            { value: 'standard', label: 'Standard (≈ 300 mots)' },
-            { value: 'courte', label: 'Courte (≈ 200 mots)' },
+            { value: 'standard', label: t('Standard (≈ 300 mots)') },
+            { value: 'courte', label: t('Courte (≈ 200 mots)') },
           ]}
         />
         <Select
           className="sm:col-span-2"
-          label="Langue"
+          label={t('Langue')}
           value={lang}
           onChange={setLang}
           options={[
-            { value: 'auto', label: hasJob ? 'Automatique (langue de l’offre)' : 'Automatique (langue du CV)' },
-            { value: 'fr', label: 'Français' },
-            { value: 'en', label: 'Anglais' },
+            { value: 'auto', label: hasJob ? t('Automatique (langue de l’offre)') : t('Automatique (langue du CV)') },
+            { value: 'fr', label: t('Français') },
+            { value: 'en', label: t('Anglais') },
           ]}
         />
         <TextArea
           className="sm:col-span-2"
-          label="Ce que vous voulez ajouter (facultatif)"
+          label={t('Ce que vous voulez ajouter (facultatif)')}
           value={notes}
           onChange={setNotes}
           rows={3}
-          placeholder={hasJob ? 'Ex. Je connais bien leurs produits, je suis disponible immédiatement…' : 'Ex. Entreprise visée, poste souhaité, pourquoi elle vous intéresse…'}
+          placeholder={hasJob ? t('Ex. Je connais bien leurs produits, je suis disponible immédiatement…') : t('Ex. Entreprise visée, poste souhaité, pourquoi elle vous intéresse…')}
         />
       </div>
       {isCvEmpty(cv) && (
         <div className="mt-3">
-          <Notice tone="warn">Remplissez d’abord votre CV : la lettre s’appuie sur vos expériences.</Notice>
+          <Notice tone="warn">{t('Remplissez d’abord votre CV : la lettre s’appuie sur vos expériences.')}</Notice>
         </div>
       )}
       {questions ? (
         <div className="mt-4 space-y-3 rounded-xl bg-white p-3.5 ring-1 ring-brand-100">
           <p className="flex items-center gap-2 text-sm font-semibold text-slate-800">
-            <MessageCircleQuestion className="size-4 text-brand-600" /> Pour une lettre qui vous ressemble (facultatif, gratuit)
-          </p>
+            <MessageCircleQuestion className="size-4 text-brand-600" /> {' '}{t('Pour une lettre qui vous ressemble (facultatif, gratuit)')}</p>
           {questions.map((q, i) => (
             <div key={i}>
               <TextArea
@@ -163,29 +161,28 @@ function GenerateCard({ onNavigate }: { onNavigate: (t: Tab) => void }) {
                 placeholder={q.hint}
               />
               <div className="mt-1.5">
-                <MicButton onText={(t) => setAnswers((cur) => cur.map((a, j) => (j === i ? appendSpoken(a, t) : a)))} lang={cv.settings.headingLang} label="Répondre en parlant" />
+                <MicButton onText={(t) => setAnswers((cur) => cur.map((a, j) => (j === i ? appendSpoken(a, t) : a)))} lang={cv.settings.headingLang} label={t('Répondre en parlant')} />
               </div>
             </div>
           ))}
           <div className="flex flex-wrap gap-2">
             <Button variant="ai" icon={<PenLine className="size-4" />} loading={busy} onClick={() => void generate(answers)}>
-              Générer la lettre <Cost />
+              {t('Générer la lettre')}{' '}<Cost />
             </Button>
             <Button variant="ghost" disabled={busy} onClick={() => void generate([])}>
-              Passer
-            </Button>
+              {t('Passer')}</Button>
           </div>
         </div>
       ) : (
         <div className="mt-3">
           <Button variant="ai" icon={<PenLine className="size-4" />} loading={busy || asking} disabled={isCvEmpty(cv) || (!hasJob && !notes.trim())} onClick={() => void start()}>
-            Générer la lettre <Cost />
+            {t('Générer la lettre')}{' '}<Cost />
           </Button>
-          {!hasJob && !notes.trim() && <p className="mt-1.5 text-xs text-slate-500">Pour une candidature spontanée, indiquez au moins l’entreprise ou le poste visé.</p>}
+          {!hasJob && !notes.trim() && <p className="mt-1.5 text-xs text-slate-500">{t('Pour une candidature spontanée, indiquez au moins l’entreprise ou le poste visé.')}</p>}
         </div>
       )}
-      {asking && <p className="mt-3 text-sm text-brand-700">Préparation de vos questions…</p>}
-      {busy && <p className="mt-3 text-sm text-brand-700">Rédaction en cours…</p>}
+      {asking && <p className="mt-3 text-sm text-brand-700">{t('Préparation de vos questions…')}</p>}
+      {busy && <p className="mt-3 text-sm text-brand-700">{t('Rédaction en cours…')}</p>}
       {error && (
         <div className="mt-3">
           <Notice tone="error">{error}</Notice>
@@ -230,48 +227,47 @@ export function LetterPage({ onNavigate }: { onNavigate: (t: Tab) => void }) {
           tour="letter-body"
           title={
             <span className="flex items-center gap-2">
-              <Mail className="size-5 text-brand-600" /> Ma lettre
-            </span>
+              <Mail className="size-5 text-brand-600" /> {' '}{t('Ma lettre')}</span>
           }
-          subtitle="Relisez et personnalisez : une lettre sincère fait la différence."
+          subtitle={t('Relisez et personnalisez : une lettre sincère fait la différence.')}
         >
           <div className="grid gap-3 sm:grid-cols-2">
-            <Field label="Destinataire" value={letter.recipientName} onChange={(recipientName) => update({ recipientName })} placeholder="Ex. Service des ressources humaines" />
-            <Field label="Entreprise" value={letter.recipientCompany} onChange={(recipientCompany) => update({ recipientCompany })} />
-            <TextArea className="sm:col-span-2" label="Adresse de l’entreprise" value={letter.recipientAddress} onChange={(recipientAddress) => update({ recipientAddress })} rows={2} />
-            <Field label="Lieu" value={letter.place} onChange={(place) => update({ place })} placeholder={cv.personal.city || 'Ville'} />
-            <Field label="Date" value={letter.date} onChange={(date) => update({ date })} />
-            <Field className="sm:col-span-2" label="Objet" value={letter.subject} onChange={(subject) => update({ subject })} placeholder="Candidature au poste de …" />
-            <Field className="sm:col-span-2" label="Formule d’appel" value={letter.salutation} onChange={(salutation) => update({ salutation })} />
+            <Field label={t('Destinataire')} value={letter.recipientName} onChange={(recipientName) => update({ recipientName })} placeholder={t('Ex. Service des ressources humaines')} />
+            <Field label={t('Entreprise')} value={letter.recipientCompany} onChange={(recipientCompany) => update({ recipientCompany })} />
+            <TextArea className="sm:col-span-2" label={t('Adresse de l’entreprise')} value={letter.recipientAddress} onChange={(recipientAddress) => update({ recipientAddress })} rows={2} />
+            <Field label={t('Lieu')} value={letter.place} onChange={(place) => update({ place })} placeholder={cv.personal.city || t('Ville')} />
+            <Field label={t('Date')} value={letter.date} onChange={(date) => update({ date })} />
+            <Field className="sm:col-span-2" label={t('Objet')} value={letter.subject} onChange={(subject) => update({ subject })} placeholder={t('Candidature au poste de …')} />
+            <Field className="sm:col-span-2" label={t('Formule d’appel')} value={letter.salutation} onChange={(salutation) => update({ salutation })} />
             <TextArea
               className="sm:col-span-2"
-              label="Corps de la lettre"
+              label={t('Corps de la lettre')}
               value={letter.body}
               onChange={(body) => update({ body })}
               rows={14}
-              hint="Laissez une ligne vide entre deux paragraphes."
+              hint={t('Laissez une ligne vide entre deux paragraphes.')}
             />
-            <TextArea className="sm:col-span-2" label="Formule de politesse" value={letter.closing} onChange={(closing) => update({ closing })} rows={2} />
+            <TextArea className="sm:col-span-2" label={t('Formule de politesse')} value={letter.closing} onChange={(closing) => update({ closing })} rows={2} />
           </div>
           <div className="mt-2">
             <Toggle
-              label="Signer la lettre"
+              label={t('Signer la lettre')}
               checked={letter.showSignature}
               onChange={(showSignature) => update({ showSignature })}
-              hint={cv.signature ? undefined : 'Dessinez votre signature dans « Mes infos » > Signature.'}
+              hint={cv.signature ? undefined : t('Dessinez votre signature dans « Mes infos » > Signature.')}
             />
           </div>
         </Card>
-        {letter.body.trim() && <NaturalReview hits={letterCliches(letter)} edit="Corrigez directement dans « Corps de la lettre » ci-dessus." />}
+        {letter.body.trim() && <NaturalReview hits={letterCliches(letter)} edit={t('Corrigez directement dans « Corps de la lettre » ci-dessus.')} />}
         {letter.body.trim() && <SendApplication />}
         {letter.body.trim() && (
           <NextSteps
             id="apres-lettre"
             onNavigate={onNavigate}
             steps={[
-              { icon: ClipboardList, label: 'Suivre mes candidatures', text: 'Où vous avez postulé, et quand relancer.', tab: 'suivi' },
-              { icon: Link2, label: 'Partager mon CV', text: 'Un lien et un QR code à donner au recruteur.', tab: 'apercu' },
-              { icon: BellRing, label: 'Trouver d’autres offres', text: 'La veille emploi cherche pour vous chaque matin.', tab: 'veille' },
+              { icon: ClipboardList, label: t('Suivre mes candidatures'), text: t('Où vous avez postulé, et quand relancer.'), tab: 'suivi' },
+              { icon: Link2, label: t('Partager mon CV'), text: t('Un lien et un QR code à donner au recruteur.'), tab: 'apercu' },
+              { icon: BellRing, label: t('Trouver d’autres offres'), text: t('La veille emploi cherche pour vous chaque matin.'), tab: 'veille' },
             ]}
           />
         )}
@@ -280,13 +276,12 @@ export function LetterPage({ onNavigate }: { onNavigate: (t: Tab) => void }) {
       <div className="space-y-3 lg:sticky lg:top-20 lg:self-start">
         <div data-tour="letter-export" className="grid grid-cols-2 gap-2">
           <Button size="lg" icon={<FileDown className="size-5" />} loading={busy === 'pdf'} onClick={() => exportAs('pdf')}>
-            {pro ? 'PDF' : 'PDF gratuit'}
+            {pro ? 'PDF' : t('PDF gratuit')}
           </Button>
           <Button size="lg" variant="secondary" icon={pro ? <FileText className="size-5" /> : <Lock className="size-5" />} loading={busy === 'docx'} onClick={() => exportAs('docx')}>
-            Word
-          </Button>
+            Word</Button>
         </div>
-        <ProOffer cv={cv} reason={needPro ? 'L’export Word fait partie de la version Pro.' : null} onUnlocked={() => needPro && void exportAs('docx', true)} />
+        <ProOffer cv={cv} reason={needPro ? t('L’export Word fait partie de la version Pro.') : null} onUnlocked={() => needPro && void exportAs('docx', true)} />
         <div className="mt-3">
           <DossierLink />
         </div>

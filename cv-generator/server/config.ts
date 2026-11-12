@@ -29,6 +29,8 @@ export async function createServer(env: Settings, opts: { db?: Db; migrate?: boo
   if (env.ANTHROPIC_API_KEY && !aiAllowed) console.warn('IA désactivée : DATABASE_URL manquante en production.');
   const client = aiAllowed ? new Anthropic({ apiKey: env.ANTHROPIC_API_KEY }) : null;
   const ai = client ? createAi(client, model) : null;
+  // Même moteur pour une interface en anglais : ce qui s'adresse à la personne y est écrit en anglais.
+  const aiEn = client ? createAi(client, model, 'en') : null;
 
   // Comptes et crédits : actifs dès qu'une base de données est configurée.
   let accounts = null;
@@ -66,6 +68,7 @@ export async function createServer(env: Settings, opts: { db?: Db; migrate?: boo
 
   const app = createApp({
     ai,
+    aiEn,
     authLimiter,
     shares,
     watches,

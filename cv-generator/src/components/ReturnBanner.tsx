@@ -4,6 +4,7 @@ import { OFFER_TITLE, REMINDER_TEXT, REMINDER_TITLE, useReturnReminder } from '.
 import { useAccount } from '../lib/account.ts';
 import { offerEnd } from './AccountDialogs.tsx';
 
+import { t } from '../i18n.ts';
 /** Fermée pour toute la visite (elle reste visible dans « Mes crédits »). */
 let offerDismissed = false;
 
@@ -24,8 +25,8 @@ export function ReturnBanner({ onAdapt }: { onAdapt: () => void }) {
         tone="amber"
         icon={<Gift className="size-5" aria-hidden />}
         title={OFFER_TITLE}
-        text={`${offer.pack.credits} crédits pour ${offer.pack.price} F au lieu de 3, jusqu’au ${offerEnd(offer.expiresAt)}. Une seule fois.`}
-        action="En profiter"
+        text={t('{0} crédits pour {1} F au lieu de 3, jusqu’au {2}. Une seule fois.', [offer.pack.credits, offer.pack.price, offerEnd(offer.expiresAt)])}
+        action={t('En profiter')}
         onAction={() => {
           close();
           openCredits('credits');
@@ -41,7 +42,7 @@ export function ReturnBanner({ onAdapt }: { onAdapt: () => void }) {
       icon={<Target className="size-5" aria-hidden />}
       title={REMINDER_TITLE}
       text={REMINDER_TEXT}
-      action="Adapter mon CV"
+      action={t('Adapter mon CV')}
       onAction={() => {
         dismiss();
         onAdapt();
@@ -65,7 +66,7 @@ function Banner(props: { tone: 'brand' | 'amber'; icon: ReactNode; title: string
           {props.action}
         </button>
       </div>
-      <button type="button" onClick={props.onClose} aria-label="Plus tard" className="rounded-lg p-1 text-slate-500 hover:bg-white">
+      <button type="button" onClick={props.onClose} aria-label={t('Plus tard')} className="rounded-lg p-1 text-slate-500 hover:bg-white">
         <X className="size-4" />
       </button>
     </div>

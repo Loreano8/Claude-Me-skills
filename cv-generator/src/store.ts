@@ -4,6 +4,7 @@ import type { AdaptResult, CoverLetterResult, InterviewResult, KeywordsResult, L
 import type { Application, CoverLetter, CvDocument, JobPostingDraft, SavedLetter } from './types.ts';
 import { applyAiContent, emptyCv, emptyLetter, letterDate, uid } from './lib/cv.ts';
 
+import { t } from './i18n.ts';
 interface State {
   cvs: CvDocument[];
   activeId: string;
@@ -42,11 +43,11 @@ interface State {
 }
 
 export const MARKET_LABELS: Record<Market, string> = {
-  international: 'English (international)',
-  uk: 'English (UK)',
-  us: 'English (US / Canada)',
-  france: 'Français (France)',
-  afrique: 'Français (Afrique)',
+  international: t('English (international)'),
+  uk: t('English (UK)'),
+  us: t('English (US / Canada)'),
+  france: t('Français (France)'),
+  afrique: t('Français (Afrique)'),
 };
 
 /**
@@ -106,7 +107,7 @@ export const useStore = create<State>()(
       addAdaptedCv: (base, result) => {
         const adapted = applyAiContent({ ...structuredClone(base), id: uid() }, result.cv, { mode: 'keepPersonal' });
         const where = [result.job.title, result.job.company].filter(Boolean).join(' – ');
-        adapted.label = where ? `Adapté : ${where}` : 'CV adapté';
+        adapted.label = where ? t('Adapté : {0}', [where]) : t('CV adapté');
         adapted.adaptation = { job: result.job, analysis: result.analysis, createdAt: Date.now() };
         // Le CV adapté garde le statut du CV de départ (Pro seulement si celui-ci l'était).
         if (result.language !== base.settings.headingLang) {
@@ -116,7 +117,7 @@ export const useStore = create<State>()(
         const now = Date.now();
         const application: Application = {
           id: uid(),
-          title: result.job.title || 'Offre sans titre',
+          title: result.job.title || t('Offre sans titre'),
           company: result.job.company,
           location: result.job.location,
           status: 'preparation',
@@ -251,5 +252,9 @@ export const useStore = create<State>()(
     },
   ),
 );
+
+/** Titres provisoires d'une candidature (dans les deux langues : ils sont enregistrés dans la langue du moment). */
+const PLACEHOLDER_TITLES = ['Offre sans titre', 'Nouvelle candidature', 'Untitled job offer', 'New application'];
+export const isPlaceholderTitle = (title: string) => PLACEHOLDER_TITLES.includes(title);
 
 export const useActiveCv = (): CvDocument => useStore((s) => s.cvs.find((c) => c.id === s.activeId) ?? s.cvs[0]);

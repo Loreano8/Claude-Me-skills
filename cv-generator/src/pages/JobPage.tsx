@@ -15,6 +15,7 @@ import { InterviewSheet } from '../components/InterviewSheet.tsx';
 import { Button, Card, Cost, Chip, Notice } from '../components/ui.tsx';
 import type { Tab } from '../App.tsx';
 
+import { t } from '../i18n.ts';
 function ScoreRing({ score, label }: { score: number; label?: string }) {
   const value = Math.max(0, Math.min(100, Math.round(score)));
   const color = value >= 70 ? '#059669' : value >= 45 ? '#d97706' : '#dc2626';
@@ -34,30 +35,28 @@ function ScoreRing({ score, label }: { score: number; label?: string }) {
 export function AnalysisCard({ result, onNavigate }: { result: Pick<AdaptResult, 'job' | 'analysis'>; onNavigate: (t: Tab) => void }) {
   const { job, analysis } = result;
   return (
-    <Card title="Analyse de l’offre" subtitle={[job.title, job.company, job.location].filter(Boolean).join(' · ')}>
+    <Card title={t('Analyse de l’offre')} subtitle={[job.title, job.company, job.location].filter(Boolean).join(' · ')}>
       {typeof analysis.matchScoreAfter === 'number' ? (
         <div className="flex flex-wrap items-center gap-3">
           <div className="flex items-center gap-2">
-            <ScoreRing score={analysis.matchScore} label="avant" />
+            <ScoreRing score={analysis.matchScore} label={t('avant')} />
             <ArrowRight className="size-5 text-slate-400" />
-            <ScoreRing score={analysis.matchScoreAfter} label="après" />
+            <ScoreRing score={analysis.matchScoreAfter} label={t('après')} />
           </div>
           <p className="min-w-0 flex-1 text-sm text-slate-600">
-            Compatibilité de votre CV avec l’offre, avant et après adaptation. Votre CV d’origine est conservé ; la version adaptée est enregistrée à part.
-          </p>
+            {t('Compatibilité de votre CV avec l’offre, avant et après adaptation. Votre CV d’origine est conservé ; la version adaptée est enregistrée à part.')}</p>
         </div>
       ) : (
         <div className="flex items-center gap-4">
           <ScoreRing score={analysis.matchScore} />
           <p className="text-sm text-slate-600">
-            Adéquation estimée entre votre profil et l’offre. Une version de votre CV adaptée à ce poste a été créée : votre CV d’origine est conservé.
-          </p>
+            {t('Adéquation estimée entre votre profil et l’offre. Une version de votre CV adaptée à ce poste a été créée : votre CV d’origine est conservé.')}</p>
         </div>
       )}
 
       {analysis.matchedKeywords.length > 0 && (
         <div className="mt-4">
-          <p className="mb-1.5 text-sm font-semibold text-slate-800">Vos points forts pour ce poste</p>
+          <p className="mb-1.5 text-sm font-semibold text-slate-800">{t('Vos points forts pour ce poste')}</p>
           <div className="flex flex-wrap gap-1.5">
             {analysis.matchedKeywords.map((k) => (
               <Chip key={k} tone="green">
@@ -70,7 +69,7 @@ export function AnalysisCard({ result, onNavigate }: { result: Pick<AdaptResult,
 
       {analysis.missingKeywords.length > 0 && (
         <div className="mt-4">
-          <p className="mb-1.5 text-sm font-semibold text-slate-800">Demandé par l’offre, absent de votre CV</p>
+          <p className="mb-1.5 text-sm font-semibold text-slate-800">{t('Demandé par l’offre, absent de votre CV')}</p>
           <div className="flex flex-wrap gap-1.5">
             {analysis.missingKeywords.map((k) => (
               <Chip key={k} tone="amber">
@@ -78,13 +77,13 @@ export function AnalysisCard({ result, onNavigate }: { result: Pick<AdaptResult,
               </Chip>
             ))}
           </div>
-          <p className="mt-1.5 text-xs text-slate-500">Ajoutez-les seulement si vous les maîtrisez vraiment : un recruteur vérifiera en entretien.</p>
+          <p className="mt-1.5 text-xs text-slate-500">{t('Ajoutez-les seulement si vous les maîtrisez vraiment : un recruteur vérifiera en entretien.')}</p>
         </div>
       )}
 
       {analysis.changes.length > 0 && (
         <div className="mt-4">
-          <p className="mb-1.5 text-sm font-semibold text-slate-800">Ce qui a été adapté</p>
+          <p className="mb-1.5 text-sm font-semibold text-slate-800">{t('Ce qui a été adapté')}</p>
           <ul className="space-y-1 text-sm text-slate-700">
             {analysis.changes.map((c, i) => (
               <li key={i} className="flex gap-2">
@@ -97,7 +96,7 @@ export function AnalysisCard({ result, onNavigate }: { result: Pick<AdaptResult,
 
       {analysis.advice.length > 0 && (
         <div className="mt-4 rounded-xl bg-sky-50 p-3">
-          <p className="mb-1 text-sm font-semibold text-sky-900">Conseils pour cette candidature</p>
+          <p className="mb-1 text-sm font-semibold text-sky-900">{t('Conseils pour cette candidature')}</p>
           <ul className="list-disc space-y-1 pl-5 text-sm text-sky-900">
             {analysis.advice.map((a, i) => (
               <li key={i}>{a}</li>
@@ -108,20 +107,18 @@ export function AnalysisCard({ result, onNavigate }: { result: Pick<AdaptResult,
 
       <div className="mt-4 flex flex-wrap gap-2">
         <Button icon={<Eye className="size-4" />} onClick={() => onNavigate('apercu')}>
-          Voir le CV adapté
-        </Button>
+          {t('Voir le CV adapté')}</Button>
         <Button variant="secondary" icon={<PencilLine className="size-4" />} onClick={() => onNavigate('infos')}>
-          Le modifier
-        </Button>
+          {t('Le modifier')}</Button>
       </div>
       <div className="mt-4">
         <NextSteps
           id="apres-offre"
           onNavigate={onNavigate}
           steps={[
-            { icon: PenLine, label: 'Écrire la lettre', text: 'Une lettre pour cette offre, à partir du CV adapté.', tab: 'lettre' },
-            { icon: ClipboardList, label: 'Suivre cette candidature', text: 'Notez-la, et recevez un rappel pour relancer.', tab: 'suivi' },
-            { icon: BellRing, label: 'Trouver d’autres offres', text: 'La veille emploi cherche pour vous chaque matin.', tab: 'veille' },
+            { icon: PenLine, label: t('Écrire la lettre'), text: t('Une lettre pour cette offre, à partir du CV adapté.'), tab: 'lettre' },
+            { icon: ClipboardList, label: t('Suivre cette candidature'), text: t('Notez-la, et recevez un rappel pour relancer.'), tab: 'suivi' },
+            { icon: BellRing, label: t('Trouver d’autres offres'), text: t('La veille emploi cherche pour vous chaque matin.'), tab: 'veille' },
           ]}
         />
       </div>
@@ -142,7 +139,7 @@ function ClarifyCard({ questions, busy, onDone, onSkip }: { questions: Question[
   const answers = questions
     .map((q, i) => {
       const a = [picked[i], notes[i].trim()].filter(Boolean).join('. ');
-      return a ? `Question : ${q.question}\nRéponse : ${a}` : '';
+      return a ? t('Question : {0}\nRéponse : {1}', [q.question, a]) : '';
     })
     .filter(Boolean)
     .join('\n\n');
@@ -153,10 +150,9 @@ function ClarifyCard({ questions, busy, onDone, onSkip }: { questions: Question[
         className="border-brand-200"
         title={
           <span className="flex items-center gap-2">
-            <HelpCircle className="size-5 text-brand-600" /> Avant d’adapter votre CV
-          </span>
+            <HelpCircle className="size-5 text-brand-600" /> {' '}{t('Avant d’adapter votre CV')}</span>
         }
-        subtitle="Quelques précisions pour viser juste. Répondez à ce que vous savez, le reste est facultatif."
+        subtitle={t('Quelques précisions pour viser juste. Répondez à ce que vous savez, le reste est facultatif.')}
       >
         <div className="space-y-4">
           {questions.map((q, i) => (
@@ -184,8 +180,8 @@ function ClarifyCard({ questions, busy, onDone, onSkip }: { questions: Question[
               <input
                 value={notes[i]}
                 onChange={(e) => setNotes((n) => set(n, i, e.target.value))}
-                placeholder={q.options.length ? 'Précisez si besoin (facultatif)' : 'Votre réponse'}
-                aria-label={`Réponse : ${q.question}`}
+                placeholder={q.options.length ? t('Précisez si besoin (facultatif)') : t('Votre réponse')}
+                aria-label={t('Réponse : {0}', [q.question])}
                 className="mt-2 w-full rounded-xl px-3 py-2 text-sm ring-1 ring-slate-300 outline-none focus:ring-2 focus:ring-brand-500"
               />
             </div>
@@ -193,11 +189,10 @@ function ClarifyCard({ questions, busy, onDone, onSkip }: { questions: Question[
         </div>
         <div className="mt-4 flex flex-wrap gap-2">
           <Button variant="ai" icon={<Target className="size-4" />} loading={busy} disabled={busy} onClick={() => onDone(answers)}>
-            Adapter mon CV <Cost />
+            {t('Adapter mon CV')}{' '}<Cost />
           </Button>
           <Button variant="ghost" disabled={busy} onClick={onSkip}>
-            Passer les questions
-          </Button>
+            {t('Passer les questions')}</Button>
         </div>
       </Card>
     </div>
@@ -283,7 +278,7 @@ export function JobPage({ onNavigate }: { onNavigate: (t: Tab) => void }) {
   }
 
   const jobTitle =
-    result?.job.title || cv.adaptation?.job.title || job.text.trim().split('\n')[0]?.slice(0, 60) || 'Offre sans titre';
+    result?.job.title || cv.adaptation?.job.title || job.text.trim().split('\n')[0]?.slice(0, 60) || t('Offre sans titre');
 
   async function prepareInterview() {
     setBusy('interview');
@@ -324,34 +319,32 @@ export function JobPage({ onNavigate }: { onNavigate: (t: Tab) => void }) {
         tour="apply"
         title={
           <span className="flex items-center gap-2">
-            <Target className="size-5 text-brand-600" /> Postuler à cette offre
-          </span>
+            <Target className="size-5 text-brand-600" /> {' '}{t('Postuler à cette offre')}</span>
         }
-        subtitle={<>À partir du CV : <strong>{cv.label}</strong></>}
+        subtitle={<>{t('À partir du CV :')}{' '}<strong>{cv.label}</strong></>}
       >
-        {empty && <Notice tone="warn">Remplissez d’abord votre CV dans « Mes infos » (la saisie rapide suffit).</Notice>}
+        {empty && <Notice tone="warn">{t('Remplissez d’abord votre CV dans « Mes infos » (la saisie rapide suffit).')}</Notice>}
         <div className="mt-3 flex flex-wrap gap-2">
           <Button variant="ai" size="lg" icon={<Target className="size-5" />} loading={busy === 'adapt'} disabled={!hasJob || empty || busy !== null} onClick={adapt}>
-            Adapter mon CV à l’offre <Cost />
+            {t('Adapter mon CV à l’offre')}{' '}<Cost />
           </Button>
           <Button variant="secondary" size="lg" icon={<Mail className="size-5" />} loading={busy === 'letter'} disabled={!hasJob || empty || busy !== null} onClick={letter}>
-            Rédiger la lettre <Cost />
+            {t('Rédiger la lettre')}{' '}<Cost />
           </Button>
           <Button variant="secondary" size="lg" icon={<MessagesSquare className="size-5" />} loading={busy === 'interview'} disabled={!hasJob || empty || busy !== null} onClick={prepareInterview}>
-            Préparer l’entretien <Cost />
+            {t('Préparer l’entretien')}{' '}<Cost />
           </Button>
         </div>
-        <p className="mt-2 text-xs text-slate-500">Les questions éventuelles sur l’offre sont gratuites.</p>
-        {busy && <p className="mt-3 text-sm text-brand-700">Lecture de l’offre et préparation de votre candidature… (jusqu’à une minute)</p>}
-        {questions && questionsFor === jobKey && !busy && <p className="mt-3 text-sm text-brand-700">Quelques questions avant d’adapter votre CV : voir ci-dessous.</p>}
+        <p className="mt-2 text-xs text-slate-500">{t('Les questions éventuelles sur l’offre sont gratuites.')}</p>
+        {busy && <p className="mt-3 text-sm text-brand-700">{t('Lecture de l’offre et préparation de votre candidature… (jusqu’à une minute)')}</p>}
+        {questions && questionsFor === jobKey && !busy && <p className="mt-3 text-sm text-brand-700">{t('Quelques questions avant d’adapter votre CV : voir ci-dessous.')}</p>}
         {error && (
           <div className="mt-3">
             <Notice tone="error">{error}</Notice>
           </div>
         )}
         <p className="mt-3 text-xs text-slate-500">
-          CVCasa met en avant ce que vous avez réellement fait et reprend les mots-clés de l’offre. Il n’invente ni diplôme, ni expérience, ni compétence.
-        </p>
+          {t('CVCasa met en avant ce que vous avez réellement fait et reprend les mots-clés de l’offre. Il n’invente ni diplôme, ni expérience, ni compétence.')}</p>
       </Card>
 
       {questions && questionsFor === jobKey && (
@@ -365,14 +358,12 @@ export function JobPage({ onNavigate }: { onNavigate: (t: Tab) => void }) {
         <Card
           title={
             <span className="flex items-center gap-2">
-              <MessagesSquare className="size-5 text-brand-600" /> Fiche entretien
-            </span>
+              <MessagesSquare className="size-5 text-brand-600" /> {' '}{t('Fiche entretien')}</span>
           }
           subtitle={jobTitle}
           actions={
             <Button variant="ghost" size="sm" icon={<ClipboardList className="size-4" />} onClick={() => onNavigate('suivi')}>
-              Mes candidatures
-            </Button>
+              {t('Mes candidatures')}</Button>
           }
         >
           <InterviewSheet sheet={(interview ?? linkedApplication?.interview)!} title={jobTitle} />

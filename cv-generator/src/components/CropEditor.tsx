@@ -3,6 +3,7 @@ import { Check, RotateCcw, X } from 'lucide-react';
 import { FULL_QUAD, type Quad } from '../lib/dossier.ts';
 import { Button } from './ui.tsx';
 
+import { t } from '../i18n.ts';
 /**
  * Recadrage : la personne place les 4 coins de la feuille sur la photo (au doigt ou à la souris),
  * puis la page est redressée comme vue de face.
@@ -33,11 +34,11 @@ export function CropEditor({ src, quad, onDone, onCancel }: { src: string; quad:
   const poly = points.map((p) => `${p.x * 100},${p.y * 100}`).join(' ');
 
   return (
-    <div className="fixed inset-0 z-50 flex flex-col bg-slate-950/95 pt-[env(safe-area-inset-top)] pb-[env(safe-area-inset-bottom)]" role="dialog" aria-label="Recadrer la page">
-      <p className="px-4 py-3 text-center text-sm text-white">Placez les 4 points sur les coins de la feuille.</p>
+    <div className="fixed inset-0 z-50 flex flex-col bg-slate-950/95 pt-[env(safe-area-inset-top)] pb-[env(safe-area-inset-bottom)]" role="dialog" aria-label={t('Recadrer la page')}>
+      <p className="px-4 py-3 text-center text-sm text-white">{t('Placez les 4 points sur les coins de la feuille.')}</p>
       <div className="flex min-h-0 flex-1 items-center justify-center px-6">
         <div className="relative max-h-full max-w-full touch-none select-none">
-          <img ref={img} src={src} alt="Page à recadrer" className="block max-h-[calc(100dvh-170px)] max-w-full" draggable={false} />
+          <img ref={img} src={src} alt={t('Page à recadrer')} className="block max-h-[calc(100dvh-170px)] max-w-full" draggable={false} />
           <svg viewBox="0 0 100 100" preserveAspectRatio="none" className="pointer-events-none absolute inset-0 size-full">
             <polygon points={poly} fill="rgba(37,73,235,0.18)" stroke="#60a5fa" strokeWidth={2} vectorEffect="non-scaling-stroke" />
           </svg>
@@ -45,7 +46,7 @@ export function CropEditor({ src, quad, onDone, onCancel }: { src: string; quad:
             <button
               key={i}
               type="button"
-              aria-label={['Coin haut gauche', 'Coin haut droit', 'Coin bas droit', 'Coin bas gauche'][i]}
+              aria-label={[t('Coin haut gauche'), t('Coin haut droit'), t('Coin bas droit'), t('Coin bas gauche')][i]}
               onPointerDown={(e) => {
                 e.currentTarget.setPointerCapture(e.pointerId);
                 setActive(i);
@@ -62,14 +63,11 @@ export function CropEditor({ src, quad, onDone, onCancel }: { src: string; quad:
       </div>
       <div className="flex flex-wrap justify-center gap-2 px-4 py-3">
         <Button variant="secondary" icon={<X className="size-4" />} onClick={onCancel}>
-          Annuler
-        </Button>
+          {t('Annuler')}</Button>
         <Button variant="secondary" icon={<RotateCcw className="size-4" />} onClick={() => onDone(FULL_QUAD)}>
-          Photo entière
-        </Button>
+          {t('Photo entière')}</Button>
         <Button icon={<Check className="size-4" />} onClick={() => onDone(points)}>
-          Valider
-        </Button>
+          {t('Valider')}</Button>
       </div>
     </div>
   );

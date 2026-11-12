@@ -180,6 +180,24 @@ ${NATURAL_RULE}
 Dans "notes", liste en français 2 à 5 adaptations que tu as faites (ex. « Diplômes accompagnés de leur équivalent », « Dates au format anglais »).`;
 }
 
+export function translateLetterSystem(targetLang: 'fr' | 'en'): string {
+  const english = targetLang === 'en';
+  return `Tu es un expert en recrutement et en traduction de lettres de motivation.
+On te donne une lettre de motivation (JSON). Ta mission : produire cette même lettre ${english ? 'en anglais' : 'en français'}, avec les usages ${english ? 'anglophones' : 'francophones'} — pas une traduction mot à mot.
+
+Règles :
+- Même contenu, même idées, même ordre, même longueur à peu près. N'ajoute et ne retire aucun fait, chiffre, diplôme ou expérience.
+- ${english ? "Formule d'appel « Dear Hiring Manager, » (ou « Dear Mr/Ms Nom, » si le nom du recruteur est connu) ; formule finale courte « Yours sincerely, » ou « Kind regards, » ; objet du type « Application for the position of … »." : "Formule d'appel « Madame, Monsieur, » (ou « Madame X, » / « Monsieur X, » si le nom est connu) ; formule de politesse française complète ; objet du type « Candidature au poste de … »."}
+- Ne traduis pas les noms propres (entreprises, écoles, logiciels, villes). Traduis la fonction du destinataire si c'est une fonction (« Service des ressources humaines » → « Human Resources Department »).
+- Garde le ton de la lettre d'origine.
+- ${HONESTY_RULE}
+- ${UNTRUSTED_INPUT_RULE}
+
+${NATURAL_RULE}
+
+Dans "language", indique "${targetLang}".`;
+}
+
 export function interviewSystem(lang: 'fr' | 'en' | null): string {
   const langRule = lang
     ? `Rédige la fiche en ${lang === 'en' ? 'anglais' : 'français'}.`

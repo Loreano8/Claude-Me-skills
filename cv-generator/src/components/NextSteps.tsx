@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { ArrowRight, X } from 'lucide-react';
 import type { Tab } from '../App.tsx';
 
+import { t } from '../i18n.ts';
 // « Et ensuite ? » : à la fin d'une étape, deux ou trois idées pour continuer. Rien d'obligatoire :
 // la personne peut ignorer, ou masquer le bloc (retenu sur cet appareil).
 
@@ -32,12 +33,12 @@ export function NextSteps({ id, steps, onNavigate }: { id: string; steps: NextSt
   };
 
   return (
-    <section aria-label="Et ensuite ?" className="rounded-2xl bg-brand-50/70 p-3 ring-1 ring-brand-100 sm:p-4">
+    <section aria-label={t('Et ensuite ?')} className="rounded-2xl bg-brand-50/70 p-3 ring-1 ring-brand-100 sm:p-4">
       <div className="mb-2 flex items-center justify-between gap-2">
         <p className="text-sm font-semibold text-slate-900">
-          Et ensuite ? <span className="font-normal text-slate-500">Si vous voulez :</span>
+          {t('Et ensuite ?')}{' '}<span className="font-normal text-slate-500">{t('Si vous voulez :')}</span>
         </p>
-        <button type="button" onClick={hide} aria-label="Masquer ces suggestions" className="flex size-11 items-center justify-center rounded-full text-slate-400 hover:bg-white hover:text-slate-700">
+        <button type="button" onClick={hide} aria-label={t('Masquer ces suggestions')} className="flex size-11 items-center justify-center rounded-full text-slate-400 hover:bg-white hover:text-slate-700">
           <X className="size-4" />
         </button>
       </div>

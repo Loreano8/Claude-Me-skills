@@ -16,13 +16,16 @@ import { RecoveryInput, type Recovery } from './recovery.ts';
 import { memoryRateLimiter, type RateLimiter } from './rateLimit.ts';
 import { ShareError, type Shares } from './shares.ts';
 import { WatchError, type Watches } from './watch.ts';
-import { WatchSaveRequest } from '../shared/schema.ts';
+import { LetterTranslateRequest, WatchSaveRequest } from '../shared/schema.ts';
+import { isUiLang, translate, type UiLang } from '../shared/i18n.ts';
 import { createHash, timingSafeEqual } from 'node:crypto';
 
 export interface AppOptions {
   /** Téléchargement des pages d'offres (remplaçable dans les tests). */
   fetchPage?: typeof fetchJobPage;
   ai: Ai | null;
+  /** Le même moteur, pour une interface en anglais (conseils, questions et analyses en anglais). */
+  aiEn?: Ai | null;
   allowedOrigins: string[];
   rateLimitPerHour: number;
   /** Limite des tentatives de connexion et de codes (en base quand elle existe, pour survivre aux redémarrages). */
@@ -56,6 +59,12 @@ export interface AppOptions {
 }
 
 // Limite simple en mémoire : suffisante pour une seule instance du serveur.
+/** Langue de l'interface de la personne (en-tête X-Lang envoyé par le site et l'application). */
+export function uiLang(c: Context): UiLang {
+  const l = c.req.header('x-lang');
+  return isUiLang(l) ? l : 'fr';
+}
+
 function clientKey(c: Context): string {
   return c.req.header('x-forwarded-for')?.split(',')[0]?.trim() || c.req.header('x-real-ip') || 'local';
 }
@@ -69,7 +78,7 @@ const Credentials = z.object({
   source: z.string().max(60).optional(),
 });
 
-export function createApp({ fetchPage = fetchJobPage, ai, allowedOrigins, rateLimitPerHour, accounts = null, payments = null, testimonials = null, support = null, vault = null, recovery = null, sources = null, sessionSecret = '', publicUrl = '', apiPublicUrl = '', adminToken = '', authLimiter = null, shares = null, watches = null, cronSecret = '' }: AppOptions) {
+export function createApp({ fetchPage = fetchJobPage, ai, aiEn = null, allowedOrigins, rateLimitPerHour, accounts = null, payments = null, testimonials = null, support = null, vault = null, recovery = null, sources = null, sessionSecret = '', publicUrl = '', apiPublicUrl = '', adminToken = '', authLimiter = null, shares = null, watches = null, cronSecret = '' }: AppOptions) {
   const app = new Hono();
   const allow = memoryRateLimiter(rateLimitPerHour);
   const allowAuth = authLimiter ?? memoryRateLimiter(20);
@@ -83,6 +92,17 @@ export function createApp({ fetchPage = fetchJobPage, ai, allowedOrigins, rateLi
       onError: (c) => c.json({ error: 'Fichier trop volumineux (15 Mo maximum).' }, 413),
     }),
   );
+
+  // Interface en anglais (en-tête X-Lang: en) : les messages d'erreur partent en anglais.
+  app.use('/api/*', async (c, next) => {
+    await next();
+    if (uiLang(c) !== 'en' || c.res.status < 400 || !c.res.headers.get('content-type')?.includes('application/json')) return;
+    const data = (await c.res.clone().json().catch(() => null)) as { error?: unknown } | null;
+    if (!data || typeof data.error !== 'string') return;
+    const headers = new Headers(c.res.headers);
+    headers.delete('content-length');
+    c.res = new Response(JSON.stringify({ ...data, error: translate('en', data.error) }), { status: c.res.status, headers });
+  });
 
   app.get('/api/health', async (c) => {
     // Appelée chaque jour par une tâche automatique : la requête à la base empêche la mise en veille du projet.
@@ -304,7 +324,7 @@ export function createApp({ fetchPage = fetchJobPage, ai, allowedOrigins, rateLi
     const user = await currentUser(c);
     if (!user) return c.json({ error: 'Connectez-vous à votre compte pour réinitialiser le code.', code: 'auth' }, 401);
     try {
-      return c.json(await vault.sendVaultCode(user));
+      return c.json(await vault.sendVaultCode(user, uiLang(c)));
     } catch (error) {
       return vaultError(c, error);
     }
@@ -315,7 +335,7 @@ export function createApp({ fetchPage = fetchJobPage, ai, allowedOrigins, rateLi
     if (!vault) return c.json({ error: 'Indisponible.' }, 503);
     if (!(await allowAuth(clientKey(c)))) return c.json({ error: 'Trop de demandes. Réessayez plus tard.' }, 429);
     try {
-      const sent = await vault.sendPasswordCode(String((await body(c)).identifier ?? ''));
+      const sent = await vault.sendPasswordCode(String((await body(c)).identifier ?? ''), uiLang(c));
       return c.json({ ok: true, to: sent?.to ?? null });
     } catch (error) {
       return vaultError(c, error);
@@ -671,7 +691,7 @@ export function createApp({ fetchPage = fetchJobPage, ai, allowedOrigins, rateLi
         }
       }
       try {
-        return c.json(await handler(ai, parsed.data));
+        return c.json(await handler(uiLang(c) === 'en' && aiEn ? aiEn : ai, parsed.data));
       } catch (error) {
         if (user && accounts && !free) {
           const credits = await accounts.refund(user.id, action, cost(parsed.data)).catch(() => null);
@@ -790,6 +810,7 @@ export function createApp({ fetchPage = fetchJobPage, ai, allowedOrigins, rateLi
   );
 
   // Questions avant la lettre (motivation, exemple vécu) : gratuites.
+  app.post('/api/ai/translate-letter', aiRoute('translate-letter', LetterTranslateRequest, (ai, body) => ai.translateLetter(body)));
   app.post('/api/ai/letter-questions', aiRoute('letter-questions', LetterQuestionsRequest, (ai, body) => ai.letterQuestions(body), undefined, true));
 
   app.post(

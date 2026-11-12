@@ -5,6 +5,7 @@ import type { CvDocument } from '../types.ts';
 import { api } from '../lib/api.ts';
 import { Button, Cost, Notice } from './ui.tsx';
 
+import { t } from '../i18n.ts';
 /** Prix de la version Pro, en crédits (doit suivre UNLOCK_COST dans server/accounts.ts). */
 export const UNLOCK_COST = 2;
 
@@ -48,8 +49,7 @@ export function ProOffer({
   if (pro) {
     return (
       <p className="flex items-center gap-1.5 text-sm font-medium text-emerald-700">
-        <BadgeCheck className="size-4" /> Version Pro : sans mention, tous les modèles, Word.
-      </p>
+        <BadgeCheck className="size-4" /> {' '}{t('Version Pro : sans mention, tous les modèles, Word.')}</p>
     );
   }
   return (
@@ -58,9 +58,7 @@ export function ProOffer({
       <p className="flex items-start gap-2 text-sm text-amber-900">
         <Crown className="mt-0.5 size-4 shrink-0" />
         <span>
-          <strong>Version Pro, {UNLOCK_COST} crédits</strong> : sans la mention « Créé avec CVCasa », les 13 modèles, l’export Word, et la lettre de ce CV.
-          Acquis pour toujours sur ce CV : modifiez-le et retéléchargez-le autant de fois que vous voulez.
-        </span>
+          <strong>{t('Version Pro, {0} crédits', [UNLOCK_COST])}</strong> {' '}{t(': sans la mention « Créé avec CVCasa », les 13 modèles, l’export Word, et la lettre de ce CV. Acquis pour toujours sur ce CV : modifiez-le et retéléchargez-le autant de fois que vous voulez.')}</span>
       </p>
       <Button
         size="sm"
@@ -71,7 +69,7 @@ export function ProOffer({
           if (await unlock()) onUnlocked?.();
         }}
       >
-        Passer en Pro <Cost n={UNLOCK_COST} />
+        {t('Passer en Pro')}{' '}<Cost n={UNLOCK_COST} />
       </Button>
       {error && (
         <div className="mt-2">

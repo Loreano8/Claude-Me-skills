@@ -3,6 +3,7 @@ import { Capacitor, type PluginListenerHandle } from '@capacitor/core';
 import { SpeechRecognition as NativeSpeech } from '@capacitor-community/speech-recognition';
 import type { Lang } from '../../shared/schema.ts';
 
+import { t } from '../i18n.ts';
 // Reconnaissance vocale gratuite, faite par l'appareil : celle d'Android dans l'application,
 // celle du navigateur sur le site (Chrome, Edge, Safari sur iPhone…).
 
@@ -41,13 +42,13 @@ function webError(code: string): string | null {
       return null;
     case 'not-allowed':
     case 'service-not-allowed':
-      return 'Le micro est bloqué. Autorisez l’accès au micro pour ce site dans les réglages du navigateur, puis réessayez.';
+      return t('Le micro est bloqué. Autorisez l’accès au micro pour ce site dans les réglages du navigateur, puis réessayez.');
     case 'network':
-      return 'La dictée a besoin d’une connexion internet.';
+      return t('La dictée a besoin d’une connexion internet.');
     case 'audio-capture':
-      return 'Aucun micro détecté sur cet appareil.';
+      return t('Aucun micro détecté sur cet appareil.');
     default:
-      return 'La dictée s’est interrompue. Réessayez.';
+      return t('La dictée s’est interrompue. Réessayez.');
   }
 }
 
@@ -82,8 +83,8 @@ export function useDictation(onFinal: (text: string) => void, lang: Lang = 'fr')
 
   const startNative = async () => {
     const perm = await NativeSpeech.requestPermissions();
-    if (perm.speechRecognition !== 'granted') throw new Error('Autorisez l’accès au micro pour utiliser la dictée.');
-    if (!(await NativeSpeech.available()).available) throw new Error('La reconnaissance vocale n’est pas disponible sur ce téléphone.');
+    if (perm.speechRecognition !== 'granted') throw new Error(t('Autorisez l’accès au micro pour utiliser la dictée.'));
+    if (!(await NativeSpeech.available()).available) throw new Error(t('La reconnaissance vocale n’est pas disponible sur ce téléphone.'));
     await NativeSpeech.removeAllListeners();
     handles.current = [
       await NativeSpeech.addListener('partialResults', (d) => {
@@ -148,7 +149,7 @@ export function useDictation(onFinal: (text: string) => void, lang: Lang = 'fr')
       if (mode === 'native') await startNative();
       else startWeb();
     } catch (e) {
-      setError(e instanceof Error ? e.message : 'Impossible de démarrer la dictée.');
+      setError(e instanceof Error ? e.message : t('Impossible de démarrer la dictée.'));
       finish();
     }
   };

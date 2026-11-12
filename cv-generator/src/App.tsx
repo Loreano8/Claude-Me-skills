@@ -22,6 +22,7 @@ import { ContactPage } from './pages/ContactPage.tsx';
 import { AdminPage } from './pages/AdminPage.tsx';
 import { DossierPage } from './pages/DossierPage.tsx';
 import { WatchPage } from './pages/WatchPage.tsx';
+import { LangButton } from './components/LangSwitch.tsx';
 import { MorePage } from './pages/MorePage.tsx';
 import { FollowUpNudge } from './components/FollowUps.tsx';
 import { isCvEmpty } from './lib/cv.ts';
@@ -29,15 +30,16 @@ import { DocumentsPage } from './pages/DocumentsPage.tsx';
 import { PrivacyPage } from './pages/PrivacyPage.tsx';
 import { refreshSupportBadge, useSupportBadge } from './lib/supportBadge.ts';
 
+import { t } from './i18n.ts';
 export type Tab = 'accueil' | 'infos' | 'apercu' | 'offre' | 'lettre' | 'plus' | 'suivi' | 'veille' | 'documents' | 'dossier' | 'scanner' | 'confidentialite' | 'contact' | 'admin';
 
 // La navigation suit le parcours : 1. le CV, 2. l'offre, 3. la lettre. Tout le reste est rangé dans « Plus ».
 type Section = 'cv' | 'offre' | 'lettre' | 'plus';
 const NAV: { id: Section; tab: Tab; label: string; short: string; step?: number; tabs: Tab[] }[] = [
-  { id: 'cv', tab: 'infos', label: 'Mon CV', short: 'Mon CV', step: 1, tabs: ['infos', 'apercu'] },
-  { id: 'offre', tab: 'offre', label: 'Adapter à une offre', short: 'Offre', step: 2, tabs: ['offre'] },
-  { id: 'lettre', tab: 'lettre', label: 'Lettre de motivation', short: 'Lettre', step: 3, tabs: ['lettre'] },
-  { id: 'plus', tab: 'plus', label: 'Scanner, documents, suivi, aide', short: 'Plus', tabs: ['plus', 'suivi', 'veille', 'documents', 'dossier', 'scanner', 'contact', 'confidentialite'] },
+  { id: 'cv', tab: 'infos', label: t('Mon CV'), short: t('Mon CV'), step: 1, tabs: ['infos', 'apercu'] },
+  { id: 'offre', tab: 'offre', label: t('Adapter à une offre'), short: t('Offre'), step: 2, tabs: ['offre'] },
+  { id: 'lettre', tab: 'lettre', label: t('Lettre de motivation'), short: t('Lettre'), step: 3, tabs: ['lettre'] },
+  { id: 'plus', tab: 'plus', label: t('Scanner, documents, suivi, aide'), short: t('Plus'), tabs: ['plus', 'suivi', 'veille', 'documents', 'dossier', 'scanner', 'contact', 'confidentialite'] },
 ];
 /** Pages ouvertes depuis « Plus » : elles affichent un retour vers ce menu. */
 const MORE_PAGES: Tab[] = ['suivi', 'veille', 'documents', 'dossier', 'scanner', 'contact', 'confidentialite'];
@@ -57,7 +59,7 @@ function initialTab(): Tab {
 
 function Logo({ onClick }: { onClick: () => void }) {
   return (
-    <button type="button" onClick={onClick} className="hit flex shrink-0 items-center gap-2 rounded-xl" aria-label="CVCasa, accueil">
+    <button type="button" onClick={onClick} className="hit flex shrink-0 items-center gap-2 rounded-xl" aria-label={t('CVCasa, accueil')}>
       <img src={`${import.meta.env.BASE_URL}icons/icon.svg`} alt="" className="size-8 lg:size-10" />
       <span className="font-display text-lg font-bold tracking-tight whitespace-nowrap text-ink max-[419px]:hidden lg:text-[1.4rem]">
         CV<span className="text-brand-600">Casa</span>
@@ -106,11 +108,11 @@ function StepMark({ step, active, unread, big = false }: { step?: number; active
 /** Dans « Mon CV » : remplir, ou voir et télécharger. */
 function CvTabs({ tab, onNavigate }: { tab: Tab; onNavigate: (t: Tab) => void }) {
   return (
-    <div className="mx-auto mb-4 grid max-w-md grid-cols-2 gap-1 rounded-2xl bg-white p-1 ring-1 ring-slate-200" role="tablist" aria-label="Mon CV">
+    <div className="mx-auto mb-4 grid max-w-md grid-cols-2 gap-1 rounded-2xl bg-white p-1 ring-1 ring-slate-200" role="tablist" aria-label={t('Mon CV')}>
       {(
         [
-          ['infos', 'Remplir'],
-          ['apercu', 'Modèle et téléchargement'],
+          ['infos', t('Remplir')],
+          ['apercu', t('Modèle et téléchargement')],
         ] as const
       ).map(([id, label]) => (
         <button
@@ -144,7 +146,7 @@ function InfosLayout() {
 /** Pages où le rappel « Une nouvelle offre ? » peut apparaître au retour. */
 const BANNER_TABS: Tab[] = ['accueil', 'infos', 'apercu', 'lettre', 'suivi', 'documents'];
 
-const navLabel = (n: (typeof NAV)[number], done: boolean) => `${n.step ? `Étape ${n.step} : ` : ''}${n.label}${done ? ' (fait)' : ''}`;
+const navLabel = (n: (typeof NAV)[number], done: boolean) => `${n.step ? t('Étape {0} : ', [n.step]) : ''}${n.label}${done ? ` ${t('(fait)')}` : ''}`;
 
 export default function App() {
   const [tab, setTabState] = useState<Tab>(initialTab);
@@ -172,11 +174,11 @@ export default function App() {
     const h = window.location.hash.slice(1);
     if (h.startsWith('paiement-')) {
       const messages: Record<string, string> = {
-        approved: 'Paiement reçu : vos crédits ont été ajoutés. Merci !',
-        pending: 'Paiement en cours de confirmation : vos crédits seront ajoutés automatiquement dans quelques instants.',
-        failed: 'Le paiement a été annulé ou refusé. Aucun montant n’a été prélevé.',
+        approved: t('Paiement reçu : vos crédits ont été ajoutés. Merci !'),
+        pending: t('Paiement en cours de confirmation : vos crédits seront ajoutés automatiquement dans quelques instants.'),
+        failed: t('Le paiement a été annulé ou refusé. Aucun montant n’a été prélevé.'),
       };
-      useAccount.getState().open('credits', messages[h.slice(9)] ?? 'Impossible de vérifier le paiement pour le moment. S’il a abouti, vos crédits seront ajoutés automatiquement.');
+      useAccount.getState().open('credits', messages[h.slice(9)] ?? t('Impossible de vérifier le paiement pour le moment. S’il a abouti, vos crédits seront ajoutés automatiquement.'));
       window.history.replaceState(null, '', `${window.location.pathname}#infos`);
     }
   }, []);
@@ -209,7 +211,7 @@ export default function App() {
       <header className="sticky top-0 z-20 border-b border-slate-200 bg-white/90 backdrop-blur pt-[env(safe-area-inset-top)]">
         <div className="mx-auto flex max-w-7xl items-center justify-between gap-2 px-3 py-2.5 sm:gap-3 sm:px-4 lg:py-3">
           <Logo onClick={() => setTab('accueil')} />
-          <nav className="hidden min-w-0 gap-1.5 lg:flex" aria-label="Navigation principale">
+          <nav className="hidden min-w-0 gap-1.5 lg:flex" aria-label={t('Navigation principale')}>
             {NAV.map((n) => (
               <button
                 key={n.id}
@@ -229,6 +231,7 @@ export default function App() {
           </nav>
           <div className="flex min-w-0 shrink-0 items-center gap-1.5 sm:gap-2">
             <span id="tour-slot" className="contents" />
+            <LangButton />
             <CvSwitcher />
             <AccountButton />
           </div>
@@ -242,8 +245,7 @@ export default function App() {
         {['infos', 'apercu', 'offre', 'lettre', 'plus'].includes(tab) && <FollowUpNudge onNavigate={setTab} />}
         {MORE_PAGES.includes(tab) && (
           <button type="button" onClick={() => setTab('plus')} className="mb-3 inline-flex min-h-11 items-center gap-1.5 rounded-xl pr-3 text-sm font-semibold text-slate-600 hover:text-slate-900">
-            <ArrowLeft className="size-4" aria-hidden="true" /> Plus
-          </button>
+            <ArrowLeft className="size-4" aria-hidden="true" /> {' '}{t('Plus')}</button>
         )}
         {(tab === 'infos' || tab === 'apercu') && <CvTabs tab={tab} onNavigate={setTab} />}
         {tab === 'plus' && <MorePage onNavigate={setTab} />}
@@ -263,7 +265,7 @@ export default function App() {
       </main>
       <Tour key={tab} tab={tab} />
 
-      <nav className="fixed inset-x-0 bottom-0 z-20 grid grid-cols-4 border-t border-slate-200 bg-white pb-[env(safe-area-inset-bottom)] lg:hidden" aria-label="Navigation principale">
+      <nav className="fixed inset-x-0 bottom-0 z-20 grid grid-cols-4 border-t border-slate-200 bg-white pb-[env(safe-area-inset-bottom)] lg:hidden" aria-label={t('Navigation principale')}>
         {NAV.map((n) => (
           <button
             key={n.id}

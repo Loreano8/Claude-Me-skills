@@ -266,6 +266,21 @@ export const InterviewRequest = z.object({
 });
 export type InterviewRequest = z.output<typeof InterviewRequest>;
 
+/** Une lettre déjà écrite, à passer dans l'autre langue (les usages du pays suivent : formule d'appel, politesse). */
+export const LetterTranslateRequest = z.object({
+  letter: z.object({
+    recipientName: z.string().max(200),
+    recipientCompany: z.string().max(200),
+    recipientAddress: z.string().max(400),
+    subject: z.string().max(400),
+    salutation: z.string().max(200),
+    paragraphs: z.array(z.string().max(4_000)).min(1).max(12),
+    closing: z.string().max(400),
+  }),
+  targetLang: Lang,
+});
+export type LetterTranslateRequest = z.output<typeof LetterTranslateRequest>;
+
 export const TranslateRequest = z.object({
   cv: AiCvContent,
   targetLang: Lang,
@@ -400,6 +415,8 @@ export const WatchCriteria = z.object({
   minSalary: z.number().int().min(0).max(100_000_000),
   keywords: z.string().max(200),
   email: z.string().trim().max(120),
+  /** Langue de la personne : résumés, notes et e-mails de la veille (les annonces gardent leur langue). */
+  lang: Lang.optional(),
 });
 export type WatchCriteria = z.infer<typeof WatchCriteria>;
 

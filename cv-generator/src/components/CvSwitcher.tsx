@@ -3,6 +3,7 @@ import { ChevronDown, Copy, FilePlus2, PencilLine, Trash2 } from 'lucide-react';
 import { useStore } from '../store.ts';
 import { cx } from './ui.tsx';
 
+import { t } from '../i18n.ts';
 /** Choix du CV en cours (CV principal, versions adaptées à des offres…). */
 export function CvSwitcher() {
   const cvs = useStore((s) => s.cvs);
@@ -34,7 +35,7 @@ export function CvSwitcher() {
       {/* Téléphone : menu calé sur la largeur de l'écran (il débordait à gauche) ; ordinateur : sous le bouton. */}
       {open && (
         <div className="fixed inset-x-3 top-[calc(env(safe-area-inset-top)+3.75rem)] z-30 rounded-2xl border border-slate-200 bg-white p-2 shadow-xl sm:absolute sm:inset-x-auto sm:top-auto sm:right-0 sm:mt-2 sm:w-72">
-          <p className="px-3 pt-1 pb-1.5 text-xs font-semibold tracking-wide text-slate-500 uppercase">Mes CV</p>
+          <p className="px-3 pt-1 pb-1.5 text-xs font-semibold tracking-wide text-slate-500 uppercase">{t('Mes CV')}</p>
           <div className="max-h-64 overflow-y-auto">
             {cvs.map((c) => (
               <button
@@ -52,32 +53,28 @@ export function CvSwitcher() {
           </div>
           <div className="mt-1 border-t border-slate-100 pt-1">
             <button type="button" className={item} onClick={() => (newCv(), setOpen(false))}>
-              <FilePlus2 className="size-4" /> Nouveau CV vierge
-            </button>
+              <FilePlus2 className="size-4" /> {' '}{t('Nouveau CV vierge')}</button>
             <button type="button" className={item} onClick={() => (duplicateCv(active.id), setOpen(false))}>
-              <Copy className="size-4" /> Dupliquer ce CV
-            </button>
+              <Copy className="size-4" /> {' '}{t('Dupliquer ce CV')}</button>
             <button
               type="button"
               className={item}
               onClick={() => {
-                const label = window.prompt('Nom de ce CV', active.label);
+                const label = window.prompt(t('Nom de ce CV'), active.label);
                 if (label?.trim()) renameCv(active.id, label.trim());
                 setOpen(false);
               }}
             >
-              <PencilLine className="size-4" /> Renommer
-            </button>
+              <PencilLine className="size-4" /> {' '}{t('Renommer')}</button>
             <button
               type="button"
               className={cx(item, 'text-red-600 hover:bg-red-50')}
               onClick={() => {
-                if (window.confirm(`Supprimer « ${active.label} » ? Cette action est définitive.`)) deleteCv(active.id);
+                if (window.confirm(t('Supprimer « {0} » ? Cette action est définitive.', [active.label]))) deleteCv(active.id);
                 setOpen(false);
               }}
             >
-              <Trash2 className="size-4" /> Supprimer ce CV
-            </button>
+              <Trash2 className="size-4" /> {' '}{t('Supprimer ce CV')}</button>
           </div>
         </div>
       )}

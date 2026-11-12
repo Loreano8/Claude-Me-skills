@@ -13,6 +13,7 @@ import { saveFile } from '../export/save.ts';
 import { Button, Card, Cost, cx, Field, Notice, TextArea } from '../components/ui.tsx';
 import type { Tab } from '../App.tsx';
 
+import { t } from '../i18n.ts';
 type Item =
   | { id: string; kind: 'cv' }
   | { id: string; kind: 'letter' }
@@ -49,8 +50,7 @@ export function DossierLink() {
     >
       <FileStack className="size-4 shrink-0 text-brand-600" />
       <span>
-        <strong>Dossier complet en un seul PDF</strong> : CV, lettre, pièce d’identité, diplômes (scannés avec le téléphone).
-      </span>
+        <strong>{t('Dossier complet en un seul PDF')}</strong> {' '}{t(': CV, lettre, pièce d’identité, diplômes (scannés avec le téléphone).')}</span>
     </button>
   );
 }
@@ -61,15 +61,14 @@ export function ScannerButton({ active, onClick }: { active: boolean; onClick: (
     <button
       type="button"
       onClick={onClick}
-      aria-label="Scanner un document en PDF"
-      title="Scanner un document en PDF"
+      aria-label={t('Scanner un document en PDF')}
+      title={t('Scanner un document en PDF')}
       className={cx(
         'hit flex items-center gap-1.5 rounded-xl border px-2 py-2 text-sm font-semibold whitespace-nowrap transition-colors sm:px-2.5',
         active ? 'border-brand-600 bg-brand-600 text-white' : 'border-brand-200 bg-brand-50 text-brand-700 hover:bg-brand-100',
       )}
     >
-      <ScanLine className="size-4.5" /> Scanner
-    </button>
+      <ScanLine className="size-4.5" /> {' '}{t('Scanner')}</button>
   );
 }
 
@@ -91,7 +90,7 @@ export function DossierPage({ onNavigate, mode = 'dossier' }: { onNavigate: (t: 
           ...(hasLetter ? [{ id: 'letter', kind: 'letter' as const }] : []),
         ],
   );
-  const [fileName, setFileName] = useState(() => (scanner ? 'Document_scanne' : cvFileName(cv, 'pdf', 'Dossier').replace(/\.pdf$/, '')));
+  const [fileName, setFileName] = useState(() => (scanner ? 'Document_scanne' : cvFileName(cv, 'pdf', t('Dossier')).replace(/\.pdf$/, '')));
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [done, setDone] = useState<string | null>(null);
@@ -133,7 +132,7 @@ export function DossierPage({ onNavigate, mode = 'dossier' }: { onNavigate: (t: 
     setDone(null);
     for (const f of Array.from(list)) {
       if (f.size > MAX_FILE) {
-        setError(`« ${f.name} » est trop lourd (25 Mo maximum).`);
+        setError(t('« {0} » est trop lourd (25 Mo maximum).', [f.name]));
         continue;
       }
       try {
@@ -144,15 +143,15 @@ export function DossierPage({ onNavigate, mode = 'dossier' }: { onNavigate: (t: 
           void pdfPageCount(bytes).then((pages) => setItems((l) => l.map((x) => (x.id === id && x.kind === 'pdf' ? { ...x, pages } : x))));
         } else if (f.type.startsWith('image/')) {
           // Photo prise avec l'appareil : rendu « scan » par défaut ; image de la galerie : couleur.
-          const base = { id: newId(), kind: 'photo' as const, name: fromCamera ? 'Page scannée' : f.name, original: f as Blob, mode: (fromCamera ? 'scan' : 'couleur') as ScanMode, rotation: 0 as const, quad: FULL_QUAD, processed: null, url: null };
+          const base = { id: newId(), kind: 'photo' as const, name: fromCamera ? t('Page scannée') : f.name, original: f as Blob, mode: (fromCamera ? 'scan' : 'couleur') as ScanMode, rotation: 0 as const, quad: FULL_QUAD, processed: null, url: null };
           setItems((l) => [...l, base]);
           const ready = await render(base);
           replace(base.id, ready);
         } else {
-          setError(`« ${f.name} » : format non pris en charge (PDF ou image seulement).`);
+          setError(t('« {0} » : format non pris en charge (PDF ou image seulement).', [f.name]));
         }
       } catch (e) {
-        setError((e as Error).message || `« ${f.name} » n’a pas pu être ajouté.`);
+        setError((e as Error).message || t('« {0} » n’a pas pu être ajouté.', [f.name]));
       }
     }
   }
@@ -199,7 +198,7 @@ export function DossierPage({ onNavigate, mode = 'dossier' }: { onNavigate: (t: 
     setError(null);
     try {
       const pages = photos.slice(0, MAX_TRANSCRIBE_PAGES);
-      if (pages.some((p) => !p.processed)) throw new Error('Une photo est encore en préparation, patientez une seconde.');
+      if (pages.some((p) => !p.processed)) throw new Error(t('Une photo est encore en préparation, patientez une seconde.'));
       const files = await Promise.all(
         pages.map(async (p, i) => {
           const url = await readAsDataUrl(p.processed!);
@@ -219,7 +218,7 @@ export function DossierPage({ onNavigate, mode = 'dossier' }: { onNavigate: (t: 
     setExporting(kind);
     setError(null);
     try {
-      const base = (fileName.trim() || 'Document').replace(/[\\/:*?"<>|]+/g, '_') + '_texte';
+      const base = (fileName.trim() || t('Document')).replace(/[\\/:*?"<>|]+/g, '_') + '_texte';
       if (kind === 'pdf') {
         const { renderTranscriptPdf } = await import('../pdf/render.tsx');
         await saveFile(await renderTranscriptPdf(transcript.title, transcript.text), `${base}.pdf`);
@@ -247,15 +246,15 @@ export function DossierPage({ onNavigate, mode = 'dossier' }: { onNavigate: (t: 
       const parts: DossierPart[] = [];
       for (const it of items) {
         if (it.kind === 'cv') parts.push({ kind: 'pdf', name: 'CV', bytes: await (await renderCvPdf(cv)).arrayBuffer() });
-        else if (it.kind === 'letter') parts.push({ kind: 'pdf', name: 'Lettre', bytes: await (await renderLetterPdf(letter, cv)).arrayBuffer() });
+        else if (it.kind === 'letter') parts.push({ kind: 'pdf', name: t('Lettre'), bytes: await (await renderLetterPdf(letter, cv)).arrayBuffer() });
         else if (it.kind === 'pdf') parts.push({ kind: 'pdf', name: it.name, bytes: it.bytes });
         else if (it.processed) parts.push({ kind: 'image', name: it.name, blob: it.processed });
-        else throw new Error('Une photo est encore en préparation, patientez une seconde.');
+        else throw new Error(t('Une photo est encore en préparation, patientez une seconde.'));
       }
       const blob = await buildDossier(parts);
-      const name = `${(fileName.trim() || 'Dossier').replace(/[\\/:*?"<>|]+/g, '_')}.pdf`;
+      const name = `${(fileName.trim() || t('Dossier')).replace(/[\\/:*?"<>|]+/g, '_')}.pdf`;
       await saveFile(blob, name);
-      setDone(`${name} : ${formatSize(blob.size)}.${blob.size > 5 * 1024 * 1024 ? ' Attention : certains sites limitent les envois à 2 ou 5 Mo.' : ''}`);
+      setDone(`${name} : ${formatSize(blob.size)}.${blob.size > 5 * 1024 * 1024 ? t(' Attention : certains sites limitent les envois à 2 ou 5 Mo.') : ''}`);
     } catch (e) {
       setError((e as Error).message);
     } finally {
@@ -272,58 +271,52 @@ export function DossierPage({ onNavigate, mode = 'dossier' }: { onNavigate: (t: 
         title={
           <span className="flex items-center gap-2">
             {scanner ? <ScanLine className="size-5 text-brand-600" /> : <FileStack className="size-5 text-brand-600" />}
-            {scanner ? 'Scanner en PDF' : 'Mon dossier en un seul PDF'}
+            {scanner ? t('Scanner en PDF') : t('Mon dossier en un seul PDF')}
           </span>
         }
         subtitle={
           scanner
-            ? 'Prenez vos papiers en photo (document écrit à la main, attestation, pièce d’identité…) : ils deviennent un PDF propre, comme passé au scanner. Une photo par page.'
-            : 'CV, lettre, pièce d’identité, diplômes, attestations… réunis dans un seul fichier, dans l’ordre voulu. Les documents restent sur votre appareil.'
+            ? t('Prenez vos papiers en photo (document écrit à la main, attestation, pièce d’identité…) : ils deviennent un PDF propre, comme passé au scanner. Une photo par page.')
+            : t('CV, lettre, pièce d’identité, diplômes, attestations… réunis dans un seul fichier, dans l’ordre voulu. Les documents restent sur votre appareil.')
         }
       >
         <div className="flex flex-wrap gap-2">
           <Button data-tour="scan" icon={<Camera className="size-4" />} onClick={() => camera.current?.click()}>
-            Scanner un document
-          </Button>
+            {t('Scanner un document')}</Button>
           <Button variant="secondary" data-tour="add-files" icon={<Paperclip className="size-4" />} onClick={() => files.current?.click()}>
-            Ajouter des fichiers (PDF, photos)
-          </Button>
+            {t('Ajouter des fichiers (PDF, photos)')}</Button>
           {!scanner && !has('cv') && !isCvEmpty(cv) && !cvBlocked && (
             <Button variant="secondary" icon={<FileUser className="size-4" />} onClick={() => setItems((l) => [{ id: 'cv', kind: 'cv' }, ...l])}>
-              Ajouter mon CV
-            </Button>
+              {t('Ajouter mon CV')}</Button>
           )}
           {!scanner && !has('letter') && hasLetter && (
             <Button variant="secondary" icon={<Mail className="size-4" />} onClick={() => setItems((l) => [...l.filter((x) => x.kind === 'cv'), { id: 'letter', kind: 'letter' }, ...l.filter((x) => x.kind !== 'cv')])}>
-              Ajouter ma lettre
-            </Button>
+              {t('Ajouter ma lettre')}</Button>
           )}
         </div>
         <input ref={camera} type="file" accept="image/*" capture="environment" className="hidden" onChange={(e) => { void addFiles(e.target.files, true); e.target.value = ''; }} />
         <input ref={files} type="file" multiple accept="application/pdf,image/*" className="hidden" onChange={(e) => { void addFiles(e.target.files, false); e.target.value = ''; }} />
         <p className="mt-2 text-xs text-slate-500">
-          Pour scanner : posez la feuille à plat sur une surface sombre, bien éclairée. Une photo par page, puis ajustez les coins avec <Crop className="inline size-3.5" /> si besoin.
+          {t('Pour scanner : posez la feuille à plat sur une surface sombre, bien éclairée. Une photo par page, puis ajustez les coins avec')}{' '}<Crop className="inline size-3.5" /> si besoin.
         </p>
         <p className="mt-1.5">
-          <span className="inline-flex items-center gap-1 rounded-full bg-slate-100 px-2 py-0.5 text-xs font-medium text-slate-600">Recadrage automatique · bientôt</span>
+          <span className="inline-flex items-center gap-1 rounded-full bg-slate-100 px-2 py-0.5 text-xs font-medium text-slate-600">{t('Recadrage automatique · bientôt')}</span>
         </p>
         {!scanner && cvBlocked && (
           <div className="mt-3">
             <Notice tone="warn">
-              Votre CV utilise un modèle Pro : passez-le en Pro ou choisissez un modèle gratuit dans{' '}
+              {t('Votre CV utilise un modèle Pro : passez-le en Pro ou choisissez un modèle gratuit dans')}{' '}
               <button type="button" className="font-semibold underline" onClick={() => onNavigate('apercu')}>
-                Aperçu
-              </button>{' '}
-              pour l’ajouter au dossier.
-            </Notice>
+                {t('Aperçu')}</button>{' '}
+              {t('pour l’ajouter au dossier.')}</Notice>
           </div>
         )}
       </Card>
 
       {items.length > 0 && (
         <Card
-          title={scanner ? 'Pages scannées' : 'Contenu du dossier'}
-          subtitle={scanner ? 'Dans l’ordre du PDF. Utilisez les flèches pour changer l’ordre.' : 'Dans l’ordre où il sera assemblé. Utilisez les flèches pour changer l’ordre.'}
+          title={scanner ? t('Pages scannées') : t('Contenu du dossier')}
+          subtitle={scanner ? t('Dans l’ordre du PDF. Utilisez les flèches pour changer l’ordre.') : t('Dans l’ordre où il sera assemblé. Utilisez les flèches pour changer l’ordre.')}
         >
           <ol className="space-y-2">
             {items.map((it, i) => (
@@ -342,13 +335,13 @@ export function DossierPage({ onNavigate, mode = 'dossier' }: { onNavigate: (t: 
                 </div>
                 <div className="min-w-0 flex-1">
                   <p className="truncate text-sm font-medium text-slate-900">
-                    {it.kind === 'cv' ? `CV : ${cv.label}` : it.kind === 'letter' ? 'Lettre de motivation' : it.name}
+                    {it.kind === 'cv' ? `CV : ${cv.label}` : it.kind === 'letter' ? t('Lettre de motivation') : it.name}
                   </p>
                   {it.kind === 'pdf' && <p className="text-xs text-slate-500">{it.pages ? `${it.pages} page${it.pages > 1 ? 's' : ''}` : 'PDF'}</p>}
-                  {(it.kind === 'cv' || it.kind === 'letter') && !cv.unlocked && <p className="text-xs text-slate-500">Version gratuite (avec la mention CVCasa)</p>}
+                  {(it.kind === 'cv' || it.kind === 'letter') && !cv.unlocked && <p className="text-xs text-slate-500">{t('Version gratuite (avec la mention CVCasa)')}</p>}
                   {it.kind === 'photo' && (
                     <div className="mt-1 flex flex-wrap items-center gap-1.5">
-                      <div role="group" aria-label="Rendu" className="inline-flex rounded-full bg-slate-100 p-0.5 text-xs font-medium">
+                      <div role="group" aria-label={t('Rendu')} className="inline-flex rounded-full bg-slate-100 p-0.5 text-xs font-medium">
                         {(['scan', 'couleur'] as const).map((m) => (
                           <button
                             key={m}
@@ -357,7 +350,7 @@ export function DossierPage({ onNavigate, mode = 'dossier' }: { onNavigate: (t: 
                             onClick={() => it.mode !== m && void update(it, { mode: m })}
                             className={cx('rounded-full px-2.5 py-1 whitespace-nowrap', it.mode === m ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-600')}
                           >
-                            {m === 'scan' ? 'Scan N&B' : 'Couleur'}
+                            {m === 'scan' ? t('Scan N&B') : t('Couleur')}
                           </button>
                         ))}
                       </div>
@@ -365,8 +358,8 @@ export function DossierPage({ onNavigate, mode = 'dossier' }: { onNavigate: (t: 
                         type="button"
                         onClick={() => void update(it, { rotation: (((it.rotation + 90) % 360) as 0 | 90 | 180 | 270) })}
                         className="rounded-full p-1.5 text-slate-600 hover:bg-slate-100"
-                        aria-label="Tourner d’un quart de tour"
-                        title="Tourner"
+                        aria-label={t('Tourner d’un quart de tour')}
+                        title={t('Tourner')}
                       >
                         <RotateCw className="size-4" />
                       </button>
@@ -374,8 +367,8 @@ export function DossierPage({ onNavigate, mode = 'dossier' }: { onNavigate: (t: 
                         type="button"
                         onClick={() => void openCrop(it)}
                         className={cx('rounded-full p-1.5 hover:bg-slate-100', it.quad !== FULL_QUAD ? 'text-brand-600' : 'text-slate-600')}
-                        aria-label="Recadrer la page"
-                        title="Recadrer"
+                        aria-label={t('Recadrer la page')}
+                        title={t('Recadrer')}
                       >
                         <Crop className="size-4" />
                       </button>
@@ -383,14 +376,14 @@ export function DossierPage({ onNavigate, mode = 'dossier' }: { onNavigate: (t: 
                   )}
                 </div>
                 <div className="flex shrink-0 flex-col">
-                  <button type="button" disabled={i === 0} onClick={() => move(i, -1)} aria-label="Monter" className="rounded p-1 text-slate-500 hover:bg-slate-100 disabled:opacity-30">
+                  <button type="button" disabled={i === 0} onClick={() => move(i, -1)} aria-label={t('Monter')} className="rounded p-1 text-slate-500 hover:bg-slate-100 disabled:opacity-30">
                     <ArrowUp className="size-4" />
                   </button>
-                  <button type="button" disabled={i === items.length - 1} onClick={() => move(i, 1)} aria-label="Descendre" className="rounded p-1 text-slate-500 hover:bg-slate-100 disabled:opacity-30">
+                  <button type="button" disabled={i === items.length - 1} onClick={() => move(i, 1)} aria-label={t('Descendre')} className="rounded p-1 text-slate-500 hover:bg-slate-100 disabled:opacity-30">
                     <ArrowDown className="size-4" />
                   </button>
                 </div>
-                <button type="button" onClick={() => setItems((l) => l.filter((x) => x.id !== it.id))} aria-label="Retirer" className="shrink-0 rounded p-1.5 text-slate-400 hover:bg-red-50 hover:text-red-600">
+                <button type="button" onClick={() => setItems((l) => l.filter((x) => x.id !== it.id))} aria-label={t('Retirer')} className="shrink-0 rounded p-1.5 text-slate-400 hover:bg-red-50 hover:text-red-600">
                   <Trash2 className="size-4" />
                 </button>
               </li>
@@ -398,20 +391,20 @@ export function DossierPage({ onNavigate, mode = 'dossier' }: { onNavigate: (t: 
           </ol>
 
           <div className="mt-4">
-            <Field label="Nom du fichier" value={fileName} onChange={setFileName} hint="Exemple : Dossier_Prenom_Nom_Comptable" />
+            <Field label={t('Nom du fichier')} value={fileName} onChange={setFileName} hint={t('Exemple : Dossier_Prenom_Nom_Comptable')} />
           </div>
           <p className={cx('mt-3 text-xs', needsCredit && !paid ? 'text-amber-800' : 'text-slate-500')}>
             {scanner
-              ? `Gratuit jusqu’à ${FREE_SCAN_PAGES} pages. Au-delà : 1 crédit pour ce PDF, pages illimitées.`
-              : `Gratuit avec le CV, la lettre et ${FREE_DOSSIER_PIECES} pièces. Au-delà : 1 crédit pour ce dossier, pièces illimitées.`}
-            {paid && ' Réglé : vous pouvez le recréer autant de fois que nécessaire.'}
+              ? t('Gratuit jusqu’à {0} pages. Au-delà : 1 crédit pour ce PDF, pages illimitées.', [FREE_SCAN_PAGES])
+              : t('Gratuit avec le CV, la lettre et {0} pièces. Au-delà : 1 crédit pour ce dossier, pièces illimitées.', [FREE_DOSSIER_PIECES])}
+            {paid && t(' Réglé : vous pouvez le recréer autant de fois que nécessaire.')}
           </p>
           <Button className="mt-2" size="lg" icon={<FileStack className="size-5" />} loading={busy} disabled={busy} onClick={() => void create()}>
-            Créer le PDF ({items.length} document{items.length > 1 ? 's' : ''}) {needsCredit && !paid ? <Cost /> : <Cost free />}
+            {t('Créer le PDF ({0} document{1})', [items.length, items.length > 1 ? 's' : ''])}{' '}{needsCredit && !paid ? <Cost /> : <Cost free />}
           </Button>
           {done && (
             <div className="mt-3">
-              <Notice tone="success">Dossier créé : {done}</Notice>
+              <Notice tone="success">{t('Dossier créé : {0}', [done])}</Notice>
             </div>
           )}
         </Card>
@@ -421,33 +414,28 @@ export function DossierPage({ onNavigate, mode = 'dossier' }: { onNavigate: (t: 
         <Card
           title={
             <span className="flex items-center gap-2">
-              <PenLine className="size-5 text-brand-600" /> Texte tapé
-            </span>
+              <PenLine className="size-5 text-brand-600" /> {' '}{t('Texte tapé')}</span>
           }
-          subtitle="Document écrit à la main ou difficile à lire ? CVCasa le retranscrit en texte tapé propre, modifiable, en PDF ou en Word."
+          subtitle={t('Document écrit à la main ou difficile à lire ? CVCasa le retranscrit en texte tapé propre, modifiable, en PDF ou en Word.')}
         >
           {!transcript ? (
             <>
               <Button variant="ai" icon={<PenLine className="size-4" />} loading={transcribing} disabled={transcribing} onClick={() => void transcribe()}>
-                Transformer en texte tapé ({Math.min(photos.length, MAX_TRANSCRIBE_PAGES)} crédit{Math.min(photos.length, MAX_TRANSCRIBE_PAGES) > 1 ? 's' : ''})
-              </Button>
+                {t('Transformer en texte tapé ({0} crédit{1})', [Math.min(photos.length, MAX_TRANSCRIBE_PAGES), Math.min(photos.length, MAX_TRANSCRIBE_PAGES) > 1 ? 's' : ''])}</Button>
               <p className="mt-2 text-xs text-slate-500">
-                1 crédit par page{photos.length > MAX_TRANSCRIBE_PAGES ? ` (les ${MAX_TRANSCRIBE_PAGES} premières pages)` : ''}. Les photos sont envoyées uniquement le temps de la lecture.
-              </p>
-              {transcribing && <p className="mt-2 text-sm text-brand-700">Lecture de votre document… (jusqu’à une minute)</p>}
+                {photos.length > MAX_TRANSCRIBE_PAGES ? t('1 crédit par page (les {0} premières pages). Les photos sont envoyées uniquement le temps de la lecture.', [MAX_TRANSCRIBE_PAGES]) : t('1 crédit par page. Les photos sont envoyées uniquement le temps de la lecture.')}</p>
+              {transcribing && <p className="mt-2 text-sm text-brand-700">{t('Lecture de votre document… (jusqu’à une minute)')}</p>}
             </>
           ) : (
             <div className="space-y-3">
-              {/\[illisible\]/.test(transcript.text) && <Notice tone="warn">Certains passages sont marqués [illisible] : complétez-les avant d’enregistrer.</Notice>}
-              <Field label="Titre" value={transcript.title} onChange={(title) => setTranscript({ ...transcript, title })} />
+              {/\[illisible\]/.test(transcript.text) && <Notice tone="warn">{t('Certains passages sont marqués [illisible] : complétez-les avant d’enregistrer.')}</Notice>}
+              <Field label={t('Titre')} value={transcript.title} onChange={(title) => setTranscript({ ...transcript, title })} />
               <TextArea value={transcript.text} onChange={(text) => setTranscript({ ...transcript, text })} rows={14} />
               <div className="flex flex-wrap gap-2">
                 <Button icon={<FileText className="size-4" />} loading={exporting === 'pdf'} disabled={exporting !== null} onClick={() => void exportTranscript('pdf')}>
-                  Enregistrer en PDF
-                </Button>
+                  {t('Enregistrer en PDF')}</Button>
                 <Button variant="secondary" icon={<FileText className="size-4" />} loading={exporting === 'docx'} disabled={exporting !== null} onClick={() => void exportTranscript('docx')}>
-                  Enregistrer en Word
-                </Button>
+                  {t('Enregistrer en Word')}</Button>
               </div>
             </div>
           )}

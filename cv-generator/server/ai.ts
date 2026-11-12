@@ -25,13 +25,14 @@ import {
   type JobInput,
   type StructureRequest,
   type TranslateRequest,
+  type LetterTranslateRequest,
   type InterviewRequest,
   LetterQuestionsResult,
   type LetterQuestionsRequest,
   StyleResult,
   type StyleRequest,
 } from '../shared/schema.ts';
-import { adaptSystem, analyzeTemplateSystem, clarifySystem, keywordsSystem, letterQuestionsSystem, styleSystem, transcribeSystem, coverLetterSystem, interviewSystem, reviseSystem, structureSystem, translateSystem } from './prompts.ts';
+import { adaptSystem, analyzeTemplateSystem, clarifySystem, keywordsSystem, letterQuestionsSystem, styleSystem, transcribeSystem, coverLetterSystem, interviewSystem, reviseSystem, structureSystem, translateSystem, translateLetterSystem } from './prompts.ts';
 
 type ContentBlock = Anthropic.Beta.BetaContentBlockParam;
 type Effort = 'low' | 'medium' | 'high';
@@ -86,7 +87,13 @@ function cvBlock(label: string, cv: unknown): ContentBlock {
   return { type: 'text', text: `<${label}>\n${JSON.stringify(cv, null, 2)}\n</${label}>` };
 }
 
-export function createAi(client: Anthropic, model = DEFAULT_MODEL) {
+/**
+ * Interface en anglais : ce qui s'adresse à la personne passe en anglais, les documents gardent leur langue.
+ * Ajouté à la fin de chaque consigne, il l'emporte sur les « en français » écrits plus haut.
+ */
+export const UI_EN_RULE = `Langue de l'interface : anglais. Tout ce qui s'adresse directement à la personne (questions, indices, conseils, analyses, points forts, manques, notes, résumés, suggestions, étiquettes, explications) doit être rédigé en anglais, même si une consigne ci-dessus dit « en français ». La langue des documents eux-mêmes (CV, lettre, fiche d'entretien quand elle suit l'offre) ne change pas : elle suit les consignes ci-dessus.`;
+
+export function createAi(client: Anthropic, model = DEFAULT_MODEL, uiLang: 'fr' | 'en' = 'fr') {
   const withFallback = !/haiku/.test(model);
   async function run<S extends z.ZodType>(
     schema: S,
@@ -103,7 +110,7 @@ export function createAi(client: Anthropic, model = DEFAULT_MODEL) {
         // (option disponible sur Opus et Sonnet, pas sur Haiku).
         ...(withFallback ? { betas: ['server-side-fallback-2026-07-01'], fallbacks: 'default' as const } : {}),
         output_config: { effort, format: betaZodOutputFormat(schema) },
-        system,
+        system: uiLang === 'en' ? `${system}\n\n${UI_EN_RULE}` : system,
         messages: [{ role: 'user', content }],
       });
     } catch (error) {
@@ -238,6 +245,14 @@ export function createAi(client: Anthropic, model = DEFAULT_MODEL) {
       if (req.notes.trim()) content.push({ type: 'text', text: `<notes_du_candidat>\n${req.notes.trim()}\n</notes_du_candidat>` });
       content.push({ type: 'text', text: 'Quelles questions poser au candidat avant d’écrire sa lettre ?' });
       return run(LetterQuestionsResult, letterQuestionsSystem(), content, 'low');
+    },
+
+    translateLetter(req: LetterTranslateRequest): Promise<CoverLetterResult> {
+      const content: ContentBlock[] = [
+        { type: 'text', text: `<lettre>\n${JSON.stringify(req.letter, null, 2)}\n</lettre>` },
+        { type: 'text', text: `Produis cette lettre ${req.targetLang === 'en' ? 'en anglais' : 'en français'}.` },
+      ];
+      return run(CoverLetterResult, translateLetterSystem(req.targetLang), content, 'medium');
     },
 
     translate(req: TranslateRequest): Promise<TranslateResult> {

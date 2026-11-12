@@ -8,6 +8,7 @@ import { CATALOG, CATEGORY_LABELS, catalogEntry, isProTemplate, settingsForTempl
 import { tint } from '../pdf/theme.ts';
 import { Button, cx, Notice } from './ui.tsx';
 
+import { t } from '../i18n.ts';
 const bar = 'h-1 rounded bg-slate-300';
 
 /** Vignettes des 3 modèles dessinés à la main. */
@@ -159,9 +160,9 @@ function Thumb({ entry, accent }: { entry: CatalogEntry; accent: string }) {
 }
 
 const VERDICT = {
-  recommande: { label: 'Modèle recommandé', tone: 'bg-emerald-100 text-emerald-800' },
-  acceptable: { label: 'Modèle correct', tone: 'bg-amber-100 text-amber-800' },
-  deconseille: { label: 'Modèle déconseillé', tone: 'bg-rose-100 text-rose-800' },
+  recommande: { label: t('Modèle recommandé'), tone: 'bg-emerald-100 text-emerald-800' },
+  acceptable: { label: t('Modèle correct'), tone: 'bg-amber-100 text-amber-800' },
+  deconseille: { label: t('Modèle déconseillé'), tone: 'bg-rose-100 text-rose-800' },
 } as const;
 
 /** « Je veux un CV dans ce style-là » : l'IA juge le modèle importé et en reprend le style. */
@@ -178,7 +179,7 @@ function TemplateImport({ onApply, onClose }: { onApply: (patch: Partial<CvSetti
     setBusy(true);
     try {
       const { size: _size, ...file } = await fileToAttachment(f);
-      if (file.mediaType === 'text/plain') throw new Error('Importez une photo ou un PDF du CV modèle.');
+      if (file.mediaType === 'text/plain') throw new Error(t('Importez une photo ou un PDF du CV modèle.'));
       setResult(await api.analyzeTemplate({ file }));
     } catch (e) {
       setError((e as Error).message);
@@ -198,22 +199,18 @@ function TemplateImport({ onApply, onClose }: { onApply: (patch: Partial<CvSetti
   return (
     <div className="mt-3 rounded-xl border border-brand-200 bg-brand-50/60 p-4">
       <p className="flex items-center gap-2 font-semibold text-slate-900">
-        <Palette className="size-4 text-brand-600" /> Un CV dans le style que vous aimez
-      </p>
+        <Palette className="size-4 text-brand-600" /> {' '}{t('Un CV dans le style que vous aimez')}</p>
       <p className="mt-1 text-sm text-slate-600">
-        Importez la photo ou le PDF d’un CV dont le style vous plaît. CVCasa vérifie qu’il est vraiment professionnel, puis reproduit sa mise en page avec
-        vos informations, en corrigeant ses défauts. Seul le style est repris, jamais le contenu. 1 crédit.
-      </p>
+        {t('Importez la photo ou le PDF d’un CV dont le style vous plaît. CVCasa vérifie qu’il est vraiment professionnel, puis reproduit sa mise en page avec vos informations, en corrigeant ses défauts. Seul le style est repris, jamais le contenu. 1 crédit.')}</p>
       <input ref={input} type="file" accept="application/pdf,image/png,image/jpeg,image/webp" className="hidden" onChange={(e) => onFile(e.target.files?.[0])} />
       <div className="mt-3 flex flex-wrap gap-2">
         <Button variant="ai" size="sm" icon={<ImageUp className="size-4" />} loading={busy} onClick={() => input.current?.click()}>
-          {result ? 'Essayer un autre modèle' : 'Importer le CV modèle'}
+          {result ? t('Essayer un autre modèle') : t('Importer le CV modèle')}
         </Button>
         <Button variant="ghost" size="sm" onClick={onClose}>
-          Fermer
-        </Button>
+          {t('Fermer')}</Button>
       </div>
-      {busy && <p className="mt-3 text-sm text-brand-700">Analyse du modèle…</p>}
+      {busy && <p className="mt-3 text-sm text-brand-700">{t('Analyse du modèle…')}</p>}
       {error && (
         <div className="mt-3">
           <Notice tone="error">{error}</Notice>
@@ -222,7 +219,7 @@ function TemplateImport({ onApply, onClose }: { onApply: (patch: Partial<CvSetti
 
       {result && !result.isCv && (
         <div className="mt-3">
-          <Notice tone="warn">Ce document ne ressemble pas à un CV. Importez la photo ou le PDF d’un CV dont vous aimez la présentation.</Notice>
+          <Notice tone="warn">{t('Ce document ne ressemble pas à un CV. Importez la photo ou le PDF d’un CV dont vous aimez la présentation.')}</Notice>
         </div>
       )}
 
@@ -237,7 +234,7 @@ function TemplateImport({ onApply, onClose }: { onApply: (patch: Partial<CvSetti
                 {VERDICT[result.verdict].label} · {Math.round(result.score)}/100
               </span>
               <p className="mt-2 text-sm text-slate-700">{result.summary}</p>
-              {!result.atsFriendly && <p className="mt-1 text-xs text-slate-500">L’original serait mal lu par les logiciels de tri des recruteurs ; notre version, si.</p>}
+              {!result.atsFriendly && <p className="mt-1 text-xs text-slate-500">{t('L’original serait mal lu par les logiciels de tri des recruteurs ; notre version, si.')}</p>}
             </div>
           </div>
           {result.strengths.length > 0 && (
@@ -251,7 +248,7 @@ function TemplateImport({ onApply, onClose }: { onApply: (patch: Partial<CvSetti
           )}
           {result.issues.length > 0 && (
             <div>
-              <p className="text-sm font-semibold text-slate-800">Corrigé dans votre version :</p>
+              <p className="text-sm font-semibold text-slate-800">{t('Corrigé dans votre version :')}</p>
               <ul className="mt-1 space-y-1 text-sm text-slate-700">
                 {result.issues.map((x, i) => (
                   <li key={i} className="flex gap-2">
@@ -268,24 +265,20 @@ function TemplateImport({ onApply, onClose }: { onApply: (patch: Partial<CvSetti
                     onApply(settingsForTemplate(closest));
                     onClose();
                   }}>
-                  Prendre le modèle « {closest.name} » à la place
-                </Button>
+                  {t('Prendre le modèle « {0} » à la place', [closest.name])}</Button>
                 <Button variant="secondary" size="sm" onClick={() => applyCustom(result)}>
-                  Utiliser quand même ce style (version corrigée)
-                </Button>
+                  {t('Utiliser quand même ce style (version corrigée)')}</Button>
               </>
             ) : (
               <>
                 <Button size="sm" onClick={() => applyCustom(result)}>
-                  Utiliser ce style pour mon CV
-                </Button>
+                  {t('Utiliser ce style pour mon CV')}</Button>
                 {closest && (
                   <Button variant="secondary" size="sm" onClick={() => {
                     onApply(settingsForTemplate(closest));
                     onClose();
                   }}>
-                    Voir le modèle proche « {closest.name} »
-                  </Button>
+                    {t('Voir le modèle proche « {0} »', [closest.name])}</Button>
                 )}
               </>
             )}
@@ -310,9 +303,7 @@ export function TemplateGallery({ cv, set }: { cv: CvDocument; set: (patch: Part
   return (
     <div>
       <p className="mb-3 text-sm text-slate-600">
-        Vous postulez sur un site de recrutement ou par formulaire ? Préférez <strong>Classique ATS</strong> : une seule colonne, c’est le modèle le mieux lu par les
-        logiciels de tri.
-      </p>
+        {t('Vous postulez sur un site de recrutement ou par formulaire ? Préférez')}{' '}<strong>{t('Classique ATS')}</strong> {' '}{t(': une seule colonne, c’est le modèle le mieux lu par les logiciels de tri.')}</p>
       <div className="-mx-1 mb-3 flex gap-1.5 overflow-x-auto px-1 pb-1">
         {(['all', ...Object.keys(CATEGORY_LABELS)] as (TemplateCategory | 'all')[]).map((c) => (
           <button
@@ -321,7 +312,7 @@ export function TemplateGallery({ cv, set }: { cv: CvDocument; set: (patch: Part
             onClick={() => setCategory(c)}
             className={cx('min-h-10 shrink-0 rounded-full px-3.5 py-2.5 text-xs font-medium', category === c ? 'bg-slate-900 text-white' : 'bg-slate-100 text-slate-700')}
           >
-            {c === 'all' ? 'Tous' : CATEGORY_LABELS[c]}
+            {c === 'all' ? t('Tous') : CATEGORY_LABELS[c]}
           </button>
         ))}
       </div>
@@ -333,7 +324,7 @@ export function TemplateGallery({ cv, set }: { cv: CvDocument; set: (patch: Part
               <StyleThumb st={{ ...st.customStyle, accent: st.template === 'perso' ? st.accent : st.customStyle.accent }} />
             </div>
             <p className="mt-1.5 flex items-center gap-1 text-xs font-semibold text-slate-800 sm:text-sm">
-              <span className="truncate">Mon style</span>
+              <span className="truncate">{t('Mon style')}</span>
               {!cv.unlocked && <span className="shrink-0 rounded bg-amber-100 px-1 text-[10px] font-bold text-amber-800">PRO</span>}
             </p>
           </button>
@@ -359,13 +350,13 @@ export function TemplateGallery({ cv, set }: { cv: CvDocument; set: (patch: Part
         ))}
         <button type="button" onClick={() => setImporting(true)} className="flex flex-col items-center justify-center gap-1.5 rounded-xl border-2 border-dashed border-brand-300 p-2 text-center text-brand-700 hover:bg-brand-50">
           <ImageUp className="size-6" />
-          <span className="text-xs font-semibold">Importer un modèle que j’aime</span>
+          <span className="text-xs font-semibold">{t('Importer un modèle que j’aime')}</span>
         </button>
       </div>
 
       <p className="mt-2 text-xs text-slate-500">
         {st.template === 'perso'
-          ? `Mon style${st.customAnalysis ? ` : ${st.customAnalysis.summary}` : ''}`
+          ? (st.customAnalysis ? t('Mon style : {0}', [st.customAnalysis.summary]) : t('Mon style'))
           : current
             ? `${current.name} : ${current.idealFor}`
             : null}

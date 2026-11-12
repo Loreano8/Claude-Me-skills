@@ -6,6 +6,7 @@ import { ACCEPTED_DOCS, fileToAttachment } from '../lib/files.ts';
 import { useSharedOffer } from '../lib/shareInbox.ts';
 import { Button, Card, Notice, TextArea } from './ui.tsx';
 
+import { t } from '../i18n.ts';
 const URL_RE = /https?:\/\/[^\s<>"']+/i;
 
 /** Premier lien d'un texte (« Regardez cette offre : https://… »). */
@@ -41,8 +42,8 @@ export function JobInputCard() {
     setInfo(null);
     try {
       const page = await api.fetchJob(url);
-      setJob({ text: `Lien de l’offre : ${page.url}\n\n${page.text}`, file: null });
-      setInfo(`Offre lue${page.title ? ` : « ${page.title} »` : ''}. Vérifiez le texte ci-dessous, puis adaptez votre CV.`);
+      setJob({ text: t('Lien de l’offre : {0}\n\n{1}', [page.url, page.text]), file: null });
+      setInfo(page.title ? t('Offre lue : « {0} ». Vérifiez le texte ci-dessous, puis adaptez votre CV.', [page.title]) : t('Offre lue. Vérifiez le texte ci-dessous, puis adaptez votre CV.'));
       setLink('');
     } catch (e) {
       // Une publication partagée contient souvent déjà le texte de l'offre : on le garde.
@@ -66,7 +67,7 @@ export function JobInputCard() {
       void readLink(url, shared);
     } else {
       setJob({ text: shared, file: null });
-      setInfo('Texte partagé reçu. Vérifiez-le, puis adaptez votre CV.');
+      setInfo(t('Texte partagé reçu. Vérifiez-le, puis adaptez votre CV.'));
     }
     // readLink et setJob ne changent pas d'un rendu à l'autre pour ce qui nous intéresse.
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -75,24 +76,23 @@ export function JobInputCard() {
   const pastedLink = !link && job.text.trim().length < 400 ? firstUrl(job.text) : null;
 
   return (
-    <Card tour="job" title="L’offre d’emploi" subtitle="Collez le lien de l’annonce, son texte, ou importez-la en PDF ou en capture d’écran.">
+    <Card tour="job" title={t('L’offre d’emploi')} subtitle={t('Collez le lien de l’annonce, son texte, ou importez-la en PDF ou en capture d’écran.')}>
       <div data-tour="job-link" className="flex flex-col gap-2 sm:flex-row">
         <label className="flex min-w-0 flex-1 items-center gap-2 rounded-xl bg-white px-3 ring-1 ring-slate-300 focus-within:ring-2 focus-within:ring-brand-500">
           <Link2 className="size-4 shrink-0 text-slate-400" />
-          <span className="sr-only">Lien de l’offre</span>
+          <span className="sr-only">{t('Lien de l’offre')}</span>
           <input
             type="url"
             inputMode="url"
             value={link}
             onChange={(e) => setLink(e.target.value)}
             onKeyDown={(e) => e.key === 'Enter' && link.trim() && void readLink(link.trim())}
-            placeholder="https://… lien de l’offre"
+            placeholder={t('https://… lien de l’offre')}
             className="min-w-0 flex-1 bg-transparent py-2.5 text-sm outline-none"
           />
         </label>
         <Button variant="secondary" loading={reading} disabled={!link.trim() || reading} onClick={() => void readLink(link.trim())}>
-          Lire l’offre
-        </Button>
+          {t('Lire l’offre')}</Button>
       </div>
       {info && (
         <div className="mt-2">
@@ -101,10 +101,8 @@ export function JobInputCard() {
       )}
       {pastedLink && !reading && (
         <div className="mt-2 flex flex-wrap items-center gap-2 rounded-xl bg-brand-50 px-3 py-2 text-sm text-brand-900">
-          Vous avez collé un lien.
-          <Button size="sm" onClick={() => void readLink(pastedLink, job.text)}>
-            Lire la page de ce lien
-          </Button>
+          {t('Vous avez collé un lien.')}<Button size="sm" onClick={() => void readLink(pastedLink, job.text)}>
+            {t('Lire la page de ce lien')}</Button>
         </div>
       )}
 
@@ -113,7 +111,7 @@ export function JobInputCard() {
           value={job.text}
           onChange={(text) => setJob({ ...job, text })}
           rows={8}
-          placeholder="Ou collez ici le texte de l’annonce : intitulé du poste, missions, profil recherché…"
+          placeholder={t('Ou collez ici le texte de l’annonce : intitulé du poste, missions, profil recherché…')}
         />
       </div>
       <div className="mt-3 flex flex-wrap items-center gap-2">
@@ -121,14 +119,13 @@ export function JobInputCard() {
         {job.file ? (
           <span className="inline-flex items-center gap-2 rounded-xl bg-slate-50 px-3 py-2 text-sm ring-1 ring-slate-200">
             <Paperclip className="size-4 text-slate-500" /> {job.file.name}
-            <button type="button" aria-label="Retirer le fichier" onClick={() => setJob({ ...job, file: null })} className="text-slate-400 hover:text-slate-700">
+            <button type="button" aria-label={t('Retirer le fichier')} onClick={() => setJob({ ...job, file: null })} className="text-slate-400 hover:text-slate-700">
               <X className="size-4" />
             </button>
           </span>
         ) : (
           <Button variant="secondary" size="sm" data-tour="job-import" icon={<FileUp className="size-4" />} onClick={() => input.current?.click()}>
-            Importer l’annonce (PDF, photo)
-          </Button>
+            {t('Importer l’annonce (PDF, photo)')}</Button>
         )}
         {(job.text || job.file) && (
           <Button
@@ -140,11 +137,10 @@ export function JobInputCard() {
               setError(null);
             }}
           >
-            Effacer l’offre
-          </Button>
+            {t('Effacer l’offre')}</Button>
         )}
       </div>
-      <p className="mt-2 text-xs text-slate-500">Astuce : depuis la page d’une offre, touchez « Partager » puis choisissez CVCasa.</p>
+      <p className="mt-2 text-xs text-slate-500">{t('Astuce : depuis la page d’une offre, touchez « Partager » puis choisissez CVCasa.')}</p>
       {error && (
         <div className="mt-3">
           <Notice tone="error">{error}</Notice>

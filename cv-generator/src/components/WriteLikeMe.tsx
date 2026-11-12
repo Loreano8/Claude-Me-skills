@@ -6,6 +6,7 @@ import { fileToAttachment } from '../lib/files.ts';
 import { useWritingStyle } from '../lib/writingStyle.ts';
 import { Button, Card, Cost, Notice, TextArea, Toggle } from './ui.tsx';
 
+import { t } from '../i18n.ts';
 const MAX_FILES = 4;
 const ACCEPTED = 'application/pdf,image/png,image/jpeg,image/webp,text/plain';
 
@@ -13,7 +14,7 @@ const ACCEPTED = 'application/pdf,image/png,image/jpeg,image/webp,text/plain';
 export async function learnStyle(files: Attachment[], text: string): Promise<string | null> {
   const res = await api.writingStyle({ files, text });
   if (!res.enough) return res.message;
-  const source = files.length ? files.map((f) => (f.mediaType.startsWith('image/') ? 'photo' : f.name)).join(', ') : 'texte collé';
+  const source = files.length ? files.map((f) => (f.mediaType.startsWith('image/') ? 'photo' : f.name)).join(', ') : t('texte collé');
   useWritingStyle.getState().setStyle(res, source);
   return null;
 }
@@ -70,13 +71,13 @@ export function WriteLikeMe({ compact = false }: { compact?: boolean }) {
       <div data-tour="style" className="rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm">
         <div className="flex items-center gap-2">
           <PenLine className="size-4 shrink-0 text-brand-600" />
-          <span className="font-semibold text-slate-800">Écrire comme moi</span>
+          <span className="font-semibold text-slate-800">{t('Écrire comme moi')}</span>
           <button type="button" className="hit ml-auto min-h-8 py-1 font-medium text-brand-700 underline" onClick={() => setOpen(true)}>
-            {style ? 'Modifier' : 'Configurer'}
+            {style ? t('Modifier') : t('Configurer')}
           </button>
         </div>
         <p className="mt-0.5 pl-6 text-slate-600">
-          {style ? (enabled ? `Activé : ${style.traits.slice(0, 3).join(' · ')}` : 'Désactivé') : 'Vos CV et lettres écrits avec vos mots à vous.'}
+          {style ? (enabled ? t('Activé : {0}', [style.traits.slice(0, 3).join(' · ')]) : t('Désactivé')) : t('Vos CV et lettres écrits avec vos mots à vous.')}
         </p>
       </div>
     );
@@ -100,29 +101,27 @@ export function WriteLikeMe({ compact = false }: { compact?: boolean }) {
           <span key={i} className="inline-flex max-w-full items-center gap-2 rounded-xl bg-white px-3 py-2 text-sm ring-1 ring-slate-200">
             <Paperclip className="size-4 shrink-0 text-slate-500" />
             <span className="truncate">{f.mediaType.startsWith('image/') ? `Photo ${i + 1}` : f.name}</span>
-            <button type="button" onClick={() => setFiles((cur) => cur.filter((_, j) => j !== i))} aria-label="Retirer ce document" className="text-slate-400 hover:text-slate-700">
+            <button type="button" onClick={() => setFiles((cur) => cur.filter((_, j) => j !== i))} aria-label={t('Retirer ce document')} className="text-slate-400 hover:text-slate-700">
               <X className="size-4" />
             </button>
           </span>
         ))}
         {files.length < MAX_FILES && (
           <Button variant="secondary" size="sm" icon={<Paperclip className="size-4" />} onClick={() => fileInput.current?.click()}>
-            Importer un document que j’ai écrit
-          </Button>
+            {t('Importer un document que j’ai écrit')}</Button>
         )}
       </div>
-      <TextArea value={text} onChange={setText} rows={3} placeholder="Ou collez ici un texte que vous avez écrit vous-même : une ancienne lettre, un message, un rapport…" />
+      <TextArea value={text} onChange={setText} rows={3} placeholder={t('Ou collez ici un texte que vous avez écrit vous-même : une ancienne lettre, un message, un rapport…')} />
       <div className="flex flex-wrap gap-2">
         <Button icon={<PenLine className="size-4" />} loading={busy} disabled={!files.length && !text.trim()} onClick={analyze}>
-          Retenir ma façon d’écrire <Cost free />
+          {t('Retenir ma façon d’écrire')}{' '}<Cost free />
         </Button>
         {style && (
           <Button variant="ghost" onClick={() => setEditing(false)}>
-            Annuler
-          </Button>
+            {t('Annuler')}</Button>
         )}
       </div>
-      {busy && <p className="text-sm text-brand-700">Lecture de votre façon d’écrire…</p>}
+      {busy && <p className="text-sm text-brand-700">{t('Lecture de votre façon d’écrire…')}</p>}
     </div>
   );
 
@@ -130,13 +129,12 @@ export function WriteLikeMe({ compact = false }: { compact?: boolean }) {
     <Card
       title={
         <span className="flex items-center gap-2">
-          <PenLine className="size-5 text-brand-600" /> Écrire comme moi
-        </span>
+          <PenLine className="size-5 text-brand-600" /> {' '}{t('Écrire comme moi')}</span>
       }
-      subtitle="Montrez un CV ou une lettre que vous avez écrit vous-même : vos prochains CV et lettres reprendront votre ton et vos tournures, pas le contenu. Gratuit."
+      subtitle={t('Montrez un CV ou une lettre que vous avez écrit vous-même : vos prochains CV et lettres reprendront votre ton et vos tournures, pas le contenu. Gratuit.')}
       actions={
         compact ? (
-          <button type="button" onClick={() => setOpen(false)} aria-label="Réduire" className="rounded-lg p-1 text-slate-500 hover:bg-slate-100">
+          <button type="button" onClick={() => setOpen(false)} aria-label={t('Réduire')} className="rounded-lg p-1 text-slate-500 hover:bg-slate-100">
             <X className="size-4" />
           </button>
         ) : undefined
@@ -151,15 +149,13 @@ export function WriteLikeMe({ compact = false }: { compact?: boolean }) {
               </span>
             ))}
           </div>
-          {style.examples.length > 0 && <p className="text-sm text-slate-600">Vos tournures : {style.examples.map((e) => `« ${e} »`).join(', ')}</p>}
-          <Toggle label="Utiliser ma façon d’écrire" hint="Pour vos CV, vos lettres et vos préparations d’entretien." checked={enabled} onChange={setEnabled} />
+          {style.examples.length > 0 && <p className="text-sm text-slate-600">{t('Vos tournures : {0}', [style.examples.map((e) => `« ${e} »`).join(', ')])}</p>}
+          <Toggle label={t('Utiliser ma façon d’écrire')} hint={t('Pour vos CV, vos lettres et vos préparations d’entretien.')} checked={enabled} onChange={setEnabled} />
           <div className="flex flex-wrap gap-2">
             <Button variant="secondary" size="sm" icon={<Paperclip className="size-4" />} onClick={() => setEditing(true)}>
-              Utiliser un autre document
-            </Button>
+              {t('Utiliser un autre document')}</Button>
             <Button variant="ghost" size="sm" icon={<Trash2 className="size-4" />} onClick={clear}>
-              Oublier mon style
-            </Button>
+              {t('Oublier mon style')}</Button>
           </div>
         </div>
       ) : (
