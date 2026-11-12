@@ -14,6 +14,16 @@ const apiOrigin = (() => {
     return 'https://clgmqhyzyiswnekmoygw.supabase.co';
   }
 })();
+// Site public : l'application y lit la fiche des mises à jour (app-update/latest.json).
+const siteOrigin = (() => {
+  try {
+    return new URL(process.env.VITE_PUBLIC_SITE ?? 'https://cvcasa.com').origin;
+  } catch {
+    return 'https://cvcasa.com';
+  }
+})();
+/** Version du code (commit) : identique pour l'APK compilée sur GitHub et pour le site compilé sur Render. */
+export const BUILD_ID = (process.env.RENDER_GIT_COMMIT || process.env.GITHUB_SHA || 'dev').slice(0, 12);
 export const CSP = [
   "default-src 'self'",
   "script-src 'self' 'wasm-unsafe-eval'",
@@ -22,7 +32,7 @@ export const CSP = [
   "font-src 'self' data:",
   "media-src 'self' blob:",
   "worker-src 'self' blob:",
-  `connect-src 'self' ${apiOrigin} blob: data:`,
+  `connect-src 'self' ${apiOrigin} ${siteOrigin} blob: data:`,
   "frame-src 'none'",
   "object-src 'none'",
   "base-uri 'self'",
@@ -66,6 +76,9 @@ export default defineConfig({
   },
   build: {
     chunkSizeWarningLimit: 2500,
+  },
+  define: {
+    __BUILD_ID__: JSON.stringify(BUILD_ID),
   },
   test: {
     environment: 'node',
