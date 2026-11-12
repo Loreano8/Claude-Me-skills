@@ -1115,6 +1115,15 @@ export const EN: Record<string, string> = {
   "CV : {0}": "CV: {0}",
   "Chauffeur-livreur": "Delivery driver",
   "Version {0}": "Version {0}",
+  "Le site est toujours à jour.": "The website is always up to date.",
+  "L’appli se met à jour toute seule. Vous pouvez aussi vérifier vous-même.": "The app updates itself. You can also check yourself.",
+  "Une nouvelle version est disponible.": "A new version is available.",
+  "Installer maintenant": "Install now",
+  "Sinon, elle s’installera toute seule au prochain lancement.": "Otherwise, it will install itself the next time you open the app.",
+  "Installation…": "Installing…",
+  "Vérifier les mises à jour": "Check for updates",
+  "Votre appli est à jour.": "Your app is up to date.",
+  "Vérification impossible pour le moment. Vérifiez votre connexion internet.": "Can’t check right now. Check your internet connection.",
 
   // Messages du serveur (erreurs, veille) : traduits à l’envoi quand l’interface est en anglais.
   "Fichier trop volumineux (15 Mo maximum).": "File too large (15 MB maximum).",

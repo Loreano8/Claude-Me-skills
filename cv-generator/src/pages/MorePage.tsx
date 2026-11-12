@@ -1,6 +1,7 @@
 import { BellRing, BookOpen, ChevronRight, ClipboardList, CreditCard, FileStack, FolderOpen, Link2, Mail, MessageCircle, Mic, PlayCircle, ScanLine, ShieldCheck, Bitcoin } from 'lucide-react';
 import { Capacitor } from '@capacitor/core';
 import { LangPicker } from '../components/LangSwitch.tsx';
+import { AppUpdateCard } from '../components/AppUpdateCard.tsx';
 import type { Tab } from '../App.tsx';
 import { PUBLIC_SITE } from '../lib/referral.ts';
 import { useSupportBadge } from '../lib/supportBadge.ts';
@@ -114,8 +115,8 @@ export function MorePage({ onNavigate }: { onNavigate: (t: Tab) => void }) {
           ))}
         </ul>
       </section>
-      {/* Numéro de version : il change quand l'appli s'est mise à jour toute seule. */}
-      <p className="text-center text-xs text-slate-400">{t('Version {0}', [__BUILD_ID__.slice(0, 7)])}</p>
+      {/* Numéro de version (il change quand l'appli s'est mise à jour) et vérification à la demande. */}
+      <AppUpdateCard />
     </div>
   );
 }

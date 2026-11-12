@@ -21,23 +21,37 @@ export function shouldInstall(latest: LatestBundle | null, current: string, nati
   return Boolean(latest && latest.version && latest.version !== current && latest.manifest?.length && nativeBuild >= latest.minNativeBuild);
 }
 
+/** La version plus récente publiée sur le site, si elle peut être installée sur cette APK ; sinon null. */
+export async function findUpdate(): Promise<LatestBundle | null> {
+  // Requête native : l'appli (https://localhost) lit la fiche de cvcasa.com sans règle de partage entre sites.
+  const res = await CapacitorHttp.get({ url: `${PUBLIC_SITE}/app-update/latest.json?t=${Date.now()}`, responseType: 'json' });
+  if (res.status !== 200) throw new Error(`HTTP ${res.status}`);
+  const latest = (typeof res.data === 'string' ? JSON.parse(res.data) : res.data) as LatestBundle;
+  const nativeBuild = Number((await App.getInfo()).build) || 0;
+  return shouldInstall(latest, __BUILD_ID__, nativeBuild) ? latest : null;
+}
+
+/**
+ * Télécharge la version (seulement les fichiers modifiés) puis l'applique :
+ * tout de suite si la personne l'a demandé (l'appli redémarre), sinon au prochain lancement.
+ */
+export async function installUpdate(latest: LatestBundle, now = false): Promise<void> {
+  // Déjà téléchargée (lancement précédent) : pas besoin de recommencer.
+  const { bundles } = await CapacitorUpdater.list();
+  const ready = bundles.find((b) => b.version === latest.version && b.status === 'success');
+  const bundle = ready ?? (await CapacitorUpdater.download({ url: '', version: latest.version, manifest: latest.manifest }));
+  if (now) await CapacitorUpdater.set({ id: bundle.id });
+  else await CapacitorUpdater.next({ id: bundle.id });
+}
+
 export async function setupAppUpdates(): Promise<void> {
   // Toujours en premier : signale que cette version démarre bien (sinon retour automatique à la précédente).
   await CapacitorUpdater.notifyAppReady();
   const check = async () => {
     try {
-      // Requête native : l'appli (https://localhost) lit la fiche de cvcasa.com sans règle de partage entre sites.
-      const res = await CapacitorHttp.get({ url: `${PUBLIC_SITE}/app-update/latest.json?t=${Date.now()}`, responseType: 'json' });
-      if (res.status !== 200) return;
-      const latest = (typeof res.data === 'string' ? JSON.parse(res.data) : res.data) as LatestBundle;
-      const nativeBuild = Number((await App.getInfo()).build) || 0;
-      if (!shouldInstall(latest, __BUILD_ID__, nativeBuild)) return;
-      // Déjà téléchargée (lancement précédent) : il suffit de la programmer.
-      const { bundles } = await CapacitorUpdater.list();
-      const ready = bundles.find((b) => b.version === latest.version && b.status === 'success');
-      const bundle = ready ?? (await CapacitorUpdater.download({ url: '', version: latest.version, manifest: latest.manifest }));
+      const latest = await findUpdate();
       // Appliquée quand l'appli passe en arrière-plan ou au prochain lancement : jamais en pleine saisie.
-      await CapacitorUpdater.next({ id: bundle.id });
+      if (latest) await installUpdate(latest);
     } catch (e) {
       console.warn('Mise à jour de l’appli', e);
     }
