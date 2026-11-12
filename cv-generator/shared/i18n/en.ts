@@ -1114,6 +1114,7 @@ export const EN: Record<string, string> = {
   "Coffre-fort": "Safe",
   "CV : {0}": "CV: {0}",
   "Chauffeur-livreur": "Delivery driver",
+  "Version {0}": "Version {0}",
 
   // Messages du serveur (erreurs, veille) : traduits à l’envoi quand l’interface est en anglais.
   "Fichier trop volumineux (15 Mo maximum).": "File too large (15 MB maximum).",

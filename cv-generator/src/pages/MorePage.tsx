@@ -114,6 +114,8 @@ export function MorePage({ onNavigate }: { onNavigate: (t: Tab) => void }) {
           ))}
         </ul>
       </section>
+      {/* Numéro de version : il change quand l'appli s'est mise à jour toute seule. */}
+      <p className="text-center text-xs text-slate-400">{t('Version {0}', [__BUILD_ID__.slice(0, 7)])}</p>
     </div>
   );
 }

@@ -1,6 +1,7 @@
 import { describe, expect, it, vi } from 'vitest';
 
 vi.mock('@capacitor/app', () => ({ App: {} }));
+vi.mock('@capacitor/core', () => ({ CapacitorHttp: {} }));
 vi.mock('@capgo/capacitor-updater', () => ({ CapacitorUpdater: {} }));
 const { shouldInstall } = await import('../src/lib/appUpdate.ts');
 

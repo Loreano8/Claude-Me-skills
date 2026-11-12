@@ -1,4 +1,5 @@
 import { App } from '@capacitor/app';
+import { CapacitorHttp } from '@capacitor/core';
 import { CapacitorUpdater, type ManifestEntry } from '@capgo/capacitor-updater';
 import { PUBLIC_SITE } from './referral.ts';
 
@@ -25,9 +26,10 @@ export async function setupAppUpdates(): Promise<void> {
   await CapacitorUpdater.notifyAppReady();
   const check = async () => {
     try {
-      const res = await fetch(`${PUBLIC_SITE}/app-update/latest.json`, { cache: 'no-store' });
-      if (!res.ok) return;
-      const latest = (await res.json()) as LatestBundle;
+      // Requête native : l'appli (https://localhost) lit la fiche de cvcasa.com sans règle de partage entre sites.
+      const res = await CapacitorHttp.get({ url: `${PUBLIC_SITE}/app-update/latest.json?t=${Date.now()}`, responseType: 'json' });
+      if (res.status !== 200) return;
+      const latest = (typeof res.data === 'string' ? JSON.parse(res.data) : res.data) as LatestBundle;
       const nativeBuild = Number((await App.getInfo()).build) || 0;
       if (!shouldInstall(latest, __BUILD_ID__, nativeBuild)) return;
       // Déjà téléchargée (lancement précédent) : il suffit de la programmer.
