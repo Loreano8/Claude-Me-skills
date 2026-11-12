@@ -37,10 +37,13 @@ export function AppUpdateCard() {
   }
 
   return (
-    <section className="rounded-2xl border border-slate-200 bg-white p-4 text-center" aria-live="polite">
-      <p className="text-sm text-slate-500">{t('Version {0}', [__BUILD_ID__.slice(0, 7)])}</p>
+    <section className="rounded-2xl border border-slate-200 bg-white p-4" aria-live="polite" aria-labelledby="update-title">
+      <h2 id="update-title" className="flex items-center gap-2 font-semibold text-slate-900">
+        <RefreshCw className="size-5 text-brand-600" aria-hidden="true" /> {t('Version et mises à jour')}
+      </h2>
+      <p className="mt-1 text-sm text-slate-600">{t('Version {0}', [__BUILD_ID__.slice(0, 7)])}</p>
       {!native ? (
-        <p className="mt-1 text-xs text-slate-400">{t('Le site est toujours à jour.')}</p>
+        <p className="mt-1 text-xs text-slate-500">{t('Le site est toujours à jour.')}</p>
       ) : (
         <>
           <p className="mt-1 text-xs text-slate-500">{t('L’appli se met à jour toute seule. Vous pouvez aussi vérifier vous-même.')}</p>

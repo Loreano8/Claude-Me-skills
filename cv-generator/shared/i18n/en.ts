@@ -1124,6 +1124,9 @@ export const EN: Record<string, string> = {
   "Vérifier les mises à jour": "Check for updates",
   "Votre appli est à jour.": "Your app is up to date.",
   "Vérification impossible pour le moment. Vérifiez votre connexion internet.": "Can’t check right now. Check your internet connection.",
+  "Réglages": "Settings",
+  "Langue de l’appli, version et mises à jour.": "App language, version and updates.",
+  "Version et mises à jour": "Version and updates",
 
   // Messages du serveur (erreurs, veille) : traduits à l’envoi quand l’interface est en anglais.
   "Fichier trop volumineux (15 Mo maximum).": "File too large (15 MB maximum).",

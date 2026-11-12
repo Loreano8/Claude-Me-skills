@@ -1,7 +1,5 @@
-import { BellRing, BookOpen, ChevronRight, ClipboardList, CreditCard, FileStack, FolderOpen, Link2, Mail, MessageCircle, Mic, PlayCircle, ScanLine, ShieldCheck, Bitcoin } from 'lucide-react';
+import { BellRing, BookOpen, Settings, ChevronRight, ClipboardList, CreditCard, FileStack, FolderOpen, Link2, Mail, MessageCircle, Mic, PlayCircle, ScanLine, ShieldCheck, Bitcoin } from 'lucide-react';
 import { Capacitor } from '@capacitor/core';
-import { LangPicker } from '../components/LangSwitch.tsx';
-import { AppUpdateCard } from '../components/AppUpdateCard.tsx';
 import type { Tab } from '../App.tsx';
 import { PUBLIC_SITE } from '../lib/referral.ts';
 import { useSupportBadge } from '../lib/supportBadge.ts';
@@ -36,6 +34,7 @@ const GROUPS: { title: string; entries: Entry[] }[] = [
       { icon: PlayCircle, title: t('Tutoriel en vidéo'), text: t('Tout CVCasa expliqué en 2 minutes.'), href: `${SITE}/tutoriel/tutoriel.mp4` },
       { icon: BookOpen, title: t('Guides et exemples'), text: LANG === 'en' ? 'CV tips by job, by country, and for the letter (in French).' : 'Conseils de CV par métier, par pays, et pour la lettre.', href: `${SITE}/guides/` },
       { icon: MessageCircle, title: t('Nous contacter'), text: t('Une question, un souci : nous répondons ici.'), tab: 'contact' },
+      { icon: Settings, title: t('Réglages'), text: t('Langue de l’appli, version et mises à jour.'), tab: 'reglages' },
       { icon: ShieldCheck, title: t('Confidentialité'), text: t('Ce que deviennent vos données.'), tab: 'confidentialite' },
     ],
   },
@@ -53,7 +52,6 @@ export function MorePage({ onNavigate }: { onNavigate: (t: Tab) => void }) {
   const unread = useSupportBadge((s) => s.unread);
   return (
     <div className="mx-auto max-w-2xl space-y-6">
-      <LangPicker />
       {GROUPS.map((g) => (
         <section key={g.title}>
           <h2 className="mb-2 px-1 font-display text-lg font-semibold text-ink">{g.title}</h2>
@@ -115,8 +113,6 @@ export function MorePage({ onNavigate }: { onNavigate: (t: Tab) => void }) {
           ))}
         </ul>
       </section>
-      {/* Numéro de version (il change quand l'appli s'est mise à jour) et vérification à la demande. */}
-      <AppUpdateCard />
     </div>
   );
 }
