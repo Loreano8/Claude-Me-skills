@@ -138,8 +138,8 @@ export function searchPrompt(c: WatchCriteria, exclude: string[], today: Date): 
 export const SEARCH_SYSTEM = `Tu fais une veille d’offres d’emploi pour une personne qui cherche du travail, le plus souvent au Bénin ou en Afrique de l’Ouest.
 
 Méthode :
-- Fais de vraies recherches sur le web (sites d’emploi, pages carrières, organisations internationales, ONG, programmes jeunes). Varie les requêtes : métier + pays, métier + « recrutement », métier + « offre d’emploi » + mois en cours.
-- Ne garde que des offres publiées récemment et encore ouvertes (date limite non dépassée, ou publiées depuis moins de 30 jours si aucune date limite).
+- Fais de vraies recherches sur le web, au moins 5 requêtes différentes avant de conclure : sites d’emploi du pays et de la région, pages carrières d’entreprises, cabinets de recrutement, organisations internationales et ONG (ReliefWeb, sites des Nations unies…), programmes jeunes. Varie les requêtes : métier + pays ou ville, métier + « recrutement », métier + « avis de recrutement », métier + « offre d’emploi » + mois en cours, et les intitulés proches (ex. comptable, assistant comptable, aide-comptable, chargé de comptabilité).
+- Ne garde que des offres encore ouvertes : date limite non dépassée, ou publiées depuis moins de 30 jours s’il n’y a pas de date limite. Une offre dont la date limite n’est pas indiquée n’est pas à écarter pour autant.
 - N’invente jamais une offre, une entreprise, un salaire ou un lien. Le lien doit être celui de la page de l’offre (ou de la page carrière qui la publie) trouvé dans les résultats de recherche.
 - Écarte les annonces douteuses : frais demandés au candidat, promesses irréalistes, contact uniquement par messagerie privée, absence d’entreprise identifiable.
 - Pour une offre à l’étranger ou en télétravail, indique si une personne basée au Bénin peut postuler (oui, non, à vérifier).
@@ -211,13 +211,13 @@ export function claudeWatchSearch(client: Anthropic, model: string): WatchSearch
           {
             model,
             max_tokens: 16000,
-            output_config: { effort: 'low' },
+            output_config: { effort: 'medium' },
             system: SEARCH_SYSTEM,
             tools: [
               {
                 type: 'web_search_20260209',
                 name: 'web_search',
-                max_uses: 5,
+                max_uses: 8,
                 // Le Bénin n'est pas accepté comme pays par l'outil de recherche : seul le fuseau horaire est donné, les zones sont dans la demande.
                 user_location: { type: 'approximate', timezone: 'Africa/Porto-Novo' },
               },
@@ -232,6 +232,8 @@ export function claudeWatchSearch(client: Anthropic, model: string): WatchSearch
         throw new WatchError('La recherche n’a pas pu se faire pour le moment. Réessayez plus tard.', 502);
       }
       collectResultHosts(res.content, hosts);
+      // Suivi du coût réel (jetons et recherches), visible dans les journaux du serveur.
+      console.log('Veille : appel', JSON.stringify({ model, stop: res.stop_reason, in: res.usage.input_tokens, out: res.usage.output_tokens, cacheRead: res.usage.cache_read_input_tokens, searches: res.usage.server_tool_use?.web_search_requests ?? 0 }));
       if (res.stop_reason === 'refusal') throw new WatchError('Cette recherche n’a pas pu être faite. Modifiez vos critères.', 502);
       const call = res.content.find((b): b is Anthropic.Messages.ToolUseBlock => b.type === 'tool_use' && b.name === OFFERS_TOOL.name);
       if (call) {
@@ -337,7 +339,8 @@ export function createWatches(db: Db, accounts: Accounts, search: WatchSearch | 
     }
     const fresh = cleanOffers(found.offers, new Set(), new Set(sent.map(normalizeUrl)));
     const offers: WatchOffer[] = fresh.map((o) => ({ ...o, ...matchOffer(o, `${w.profile} ${w.criteria.jobs.join(' ')}`) }));
-    const note = offers.length ? found.note : 'Pas de nouvelle offre depuis le dernier envoi. La veille continue.';
+    // Recherche sans résultat : on garde l'explication de la recherche ; offres trouvées mais déjà envoyées : message simple.
+    const note = offers.length || !found.offers.length ? found.note : 'Pas de nouvelle offre depuis le dernier envoi. La veille continue.';
     const [saved] = await db.query<{ id: number; created_at: Date }>(
       'insert into job_watch_runs (user_id, offers, note) values ($1, $2, $3) returning id, created_at',
       [user.id, JSON.stringify(offers), note],
