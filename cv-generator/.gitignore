@@ -8,3 +8,4 @@ android/build
 android/local.properties
 supabase/functions/api/server/
 supabase/functions/api/shared/
+captures-accueil/
