@@ -66,14 +66,6 @@ h2 {
   }
 }
 
-/* Titre d'étape de l'animation du CV (accueil). */
-@keyframes fadeIn {
-  from {
-    opacity: 0;
-    transform: translateY(6px);
-  }
-}
-
 /* Bandeau défilant de la page d'accueil (contenu doublé : -50 % = boucle sans saut). */
 @keyframes marquee {
   to {

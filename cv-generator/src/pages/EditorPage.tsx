@@ -22,7 +22,7 @@ type Update = (recipe: (cv: CvDocument) => CvDocument) => void;
 
 const QUICK_PLACEHOLDER = `Écrivez tout comme ça vous vient, dans le désordre. Par exemple :
 
-Awa Diallo, comptable, tél. 07 00 00 00 00, awa.diallo@email.com.
+Prénom Nom, comptable, tél. 01 00 00 00 00, prenom.nom@email.com.
 Master en finance en 2020. Depuis 2021 comptable dans une société de transport : déclarations fiscales, paie de 120 salariés, j'ai réduit les retards de paiement de 30 %. Avant : stage de 6 mois dans un cabinet d'audit.
 Excel avancé, Sage. Français, anglais courant. J'aime le basket et le bénévolat.`;
 

@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { ArrowRight, BadgeCheck, Briefcase, GraduationCap, Check, ClipboardList, FileDown, FileStack, Globe2, Languages, Mail, MessagesSquare, PenLine, PlayCircle, ShieldCheck, Target } from 'lucide-react';
 import { PACKS } from '../../server/payments.ts';
-import { CvStory } from '../components/CvStory.tsx';
+import { HeroScene } from '../components/HeroScene.tsx';
 import type { Tab } from '../App.tsx';
 import { Button } from '../components/ui.tsx';
 import { api, type PublicTestimonial } from '../lib/api.ts';
@@ -125,29 +125,36 @@ export function LandingPage({ onNavigate }: { onNavigate: (t: Tab) => void }) {
 
   return (
     <div className="-mx-4 -mt-4">
-      <section className="bg-gradient-to-b from-brand-50 to-white px-4 pt-12 pb-14 text-center sm:pt-20">
-        <h1 className="mx-auto max-w-3xl text-4xl leading-[1.05] font-bold text-ink sm:text-6xl">
-          Votre CV gratuit, adapté à chaque offre, en quelques minutes
-        </h1>
-        <p className="mx-auto mt-4 max-w-2xl text-base text-slate-600 sm:text-lg">
-          Écrivez votre parcours en vrac, collez l’annonce : CVCasa met en forme un CV aux normes actuelles, adapté au poste, avec la lettre de
-          motivation et la préparation de l’entretien.
-        </p>
-        <div className="mt-7 flex flex-col items-center justify-center gap-3 sm:flex-row">
-          <Button size="lg" onClick={start} icon={<ArrowRight className="size-5" />}>
-            Créer mon CV gratuitement
-          </Button>
-          <Button size="lg" variant="secondary" onClick={() => onNavigate('offre')}>
-            J’ai déjà une offre
-          </Button>
+      <section className="bg-white px-4 pt-8 pb-12 sm:pt-14 lg:pb-16">
+        {/* Téléphone : titre, scène, puis texte et boutons. Ordinateur : titre et texte à gauche, scène à droite. */}
+        <div className="mx-auto grid max-w-6xl items-center gap-x-14 gap-y-6 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.05fr)] lg:grid-rows-[auto_auto]">
+          <h1 className="text-center text-[2.4rem] leading-[1.02] font-bold text-ink sm:text-6xl lg:self-end lg:text-left lg:text-[4.4rem]">Vous racontez. CVCasa écrit votre CV.</h1>
+          <div className="relative overflow-hidden rounded-[28px] bg-ink px-4 pt-6 pb-5 sm:px-8 sm:pt-9 lg:col-start-2 lg:row-span-2 lg:row-start-1">
+            {/* Trame de points discrète : la scène se détache sans dégradé décoratif. */}
+            <div className="pointer-events-none absolute inset-0 opacity-[0.12] [background-image:radial-gradient(#fff_1px,transparent_1px)] [background-size:18px_18px]" />
+            <div className="relative">
+              <HeroScene />
+            </div>
+          </div>
+          <div className="text-center lg:self-start lg:text-left">
+            <p className="mx-auto max-w-xl text-base text-slate-600 sm:text-lg lg:mx-0">
+              À l’écrit ou au micro, dans le désordre : votre parcours est rangé, reformulé et mis en page, puis adapté à chaque offre. Créer et télécharger son CV est gratuit.
+            </p>
+            <div className="mt-7 flex flex-col items-center justify-center gap-3 sm:flex-row lg:justify-start">
+              <Button size="lg" onClick={start} icon={<ArrowRight className="size-5" />}>
+                Créer mon CV gratuitement
+              </Button>
+              <Button size="lg" variant="secondary" onClick={() => onNavigate('offre')}>
+                J’ai déjà une offre
+              </Button>
+            </div>
+            <p className="mt-3 text-sm text-slate-500">Sans compte pour créer et télécharger son CV. Première adaptation offerte.</p>
+            <a href="#tutoriel" onClick={(e) => { e.preventDefault(); document.getElementById('tutoriel')?.scrollIntoView({ behavior: 'smooth', block: 'center' }); }} className="mt-2 inline-flex min-h-11 items-center gap-2 px-2 text-sm font-semibold text-brand-700 hover:text-brand-800 lg:-ml-2">
+              <PlayCircle className="size-5" /> Voir le tutoriel en vidéo (2 min)
+            </a>
+          </div>
         </div>
-        <p className="mt-3 text-sm text-slate-500">Sans compte pour créer et télécharger son CV · 1re adaptation offerte</p>
-        <a href="#tutoriel" onClick={(e) => { e.preventDefault(); document.getElementById('tutoriel')?.scrollIntoView({ behavior: 'smooth', block: 'center' }); }} className="mt-3 inline-flex min-h-11 items-center gap-2 px-2 text-sm font-semibold text-brand-700 hover:text-brand-800">
-          <PlayCircle className="size-5" /> Voir le tutoriel en vidéo (2 min)
-        </a>
       </section>
-
-      <CvStory />
 
       <section className="space-y-3 border-y border-slate-200 bg-slate-50 py-6" aria-label="Métiers et villes">
         <p className="px-4 text-center text-sm font-semibold text-slate-600">Un CV adapté à votre métier, pour postuler où vous voulez</p>

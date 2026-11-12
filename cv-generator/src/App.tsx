@@ -56,8 +56,8 @@ function initialTab(): Tab {
 function Logo({ onClick }: { onClick: () => void }) {
   return (
     <button type="button" onClick={onClick} className="hit flex shrink-0 items-center gap-2 rounded-xl" aria-label="CVCasa, accueil">
-      <img src={`${import.meta.env.BASE_URL}icons/icon.svg`} alt="" className="size-8" />
-      <span className="text-lg font-bold tracking-tight whitespace-nowrap text-slate-900 max-[419px]:hidden">
+      <img src={`${import.meta.env.BASE_URL}icons/icon.svg`} alt="" className="size-8 lg:size-10" />
+      <span className="font-display text-lg font-bold tracking-tight whitespace-nowrap text-ink max-[419px]:hidden lg:text-[1.4rem]">
         CV<span className="text-brand-600">Casa</span>
       </span>
     </button>
@@ -78,11 +78,11 @@ function useDoneSteps(): Record<Section, boolean> {
 }
 
 /** Pastille d'une entrée de navigation : numéro de l'étape, coche si elle est faite, ou icône de « Plus ». */
-function StepMark({ step, done, active, unread }: { step?: number; done: boolean; active: boolean; unread: number }) {
+function StepMark({ step, done, active, unread, big = false }: { step?: number; done: boolean; active: boolean; unread: number; big?: boolean }) {
   if (!step) {
     return (
-      <span className="relative flex size-6 items-center justify-center">
-        <LayoutGrid className={cx('size-5', active && 'stroke-[2.4]')} aria-hidden="true" />
+      <span className={cx('relative flex items-center justify-center', big ? 'size-7' : 'size-6')}>
+        <LayoutGrid className={cx(big ? 'size-6' : 'size-5', active && 'stroke-[2.4]')} aria-hidden="true" />
         {unread > 0 && <span className="absolute -top-0.5 -right-1 size-2.5 rounded-full bg-red-600 ring-2 ring-white" />}
       </span>
     );
@@ -90,11 +90,12 @@ function StepMark({ step, done, active, unread }: { step?: number; done: boolean
   return (
     <span
       className={cx(
-        'flex size-6 items-center justify-center rounded-full text-xs font-bold',
+        'flex items-center justify-center rounded-full font-bold',
+        big ? 'size-7 text-sm' : 'size-6 text-xs',
         done ? 'bg-emerald-600 text-white' : active ? 'bg-brand-600 text-white' : 'bg-slate-200 text-slate-700',
       )}
     >
-      {done ? <Check className="size-3.5 stroke-[3]" aria-hidden="true" /> : step}
+      {done ? <Check className={cx(big ? 'size-4' : 'size-3.5', 'stroke-[3]')} aria-hidden="true" /> : step}
     </span>
   );
 }
@@ -203,9 +204,9 @@ export default function App() {
   return (
     <div className="min-h-dvh bg-slate-50">
       <header className="sticky top-0 z-20 border-b border-slate-200 bg-white/90 backdrop-blur pt-[env(safe-area-inset-top)]">
-        <div className="mx-auto flex max-w-7xl items-center justify-between gap-2 px-3 py-2.5 sm:gap-3 sm:px-4">
+        <div className="mx-auto flex max-w-7xl items-center justify-between gap-2 px-3 py-2.5 sm:gap-3 sm:px-4 lg:py-3">
           <Logo onClick={() => setTab('accueil')} />
-          <nav className="hidden min-w-0 gap-1 lg:flex" aria-label="Navigation principale">
+          <nav className="hidden min-w-0 gap-1.5 lg:flex" aria-label="Navigation principale">
             {NAV.map((n) => (
               <button
                 key={n.id}
@@ -214,11 +215,11 @@ export default function App() {
                 aria-current={section === n.id ? 'page' : undefined}
                 onClick={() => setTab(n.tab)}
                 className={cx(
-                  'flex items-center gap-2 rounded-xl px-3 py-2 text-sm font-semibold whitespace-nowrap transition-colors',
-                  section === n.id ? 'bg-brand-50 text-brand-800' : 'text-slate-600 hover:bg-slate-100',
+                  'flex min-h-12 items-center gap-2.5 rounded-2xl px-4 text-base font-semibold whitespace-nowrap transition-colors',
+                  section === n.id ? 'bg-brand-50 text-brand-800' : 'text-slate-700 hover:bg-slate-100',
                 )}
               >
-                <StepMark step={n.step} done={done[n.id]} active={section === n.id} unread={unread} />
+                <StepMark step={n.step} done={done[n.id]} active={section === n.id} unread={unread} big />
                 {n.short}
               </button>
             ))}

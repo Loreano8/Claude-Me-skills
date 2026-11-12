@@ -398,7 +398,7 @@ export function DossierPage({ onNavigate, mode = 'dossier' }: { onNavigate: (t: 
           </ol>
 
           <div className="mt-4">
-            <Field label="Nom du fichier" value={fileName} onChange={setFileName} hint="Exemple : Dossier_Awa_Diallo_Comptable" />
+            <Field label="Nom du fichier" value={fileName} onChange={setFileName} hint="Exemple : Dossier_Prenom_Nom_Comptable" />
           </div>
           <p className={cx('mt-3 text-xs', needsCredit && !paid ? 'text-amber-800' : 'text-slate-500')}>
             {scanner
