@@ -1,5 +1,5 @@
 import { useId, useState, type ButtonHTMLAttributes, type ReactNode } from 'react';
-import { ChevronDown, Loader2 } from 'lucide-react';
+import { ChevronDown, Eye, EyeOff, Loader2 } from 'lucide-react';
 
 import { t } from '../i18n.ts';
 export function cx(...classes: (string | false | null | undefined)[]): string {
@@ -136,21 +136,38 @@ export function Field({
   autoComplete?: string;
 }) {
   const id = useId();
+  // Mot de passe ou code : un bouton œil pour voir ce qu'on tape (et le masquer à nouveau).
+  const secret = type === 'password';
+  const [shown, setShown] = useState(false);
   return (
     <div className={className}>
       <label htmlFor={id} className="mb-1 block text-sm font-medium text-slate-700">
         {label}
       </label>
-      <input
-        id={id}
-        type={type}
-        value={value}
-        list={list}
-        autoComplete={autoComplete}
-        placeholder={placeholder}
-        onChange={(e) => onChange(e.target.value)}
-        className={inputClass}
-      />
+      <div className="relative">
+        <input
+          id={id}
+          type={secret && shown ? 'text' : type}
+          value={value}
+          list={list}
+          autoComplete={autoComplete}
+          placeholder={placeholder}
+          onChange={(e) => onChange(e.target.value)}
+          className={cx(inputClass, secret && 'pr-12')}
+          {...(secret ? { autoCapitalize: 'none', autoCorrect: 'off', spellCheck: false } : {})}
+        />
+        {secret && (
+          <button
+            type="button"
+            onClick={() => setShown((v) => !v)}
+            aria-label={shown ? t('Masquer le mot de passe') : t('Afficher le mot de passe')}
+            aria-pressed={shown}
+            className="absolute inset-y-0 right-0 flex w-12 items-center justify-center rounded-r-xl text-slate-500 hover:text-slate-800"
+          >
+            {shown ? <EyeOff className="size-5" aria-hidden="true" /> : <Eye className="size-5" aria-hidden="true" />}
+          </button>
+        )}
+      </div>
       {hint && <p className="mt-1 text-xs text-slate-500">{hint}</p>}
     </div>
   );

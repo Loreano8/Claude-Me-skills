@@ -1145,6 +1145,8 @@ export const EN: Record<string, string> = {
   'Votre CV en *3 étapes simples*': 'Your CV in *3 simple steps*',
   'Tout pour *décrocher le poste*': 'Everything to *land the job*',
   'Du CV à l’entretien, au même endroit.': 'From CV to interview, all in one place.',
+  'Masquer le mot de passe': 'Hide password',
+  'Afficher le mot de passe': 'Show password',
   // Messages du serveur (erreurs, veille) : traduits à l’envoi quand l’interface est en anglais.
   "Fichier trop volumineux (15 Mo maximum).": "File too large (15 MB maximum).",
   "Erreur interne du serveur.": "Internal server error.",
