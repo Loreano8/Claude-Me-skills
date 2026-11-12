@@ -374,6 +374,15 @@ export function createApp({ fetchPage = fetchJobPage, ai, aiEn = null, allowedOr
     }
   });
 
+  app.post('/api/account/name', async (c) => {
+    const user = await currentUser(c);
+    if (!user || !accounts) return c.json({ error: 'Session expirée. Reconnectez-vous.' }, 401);
+    const name = String((await body(c)).name ?? '').trim();
+    if (name.length < 1 || name.length > 60) return c.json({ error: 'Indiquez un prénom (60 caractères au plus).' }, 400);
+    const updated = await accounts.setName(user.id, name);
+    return updated ? c.json({ user: publicUser(updated) }) : c.json({ error: 'Compte introuvable.' }, 404);
+  });
+
   app.post('/api/account/password', async (c) => {
     if (!(await allowAuth(clientKey(c)))) return c.json({ error: 'Trop de tentatives. Réessayez plus tard.' }, 429);
     const user = await currentUser(c);

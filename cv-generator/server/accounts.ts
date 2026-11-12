@@ -109,6 +109,13 @@ export function createAccounts(db: Db, opts: AccountOptions) {
       return user;
     },
 
+    /** Prénom affiché (e-mails, messages) : modifiable dans Réglages. */
+    async setName(userId: number, name: string): Promise<User | null> {
+      const clean = name.replace(/\s+/g, ' ').trim().slice(0, 60);
+      const [row] = await db.query<User>(`update users set name = $2 where id = $1 returning ${USER_COLUMNS}`, [userId, clean]);
+      return row ?? null;
+    },
+
     async setPassword(userId: number, password: string): Promise<void> {
       await db.query('update users set password_hash = $2 where id = $1', [userId, await hashPassword(password)]);
     },

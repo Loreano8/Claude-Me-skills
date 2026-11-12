@@ -1124,9 +1124,13 @@ export const EN: Record<string, string> = {
   "Votre appli est à jour.": "Your app is up to date.",
   "Vérification impossible pour le moment. Vérifiez votre connexion internet.": "Can’t check right now. Check your internet connection.",
   "Réglages": "Settings",
-  "Langue de l’appli, version et mises à jour.": "App language, version and updates.",
   "Version et mises à jour": "Version and updates",
-  "Langue du site.": "Site language.",
+  "Mon compte": "My account",
+  "Connectez-vous pour gérer votre prénom, votre mot de passe et vos crédits.": "Sign in to manage your first name, password and credits.",
+  "Prénom enregistré.": "First name saved.",
+  "Connecté avec : {0}": "Signed in as: {0}",
+  "Mon compte et sécurité": "My account and security",
+  "Compte, mot de passe, langue, confidentialité.": "Account, password, language, privacy.",
 
   // Messages du serveur (erreurs, veille) : traduits à l’envoi quand l’interface est en anglais.
   "Fichier trop volumineux (15 Mo maximum).": "File too large (15 MB maximum).",
@@ -1232,4 +1236,5 @@ export const EN: Record<string, string> = {
   "Le contenu est trop long pour être traité en une fois.": "The content is too long to process in one go.",
   "Réponse inattendue. Réessayez.": "Unexpected response. Try again.",
   "Pas de nouvelle offre depuis le dernier envoi. La veille continue.": "No new offers since the last email. Your alerts keep running.",
+  "Indiquez un prénom (60 caractères au plus).": "Enter a first name (60 characters at most).",
 };

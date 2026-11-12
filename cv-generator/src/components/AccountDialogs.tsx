@@ -1,6 +1,6 @@
 import { useEffect, useState, type FormEvent, type ReactNode } from 'react';
 import { Capacitor } from '@capacitor/core';
-import { Check, Copy, Gift, LogOut, Share2, ShieldCheck, UserRound, X, Zap } from 'lucide-react';
+import { Check, Copy, Gift, Settings, Share2, ShieldCheck, UserRound, X, Zap } from 'lucide-react';
 import { useAccount, type Pack } from '../lib/account.ts';
 import { api, refreshAccount } from '../lib/api.ts';
 import { clearReferral, pendingReferral, referralLink } from '../lib/referral.ts';
@@ -201,7 +201,7 @@ const PRICES: [string, string][] = [
 ];
 
 /** « Mes crédits » : phrase ou question secrète (récupération du compte) et changement de mot de passe. */
-function AccountSecurity({ onboarding = false, onSaved }: { onboarding?: boolean; onSaved?: () => void } = {}) {
+export function AccountSecurity({ onboarding = false, onSaved }: { onboarding?: boolean; onSaved?: () => void } = {}) {
   const [secretSet, setSecretSet] = useState<boolean | null>(null);
   const [savedQuestion, setSavedQuestion] = useState<string | null>(null);
   const [kind, setKind] = useState<'phrase' | 'question'>('phrase');
@@ -513,7 +513,7 @@ export function offerEnd(iso: string): string {
 }
 
 function CreditsDialog() {
-  const { user, dialogReason, close, logout } = useAccount();
+  const { user, dialogReason, close } = useAccount();
   const [packs, setPacks] = useState<Pack[] | null>(null);
   const [paymentsOn, setPaymentsOn] = useState(true);
   const [busy, setBusy] = useState<string | null>(null);
@@ -631,18 +631,19 @@ function CreditsDialog() {
           <Notice tone="error">{error}</Notice>
         </div>
       )}
-      {user && <AccountSecurity />}
       {user && <ReferralCard />}
+      {/* Compte (prénom, mot de passe, phrase secrète, déconnexion) : dans Réglages. */}
       {user && (
         <button
           type="button"
           onClick={() => {
-            logout();
             close();
+            window.location.hash = 'reglages';
           }}
-          className="mt-5 flex items-center gap-1.5 text-sm text-slate-500 hover:text-slate-800"
+          className="mt-5 flex min-h-11 items-center gap-1.5 text-sm font-semibold text-brand-700 hover:text-brand-800"
         >
-          <LogOut className="size-4" /> {' '}{t('Se déconnecter')}</button>
+          <Settings className="size-4" aria-hidden="true" /> {t('Mon compte et sécurité')}
+        </button>
       )}
     </Modal>
   );

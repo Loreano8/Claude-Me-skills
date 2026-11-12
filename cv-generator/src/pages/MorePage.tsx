@@ -1,4 +1,4 @@
-import { BellRing, BookOpen, Settings, ChevronRight, ClipboardList, CreditCard, FileStack, FolderOpen, Link2, Mail, MessageCircle, Mic, PlayCircle, ScanLine, ShieldCheck, Bitcoin } from 'lucide-react';
+import { BellRing, BookOpen, Settings, ChevronRight, ClipboardList, CreditCard, FileStack, FolderOpen, Link2, Mail, MessageCircle, Mic, PlayCircle, ScanLine, Bitcoin } from 'lucide-react';
 import { Capacitor } from '@capacitor/core';
 import type { Tab } from '../App.tsx';
 import { PUBLIC_SITE } from '../lib/referral.ts';
@@ -34,8 +34,7 @@ const GROUPS: { title: string; entries: Entry[] }[] = [
       { icon: PlayCircle, title: t('Tutoriel en vidéo'), text: t('Tout CVCasa expliqué en 2 minutes.'), href: `${SITE}/tutoriel/tutoriel.mp4` },
       { icon: BookOpen, title: t('Guides et exemples'), text: LANG === 'en' ? 'CV tips by job, by country, and for the letter (in French).' : 'Conseils de CV par métier, par pays, et pour la lettre.', href: `${SITE}/guides/` },
       { icon: MessageCircle, title: t('Nous contacter'), text: t('Une question, un souci : nous répondons ici.'), tab: 'contact' },
-      { icon: Settings, title: t('Réglages'), text: Capacitor.isNativePlatform() ? t('Langue de l’appli, version et mises à jour.') : t('Langue du site.'), tab: 'reglages' },
-      { icon: ShieldCheck, title: t('Confidentialité'), text: t('Ce que deviennent vos données.'), tab: 'confidentialite' },
+      { icon: Settings, title: t('Réglages'), text: t('Compte, mot de passe, langue, confidentialité.'), tab: 'reglages' },
     ],
   },
 ];

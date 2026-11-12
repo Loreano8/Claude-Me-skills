@@ -279,7 +279,7 @@ export default function App() {
         {tab === 'lettre' && <LetterPage onNavigate={setTab} />}
         {tab === 'suivi' && <ApplicationsPage onNavigate={setTab} />}
         {tab === 'veille' && <WatchPage onNavigate={setTab} />}
-        {tab === 'reglages' && <SettingsPage />}
+        {tab === 'reglages' && <SettingsPage onNavigate={setTab} />}
         {tab === 'documents' && <DocumentsPage onNavigate={setTab} />}
         {tab === 'dossier' && <DossierPage key="dossier" onNavigate={setTab} />}
         {tab === 'scanner' && <DossierPage key="scanner" mode="scanner" onNavigate={setTab} />}

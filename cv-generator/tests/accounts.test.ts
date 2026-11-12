@@ -41,6 +41,18 @@ describe('comptes', () => {
     expect(await accounts.refund(user.id, 'structure')).toBe(1);
   });
 
+  it('change le prénom depuis Réglages', async () => {
+    const accounts = createAccounts(await testDb(), opts);
+    const user = await accounts.register({ identifier: 'nom@b.co', password: 'secret12', name: 'Avant', ip: '1.1.1.1', device: dev() });
+    const { createApp } = await import('../server/app.ts');
+    const app = createApp({ ai: null, accounts, sessionSecret: 's', allowedOrigins: [], rateLimitPerHour: 5 });
+    const call = (name: string, lang = 'fr') =>
+      app.request('/api/account/name', { method: 'POST', headers: { 'content-type': 'application/json', authorization: `Bearer ${signToken(user.id, 's')}`, 'x-lang': lang }, body: JSON.stringify({ name }) });
+    expect((await (await call('  Prénom   Nom ')).json()).user.name).toBe('Prénom Nom');
+    expect((await accounts.get(user.id))!.name).toBe('Prénom Nom');
+    expect((await (await call('', 'en')).json()).error).toBe('Enter a first name (60 characters at most).');
+  });
+
   it('signe et vérifie les jetons de session', () => {
     const token = signToken(42, 'secret');
     expect(verifyToken(token, 'secret')).toBe(42);
