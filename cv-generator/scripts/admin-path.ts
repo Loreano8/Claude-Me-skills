@@ -2,7 +2,7 @@
 // - Sur le site en ligne, il est déplacé vers l'adresse secrète ADMIN_PATH (variable d'environnement de Render,
 //   jamais écrite dans le code) ; /admin/ affiche alors simplement l'accueil, comme une adresse inconnue.
 // - Sans ADMIN_PATH (appli Android, essais), il est retiré : l'appli n'en a pas besoin.
-import { existsSync, renameSync, rmSync } from 'node:fs';
+import { existsSync, mkdirSync, renameSync, rmSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 
 const dist = join(import.meta.dirname, '..', 'dist');
@@ -19,3 +19,11 @@ if (existsSync(from)) {
     console.log('Espace administrateur : retiré de cette construction (pas d’ADMIN_PATH).');
   }
 }
+
+// Render garde un temps les fichiers des versions précédentes : une page de remplacement à /admin/
+// écrase l'ancien espace administrateur et renvoie vers l'accueil, comme n'importe quelle adresse inconnue.
+mkdirSync(from, { recursive: true });
+writeFileSync(
+  join(from, 'index.html'),
+  '<!doctype html><html lang="fr"><head><meta charset="utf-8"><meta name="robots" content="noindex"><meta http-equiv="refresh" content="0;url=/"><title>CVCasa</title></head><body><a href="/">CVCasa</a></body></html>\n',
+);
