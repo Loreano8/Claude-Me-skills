@@ -204,6 +204,17 @@ describe('API avec comptes et crédits', async () => {
     const res = await authed(app, '/api/admin/credits', 'adm', { identifier: 'a@b.co', credits: 5 });
     expect((await res.json()).credits).toBe(6);
   });
+
+  it('bloque les essais de jeton administrateur à la chaîne', async () => {
+    const { app } = await setup();
+    const codes: number[] = [];
+    for (let i = 0; i < 25; i++) codes.push((await app.request('/api/admin/support', { headers: { authorization: `Bearer essai${i}` } })).status);
+    expect(codes.slice(0, 5)).toEqual([403, 403, 403, 403, 403]);
+    expect(codes.at(-1)).toBe(429);
+    // Le bon jeton reste accepté : seuls les essais ratés sont comptés.
+    await post(app, '/api/auth/register', { identifier: 'c@d.co', password: 'secret12' });
+    expect((await authed(app, '/api/admin/credits', 'adm', { identifier: 'c@d.co', credits: 2 })).status).toBe(200);
+  });
 });
 
 describe('corrections et modèles', () => {

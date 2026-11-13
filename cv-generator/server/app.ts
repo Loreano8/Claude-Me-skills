@@ -233,11 +233,22 @@ export function createApp({ fetchPage = fetchJobPage, ai, aiEn = null, allowedOr
     }
   });
 
+  // Espace administrateur : la page s'affiche pour tout le monde, mais aucune donnée ne sort sans le jeton secret.
+  // Comparaison à durée constante (le temps de réponse ne renseigne pas sur le jeton), et les essais ratés
+  // sont limités par adresse : impossible de deviner le jeton en essayant à la chaîne.
+  const digest = (v: string) => createHash('sha256').update(v).digest();
+  const isAdmin = (c: Context) => Boolean(adminToken) && timingSafeEqual(digest(c.req.header('authorization') ?? ''), digest(`Bearer ${adminToken}`));
+  app.use('/api/admin/*', async (c, next) => {
+    if (isAdmin(c)) return next();
+    if (!(await allowAuth(`admin:${clientKey(c)}`))) return c.json({ error: 'Trop de tentatives. Réessayez plus tard.' }, 429);
+    return c.json({ error: 'Accès refusé.' }, 403);
+  });
+
   // Ajout manuel de crédits (ex. paiement reçu directement par mobile money).
   // Compte bloqué (mot de passe oublié, sans e-mail) : l'administrateur donne un mot de passe provisoire,
   // transmis à la personne par « Nous contacter ». Elle pourra le changer ensuite.
   app.post('/api/admin/password', async (c) => {
-    if (!accounts || !adminToken || c.req.header('authorization') !== `Bearer ${adminToken}`) {
+    if (!accounts || !isAdmin(c)) {
       return c.json({ error: 'Accès refusé.' }, 403);
     }
     const body = (await c.req.json().catch(() => null)) as { identifier?: string } | null;
@@ -250,7 +261,7 @@ export function createApp({ fetchPage = fetchJobPage, ai, aiEn = null, allowedOr
   });
 
   app.post('/api/admin/credits', async (c) => {
-    if (!accounts || !adminToken || c.req.header('authorization') !== `Bearer ${adminToken}`) {
+    if (!accounts || !isAdmin(c)) {
       return c.json({ error: 'Accès refusé.' }, 403);
     }
     const body = (await c.req.json().catch(() => null)) as { identifier?: string; credits?: number } | null;
@@ -574,9 +585,6 @@ export function createApp({ fetchPage = fetchJobPage, ai, aiEn = null, allowedOr
     return ok ? c.json({ ok: true }) : c.json({ error: 'Témoignage introuvable ou déjà retiré.' }, 404);
   });
 
-  // Comparaison à durée constante : le temps de réponse ne renseigne pas sur la clé.
-  const digest = (v: string) => createHash('sha256').update(v).digest();
-  const isAdmin = (c: Context) => Boolean(adminToken) && timingSafeEqual(digest(c.req.header('authorization') ?? ''), digest(`Bearer ${adminToken}`));
 
   // Visite comptée une fois par session de navigation (aucune donnée personnelle).
   app.post('/api/visit', async (c) => {
