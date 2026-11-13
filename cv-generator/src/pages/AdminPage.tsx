@@ -537,7 +537,7 @@ function TempPassword({ token }: { token: string }) {
 
 type AdminAmbassador = { userId: number; identifier: string; name: string; status: string; momoNumber: string; momoName: string; contractVersion: string; contractSignedAt: string | null; motivation: string; createdAt: string; invited: number; buyers: number; earned: number; paid: number };
 type AdminNumberChange = { id: number; userId: number; identifier: string; legalName: string; oldNumber: string; newNumber: string; status: string; requestedAt: string; documents: number };
-type AdminPayout = { id: number; userId: number; identifier: string; amount: number; fee: number; net: number; momoNumber: string; momoName: string; status: string; requestedAt: string };
+type AdminPayout = { id: number; userId: number; identifier: string; amount: number; fee: number; net: number; momoNumber: string; momoName: string; status: string; ambassadorStatus: string; requestedAt: string };
 
 const AMB_STATUS: Record<string, string> = { pending: 'À valider', active: 'Actif', refused: 'Refusé', suspended: 'Suspendu' };
 const fcfaAdmin = (n: number) => `${n.toLocaleString('fr-FR')} FCFA`;
@@ -597,12 +597,15 @@ function Ambassadors({ token }: { token: string }) {
                 Avant de valider l’envoi, Mobile Money doit afficher le nom : <strong>{p.momoName}</strong>. Sinon, n’envoyez pas et refusez.
               </p>
               <p className="text-xs text-slate-500">Gains {fcfaAdmin(p.amount)} − frais d’envoi {fcfaAdmin(p.fee)} = {fcfaAdmin(p.net)} à envoyer.</p>
+              {p.status === 'requested' && p.ambassadorStatus !== 'active' && (
+                <p className="mt-1 font-semibold text-red-700">Ambassadeur {AMB_STATUS[p.ambassadorStatus]?.toLowerCase() ?? p.ambassadorStatus} : ne payez pas ce retrait.</p>
+              )}
               {p.status === 'requested' && (
                 <div className="mt-2 flex flex-wrap gap-2">
-                  <Button size="sm" loading={busy === `p${p.id}`} onClick={() => window.confirm(`Avez-vous bien envoyé ${fcfaAdmin(p.net)} au ${p.momoNumber}, au nom de ${p.momoName} ?`) && void act(`p${p.id}`, `/api/admin/payouts/${p.id}`, { decision: 'paid' })}>
+                  <Button size="sm" disabled={p.ambassadorStatus !== 'active'} loading={busy === `p${p.id}`} onClick={() => window.confirm(`Avez-vous bien envoyé ${fcfaAdmin(p.net)} au ${p.momoNumber}, au nom de ${p.momoName} ?`) && void act(`p${p.id}`, `/api/admin/payouts/${p.id}`, { decision: 'paid' })}>
                     Payé
                   </Button>
-                  <Button size="sm" variant="ghost" onClick={() => { const note = window.prompt('Raison du refus (visible par vous seulement) :') ?? ''; void act(`p${p.id}`, `/api/admin/payouts/${p.id}`, { decision: 'refused', note }); }}>
+                  <Button size="sm" variant="ghost" onClick={() => { const note = window.prompt('Raison du refus (affichée à l’ambassadeur) :'); if (note === null) return; void act(`p${p.id}`, `/api/admin/payouts/${p.id}`, { decision: 'refused', note }); }}>
                     Refuser
                   </Button>
                 </div>
@@ -625,7 +628,7 @@ function Ambassadors({ token }: { token: string }) {
                   <Button size="sm" loading={busy === `c${c.id}`} onClick={() => window.confirm(`Accepter le nouveau numéro ${c.newNumber} pour ${c.legalName} ?`) && void act(`c${c.id}`, `/api/admin/number-changes/${c.id}`, { approve: true })}>
                     Accepter
                   </Button>
-                  <Button size="sm" variant="ghost" onClick={() => { const note = window.prompt('Raison du refus (affichée à l’ambassadeur) :') ?? ''; void act(`c${c.id}`, `/api/admin/number-changes/${c.id}`, { approve: false, note }); }}>
+                  <Button size="sm" variant="ghost" onClick={() => { const note = window.prompt('Raison du refus (affichée à l’ambassadeur). Les justificatifs seront effacés :'); if (note === null) return; void act(`c${c.id}`, `/api/admin/number-changes/${c.id}`, { approve: false, note }); }}>
                     Refuser
                   </Button>
                 </div>
@@ -665,8 +668,8 @@ function Ambassadors({ token }: { token: string }) {
               {a.motivation && <p className="mt-1 text-slate-700 italic">« {a.motivation} »</p>}
               <div className="mt-2 flex flex-wrap gap-2">
                 {a.status !== 'active' && (
-                  <Button size="sm" loading={busy === `a${a.userId}`} onClick={() => void act(`a${a.userId}`, `/api/admin/ambassadors/${a.userId}`, { status: 'active' })}>
-                    Valider
+                  <Button size="sm" loading={busy === `a${a.userId}`} onClick={() => (a.status === 'pending' || window.confirm(`Réactiver ${a.momoName} (actuellement ${AMB_STATUS[a.status]?.toLowerCase()}) ?`)) && void act(`a${a.userId}`, `/api/admin/ambassadors/${a.userId}`, { status: 'active' })}>
+                    {a.status === 'pending' ? 'Valider' : 'Réactiver'}
                   </Button>
                 )}
                 {a.status === 'pending' && (
@@ -675,7 +678,7 @@ function Ambassadors({ token }: { token: string }) {
                   </Button>
                 )}
                 {a.status === 'active' && (
-                  <Button size="sm" variant="ghost" onClick={() => window.confirm('Suspendre cet ambassadeur ? Il ne gagnera plus rien et ne pourra plus demander de retrait tant qu’il est suspendu.') && void act(`a${a.userId}`, `/api/admin/ambassadors/${a.userId}`, { status: 'suspended' })}>
+                  <Button size="sm" variant="ghost" onClick={() => window.confirm('Suspendre cet ambassadeur ? Il ne gagnera plus rien, son retrait en attente est refusé, et il ne pourra plus demander de retrait tant qu’il est suspendu.') && void act(`a${a.userId}`, `/api/admin/ambassadors/${a.userId}`, { status: 'suspended' })}>
                     Suspendre
                   </Button>
                 )}

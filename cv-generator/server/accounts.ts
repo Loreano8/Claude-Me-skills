@@ -16,8 +16,9 @@ const newReferralCode = () => Array.from({ length: 6 }, () => CODE_ALPHABET[rand
 
 /** Code de parrainage choisi : 4 à 12 lettres ou chiffres, sans accent ni espace (il se tape et se dicte facilement). */
 export const REFERRAL_CODE_PATTERN = /^[A-Z0-9]{4,12}$/;
-/** Codes réservés : ne doivent pas faire croire à un code officiel. */
-const RESERVED_CODES = ['CVCASA', 'ADMIN', 'OFFICIEL', 'OFFICIAL', 'SUPPORT', 'GRATUIT', 'FREE', 'PROMO', 'TEST'];
+/** Codes réservés : ne doivent pas faire croire à un code officiel (début du code, ou code exact pour les mots courts). */
+const RESERVED_PREFIXES = ['CVCASA', 'ADMIN', 'OFFICIEL', 'OFFICIAL', 'SUPPORT'];
+const RESERVED_EXACT = ['GRATUIT', 'FREE', 'PROMO', 'TEST', 'CODE', 'PROMO2026'];
 /** Nombre de personnalisations possibles (chaque ancien code reste valable). */
 export const REFERRAL_CODE_CHANGES = 3;
 
@@ -84,7 +85,7 @@ export function createAccounts(db: Db, opts: AccountOptions) {
       return true;
     },
 
-    async register(input: { identifier: string; password: string; name?: string; ip: string; device: string; referralCode?: string; source?: string }): Promise<User> {
+    async register(input: { identifier: string; password: string; name?: string; ip: string; device: string; referralCode?: string; referralTyped?: boolean; source?: string }): Promise<User> {
       const identifier = normalizeIdentifier(input.identifier);
       if (!identifier) throw new AccountError('Indiquez un e-mail ou un numéro de téléphone valide.', 400);
       if (input.password.length < 8) throw new AccountError('Le mot de passe doit faire au moins 8 caractères.', 400);
@@ -93,6 +94,8 @@ export function createAccounts(db: Db, opts: AccountOptions) {
         const [existing] = await tx.query('select id from users where identifier = $1', [identifier]);
         if (existing) throw new AccountError('Un compte existe déjà avec cet identifiant. Connectez-vous.', 409);
         const device = input.device.trim().slice(0, 100);
+        // Verrou par appareil et par connexion : deux inscriptions en même temps n'obtiennent pas chacune le crédit offert.
+        await tx.query('select pg_advisory_xact_lock(hashtext($1)), pg_advisory_xact_lock(hashtext($2))', [`device:${device}`, `ip:${input.ip}`]);
         const [{ n }] = await tx.query<{ n: number }>(
           `select count(*)::int as n from credit_ledger l join users u on u.id = l.user_id
            where l.reason = 'welcome'
@@ -102,7 +105,8 @@ export function createAccounts(db: Db, opts: AccountOptions) {
         const code = (input.referralCode ?? '').replace(/\s+/g, '').toUpperCase();
         const referrerId = code ? await ownerOfCode(tx, code) : null;
         // Code tapé (ou repris d'un lien) mais inconnu : on le signale plutôt que de l'ignorer.
-        if (code && !referrerId) throw new AccountError('Ce code de parrainage n’existe pas. Vérifiez-le ou laissez la case vide.', 400);
+        // Anciennes versions de l'appli (pas de champ visible) : un code périmé gardé en mémoire est ignoré, pour ne pas bloquer l'inscription.
+        if (code && !referrerId && input.referralTyped) throw new AccountError('Ce code de parrainage n’existe pas. Vérifiez-le ou laissez la case vide.', 400);
         const referrer = referrerId ? { id: referrerId } : undefined;
         const [user] = await tx.query<User>(
           `insert into users (identifier, name, password_hash, signup_ip, signup_device, referred_by, signup_source) values ($1, $2, $3, $4, $5, $6, $7) returning ${USER_COLUMNS}`,
@@ -182,9 +186,11 @@ export function createAccounts(db: Db, opts: AccountOptions) {
     async setReferralCode(userId: number, raw: string): Promise<string> {
       const code = raw.replace(/\s+/g, '').toUpperCase();
       if (!REFERRAL_CODE_PATTERN.test(code)) throw new AccountError('Choisissez un code de 4 à 12 lettres ou chiffres, sans espace ni accent.', 400);
-      if (RESERVED_CODES.some((r) => code.includes(r))) throw new AccountError('Ce code est réservé. Choisissez-en un autre.', 400);
+      if (RESERVED_PREFIXES.some((r) => code.startsWith(r)) || RESERVED_EXACT.includes(code)) throw new AccountError('Ce code est réservé. Choisissez-en un autre.', 400);
       await this.referral(userId); // garantit un code actuel
       return db.transaction(async (tx) => {
+        // Deux personnes qui veulent le même code au même moment : la seconde reçoit « déjà pris », pas une erreur.
+        await tx.query('select pg_advisory_xact_lock(hashtext($1))', [`code:${code}`]);
         const [me] = await tx.query<{ referral_code: string }>('select referral_code from users where id = $1 for update', [userId]);
         if (me.referral_code === code) return code;
         const owner = await ownerOfCode(tx, code);

@@ -75,7 +75,9 @@ export function uiLang(c: Context): UiLang {
 }
 
 function clientKey(c: Context): string {
-  return c.req.header('x-forwarded-for')?.split(',')[0]?.trim() || c.req.header('x-real-ip') || 'local';
+  // Le serveur en ligne est derrière Cloudflare : cf-connecting-ip est posé par Cloudflare et ne peut pas être
+  // inventé par le client (contrairement au début de x-forwarded-for, qu'un client peut remplir lui-même).
+  return c.req.header('cf-connecting-ip')?.trim() || c.req.header('x-forwarded-for')?.split(',')[0]?.trim() || c.req.header('x-real-ip') || 'local';
 }
 
 const Credentials = z.object({
@@ -83,6 +85,8 @@ const Credentials = z.object({
   password: z.string().max(200),
   name: z.string().max(80).optional(),
   referralCode: z.string().max(20).optional(),
+  /** Le code a été montré à la personne (champ visible) : un code inconnu est alors signalé au lieu d'être ignoré. */
+  referralTyped: z.boolean().optional(),
   /** Provenance du visiteur (lien de pub ?src=…). */
   source: z.string().max(60).optional(),
 });
@@ -214,7 +218,7 @@ export function createApp({ fetchPage = fetchJobPage, ai, aiEn = null, allowedOr
     if (!payments || !ref) return c.redirect(`${site}/#paiement-error`);
     try {
       const { status } = await payments.confirm(ref);
-      const outcome = status === 'approved' || status === 'pending' ? status : 'failed';
+      const outcome = status === 'approved' || status === 'transferred' ? 'approved' : status === 'pending' ? 'pending' : 'failed';
       return c.redirect(`${site}/#paiement-${outcome}`);
     } catch (error) {
       console.error(error);
@@ -338,7 +342,7 @@ export function createApp({ fetchPage = fetchJobPage, ai, aiEn = null, allowedOr
     const b = (await c.req.json().catch(() => null)) as { code?: string } | null;
     try {
       const s = await ambassadors.summary(user.id);
-      if (s.status !== 'active' && s.status !== 'pending') return c.json({ error: 'Le code personnalisé est réservé aux ambassadeurs.' }, 403);
+      if (s.status !== 'active') return c.json({ error: 'Le code personnalisé est réservé aux ambassadeurs validés.' }, 403);
       const code = await accounts.setReferralCode(user.id, String(b?.code ?? ''));
       return c.json({ ...s, code });
     } catch (error) {

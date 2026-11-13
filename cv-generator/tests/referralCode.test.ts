@@ -8,7 +8,7 @@ describe('codes de parrainage', () => {
     let i = 0;
     const person = (referralCode?: string) => {
       const n = ++i;
-      return accounts.register({ identifier: `r${n}@ex.com`, password: 'secret12', ip: `10.1.0.${n}`, device: `device-${n}-xxxxxxxx`, referralCode });
+      return accounts.register({ identifier: `r${n}@ex.com`, password: 'secret12', ip: `10.1.0.${n}`, device: `device-${n}-xxxxxxxx`, referralCode, referralTyped: true });
     };
     return { accounts, person };
   }

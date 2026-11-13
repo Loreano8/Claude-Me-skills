@@ -205,8 +205,9 @@ describe('parrainage', () => {
 
   it('signale un code inconnu (la personne corrige ou vide la case)', async () => {
     const accounts = createAccounts(await testDb(), opts);
-    await expect(accounts.register({ identifier: 'z@x.co', password: 'secret12', ip: '3.3.3.3', device: dev(), referralCode: 'NOPE42' })).rejects.toMatchObject({ status: 400 });
-    const u = await accounts.register({ identifier: 'z@x.co', password: 'secret12', ip: '3.3.3.3', device: dev(), referralCode: '' });
+    await expect(accounts.register({ identifier: 'z@x.co', password: 'secret12', ip: '3.3.3.3', device: dev(), referralCode: 'NOPE42', referralTyped: true })).rejects.toMatchObject({ status: 400 });
+    // Ancienne appli (code gardé en mémoire, pas de champ visible) : ignoré, l'inscription passe.
+    const u = await accounts.register({ identifier: 'z@x.co', password: 'secret12', ip: '3.3.3.3', device: dev(), referralCode: 'NOPE42' });
     expect(u.credits).toBe(1);
   });
 });

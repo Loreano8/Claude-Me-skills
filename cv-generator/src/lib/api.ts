@@ -143,7 +143,7 @@ export const api = {
   resetPassword: (identifier: string, code: string, password: string) => post<Session>('/api/auth/reset', { identifier, code, password }),
 
   register: (identifier: string, password: string, name: string, referralCode?: string | null, captcha = '') =>
-    post<Session>('/api/auth/register', { identifier, password, name, captcha, ...(referralCode ? { referralCode } : {}), ...(pendingSource() ? { source: pendingSource() } : {}) }),
+    post<Session>('/api/auth/register', { identifier, password, name, captcha, ...(referralCode ? { referralCode, referralTyped: true } : {}), ...(pendingSource() ? { source: pendingSource() } : {}) }),
   referral: () => request<{ code: string; invited: number; rewarded: number; bonus: number }>('GET', '/api/referral'),
   ambassador: () => request<AmbassadorInfo>('GET', '/api/ambassador'),
   ambassadorApply: (form: { firstName: string; lastName: string; momoNumber: string; motivation: string; contractVersion: string; accept: boolean; signature: string; signatureImage: string }) =>
@@ -234,7 +234,7 @@ export interface AmbassadorInfo {
   rules: { signupReward: number; signupRewardLimit: number; firstPurchaseReward: number; commissionPercent: number; commissionMonths: number; holdDays: number; minPayout: number; monthlyCap: number; payoutFeePercent: number };
   stats: { invited: number; signupsRewarded: number; buyers: number };
   earnings: { pending: number; available: number; requested: number; paid: number };
-  payouts: { id: number; amount: number; fee: number; net: number; status: string; requestedAt: string; decidedAt: string | null }[];
+  payouts: { id: number; amount: number; fee: number; net: number; status: string; note: string; requestedAt: string; decidedAt: string | null }[];
 }
 
 export interface PublicTestimonial {

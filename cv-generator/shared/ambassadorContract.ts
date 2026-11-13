@@ -26,15 +26,15 @@ const fe = (n: number) => `${n.toLocaleString('en-GB')} FCFA`;
 export function ambassadorContract(lang: 'fr' | 'en', r: ContractNumbers): ContractSection[] {
   if (lang === 'en') {
     return [
-      { title: '1. Parties', text: ['This agreement is between CVCasa (cvcasa.com), the service publisher, and the person identified below by their legal first and last names (“the Ambassador”). The French version of this agreement prevails.'] },
+      { title: '1. Parties', text: ['This agreement is between the publisher of CVCasa (cvcasa.com), reachable through “Contact us” in the app, and the person identified below by their legal first and last names (“the Ambassador”). The Ambassador declares they are at least 18 years old and legally able to enter into this agreement. The French version of this agreement prevails.'] },
       { title: '2. Purpose', text: ['The Ambassador recommends CVCasa to people around them using their personal link. In return, they receive the rewards described below. The Ambassador acts independently: this agreement is neither an employment contract nor an exclusive agency, and does not entitle them to act or sign on behalf of CVCasa.'] },
       {
         title: '3. Rewards',
         text: [
-          `${fe(r.signupReward)} for each new person who signs up through the link and creates their first CV, for the Ambassador's first ${r.signupRewardLimit} referrals only.`,
+          `${fe(r.signupReward)} for each new person who signs up through the link and creates their first CV, for the Ambassador's first ${r.signupRewardLimit} referrals only, and only if that person uses neither the Ambassador's phone nor the same internet connection.`,
           `${fe(r.firstPurchaseReward)} when a referred person makes their first purchase, then ${r.commissionPercent}% of each of their purchases for ${r.commissionMonths} months after they sign up.`,
           `Earnings become available ${r.holdDays} days after the sign-up or purchase. They are capped at ${fe(r.monthlyCap)} per month.`,
-          'Nothing is due for an account created by the Ambassador themself, on their own phone, or for a person who was already a customer.',
+          'Nothing is due for an account created by the Ambassador themself or on their own phone, for a person who signed up before the Ambassador was approved, or for a purchase that is refunded or cancelled.',
         ],
       },
       {
@@ -56,21 +56,21 @@ export function ambassadorContract(lang: 'fr' | 'en', r: ContractNumbers): Contr
       },
       { title: '6. Fraud and sanctions', text: ['In the event of fraud or breach of these commitments, CVCasa may suspend the account, cancel earnings not yet paid and end this agreement. Earnings obtained by fraud must be repaid.'] },
       { title: '7. Taxes', text: ['The Ambassador is responsible for declaring the income received under this agreement, according to the rules of their country.'] },
-      { title: '8. Personal data', text: ['CVCasa keeps the Ambassador’s legal name, Mobile Money number, signature of this agreement, referral statistics and payment history, in order to run the programme and pay the rewards. Documents sent to change the payment number are deleted once the request has been processed. The Ambassador can ask to see or correct this data via “Contact us”.'] },
-      { title: '9. Duration and changes', text: ['This agreement starts when CVCasa approves the application, for an indefinite period. Either party may end it at any time; earnings already available remain payable. CVCasa may change or end the programme: any change applies only after the Ambassador has been informed, and earnings already available remain payable.'] },
+      { title: '8. Personal data', text: ['CVCasa keeps the Ambassador’s legal name, Mobile Money number, the signature of this agreement (typed name, drawn signature, date and internet address), referral statistics and payment history, in order to run the programme and pay the rewards. Documents sent to change the payment number are deleted once the request has been processed. The Ambassador can ask to see or correct this data via “Contact us”.'] },
+      { title: '9. Duration and changes', text: ['This agreement starts when CVCasa approves the application, for an indefinite period. Either party may end it at any time. CVCasa may change or end the programme: any change applies only after the Ambassador has been informed. Except in case of fraud, earnings already available remain payable: when the agreement ends, amounts below the withdrawal threshold are paid on request via “Contact us”.'] },
       { title: '10. Applicable law', text: ['This agreement is governed by Beninese law. The parties will first seek an amicable solution through “Contact us”.'] },
     ];
   }
   return [
-    { title: '1. Les parties', text: ['Ce contrat est conclu entre CVCasa (cvcasa.com), éditeur du service, et la personne identifiée ci-dessous par ses nom et prénoms légaux (« l’Ambassadeur »).'] },
+    { title: '1. Les parties', text: ['Ce contrat est conclu entre l’éditeur de CVCasa (cvcasa.com), joignable depuis « Nous contacter » dans l’application, et la personne identifiée ci-dessous par ses nom et prénoms légaux (« l’Ambassadeur »). L’Ambassadeur déclare avoir au moins 18 ans et la capacité de signer ce contrat.'] },
     { title: '2. Objet', text: ['L’Ambassadeur recommande CVCasa autour de lui grâce à son lien personnel. En échange, il reçoit les rémunérations décrites ci-dessous. L’Ambassadeur agit de façon indépendante : ce contrat n’est ni un contrat de travail ni un mandat exclusif, et ne lui permet pas d’agir ou de signer au nom de CVCasa.'] },
     {
       title: '3. Rémunération',
       text: [
-        `${f(r.signupReward)} pour chaque nouvelle personne qui s’inscrit par le lien et crée son premier CV, pour les ${r.signupRewardLimit} premiers filleuls de l’Ambassadeur seulement.`,
+        `${f(r.signupReward)} pour chaque nouvelle personne qui s’inscrit par le lien et crée son premier CV, pour les ${r.signupRewardLimit} premiers filleuls de l’Ambassadeur seulement, à condition qu’elle n’utilise ni le téléphone ni la connexion internet de l’Ambassadeur.`,
         `${f(r.firstPurchaseReward)} au premier achat d’un filleul, puis ${r.commissionPercent} % de chacun de ses achats pendant ${r.commissionMonths} mois après son inscription.`,
         `Les gains deviennent disponibles ${r.holdDays} jours après l’inscription ou l’achat. Ils sont plafonnés à ${f(r.monthlyCap)} par mois.`,
-        'Rien n’est dû pour un compte créé par l’Ambassadeur lui-même, sur son propre téléphone, ni pour une personne qui était déjà cliente.',
+        'Rien n’est dû pour un compte créé par l’Ambassadeur lui-même ou sur son propre téléphone, pour une personne inscrite avant la validation de l’Ambassadeur, ni pour un achat remboursé ou annulé.',
       ],
     },
     {
@@ -92,8 +92,8 @@ export function ambassadorContract(lang: 'fr' | 'en', r: ContractNumbers): Contr
     },
     { title: '6. Fraude et sanctions', text: ['En cas de fraude ou de manquement à ces engagements, CVCasa peut suspendre le compte, annuler les gains non encore versés et mettre fin à ce contrat. Les gains obtenus par fraude doivent être remboursés.'] },
     { title: '7. Fiscalité', text: ['L’Ambassadeur est responsable de la déclaration des revenus perçus au titre de ce contrat, selon les règles de son pays.'] },
-    { title: '8. Données personnelles', text: ['CVCasa conserve les nom et prénoms légaux de l’Ambassadeur, son numéro Mobile Money, la signature de ce contrat, les statistiques de parrainage et l’historique des paiements, pour gérer le programme et verser les gains. Les justificatifs envoyés pour changer de numéro sont supprimés une fois la demande traitée. L’Ambassadeur peut demander à consulter ou corriger ces données depuis « Nous contacter ».'] },
-    { title: '9. Durée et modifications', text: ['Le contrat commence à la validation de la demande par CVCasa, pour une durée indéterminée. Chaque partie peut y mettre fin à tout moment ; les gains déjà disponibles restent dus. CVCasa peut faire évoluer ou arrêter le programme : toute modification ne s’applique qu’après en avoir informé l’Ambassadeur, et les gains déjà disponibles restent dus.'] },
+    { title: '8. Données personnelles', text: ['CVCasa conserve les nom et prénoms légaux de l’Ambassadeur, son numéro Mobile Money, la signature de ce contrat (nom tapé, signature dessinée, date et adresse internet), les statistiques de parrainage et l’historique des paiements, pour gérer le programme et verser les gains. Les justificatifs envoyés pour changer de numéro sont supprimés une fois la demande traitée. L’Ambassadeur peut demander à consulter ou corriger ces données depuis « Nous contacter ».'] },
+    { title: '9. Durée et modifications', text: ['Le contrat commence à la validation de la demande par CVCasa, pour une durée indéterminée. Chaque partie peut y mettre fin à tout moment. CVCasa peut faire évoluer ou arrêter le programme : toute modification ne s’applique qu’après en avoir informé l’Ambassadeur. Sauf fraude, les gains déjà disponibles restent dus : à la fin du contrat, ceux sous le seuil de retrait sont versés sur demande via « Nous contacter ».'] },
     { title: '10. Droit applicable', text: ['Ce contrat est soumis au droit béninois. Les parties chercheront d’abord une solution à l’amiable via « Nous contacter ».'] },
   ];
 }

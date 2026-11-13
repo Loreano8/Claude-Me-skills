@@ -102,8 +102,8 @@ export function createPayments(db: Db, accounts: Accounts, provider: PaymentProv
   async function returnOffer(user: User, now = new Date()): Promise<ReturnOffer> {
     const [row] = await db.query<{ until: Date | string | null; used: boolean; last_purchase: Date | string | null; last_activity: Date | string | null }>(
       `select u.return_offer_until as until,
-         exists (select 1 from payments p where p.user_id = u.id and p.pack_id = $2 and p.status = 'approved') as used,
-         (select max(p.created_at) from payments p where p.user_id = u.id and p.status = 'approved') as last_purchase,
+         exists (select 1 from payments p where p.user_id = u.id and p.pack_id = $2 and p.status in ('approved', 'transferred')) as used,
+         (select max(p.created_at) from payments p where p.user_id = u.id and p.status in ('approved', 'transferred')) as last_purchase,
          (select max(l.created_at) from credit_ledger l where l.user_id = u.id) as last_activity
        from users u where u.id = $1`,
       [user.id, RETURN_PACK.id],
@@ -159,15 +159,36 @@ export function createPayments(db: Db, accounts: Accounts, provider: PaymentProv
           [provider.name, ref],
         );
         if (!payment) throw new PaymentError('Paiement introuvable.', 404);
-        if (payment.status === 'approved' || status === payment.status) {
+        // « transferred » (argent déjà reversé par FedaPay) vaut paiement réussi.
+        const paid = (x: string) => x === 'approved' || x === 'transferred';
+        if (paid(payment.status) && (status === 'refunded' || status === 'canceled')) {
+          // Remboursé après coup : on reprend les crédits encore disponibles et on annule les gains d'ambassadeur liés.
+          await tx.query('update payments set status = $2, updated_at = now() where id = $1', [payment.id, status]);
+          const [{ credits: left }] = await tx.query<{ credits: number }>('select credits from users where id = $1 for update', [payment.user_id]);
+          const back = Math.min(left, payment.credits);
+          if (back > 0) await accounts.addCreditsInTx(tx, payment.user_id, -back, 'purchase-reversed', `${provider.name}:${ref}`);
+          await ambassadors?.onPaymentReversedInTx(tx, payment.id);
+          return { status, userId: payment.user_id };
+        }
+        if (paid(payment.status) || status === payment.status) {
           return { status: payment.status as PaymentStatus, userId: payment.user_id };
         }
         await tx.query('update payments set status = $2, updated_at = now() where id = $1', [payment.id, status]);
-        if (status !== 'approved') return { status, userId: payment.user_id };
+        if (!paid(status)) return { status, userId: payment.user_id };
         await accounts.addCreditsInTx(tx, payment.user_id, payment.credits, 'purchase', `${provider.name}:${ref}`);
         await accounts.rewardReferralInTx(tx, payment.user_id);
         // Programme Ambassadeur : prime et pourcentage pour l'ambassadeur du filleul (s'il y en a un, actif).
-        await ambassadors?.onPurchaseInTx(tx, payment.user_id, payment.id, payment.amount);
+        // Isolé : une erreur ici ne doit jamais priver le client de ses crédits.
+        if (ambassadors) {
+          await tx.query('savepoint ambassador');
+          try {
+            await ambassadors.onPurchaseInTx(tx, payment.user_id, payment.id, payment.amount);
+            await tx.query('release savepoint ambassador');
+          } catch (error) {
+            await tx.query('rollback to savepoint ambassador');
+            console.error('Ambassadeur (achat)', error);
+          }
+        }
         const [{ credits }] = await tx.query<{ credits: number }>('select credits from users where id = $1', [payment.user_id]);
         return { status, credits, userId: payment.user_id };
       });

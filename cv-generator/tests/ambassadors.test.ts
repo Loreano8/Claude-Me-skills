@@ -18,10 +18,11 @@ async function setup() {
   const ambassadors = createAmbassadors(db, () => new Date(clock.t));
   const accounts = createAccounts(db, { freeCredits: 1, freeIpCooldownDays: 0 });
   let n = 0;
+  const status = { value: 'approved' };
   const provider: PaymentProvider = {
     name: 'fake',
     createCheckout: async () => ({ ref: `tx-${++n}`, url: 'https://pay.example' }),
-    fetchStatus: async () => 'approved' as never,
+    fetchStatus: async () => status.value as never,
   };
   const payments = createPayments(db, accounts, provider, ambassadors);
   let seq = 0;
@@ -42,7 +43,7 @@ async function setup() {
     await payments.checkout(user, pack, 'x');
     return payments.confirm(`tx-${n}`);
   };
-  return { db, clock, ambassadors, accounts, person, ambassador, buy };
+  return { db, clock, ambassadors, accounts, payments, status, person, ambassador, buy, lastRef: () => `tx-${n}` };
 }
 
 describe('programme Ambassadeur', () => {
@@ -206,7 +207,7 @@ describe('programme Ambassadeur', () => {
     const { clock, ambassadors, person, ambassador, buy } = await setup();
     const { a, code } = await ambassador();
     await expect(ambassadors.apply(a.id, form('+229 99 99 99 99 99'))).rejects.toMatchObject({ status: 409 });
-    const doc = (name: string) => ({ name, mediaType: 'image/jpeg', data: 'aGVsbG8=' });
+    const doc = (name: string) => ({ name, mediaType: 'image/jpeg', data: 'A'.repeat(1200) });
     await expect(ambassadors.requestNumberChange(a.id, { momoNumber: '+229 99 99 99 99 99', documents: [doc('cni.jpg')] })).rejects.toMatchObject({ status: 400 });
     for (let i = 0; i < 6; i++) await buy((await person(code)).id, 'pro');
     clock.t += (R.holdDays + 1) * DAY;
@@ -220,5 +221,72 @@ describe('programme Ambassadeur', () => {
     expect(s.momoNumber).toBe('+22999999999' + '99');
     expect((await ambassadors.requestPayout(a.id)).amount).toBe(2400);
     expect((await ambassadors.adminList()).payouts[0]).toMatchObject({ momoNumber: '+2299999999999' });
+  });
+  it('un bug du programme ne prive jamais le client de ses crédits', async () => {
+    const { db, accounts, person, ambassador, buy } = await setup();
+    const { code } = await ambassador();
+    const f = await person(code);
+    await db.query('alter table ambassador_earnings rename to ambassador_earnings_casse');
+    const r = await buy(f.id, 'essentiel');
+    expect(r.credits).toBe(1 + 3 + 1); // offert + pack + bonus filleul
+    expect((await accounts.get(f.id))!.credits).toBe(5);
+  });
+
+  it('rien pour les filleuls inscrits avant la validation, ni pour un second CV ou un second « premier achat »', async () => {
+    const { ambassadors, accounts, person, buy } = await setup();
+    const a = await person();
+    const { code } = await accounts.referral(a.id);
+    await ambassadors.apply(a.id, form());
+    const before = await person(code); // inscrit pendant que la demande est en attente
+    await buy(before.id, 'essentiel');
+    await ambassadors.setStatus(a.id, 'active');
+    expect(await ambassadors.onFirstCv(before.id)).toBe(0);
+    await buy(before.id, 'essentiel');
+    expect((await ambassadors.summary(a.id)).earnings.pending).toBe(0);
+  });
+
+  it('suspendre refuse le retrait en attente ; annuler couvre aussi les gains déjà demandés ; on ne paie pas un suspendu', async () => {
+    const { clock, ambassadors, person, ambassador, buy } = await setup();
+    const { a, code } = await ambassador();
+    for (let i = 0; i < 6; i++) await buy((await person(code)).id, 'pro');
+    clock.t += (R.holdDays + 1) * DAY;
+    const p = await ambassadors.requestPayout(a.id);
+    await ambassadors.setStatus(a.id, 'suspended');
+    expect((await ambassadors.summary(a.id)).payouts[0]).toMatchObject({ status: 'refused' });
+    await expect(ambassadors.decidePayout(p.id, 'paid')).rejects.toMatchObject({ status: 409 });
+    expect(await ambassadors.cancelUnpaid(a.id)).toBeGreaterThan(0);
+    expect((await ambassadors.summary(a.id)).earnings).toMatchObject({ pending: 0, available: 0, requested: 0, paid: 0 });
+  });
+
+  it('un achat remboursé annule les gains liés et reprend les crédits restants', async () => {
+    const { ambassadors, accounts, payments, status, person, ambassador, buy, lastRef } = await setup();
+    const { a, code } = await ambassador();
+    const f = await person(code);
+    await buy(f.id, 'candidature');
+    expect((await ambassadors.summary(a.id)).earnings.pending).toBe(250);
+    status.value = 'refunded';
+    await payments.confirm(lastRef());
+    expect((await ambassadors.summary(a.id)).earnings.pending).toBe(0);
+    expect((await accounts.get(f.id))!.credits).toBe(2); // offert + bonus filleul ; les 10 du pack repris
+  });
+
+  it('« transferred » compte comme un paiement réussi', async () => {
+    const { accounts, payments, status, person } = await setup();
+    const f = await person();
+    status.value = 'transferred';
+    await payments.checkout((await accounts.get(f.id))!, 'essentiel', 'x');
+    expect((await payments.confirm('tx-1')).credits).toBe(4);
+  });
+
+  it('pas de changement de numéro pendant un retrait ; une nouvelle version du contrat se signe', async () => {
+    const { clock, ambassadors, person, ambassador, buy } = await setup();
+    const { a, code } = await ambassador();
+    for (let i = 0; i < 6; i++) await buy((await person(code)).id, 'pro');
+    clock.t += (R.holdDays + 1) * DAY;
+    await ambassadors.requestPayout(a.id);
+    const doc = (name: string) => ({ name, mediaType: 'image/jpeg', data: 'A'.repeat(1200) });
+    await expect(ambassadors.requestNumberChange(a.id, { momoNumber: '+229 99 99 99 99 99', documents: [doc('a.jpg'), doc('b.jpg')] })).rejects.toMatchObject({ status: 409 });
+    // Même version : refusé ; ancienne version simulée : la nouvelle se signe au même nom.
+    await expect(ambassadors.apply(a.id, form())).rejects.toMatchObject({ status: 409 });
   });
 });

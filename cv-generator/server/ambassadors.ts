@@ -67,6 +67,8 @@ alter table ambassadors add column if not exists contract_signed_at timestamptz;
 alter table ambassadors add column if not exists contract_ip text not null default '';
 -- Signature dessinée à l'écran (image PNG), en plus du nom tapé.
 alter table ambassadors add column if not exists signature_image text not null default '';
+-- Date de la première validation : seuls les filleuls inscrits après rapportent quelque chose.
+alter table ambassadors add column if not exists activated_at timestamptz;
 
 -- Changement du numéro de paiement d'un ambassadeur validé : seulement sur justificatifs, vérifiés par l'administrateur.
 -- Les justificatifs sont effacés dès que la demande est traitée.
@@ -124,7 +126,7 @@ export interface AmbassadorSummary {
   rules: typeof AMBASSADOR_RULES;
   stats: { invited: number; signupsRewarded: number; buyers: number };
   earnings: { pending: number; available: number; requested: number; paid: number };
-  payouts: { id: number; amount: number; fee: number; net: number; status: string; requestedAt: string; decidedAt: string | null }[];
+  payouts: { id: number; amount: number; fee: number; net: number; status: string; note: string; requestedAt: string; decidedAt: string | null }[];
 }
 
 const cleanPhone = (v: string) => v.replace(/[^\d+]/g, '').slice(0, 20);
@@ -159,7 +161,7 @@ export function createAmbassadors(db: Db, now: () => Date = () => new Date()) {
     const [row] = await tx.query<{ ambassador_id: number; filleul_created: string }>(
       `select a.user_id as ambassador_id, f.created_at as filleul_created
        from users f join users s on s.id = f.referred_by join ambassadors a on a.user_id = s.id
-       where f.id = $1 and a.status = 'active'
+       where f.id = $1 and a.status = 'active' and a.activated_at is not null and f.created_at >= a.activated_at
          and length(f.signup_device) >= 8 and f.signup_device <> s.signup_device
          and (not $2 or f.signup_ip = '' or f.signup_ip <> s.signup_ip)`,
       [filleulId, strict],
@@ -188,12 +190,23 @@ export function createAmbassadors(db: Db, now: () => Date = () => new Date()) {
     return rows.length ? value : 0;
   }
 
+  async function refuseOpenPayouts(tx: Db, userId: number, note: string) {
+    const open = await tx.query<{ id: number }>(
+      `update ambassador_payouts set status = 'refused', note = $2, decided_at = now() where ambassador_id = $1 and status = 'requested' returning id`,
+      [userId, note],
+    );
+    for (const p of open) await tx.query(`update ambassador_earnings set status = 'pending', payout_id = null where payout_id = $1 and status = 'requested'`, [p.id]);
+  }
+
   return {
     /** Le filleul a créé son premier CV : prime d'inscription, pour les 3 premiers filleuls seulement. */
     async onFirstCv(filleulId: number): Promise<number> {
       return db.transaction(async (tx) => {
         const sponsor = await sponsorOf(tx, filleulId, true);
         if (!sponsor) return 0;
+        // Vraiment le premier CV de ce compte (une seule création enregistrée).
+        const [{ cvs }] = await tx.query<{ cvs: number }>(`select count(*)::int as cvs from credit_ledger where user_id = $1 and reason = 'structure'`, [filleulId]);
+        if (cvs > 1) return 0;
         // Verrou sur l'ambassadeur : deux filleuls en même temps ne dépassent pas la limite.
         await tx.query('select 1 from ambassadors where user_id = $1 for update', [sponsor.ambassador_id]);
         const [{ n }] = await tx.query<{ n: number }>(
@@ -209,13 +222,17 @@ export function createAmbassadors(db: Db, now: () => Date = () => new Date()) {
     async onPurchaseInTx(tx: Db, filleulId: number, paymentId: number, amount: number): Promise<number> {
       const sponsor = await sponsorOf(tx, filleulId);
       if (!sponsor) return 0;
+      // Verrou sur l'ambassadeur : deux achats en même temps ne dépassent pas le plafond mensuel.
+      await tx.query('select 1 from ambassadors where user_id = $1 for update', [sponsor.ambassador_id]);
       const ageMonths = (now().getTime() - new Date(sponsor.filleul_created).getTime()) / (30.44 * 86_400_000);
       let total = 0;
+      // Premier achat : aucun autre paiement réussi pour ce compte, et aucune prime déjà versée.
       const [{ bought }] = await tx.query<{ bought: number }>(
-        `select count(*)::int as bought from ambassador_earnings where filleul_id = $1 and kind = 'first_purchase'`,
-        [filleulId],
+        `select (select count(*)::int from payments where user_id = $1 and id <> $2 and status in ('approved', 'transferred'))
+              + (select count(*)::int from ambassador_earnings where filleul_id = $1 and kind = 'first_purchase') as bought`,
+        [filleulId, paymentId],
       );
-      if (!bought) total += await earn(tx, sponsor.ambassador_id, filleulId, 'first_purchase', R.firstPurchaseReward, null);
+      if (!bought) total += await earn(tx, sponsor.ambassador_id, filleulId, 'first_purchase', R.firstPurchaseReward, paymentId);
       if (ageMonths <= R.commissionMonths) {
         const commission = Math.floor((amount * R.commissionPercent) / 100);
         if (commission > 0) total += await earn(tx, sponsor.ambassador_id, filleulId, 'commission', commission, paymentId);
@@ -241,9 +258,20 @@ export function createAmbassadors(db: Db, now: () => Date = () => new Date()) {
       const image = String(input.signatureImage ?? '');
       if (!/^data:image\/(png|jpeg);base64,[A-Za-z0-9+/=]+$/.test(image) || image.length < 200) throw new AmbassadorError('Signez le contrat dans le cadre prévu.');
       if (image.length > 500_000) throw new AmbassadorError('Signature trop lourde : signez à nouveau dans le cadre.', 413);
-      const [current] = await db.query<{ status: string }>('select status from ambassadors where user_id = $1', [userId]);
+      const [current] = await db.query<{ status: string; contract_version: string; legal_first_name: string; legal_last_name: string }>(
+        'select status, contract_version, legal_first_name, legal_last_name from ambassadors where user_id = $1',
+        [userId],
+      );
       if (current && current.status !== 'pending' && current.status !== 'refused') {
-        throw new AmbassadorError('Votre compte ambassadeur est déjà validé. Pour changer de numéro, envoyez une demande avec justificatifs.', 409);
+        // Compte validé : seule une nouvelle version du contrat peut être signée, au même nom légal.
+        if (current.contract_version === AMBASSADOR_CONTRACT_VERSION || !sameName(`${firstName} ${lastName}`, `${current.legal_first_name} ${current.legal_last_name}`)) {
+          throw new AmbassadorError('Votre compte ambassadeur est déjà validé. Pour changer de numéro, envoyez une demande avec justificatifs.', 409);
+        }
+        await db.query(
+          `update ambassadors set contract_version = $2, contract_signature = $3, contract_signed_at = $4, contract_ip = $5, signature_image = $6 where user_id = $1`,
+          [userId, AMBASSADOR_CONTRACT_VERSION, input.signature.trim().slice(0, 120), now().toISOString(), (input.ip ?? '').slice(0, 60), image],
+        );
+        return this.summary(userId);
       }
       await db.query(
         `insert into ambassadors (user_id, momo_number, momo_name, motivation, legal_first_name, legal_last_name, contract_version, contract_signature, contract_signed_at, contract_ip, signature_image)
@@ -263,15 +291,19 @@ export function createAmbassadors(db: Db, now: () => Date = () => new Date()) {
     async requestNumberChange(userId: number, input: { momoNumber: string; documents: ChangeDocument[] }) {
       const momoNumber = cleanPhone(input.momoNumber);
       if (momoNumber.replace(/\D/g, '').length < 8) throw new AmbassadorError('Indiquez un numéro Mobile Money valide.');
-      const docs = (input.documents ?? []).filter((d) => d && typeof d.data === 'string' && DOC_TYPES.includes(d.mediaType));
+      const docs = (input.documents ?? []).filter(
+        (d) => d && typeof d.data === 'string' && DOC_TYPES.includes(d.mediaType) && d.data.length >= 1000 && /^[A-Za-z0-9+/=]+$/.test(d.data),
+      );
       if (docs.length < 2) throw new AmbassadorError('Joignez votre pièce d’identité et une preuve que le numéro est à votre nom (capture du compte Mobile Money).');
-      if (docs.length > 4 || docs.some((d) => d.data.length > 4_000_000)) throw new AmbassadorError('Fichiers trop lourds : 4 fichiers de 3 Mo au plus.', 413);
+      if (docs.length > 4 || docs.reduce((n, d) => n + d.data.length, 0) > 10_000_000) throw new AmbassadorError('Fichiers trop lourds : 7 Mo au total au plus.', 413);
       return db.transaction(async (tx) => {
         const [a] = await tx.query<{ status: string; momo_number: string }>('select status, momo_number from ambassadors where user_id = $1 for update', [userId]);
         if (!a || (a.status !== 'active' && a.status !== 'suspended')) throw new AmbassadorError('Votre compte ambassadeur n’est pas actif.', 403);
         if (cleanPhone(a.momo_number) === momoNumber) throw new AmbassadorError('C’est déjà votre numéro de paiement.');
         const [open] = await tx.query(`select 1 from ambassador_number_changes where ambassador_id = $1 and status = 'requested'`, [userId]);
         if (open) throw new AmbassadorError('Une demande de changement de numéro est déjà en cours d’examen.', 409);
+        const [paying] = await tx.query(`select 1 from ambassador_payouts where ambassador_id = $1 and status = 'requested'`, [userId]);
+        if (paying) throw new AmbassadorError('Un retrait est en cours vers votre numéro actuel. Attendez qu’il soit traité pour changer de numéro.', 409);
         const [row] = await tx.query<{ id: number }>(
           'insert into ambassador_number_changes (ambassador_id, old_number, new_number, documents) values ($1, $2, $3, $4) returning id',
           [userId, a.momo_number, momoNumber, JSON.stringify(docs.map((d) => ({ name: String(d.name).slice(0, 120), mediaType: d.mediaType, data: d.data })))],
@@ -303,8 +335,8 @@ export function createAmbassadors(db: Db, now: () => Date = () => new Date()) {
         [userId, now().toISOString()],
       );
       const get = (b: string) => sums.find((s) => s.bucket === b)?.total ?? 0;
-      const payouts = await db.query<{ id: number; amount: number; fee: number; status: string; requested_at: string; decided_at: string | null }>(
-        'select id, amount, fee, status, requested_at, decided_at from ambassador_payouts where ambassador_id = $1 order by id desc limit 20',
+      const payouts = await db.query<{ id: number; amount: number; fee: number; status: string; note: string; requested_at: string; decided_at: string | null }>(
+        'select id, amount, fee, status, note, requested_at, decided_at from ambassador_payouts where ambassador_id = $1 order by id desc limit 20',
         [userId],
       );
       return {
@@ -318,7 +350,7 @@ export function createAmbassadors(db: Db, now: () => Date = () => new Date()) {
         rules: R,
         stats: { invited: stats.invited, signupsRewarded: stats.signups, buyers: stats.buyers },
         earnings: { pending: get('pending'), available: get('available'), requested: get('requested'), paid: get('paid') },
-        payouts: payouts.map((p) => ({ id: p.id, amount: p.amount, fee: p.fee, net: p.amount - p.fee, status: p.status, requestedAt: new Date(p.requested_at).toISOString(), decidedAt: p.decided_at ? new Date(p.decided_at).toISOString() : null })),
+        payouts: payouts.map((p) => ({ id: p.id, amount: p.amount, fee: p.fee, net: p.amount - p.fee, status: p.status, note: p.note, requestedAt: new Date(p.requested_at).toISOString(), decidedAt: p.decided_at ? new Date(p.decided_at).toISOString() : null })),
       };
     },
 
@@ -334,10 +366,11 @@ export function createAmbassadors(db: Db, now: () => Date = () => new Date()) {
         if (open) throw new AmbassadorError('Un retrait est déjà en cours de traitement.', 409);
         const [changing] = await tx.query(`select 1 from ambassador_number_changes where ambassador_id = $1 and status = 'requested'`, [userId]);
         if (changing) throw new AmbassadorError('Votre changement de numéro est en cours d’examen : le retrait sera possible ensuite.', 409);
+        const at = now().toISOString();
         const [{ total }] = await tx.query<{ total: number }>(
           `select coalesce(sum(amount), 0)::int as total from ambassador_earnings
            where ambassador_id = $1 and status = 'pending' and available_at <= $2`,
-          [userId, now().toISOString()],
+          [userId, at],
         );
         if (total < R.minPayout) throw new AmbassadorError(`Le retrait est possible à partir de ${R.minPayout} FCFA disponibles.`, 400);
         const { fee, net } = payoutSplit(total);
@@ -348,7 +381,7 @@ export function createAmbassadors(db: Db, now: () => Date = () => new Date()) {
         await tx.query(
           `update ambassador_earnings set status = 'requested', payout_id = $2
            where ambassador_id = $1 and status = 'pending' and available_at <= $3`,
-          [userId, p.id, now().toISOString()],
+          [userId, p.id, at],
         );
         return { id: p.id, amount: total, fee, net };
       });
@@ -369,9 +402,9 @@ export function createAmbassadors(db: Db, now: () => Date = () => new Date()) {
          from ambassadors a join users u on u.id = a.user_id
          order by (a.status = 'pending') desc, a.created_at desc limit 200`,
       );
-      const payouts = await db.query<{ id: number; ambassador_id: number; identifier: string; amount: number; fee: number; momo_number: string; momo_name: string; status: string; requested_at: string }>(
-        `select p.id, p.ambassador_id, u.identifier, p.amount, p.fee, p.momo_number, p.momo_name, p.status, p.requested_at
-         from ambassador_payouts p join users u on u.id = p.ambassador_id
+      const payouts = await db.query<{ id: number; ambassador_id: number; identifier: string; amount: number; fee: number; momo_number: string; momo_name: string; status: string; requested_at: string; ambassador_status: string }>(
+        `select p.id, p.ambassador_id, u.identifier, p.amount, p.fee, p.momo_number, p.momo_name, p.status, p.requested_at, a.status as ambassador_status
+         from ambassador_payouts p join users u on u.id = p.ambassador_id join ambassadors a on a.user_id = p.ambassador_id
          order by (p.status = 'requested') desc, p.id desc limit 100`,
       );
       const changes = await db.query<{ id: number; ambassador_id: number; identifier: string; momo_name: string; old_number: string; new_number: string; status: string; created_at: string; docs: number }>(
@@ -383,15 +416,24 @@ export function createAmbassadors(db: Db, now: () => Date = () => new Date()) {
       return {
         numberChanges: changes.map((c) => ({ id: c.id, userId: c.ambassador_id, identifier: c.identifier, legalName: c.momo_name, oldNumber: c.old_number, newNumber: c.new_number, status: c.status, requestedAt: new Date(c.created_at).toISOString(), documents: Number(c.docs) })),
         ambassadors: rows.map((r) => ({ userId: r.user_id, identifier: r.identifier, name: r.name, status: r.status, momoNumber: r.momo_number, momoName: r.momo_name, contractVersion: r.contract_version, contractSignedAt: r.contract_signed_at ? new Date(r.contract_signed_at).toISOString() : null, motivation: r.motivation, createdAt: new Date(r.created_at).toISOString(), invited: r.invited, buyers: r.buyers, earned: r.earned, paid: r.paid })),
-        payouts: payouts.map((p) => ({ id: p.id, userId: p.ambassador_id, identifier: p.identifier, amount: p.amount, fee: p.fee, net: p.amount - p.fee, momoNumber: p.momo_number, momoName: p.momo_name, status: p.status, requestedAt: new Date(p.requested_at).toISOString() })),
+        payouts: payouts.map((p) => ({ id: p.id, userId: p.ambassador_id, identifier: p.identifier, amount: p.amount, fee: p.fee, net: p.amount - p.fee, momoNumber: p.momo_number, momoName: p.momo_name, status: p.status, ambassadorStatus: p.ambassador_status, requestedAt: new Date(p.requested_at).toISOString() })),
       };
     },
 
     async setStatus(userId: number, status: AmbassadorStatus) {
       if (!['pending', 'active', 'refused', 'suspended'].includes(status)) throw new AmbassadorError('Statut inconnu.');
       if (!Number.isInteger(userId)) throw new AmbassadorError('Ambassadeur introuvable.', 404);
-      const rows = await db.query('update ambassadors set status = $2, decided_at = now() where user_id = $1 returning user_id', [userId, status]);
-      if (!rows.length) throw new AmbassadorError('Ambassadeur introuvable.', 404);
+      return db.transaction(async (tx) => {
+        const rows = await tx.query(
+          `update ambassadors set status = $2, decided_at = now(),
+             activated_at = case when $2 = 'active' then coalesce(activated_at, now()) else activated_at end
+           where user_id = $1 returning user_id`,
+          [userId, status],
+        );
+        if (!rows.length) throw new AmbassadorError('Ambassadeur introuvable.', 404);
+        // Suspendu ou refusé : le retrait en attente est refusé, ses gains redeviennent « non versés ».
+        if (status !== 'active') await refuseOpenPayouts(tx, userId, 'Compte ambassadeur suspendu.');
+      });
     },
 
     /** Justificatifs d'une demande de changement de numéro (pour l'administrateur). */
@@ -417,7 +459,19 @@ export function createAmbassadors(db: Db, now: () => Date = () => new Date()) {
     /** Fraude constatée : annule les gains pas encore payés (ni demandés) de l'ambassadeur. */
     async cancelUnpaid(userId: number) {
       if (!Number.isInteger(userId)) throw new AmbassadorError('Ambassadeur introuvable.', 404);
-      const rows = await db.query(`update ambassador_earnings set status = 'cancelled' where ambassador_id = $1 and status = 'pending' returning id`, [userId]);
+      return db.transaction(async (tx) => {
+        await refuseOpenPayouts(tx, userId, 'Gains annulés (fraude).');
+        const rows = await tx.query(`update ambassador_earnings set status = 'cancelled' where ambassador_id = $1 and status = 'pending' returning id`, [userId]);
+        return rows.length;
+      });
+    },
+
+    /** Achat remboursé ou annulé après coup : les gains liés à ce paiement, pas encore versés, sont annulés. */
+    async onPaymentReversedInTx(tx: Db, paymentId: number) {
+      const rows = await tx.query(
+        `update ambassador_earnings set status = 'cancelled' where payment_id = $1 and status in ('pending', 'requested') returning payout_id`,
+        [paymentId],
+      );
       return rows.length;
     },
 
@@ -425,12 +479,16 @@ export function createAmbassadors(db: Db, now: () => Date = () => new Date()) {
     async decidePayout(payoutId: number, decision: 'paid' | 'refused', note = '') {
       if (!Number.isInteger(payoutId)) throw new AmbassadorError('Retrait introuvable.', 404);
       return db.transaction(async (tx) => {
-        const [p] = await tx.query<{ status: string }>('select status from ambassador_payouts where id = $1 for update', [payoutId]);
+        const [p] = await tx.query<{ status: string; ambassador_status: string }>(
+          `select p.status, a.status as ambassador_status from ambassador_payouts p join ambassadors a on a.user_id = p.ambassador_id where p.id = $1 for update of p`,
+          [payoutId],
+        );
         if (!p) throw new AmbassadorError('Retrait introuvable.', 404);
         if (p.status !== 'requested') throw new AmbassadorError('Ce retrait a déjà été traité.', 409);
+        if (decision === 'paid' && p.ambassador_status !== 'active') throw new AmbassadorError('Cet ambassadeur n’est plus actif : ne payez pas ce retrait.', 409);
         await tx.query('update ambassador_payouts set status = $2, note = $3, decided_at = now() where id = $1', [payoutId, decision, note.slice(0, 300)]);
-        if (decision === 'paid') await tx.query(`update ambassador_earnings set status = 'paid' where payout_id = $1`, [payoutId]);
-        else await tx.query(`update ambassador_earnings set status = 'pending', payout_id = null where payout_id = $1`, [payoutId]);
+        if (decision === 'paid') await tx.query(`update ambassador_earnings set status = 'paid' where payout_id = $1 and status = 'requested'`, [payoutId]);
+        else await tx.query(`update ambassador_earnings set status = 'pending', payout_id = null where payout_id = $1 and status = 'requested'`, [payoutId]);
       });
     },
   };

@@ -244,7 +244,10 @@ export function AmbassadorPage() {
   const addDocs = async (files: FileList | null) => {
     setError(null);
     try {
-      const docs = await Promise.all([...(files ?? [])].map((f) => fileToAttachment(f)));
+      const list = [...(files ?? [])];
+      if (list.some((f) => !/^image\/|application\/pdf/.test(f.type))) throw new Error(t('Ajoutez des photos ou des PDF uniquement.'));
+      const docs = await Promise.all(list.map((f) => fileToAttachment(f)));
+      if (docs.some((d) => d.size > 3 * 1024 * 1024)) throw new Error(t('Chaque fichier doit faire moins de 3 Mo.'));
       setChange((c) => ({ ...c, docs: [...c.docs, ...docs.map(({ name, mediaType, data }) => ({ name, mediaType, data }))].slice(0, 4) }));
     } catch (err) {
       setError((err as Error).message);
@@ -253,6 +256,40 @@ export function AmbassadorPage() {
   return (
     <div className="mx-auto max-w-2xl space-y-4">
       {header}
+      {info.contract && !info.contract.current && (
+        <Card title={t('Nouvelle version du contrat à signer')} subtitle={t('Le contrat Ambassadeur a changé. Lisez-le et signez-le pour continuer à gagner.')}>
+          <Contract r={r} />
+          <label className="mt-3 flex min-h-11 items-start gap-2.5 text-sm text-slate-800">
+            <input type="checkbox" className="mt-1 size-4 accent-brand-600" checked={form.accept} onChange={(ev) => setForm({ ...form, accept: ev.target.checked })} />
+            <span>{t('J’ai lu le contrat Ambassadeur et je l’accepte.')}</span>
+          </label>
+          <Field className="mt-2" label={t('Signature : tapez vos prénoms et votre nom')} value={form.signature} onChange={(v) => setForm({ ...form, signature: v.slice(0, 120) })} placeholder={info.momoName} />
+          <p className="mt-3 mb-1 text-sm font-medium text-slate-700">{t('Signez dans le cadre, au doigt ou à la souris')}</p>
+          <SignaturePad value={form.signatureImage || null} onChange={(v) => setForm((f) => ({ ...f, signatureImage: v ?? '' }))} />
+          {error && <div className="mt-3"><Notice tone="error">{error}</Notice></div>}
+          <Button
+            className="mt-3"
+            icon={<FileSignature className="size-4" />}
+            loading={busy}
+            disabled={!form.accept || !form.signatureImage || !sameName(form.signature, info.momoName)}
+            onClick={() =>
+              void run(() =>
+                api.ambassadorApply({
+                  firstName: info.legalFirstName,
+                  lastName: info.legalLastName,
+                  momoNumber: info.momoNumber,
+                  motivation: '',
+                  accept: form.accept,
+                  signature: form.signature,
+                  signatureImage: form.signatureImage,
+                  contractVersion: AMBASSADOR_CONTRACT_VERSION,
+                }),
+              )
+            }
+          >
+            {t('Signer la nouvelle version')}</Button>
+        </Card>
+      )}
       <Card tour="ambassador-link" title={t('Votre lien')} subtitle={t('Chaque ami qui s’inscrit par ce lien est rattaché à vous.')}>
         <div className="flex items-center gap-2 rounded-xl bg-slate-50 px-3 py-2 ring-1 ring-slate-200">
           <span className="min-w-0 flex-1 truncate text-sm text-slate-700">{link}</span>
@@ -329,12 +366,13 @@ export function AmbassadorPage() {
         {info.payouts.length > 0 && (
           <ul className="mt-3 divide-y divide-slate-100 text-sm">
             {info.payouts.map((p) => (
-              <li key={p.id} className="flex items-center justify-between py-2">
+              <li key={p.id} className="flex flex-wrap items-center justify-between gap-x-2 py-2">
                 <span>{day(p.requestedAt)}</span>
                 <span className="font-semibold">{fcfa(p.net)}</span>
                 <span className={cx('rounded-full px-2 py-0.5 text-xs font-semibold', p.status === 'paid' ? 'bg-emerald-100 text-emerald-900' : p.status === 'refused' ? 'bg-red-50 text-red-800' : 'bg-sun-100 text-sun-900')}>
                   {p.status === 'paid' ? t('Reçu') : p.status === 'refused' ? t('Refusé') : t('En cours')}
                 </span>
+                {p.status === 'refused' && p.note && <span className="basis-full text-xs text-slate-500">{p.note}</span>}
               </li>
             ))}
           </ul>
@@ -347,7 +385,12 @@ export function AmbassadorPage() {
               {t('Changer de numéro Mobile Money')}</button>
           ) : (
             <div className="space-y-3">
-              {info.numberChange?.status === 'refused' && <Notice tone="warn">{t('Votre dernière demande de changement a été refusée. Vérifiez vos justificatifs.')}</Notice>}
+              {info.numberChange?.status === 'refused' && (
+                <Notice tone="warn">
+                  {t('Votre dernière demande de changement a été refusée. Vérifiez vos justificatifs.')}
+                  {info.numberChange.note && ` (${info.numberChange.note})`}
+                </Notice>
+              )}
               <p className="text-sm text-slate-600">{t('Pour votre sécurité, le nouveau numéro doit être à votre nom ({0}). Joignez une photo de votre pièce d’identité et une capture montrant le nom du titulaire du compte Mobile Money.', [info.momoName])}</p>
               <Field label={t('Nouveau numéro Mobile Money')} value={change.number} onChange={(v) => setChange({ ...change, number: v.slice(0, 20) })} autoComplete="tel" />
               <label className="flex min-h-11 w-fit cursor-pointer items-center gap-2 rounded-xl bg-slate-100 px-3 text-sm font-semibold text-slate-800 hover:bg-slate-200">
