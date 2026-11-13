@@ -1309,6 +1309,13 @@ export const EN: Record<string, string> = {
   "Pas encore de photo sur votre CV (facultatif).": "No photo on your CV yet (optional).",
   "Ajouter ma photo": "Add my photo",
   "Votre CV fait {0} pages. Les recruteurs préfèrent souvent une seule page : raccourcissez les expériences anciennes ou les moins utiles pour le poste, ou retirez une rubrique secondaire.": "Your CV is {0} pages long. Recruiters often prefer a single page: shorten older or less relevant experience, or remove a secondary section.",
+  "Prestige": "Prestige",
+  "Profils confirmés et cadres. Colonne bleu nuit, filets dorés, frise chronologique.": "Senior profiles and managers. Navy column, gold rules, timeline.",
+  "Horizon": "Horizon",
+  "Moderne et dynamique. Bandeau en biais, photo mise en avant, niveaux de langue.": "Modern and dynamic. Angled header, featured photo, language levels.",
+  "Atelier": "Atelier",
+  "Métiers créatifs, communication, commerce. Rubriques numérotées et monogramme.": "Creative, communication and sales roles. Numbered sections and monogram.",
+  "Sobre et haut de gamme. Nom en capitales, doubles filets, deux colonnes.": "Understated and upscale. Name in capitals, double rules, two columns.",
   // Messages du serveur (erreurs, veille) : traduits à l’envoi quand l’interface est en anglais.
   "Fichier trop volumineux (15 Mo maximum).": "File too large (15 MB maximum).",
   "Erreur interne du serveur.": "Internal server error.",

@@ -8,7 +8,7 @@ const { execFileSync } = require('child_process');
 
 const APP = 'http://localhost:5173';
 const ROOT = path.join(__dirname, '..', 'public', 'modeles');
-const IDS = ['moderne', 'classique', 'elegant', 'finance', 'ingenieur', 'creatif', 'canada', 'europass', 'concours', 'etudiant', 'executif', 'sante', 'minimal'];
+const IDS = ['moderne', 'classique', 'elegant', 'prestige', 'horizon', 'atelier', 'signature', 'finance', 'ingenieur', 'creatif', 'canada', 'europass', 'concours', 'etudiant', 'executif', 'sante', 'minimal'];
 const NO_PHOTO = ['classique', 'canada'];
 const u = () => Math.random().toString(36).slice(2, 10);
 

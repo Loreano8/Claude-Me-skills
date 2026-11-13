@@ -45,6 +45,10 @@ export const CATALOG: CatalogEntry[] = [
   { id: 'moderne', name: t('Moderne'), category: 'polyvalent', accent: '#1d4ed8', idealFor: t('La plupart des métiers. Colonne colorée avec photo.') },
   { id: 'classique', name: t('Classique ATS'), category: 'classique', accent: '#1f2937', idealFor: t('Grandes entreprises : le mieux lu par les logiciels de tri.') },
   { id: 'elegant', name: t('Élégant'), category: 'polyvalent', accent: '#0f766e', idealFor: t('Se démarquer avec sobriété. Bandeau et frise des dates.') },
+  { id: 'prestige', name: t('Prestige'), category: 'polyvalent', accent: '#b8913a', idealFor: t('Profils confirmés et cadres. Colonne bleu nuit, filets dorés, frise chronologique.') },
+  { id: 'horizon', name: t('Horizon'), category: 'creatif', accent: '#0e7490', idealFor: t('Moderne et dynamique. Bandeau en biais, photo mise en avant, niveaux de langue.') },
+  { id: 'atelier', name: t('Atelier'), category: 'creatif', accent: '#c2410c', idealFor: t('Métiers créatifs, communication, commerce. Rubriques numérotées et monogramme.') },
+  { id: 'signature', name: t('Signature'), category: 'classique', accent: '#7f1d3f', idealFor: t('Sobre et haut de gamme. Nom en capitales, doubles filets, deux colonnes.') },
   {
     id: 'finance',
     name: t('Finance'),
