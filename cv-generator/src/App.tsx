@@ -19,7 +19,6 @@ import { ExportButtons, PreviewPage } from './pages/PreviewPage.tsx';
 import { ApplicationsPage } from './pages/ApplicationsPage.tsx';
 import { LandingPage } from './pages/LandingPage.tsx';
 import { ContactPage } from './pages/ContactPage.tsx';
-import { AdminPage } from './pages/AdminPage.tsx';
 import { DossierPage } from './pages/DossierPage.tsx';
 import { WatchPage } from './pages/WatchPage.tsx';
 import { SettingsPage } from './pages/SettingsPage.tsx';
@@ -32,7 +31,7 @@ import { PrivacyPage } from './pages/PrivacyPage.tsx';
 import { refreshSupportBadge, useSupportBadge } from './lib/supportBadge.ts';
 
 import { t } from './i18n.ts';
-export type Tab = 'accueil' | 'infos' | 'apercu' | 'offre' | 'lettre' | 'plus' | 'suivi' | 'veille' | 'reglages' | 'documents' | 'dossier' | 'scanner' | 'confidentialite' | 'contact' | 'admin';
+export type Tab = 'accueil' | 'infos' | 'apercu' | 'offre' | 'lettre' | 'plus' | 'suivi' | 'veille' | 'reglages' | 'documents' | 'dossier' | 'scanner' | 'confidentialite' | 'contact';
 
 // La navigation suit le parcours : 1. le CV, 2. l'offre, 3. la lettre. Tout le reste est rangé dans « Plus ».
 type Section = 'cv' | 'offre' | 'lettre' | 'plus';
@@ -44,7 +43,7 @@ const NAV: { id: Section; tab: Tab; label: string; short: string; step?: number;
 ];
 /** Pages ouvertes depuis « Plus » : elles affichent un retour vers ce menu. */
 const MORE_PAGES: Tab[] = ['suivi', 'veille', 'reglages', 'documents', 'dossier', 'scanner', 'contact', 'confidentialite'];
-const ALL_TABS: Tab[] = ['accueil', 'admin', ...NAV.flatMap((n) => n.tabs)];
+const ALL_TABS: Tab[] = ['accueil', ...NAV.flatMap((n) => n.tabs)];
 
 const isTab = (v: string): v is Tab => ALL_TABS.includes(v as Tab);
 
@@ -374,7 +373,6 @@ export default function App() {
         {tab === 'scanner' && <DossierPage key="scanner" mode="scanner" onNavigate={setTab} />}
         {tab === 'confidentialite' && <PrivacyPage />}
         {tab === 'contact' && <ContactPage />}
-        {tab === 'admin' && <AdminPage />}
       </main>
       <Tour key={tab} tab={tab} />
 
