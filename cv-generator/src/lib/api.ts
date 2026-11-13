@@ -145,6 +145,9 @@ export const api = {
   register: (identifier: string, password: string, name: string, referralCode?: string | null, captcha = '') =>
     post<Session>('/api/auth/register', { identifier, password, name, captcha, ...(referralCode ? { referralCode } : {}), ...(pendingSource() ? { source: pendingSource() } : {}) }),
   referral: () => request<{ code: string; invited: number; rewarded: number; bonus: number }>('GET', '/api/referral'),
+  ambassador: () => request<AmbassadorInfo>('GET', '/api/ambassador'),
+  ambassadorApply: (form: { momoNumber: string; momoName: string; motivation: string }) => post<AmbassadorInfo>('/api/ambassador/apply', form),
+  ambassadorPayout: () => post<AmbassadorInfo>('/api/ambassador/payout', {}),
   login: (identifier: string, password: string) => post<Session>('/api/auth/login', { identifier, password }),
   me: () => request<{ user: AccountUser }>('GET', '/api/me'),
   health: () => request<{ ai: boolean; accounts: boolean; payments: boolean; email?: boolean; captcha?: string | null }>('GET', '/api/health'),
@@ -214,6 +217,17 @@ export async function adminRequest<T>(token: string, method: 'GET' | 'POST', pat
   const data = (await res.json().catch(() => null)) as { error?: unknown } | null;
   if (!res.ok) throw new ApiError(typeof data?.error === 'string' ? data.error : t('Erreur du serveur.'));
   return data as T;
+}
+
+export interface AmbassadorInfo {
+  status: 'pending' | 'active' | 'refused' | 'suspended' | null;
+  code: string;
+  momoNumber: string;
+  momoName: string;
+  rules: { signupReward: number; signupRewardLimit: number; firstPurchaseReward: number; commissionPercent: number; commissionMonths: number; holdDays: number; minPayout: number; monthlyCap: number };
+  stats: { invited: number; signupsRewarded: number; buyers: number };
+  earnings: { pending: number; available: number; requested: number; paid: number };
+  payouts: { id: number; amount: number; status: string; requestedAt: string; decidedAt: string | null }[];
 }
 
 export interface PublicTestimonial {

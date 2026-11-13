@@ -1,6 +1,6 @@
 import { useEffect, useState, type FormEvent, type ReactNode } from 'react';
 import { Capacitor } from '@capacitor/core';
-import { Check, Copy, Gift, LogOut, Settings, Share2, ShieldCheck, UserRound, X, Zap } from 'lucide-react';
+import { Check, Copy, Gift, HandCoins, LogOut, Settings, Share2, ShieldCheck, UserRound, X, Zap } from 'lucide-react';
 import { useAccount, type Pack } from '../lib/account.ts';
 import { api, refreshAccount } from '../lib/api.ts';
 import { clearReferral, pendingReferral, referralLink } from '../lib/referral.ts';
@@ -658,6 +658,16 @@ function CreditsDialog() {
             className="flex min-h-11 items-center gap-1.5 text-sm font-semibold text-brand-700 hover:text-brand-800"
           >
             <Settings className="size-4" aria-hidden="true" /> {t('Mon compte et sécurité')}
+          </button>
+          <button
+            type="button"
+            onClick={() => {
+              close();
+              window.location.hash = 'ambassadeur';
+            }}
+            className="flex min-h-11 items-center gap-1.5 text-sm font-semibold text-emerald-700 hover:text-emerald-800"
+          >
+            <HandCoins className="size-4" aria-hidden="true" /> {t('Gagner de l’argent')}
           </button>
           {/* Se déconnecter : les CV restent sur l'appareil, seuls les crédits sont liés au compte. */}
           <button

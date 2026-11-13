@@ -11,6 +11,7 @@ import { TestimonialInput, type Testimonials } from './testimonials.ts';
 import { SupportError, SupportMessageInput, type Support } from './support.ts';
 import { fetchJobPage, JobPageError } from './jobPage.ts';
 import type { Mailer, Vault } from './vault.ts';
+import { AmbassadorError, type Ambassadors } from './ambassadors.ts';
 import type { Sources } from './sources.ts';
 import { RecoveryInput, type Recovery } from './recovery.ts';
 import { memoryRateLimiter, type RateLimiter } from './rateLimit.ts';
@@ -60,6 +61,8 @@ export interface AppOptions {
   /** Deuxième vérification de l'administrateur : un code envoyé à cette adresse (actif si les deux sont réglés). */
   adminEmail?: string;
   adminMailer?: Mailer | null;
+  /** Programme Ambassadeur (gains en FCFA pour les filleuls). */
+  ambassadors?: Ambassadors | null;
   /** Vérification anti-robot (inscription, message sans compte). Absente : pas de vérification. */
   turnstile?: Turnstile | null;
 }
@@ -84,7 +87,7 @@ const Credentials = z.object({
   source: z.string().max(60).optional(),
 });
 
-export function createApp({ fetchPage = fetchJobPage, ai, aiEn = null, allowedOrigins, rateLimitPerHour, accounts = null, payments = null, testimonials = null, support = null, vault = null, recovery = null, sources = null, sessionSecret = '', publicUrl = '', apiPublicUrl = '', adminToken = '', adminEmail = '', adminMailer = null, authLimiter = null, shares = null, watches = null, cronSecret = '', turnstile = null }: AppOptions) {
+export function createApp({ fetchPage = fetchJobPage, ai, aiEn = null, allowedOrigins, rateLimitPerHour, accounts = null, payments = null, testimonials = null, support = null, vault = null, recovery = null, sources = null, sessionSecret = '', publicUrl = '', apiPublicUrl = '', adminToken = '', adminEmail = '', adminMailer = null, ambassadors = null, authLimiter = null, shares = null, watches = null, cronSecret = '', turnstile = null }: AppOptions) {
   const app = new Hono();
   const allow = memoryRateLimiter(rateLimitPerHour);
   const allowAuth = authLimiter ?? memoryRateLimiter(20);
@@ -285,6 +288,78 @@ export function createApp({ fetchPage = fetchJobPage, ai, aiEn = null, allowedOr
     if (code.length !== 6 || !signedOk(String(b?.challenge ?? ''), 'code', code)) return c.json({ error: 'Code incorrect ou expiré.' }, 400);
     const exp = Date.now() + 12 * 3600_000;
     return c.json({ session: `${exp}.${adminSign(`session|${exp}|`)}` });
+  });
+
+  // ——— Programme Ambassadeur ———
+  const ambassadorError = (c: Context, error: unknown) => {
+    if (error instanceof AmbassadorError) return c.json({ error: error.message }, error.status as 400);
+    console.error(error);
+    return c.json({ error: 'Erreur interne du serveur.' }, 500);
+  };
+  const tellAdmin = (subject: string, text: string) => {
+    if (adminMailer && adminEmail) void adminMailer(adminEmail, subject, text).catch((e) => console.error('Alerte admin', e));
+  };
+
+  app.get('/api/ambassador', async (c) => {
+    const user = await currentUser(c);
+    if (!user || !accounts || !ambassadors) return c.json({ error: 'Connectez-vous pour voir votre espace ambassadeur.' }, 401);
+    const [summary, referral] = await Promise.all([ambassadors.summary(user.id), accounts.referral(user.id)]);
+    return c.json({ ...summary, code: referral.code });
+  });
+
+  app.post('/api/ambassador/apply', async (c) => {
+    const user = await currentUser(c);
+    if (!user || !accounts || !ambassadors) return c.json({ error: 'Connectez-vous pour devenir ambassadeur.' }, 401);
+    const b = (await c.req.json().catch(() => null)) as { momoNumber?: string; momoName?: string; motivation?: string } | null;
+    try {
+      const before = await ambassadors.summary(user.id);
+      const summary = await ambassadors.apply(user.id, { momoNumber: String(b?.momoNumber ?? ''), momoName: String(b?.momoName ?? ''), motivation: String(b?.motivation ?? '') });
+      if (!before.status) tellAdmin('CVCasa : nouvelle demande d’ambassadeur', `Nouvelle demande d'ambassadeur : ${user.identifier}. À valider dans l'espace administrateur.`);
+      return c.json(summary);
+    } catch (error) {
+      return ambassadorError(c, error);
+    }
+  });
+
+  app.post('/api/ambassador/payout', async (c) => {
+    const user = await currentUser(c);
+    if (!user || !accounts || !ambassadors) return c.json({ error: 'Connectez-vous pour demander un retrait.' }, 401);
+    try {
+      const payout = await ambassadors.requestPayout(user.id);
+      tellAdmin('CVCasa : demande de retrait ambassadeur', `${user.identifier} demande un retrait de ${payout.amount} FCFA. À envoyer par Mobile Money puis marquer « Payé » dans l'espace administrateur.`);
+      return c.json(await ambassadors.summary(user.id));
+    } catch (error) {
+      return ambassadorError(c, error);
+    }
+  });
+
+  app.get('/api/admin/ambassadors', async (c) => {
+    if (!ambassadors || !isAdmin(c)) return c.json({ error: 'Accès refusé.' }, 403);
+    return c.json(await ambassadors.adminList());
+  });
+
+  app.post('/api/admin/ambassadors/:id', async (c) => {
+    if (!ambassadors || !isAdmin(c)) return c.json({ error: 'Accès refusé.' }, 403);
+    const b = (await c.req.json().catch(() => null)) as { status?: string } | null;
+    try {
+      await ambassadors.setStatus(Number(c.req.param('id')), String(b?.status ?? '') as never);
+      return c.json(await ambassadors.adminList());
+    } catch (error) {
+      return ambassadorError(c, error);
+    }
+  });
+
+  app.post('/api/admin/payouts/:id', async (c) => {
+    if (!ambassadors || !isAdmin(c)) return c.json({ error: 'Accès refusé.' }, 403);
+    const b = (await c.req.json().catch(() => null)) as { decision?: string; note?: string } | null;
+    const decision = b?.decision === 'paid' ? 'paid' : b?.decision === 'refused' ? 'refused' : null;
+    if (!decision) return c.json({ error: 'Décision inconnue.' }, 400);
+    try {
+      await ambassadors.decidePayout(Number(c.req.param('id')), decision, String(b?.note ?? ''));
+      return c.json(await ambassadors.adminList());
+    } catch (error) {
+      return ambassadorError(c, error);
+    }
   });
 
   // Ajout manuel de crédits (ex. paiement reçu directement par mobile money).
@@ -763,7 +838,10 @@ export function createApp({ fetchPage = fetchJobPage, ai, aiEn = null, allowedOr
         }
       }
       try {
-        return c.json(await handler(uiLang(c) === 'en' && aiEn ? aiEn : ai, parsed.data));
+        const result = await handler(uiLang(c) === 'en' && aiEn ? aiEn : ai, parsed.data);
+        // Premier CV créé par un filleul : prime d'inscription pour son ambassadeur (3 premiers filleuls).
+        if (action === 'structure' && user && ambassadors) await ambassadors.onFirstCv(user.id).catch((e) => console.error('Ambassadeur', e));
+        return c.json(result);
       } catch (error) {
         if (user && accounts && !free) {
           const credits = await accounts.refund(user.id, action, cost(parsed.data)).catch(() => null);

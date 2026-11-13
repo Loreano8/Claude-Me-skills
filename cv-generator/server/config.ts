@@ -13,6 +13,7 @@ import { createRecovery } from './recovery.ts';
 import { createSources } from './sources.ts';
 import { createTurnstile } from './turnstile.ts';
 import { claudeWatchSearch, createWatches, type Watches } from './watch.ts';
+import { createAmbassadors, type Ambassadors } from './ambassadors.ts';
 
 export type Settings = Record<string, string | undefined>;
 
@@ -44,6 +45,7 @@ export async function createServer(env: Settings, opts: { db?: Db; migrate?: boo
   let authLimiter: RateLimiter | null = null;
   let shares: Shares | null = null;
   let watches: Watches | null = null;
+  let ambassadors: Ambassadors | null = null;
   if (hasDb) {
     if (!env.SESSION_SECRET) throw new Error('SESSION_SECRET est obligatoire avec une base de données.');
     // DATABASE_SSL=true pour une base externe (Supabase…) ; inutile pour la base interne de Render.
@@ -58,12 +60,13 @@ export async function createServer(env: Settings, opts: { db?: Db; migrate?: boo
     vault = createVault(db, accounts, resendMailer(env));
     recovery = createRecovery(db, accounts, support);
     sources = createSources(db);
+    ambassadors = createAmbassadors(db);
     authLimiter = dbRateLimiter(db, 'auth', 20);
     shares = createShares(db);
     // Veille emploi : même modèle que le reste, sauf réglage WATCH_MODEL (ex. un modèle plus léger pour baisser le coût).
     watches = createWatches(db, accounts, client ? claudeWatchSearch(client, env.WATCH_MODEL || model) : null, resendMailer(env), env.PUBLIC_URL ?? '');
     if (env.FEDAPAY_SECRET_KEY) {
-      payments = createPayments(db, accounts, fedapay(env.FEDAPAY_SECRET_KEY, env.FEDAPAY_ENV === 'live' ? 'live' : 'sandbox'));
+      payments = createPayments(db, accounts, fedapay(env.FEDAPAY_SECRET_KEY, env.FEDAPAY_ENV === 'live' ? 'live' : 'sandbox'), ambassadors);
     }
   }
 
@@ -71,6 +74,7 @@ export async function createServer(env: Settings, opts: { db?: Db; migrate?: boo
     ai,
     aiEn,
     authLimiter,
+    ambassadors,
     shares,
     watches,
     cronSecret: env.CRON_SECRET ?? '',

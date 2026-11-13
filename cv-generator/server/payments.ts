@@ -1,5 +1,6 @@
 import type { Db } from './db.ts';
 import type { Accounts, User } from './accounts.ts';
+import type { Ambassadors } from './ambassadors.ts';
 
 export interface Pack {
   id: string;
@@ -93,7 +94,7 @@ export function fedapay(secretKey: string, env: 'sandbox' | 'live', fetchImpl: t
   };
 }
 
-export function createPayments(db: Db, accounts: Accounts, provider: PaymentProvider | null) {
+export function createPayments(db: Db, accounts: Accounts, provider: PaymentProvider | null, ambassadors: Ambassadors | null = null) {
   /**
    * Offre de retour : ouverte (72 h) au moment où la personne revient après au moins 10 jours
    * sans mouvement de crédits, si elle n'a rien acheté depuis 30 jours. Une seule fois par compte.
@@ -153,8 +154,8 @@ export function createPayments(db: Db, accounts: Accounts, provider: PaymentProv
       if (!known) throw new PaymentError('Paiement introuvable.', 404);
       const status = await provider.fetchStatus(ref);
       return db.transaction(async (tx) => {
-        const [payment] = await tx.query<{ id: number; user_id: number; credits: number; status: string }>(
-          'select id, user_id, credits, status from payments where provider = $1 and provider_ref = $2 for update',
+        const [payment] = await tx.query<{ id: number; user_id: number; credits: number; amount: number; status: string }>(
+          'select id, user_id, credits, amount, status from payments where provider = $1 and provider_ref = $2 for update',
           [provider.name, ref],
         );
         if (!payment) throw new PaymentError('Paiement introuvable.', 404);
@@ -165,6 +166,8 @@ export function createPayments(db: Db, accounts: Accounts, provider: PaymentProv
         if (status !== 'approved') return { status, userId: payment.user_id };
         await accounts.addCreditsInTx(tx, payment.user_id, payment.credits, 'purchase', `${provider.name}:${ref}`);
         await accounts.rewardReferralInTx(tx, payment.user_id);
+        // Programme Ambassadeur : prime et pourcentage pour l'ambassadeur du filleul (s'il y en a un, actif).
+        await ambassadors?.onPurchaseInTx(tx, payment.user_id, payment.id, payment.amount);
         const [{ credits }] = await tx.query<{ credits: number }>('select credits from users where id = $1', [payment.user_id]);
         return { status, credits, userId: payment.user_id };
       });

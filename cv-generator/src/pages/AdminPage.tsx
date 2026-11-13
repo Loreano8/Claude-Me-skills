@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
-import { ArrowLeft, BarChart3, Check, Coins, Copy, KeyRound, LogOut, MessageCircle, RefreshCw, Send, ShieldCheck, Star, X } from 'lucide-react';
+import { ArrowLeft, BarChart3, HandCoins, Check, Coins, Copy, KeyRound, LogOut, MessageCircle, RefreshCw, Send, ShieldCheck, Star, X } from 'lucide-react';
 import { PUBLIC_SITE } from '../lib/referral.ts';
 import { ADMIN_SESSION_KEY, adminRequest, type SupportMessage } from '../lib/api.ts';
 import { Button, Card, cx, Field, Notice, TextArea } from '../components/ui.tsx';
@@ -535,11 +535,113 @@ function TempPassword({ token }: { token: string }) {
   );
 }
 
+type AdminAmbassador = { userId: number; identifier: string; name: string; status: string; momoNumber: string; momoName: string; motivation: string; createdAt: string; invited: number; buyers: number; earned: number; paid: number };
+type AdminPayout = { id: number; userId: number; identifier: string; amount: number; momoNumber: string; momoName: string; status: string; requestedAt: string };
+
+const AMB_STATUS: Record<string, string> = { pending: 'À valider', active: 'Actif', refused: 'Refusé', suspended: 'Suspendu' };
+const fcfaAdmin = (n: number) => `${n.toLocaleString('fr-FR')} FCFA`;
+
+/** Programme Ambassadeur : valider les demandes, puis payer les retraits (Mobile Money envoyé à la main, puis « Payé »). */
+function Ambassadors({ token }: { token: string }) {
+  const [data, setData] = useState<{ ambassadors: AdminAmbassador[]; payouts: AdminPayout[] } | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  const [busy, setBusy] = useState<string | null>(null);
+  const load = useCallback(async () => {
+    try {
+      setData(await adminRequest(token, 'GET', '/api/admin/ambassadors'));
+    } catch (e) {
+      setError((e as Error).message);
+    }
+  }, [token]);
+  useEffect(() => {
+    void load();
+  }, [load]);
+  const act = async (key: string, path: string, body: unknown) => {
+    setBusy(key);
+    setError(null);
+    try {
+      setData(await adminRequest(token, 'POST', path, body));
+    } catch (e) {
+      setError((e as Error).message);
+    } finally {
+      setBusy(null);
+    }
+  };
+  if (!data) return error ? <Notice tone="error">{error}</Notice> : <p className="text-sm text-slate-500">Chargement…</p>;
+  const toPay = data.payouts.filter((p) => p.status === 'requested');
+  return (
+    <div className="space-y-5">
+      {error && <Notice tone="error">{error}</Notice>}
+      <section>
+        <h3 className="mb-2 font-semibold text-slate-900">Retraits à payer ({toPay.length})</h3>
+        {!data.payouts.length && <p className="text-sm text-slate-500">Aucune demande de retrait.</p>}
+        <ul className="space-y-2">
+          {data.payouts.map((p) => (
+            <li key={p.id} className={cx('rounded-xl border p-3 text-sm', p.status === 'requested' ? 'border-amber-300 bg-amber-50' : 'border-slate-200')}>
+              <div className="flex flex-wrap items-center justify-between gap-2">
+                <span className="font-semibold">{fcfaAdmin(p.amount)} · {p.identifier}</span>
+                <span className="text-xs text-slate-500">{when(p.requestedAt)} · {p.status === 'requested' ? 'à payer' : p.status === 'paid' ? 'payé' : 'refusé'}</span>
+              </div>
+              <p className="mt-1 text-slate-700">Mobile Money : <strong>{p.momoNumber}</strong> ({p.momoName})</p>
+              {p.status === 'requested' && (
+                <div className="mt-2 flex flex-wrap gap-2">
+                  <Button size="sm" loading={busy === `p${p.id}`} onClick={() => window.confirm(`Avez-vous bien envoyé ${fcfaAdmin(p.amount)} au ${p.momoNumber} ?`) && void act(`p${p.id}`, `/api/admin/payouts/${p.id}`, { decision: 'paid' })}>
+                    Payé
+                  </Button>
+                  <Button size="sm" variant="ghost" onClick={() => { const note = window.prompt('Raison du refus (visible par vous seulement) :') ?? ''; void act(`p${p.id}`, `/api/admin/payouts/${p.id}`, { decision: 'refused', note }); }}>
+                    Refuser
+                  </Button>
+                </div>
+              )}
+            </li>
+          ))}
+        </ul>
+      </section>
+      <section>
+        <h3 className="mb-2 font-semibold text-slate-900">Ambassadeurs ({data.ambassadors.length})</h3>
+        {!data.ambassadors.length && <p className="text-sm text-slate-500">Aucune demande pour le moment.</p>}
+        <ul className="space-y-2">
+          {data.ambassadors.map((a) => (
+            <li key={a.userId} className={cx('rounded-xl border p-3 text-sm', a.status === 'pending' ? 'border-brand-300 bg-brand-50' : 'border-slate-200')}>
+              <div className="flex flex-wrap items-center justify-between gap-2">
+                <span className="font-semibold">{a.name || a.identifier} <span className="font-normal text-slate-500">· {a.identifier}</span></span>
+                <span className="rounded-full bg-slate-100 px-2 py-0.5 text-xs font-semibold">{AMB_STATUS[a.status] ?? a.status}</span>
+              </div>
+              <p className="mt-1 text-slate-600">
+                {a.invited} inscrit(s) · {a.buyers} acheteur(s) · gagné {fcfaAdmin(a.earned)} · payé {fcfaAdmin(a.paid)}
+              </p>
+              <p className="text-slate-600">Mobile Money : {a.momoNumber} ({a.momoName})</p>
+              {a.motivation && <p className="mt-1 text-slate-700 italic">« {a.motivation} »</p>}
+              <div className="mt-2 flex flex-wrap gap-2">
+                {a.status !== 'active' && (
+                  <Button size="sm" loading={busy === `a${a.userId}`} onClick={() => void act(`a${a.userId}`, `/api/admin/ambassadors/${a.userId}`, { status: 'active' })}>
+                    Valider
+                  </Button>
+                )}
+                {a.status === 'pending' && (
+                  <Button size="sm" variant="ghost" onClick={() => void act(`a${a.userId}`, `/api/admin/ambassadors/${a.userId}`, { status: 'refused' })}>
+                    Refuser
+                  </Button>
+                )}
+                {a.status === 'active' && (
+                  <Button size="sm" variant="ghost" onClick={() => window.confirm('Suspendre cet ambassadeur ? Il ne gagnera plus rien tant qu’il est suspendu.') && void act(`a${a.userId}`, `/api/admin/ambassadors/${a.userId}`, { status: 'suspended' })}>
+                    Suspendre
+                  </Button>
+                )}
+              </div>
+            </li>
+          ))}
+        </ul>
+      </section>
+    </div>
+  );
+}
+
 export function AdminPage() {
   // Connecté seulement avec le jeton ET une session encore valide (code e-mail de moins de 12 h).
   const [token, setToken] = useState(() => (sessionAlive() || !readToken() ? readToken() : ''));
   const [draft, setDraft] = useState(readToken);
-  const [tab, setTab] = useState<'messages' | 'recuperations' | 'temoignages' | 'credits' | 'pubs'>('messages');
+  const [tab, setTab] = useState<'messages' | 'recuperations' | 'temoignages' | 'credits' | 'pubs' | 'ambassadeurs'>('messages');
   const [error, setError] = useState<string | null>(null);
   const [checking, setChecking] = useState(false);
   // Étape 2 : code envoyé par e-mail.
@@ -668,6 +770,7 @@ export function AdminPage() {
               ['temoignages', 'Témoignages', Star],
               ['credits', 'Comptes', Coins],
               ['pubs', 'Pubs', BarChart3],
+              ['ambassadeurs', 'Ambassadeurs', HandCoins],
             ] as const
           ).map(([id, label, Icon]) => (
             <button
@@ -688,6 +791,8 @@ export function AdminPage() {
           <Testimonials token={token} />
         ) : tab === 'pubs' ? (
           <Sources token={token} />
+        ) : tab === 'ambassadeurs' ? (
+          <Ambassadors token={token} />
         ) : (
           <>
             <Credits token={token} />

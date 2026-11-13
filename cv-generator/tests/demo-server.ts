@@ -40,15 +40,17 @@ const demoSearch: WatchSearch = async (criteria) => {
 };
 import { createSupport } from '../server/support.ts';
 import { testDb } from './pglite.ts';
+import { createAmbassadors } from '../server/ambassadors.ts';
 import { sampleAdapt, sampleInterview, sampleLetter, sampleRevise, sampleTemplateAnalysis, sampleTranslation, sampleClarify, sampleTranscript, sampleStyle, sampleLetterQuestions, sampleKeywords } from './fixtures.ts';
 const db = await testDb();
 const accounts = createAccounts(db, { freeCredits: 1, freeIpCooldownDays: 0 });
+const ambassadors = createAmbassadors(db);
 const paid = new Set<string>();
 const payments = createPayments(db, accounts, {
   name: 'fedapay',
   createCheckout: async () => ({ ref: 'tx42', url: 'http://localhost:8787/fake-pay?id=tx42' }),
   fetchStatus: async (ref) => (paid.has(ref) ? 'approved' : 'pending'),
-});
+}, ambassadors);
 // DEMO_DELAY_MS : simule le temps de réponse réel (vidéos de démonstration).
 const wait = () => new Promise((r) => setTimeout(r, Number(process.env.DEMO_DELAY_MS ?? 0)));
 const anonymous = (cv: typeof sampleAdapt.cv) => {
@@ -95,7 +97,7 @@ const ai = {
 // E-mails simulés : le code s'affiche dans la console du serveur de démo.
 const support = createSupport(db, async (t) => console.log('[notification]', t));
 const vault = createVault(db, accounts, async (to, subject, text) => console.log('[e-mail]', to, subject, text.replace(/\n/g, ' ')));
-const app = createApp({ ai, accounts, payments, vault, testimonials: createTestimonials(db), support, recovery: createRecovery(db, accounts, support), sources: createSources(db), shares: createShares(db), watches: createWatches(db, accounts, demoSearch, null, 'http://localhost:5173'), cronSecret: 'demo', sessionSecret: 'dev', adminToken: 'demo', publicUrl: 'http://localhost:5173', allowedOrigins: [], rateLimitPerHour: 100 });
+const app = createApp({ ai, accounts, payments, ambassadors, vault, testimonials: createTestimonials(db), support, recovery: createRecovery(db, accounts, support), sources: createSources(db), shares: createShares(db), watches: createWatches(db, accounts, demoSearch, null, 'http://localhost:5173'), cronSecret: 'demo', sessionSecret: 'dev', adminToken: 'demo', publicUrl: 'http://localhost:5173', allowedOrigins: [], rateLimitPerHour: 100 });
 // Fausse page de paiement : « payer » puis revenir comme le ferait FedaPay.
 app.get('/fake-pay', (c) => { paid.add(c.req.query('id')!); return c.redirect(`/api/payments/return?id=${c.req.query('id')}&status=approved`); });
 serve({ fetch: app.fetch, port: 8787 }, () => console.log('e2e server ready'));

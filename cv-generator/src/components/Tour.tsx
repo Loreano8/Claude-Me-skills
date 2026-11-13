@@ -53,6 +53,12 @@ export const TOURS: Partial<Record<Tab, Step[]>> = {
     { target: 'watch-run', title: t('Voir les offres maintenant'), text: t('Lancez une recherche : les offres s’affichent ici, chacune avec un bouton pour adapter votre CV. La première est offerte.') },
     { target: 'watch-auto', title: t('Chaque matin, sans rien faire'), text: t('Choisissez la fréquence et activez la veille : les nouvelles offres arrivent par e-mail. Arrêt possible à tout moment.') },
   ],
+  ambassadeur: [
+    { target: 'ambassador-apply', title: t('Devenir ambassadeur'), text: t('Indiquez votre numéro Mobile Money : c’est là que vous recevrez vos gains. L’équipe valide votre demande.') },
+    { target: 'ambassador-link', title: t('Votre lien'), text: t('Partagez-le dans vos groupes : chaque ami qui s’inscrit par ce lien vous est rattaché.') },
+    { target: 'ambassador-earnings', title: t('Vos gains'), text: t('Les gains passent « disponibles » après le délai de sécurité, puis vous demandez votre retrait.') },
+    { target: 'ambassador-payout', title: t('Retirer'), text: t('Dès le seuil atteint, demandez le retrait : l’argent arrive par Mobile Money.') },
+  ],
   plus: [
     { target: 'more-papers', title: t('Vos papiers'), text: t('Scanner une page, réunir un dossier en un seul PDF, et le coffre-fort de vos documents.') },
     { target: 'more-search', title: t('Votre recherche'), text: t('La veille emploi, le suivi de vos candidatures, le partage de votre CV et l’e-mail de candidature.') },

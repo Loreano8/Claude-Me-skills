@@ -1,4 +1,4 @@
-import { BellRing, BookOpen, Settings, ChevronRight, ClipboardList, CreditCard, FileStack, FolderOpen, Link2, Mail, MessageCircle, Mic, PlayCircle, ScanLine, Bitcoin } from 'lucide-react';
+import { BellRing, BookOpen, Settings, ChevronRight, ClipboardList, CreditCard, FileStack, FolderOpen, Link2, Mail, MessageCircle, Mic, PlayCircle, ScanLine, Bitcoin , HandCoins } from 'lucide-react';
 import { Capacitor } from '@capacitor/core';
 import type { Tab } from '../App.tsx';
 import { PUBLIC_SITE } from '../lib/referral.ts';
@@ -26,6 +26,7 @@ const GROUPS: { title: string; entries: Entry[] }[] = [
       { icon: ClipboardList, title: t('Suivi et relances'), text: t('Où vous avez postulé, et un message prêt pour relancer au bout d’une semaine.'), tab: 'suivi' },
       { icon: Link2, title: t('Partager mon CV'), text: t('Un lien et un QR code à donner à un recruteur.'), tab: 'apercu' },
       { icon: Mail, title: t('E-mail de candidature'), text: t('Le message à envoyer avec votre CV et votre lettre, prêt à copier.'), tab: 'lettre' },
+      { icon: HandCoins, title: t('Devenir ambassadeur'), text: t('Recommandez CVCasa et gagnez de l’argent, versé par Mobile Money.'), tab: 'ambassadeur' },
     ],
   },
   {
