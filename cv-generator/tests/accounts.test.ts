@@ -203,9 +203,10 @@ describe('parrainage', () => {
     expect((await accounts.get(parrain.id))!.credits).toBe(2);
   });
 
-  it('ignore un code inconnu', async () => {
+  it('signale un code inconnu (la personne corrige ou vide la case)', async () => {
     const accounts = createAccounts(await testDb(), opts);
-    const u = await accounts.register({ identifier: 'z@x.co', password: 'secret12', ip: '3.3.3.3', device: dev(), referralCode: 'NOPE42' });
+    await expect(accounts.register({ identifier: 'z@x.co', password: 'secret12', ip: '3.3.3.3', device: dev(), referralCode: 'NOPE42' })).rejects.toMatchObject({ status: 400 });
+    const u = await accounts.register({ identifier: 'z@x.co', password: 'secret12', ip: '3.3.3.3', device: dev(), referralCode: '' });
     expect(u.credits).toBe(1);
   });
 });

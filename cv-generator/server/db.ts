@@ -27,6 +27,13 @@ alter table users add column if not exists referral_code text unique;
 alter table users add column if not exists referred_by integer references users(id);
 alter table users add column if not exists referral_rewarded boolean not null default false;
 
+-- Anciens codes de parrainage (après personnalisation) : les liens déjà partagés continuent de marcher.
+create table if not exists referral_aliases (
+  code text primary key,
+  user_id integer not null references users(id) on delete cascade,
+  created_at timestamptz not null default now()
+);
+
 -- Historique de chaque mouvement de crédits (offerts, achetés, dépensés, remboursés).
 create table if not exists credit_ledger (
   id serial primary key,

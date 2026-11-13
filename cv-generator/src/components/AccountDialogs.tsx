@@ -367,7 +367,9 @@ function AccountDialog() {
   const [password, setPassword] = useState('');
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const invitedBy = pendingReferral();
+  // Code de parrainage : repris du lien d'invitation s'il y en a un, sinon tapé à la main (facultatif).
+  const [referral, setReferral] = useState(() => pendingReferral() ?? '');
+  const invitedBy = referral.replace(/\s+/g, '').toUpperCase() || null;
 
   async function submit(e: FormEvent) {
     e.preventDefault();
@@ -441,6 +443,14 @@ function AccountDialog() {
           autoComplete={mode === 'register' ? 'new-password' : 'current-password'}
           hint={mode === 'register' ? t('8 caractères minimum.') : undefined}
         />
+        {mode === 'register' && (
+          <Field
+            label={t('Code de parrainage (facultatif)')}
+            value={referral}
+            onChange={(v) => setReferral(v.toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 12))}
+            hint={t('Quelqu’un vous a recommandé CVCasa ? Indiquez son code.')}
+          />
+        )}
         {mode === 'login' && (
           <button type="button" className="hit min-h-8 text-sm font-medium text-brand-700" onClick={() => (setMode('forgot'), setError(null))}>
             {t('Mot de passe oublié ?')}</button>

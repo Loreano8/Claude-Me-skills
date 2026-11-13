@@ -150,6 +150,7 @@ export const api = {
     post<AmbassadorInfo>('/api/ambassador/apply', form),
   ambassadorNumber: (momoNumber: string, documents: { name: string; mediaType: string; data: string }[]) => post<AmbassadorInfo>('/api/ambassador/number', { momoNumber, documents }),
   ambassadorPayout: () => post<AmbassadorInfo>('/api/ambassador/payout', {}),
+  ambassadorCode: (code: string) => post<AmbassadorInfo>('/api/ambassador/code', { code }),
   login: (identifier: string, password: string) => post<Session>('/api/auth/login', { identifier, password }),
   me: () => request<{ user: AccountUser }>('GET', '/api/me'),
   health: () => request<{ ai: boolean; accounts: boolean; payments: boolean; email?: boolean; captcha?: string | null }>('GET', '/api/health'),

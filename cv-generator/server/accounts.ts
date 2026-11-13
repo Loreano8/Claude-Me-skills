@@ -14,6 +14,22 @@ export const DOSSIER_COST = 1;
 const CODE_ALPHABET = 'ABCDEFGHJKMNPQRSTUVWXYZ23456789';
 const newReferralCode = () => Array.from({ length: 6 }, () => CODE_ALPHABET[randomInt(CODE_ALPHABET.length)]).join('');
 
+/** Code de parrainage choisi : 4 à 12 lettres ou chiffres, sans accent ni espace (il se tape et se dicte facilement). */
+export const REFERRAL_CODE_PATTERN = /^[A-Z0-9]{4,12}$/;
+/** Codes réservés : ne doivent pas faire croire à un code officiel. */
+const RESERVED_CODES = ['CVCASA', 'ADMIN', 'OFFICIEL', 'OFFICIAL', 'SUPPORT', 'GRATUIT', 'FREE', 'PROMO', 'TEST'];
+/** Nombre de personnalisations possibles (chaque ancien code reste valable). */
+export const REFERRAL_CODE_CHANGES = 3;
+
+/** Compte auquel appartient un code (actuel ou ancien code personnalisé). */
+async function ownerOfCode(db: Db, code: string): Promise<number | null> {
+  const [row] = await db.query<{ id: number }>(
+    'select id from users where referral_code = $1 union all select user_id as id from referral_aliases where code = $1 limit 1',
+    [code],
+  );
+  return row?.id ?? null;
+}
+
 export interface ReferralInfo {
   code: string;
   /** Amis inscrits avec ce code. */
@@ -83,8 +99,11 @@ export function createAccounts(db: Db, opts: AccountOptions) {
              and (u.signup_device = $1 or (u.signup_ip = $2 and l.created_at > now() - make_interval(days => $3)))`,
           [device, input.ip, opts.freeIpCooldownDays],
         );
-        const code = (input.referralCode ?? '').trim().toUpperCase();
-        const [referrer] = code ? await tx.query<{ id: number }>('select id from users where referral_code = $1', [code]) : [];
+        const code = (input.referralCode ?? '').replace(/\s+/g, '').toUpperCase();
+        const referrerId = code ? await ownerOfCode(tx, code) : null;
+        // Code tapé (ou repris d'un lien) mais inconnu : on le signale plutôt que de l'ignorer.
+        if (code && !referrerId) throw new AccountError('Ce code de parrainage n’existe pas. Vérifiez-le ou laissez la case vide.', 400);
+        const referrer = referrerId ? { id: referrerId } : undefined;
         const [user] = await tx.query<User>(
           `insert into users (identifier, name, password_hash, signup_ip, signup_device, referred_by, signup_source) values ($1, $2, $3, $4, $5, $6, $7) returning ${USER_COLUMNS}`,
           [identifier, (input.name ?? '').trim().slice(0, 80), passwordHash, input.ip, device, referrer?.id ?? null, input.source ? normalizeSource(input.source) : ''],
@@ -140,7 +159,9 @@ export function createAccounts(db: Db, opts: AccountOptions) {
       for (let attempt = 0; !row.referral_code && attempt < 5; attempt++) {
         try {
           // « is null » : si deux demandes arrivent en même temps, la première gagne.
-          await db.query('update users set referral_code = $2 where id = $1 and referral_code is null', [userId, newReferralCode()]);
+          const candidate = newReferralCode();
+          if (await ownerOfCode(db, candidate)) continue; // déjà pris (code actuel ou ancien code de quelqu'un)
+          await db.query('update users set referral_code = $2 where id = $1 and referral_code is null', [userId, candidate]);
         } catch {
           // Code déjà attribué à quelqu'un d'autre (très rare) : on en tire un autre.
         }
@@ -152,6 +173,30 @@ export function createAccounts(db: Db, opts: AccountOptions) {
         [userId],
       );
       return { code: row.referral_code!, invited, rewarded };
+    },
+
+    /**
+     * Code de parrainage personnalisé (ambassadeurs) : unique, 4 à 12 lettres ou chiffres, 3 changements au plus.
+     * L'ancien code reste valable (liens déjà partagés) et ne peut pas être repris par quelqu'un d'autre.
+     */
+    async setReferralCode(userId: number, raw: string): Promise<string> {
+      const code = raw.replace(/\s+/g, '').toUpperCase();
+      if (!REFERRAL_CODE_PATTERN.test(code)) throw new AccountError('Choisissez un code de 4 à 12 lettres ou chiffres, sans espace ni accent.', 400);
+      if (RESERVED_CODES.some((r) => code.includes(r))) throw new AccountError('Ce code est réservé. Choisissez-en un autre.', 400);
+      await this.referral(userId); // garantit un code actuel
+      return db.transaction(async (tx) => {
+        const [me] = await tx.query<{ referral_code: string }>('select referral_code from users where id = $1 for update', [userId]);
+        if (me.referral_code === code) return code;
+        const owner = await ownerOfCode(tx, code);
+        if (owner && owner !== userId) throw new AccountError('Ce code est déjà pris. Essayez une variante (par exemple avec votre ville ou un chiffre).', 409);
+        const [{ n }] = await tx.query<{ n: number }>('select count(*)::int as n from referral_aliases where user_id = $1', [userId]);
+        if (n >= REFERRAL_CODE_CHANGES && !owner) throw new AccountError(`Vous avez déjà changé votre code ${REFERRAL_CODE_CHANGES} fois.`, 409);
+        // Reprendre un de ses anciens codes : il redevient le code principal.
+        if (owner === userId) await tx.query('delete from referral_aliases where code = $1', [code]);
+        await tx.query('insert into referral_aliases (code, user_id) values ($1, $2) on conflict (code) do nothing', [me.referral_code, userId]);
+        await tx.query('update users set referral_code = $2 where id = $1', [userId, code]);
+        return code;
+      });
     },
 
     /**

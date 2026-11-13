@@ -331,6 +331,22 @@ export function createApp({ fetchPage = fetchJobPage, ai, aiEn = null, allowedOr
     }
   });
 
+  // Code de parrainage personnalisé : réservé aux ambassadeurs (en attente ou validés).
+  app.post('/api/ambassador/code', async (c) => {
+    const user = await currentUser(c);
+    if (!user || !accounts || !ambassadors) return c.json({ error: 'Connectez-vous pour continuer.' }, 401);
+    const b = (await c.req.json().catch(() => null)) as { code?: string } | null;
+    try {
+      const s = await ambassadors.summary(user.id);
+      if (s.status !== 'active' && s.status !== 'pending') return c.json({ error: 'Le code personnalisé est réservé aux ambassadeurs.' }, 403);
+      const code = await accounts.setReferralCode(user.id, String(b?.code ?? ''));
+      return c.json({ ...s, code });
+    } catch (error) {
+      if (error instanceof AccountError) return accountError(c, error);
+      return ambassadorError(c, error);
+    }
+  });
+
   app.post('/api/ambassador/number', async (c) => {
     const user = await currentUser(c);
     if (!user || !accounts || !ambassadors) return c.json({ error: 'Connectez-vous pour continuer.' }, 401);

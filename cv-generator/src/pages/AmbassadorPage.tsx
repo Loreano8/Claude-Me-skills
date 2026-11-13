@@ -74,6 +74,7 @@ export function AmbassadorPage() {
   const [showContract, setShowContract] = useState(false);
   const [change, setChange] = useState<{ open: boolean; number: string; docs: { name: string; mediaType: string; data: string }[] }>({ open: false, number: '', docs: [] });
   const [copied, setCopied] = useState(false);
+  const [codeEdit, setCodeEdit] = useState<string | null>(null);
 
   const load = useCallback(async () => {
     try {
@@ -263,8 +264,33 @@ export function AmbassadorPage() {
             {copied ? <Check className="size-4" aria-hidden="true" /> : <Copy className="size-4" aria-hidden="true" />} {copied ? t('Copié') : t('Copier')}
           </button>
         </div>
-        <Button className="mt-3" icon={<Share2 className="size-4" />} onClick={() => void share()}>
-          {t('Partager mon lien')}</Button>
+        <div className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-1">
+          <Button icon={<Share2 className="size-4" />} onClick={() => void share()}>
+            {t('Partager mon lien')}</Button>
+          {codeEdit === null && (
+            <button type="button" onClick={() => setCodeEdit(info.code)} className="min-h-11 text-sm font-semibold text-brand-700">
+              {t('Personnaliser mon code')}</button>
+          )}
+        </div>
+        <p className="mt-2 text-sm text-slate-600">{t('Votre code : {0}. Vos amis peuvent aussi le taper à l’inscription.', [info.code])}</p>
+        {codeEdit !== null && (
+          <div className="mt-3 space-y-2 rounded-xl bg-slate-50 p-3 ring-1 ring-slate-200">
+            <Field
+              label={t('Votre code personnalisé')}
+              value={codeEdit}
+              onChange={(v) => setCodeEdit(v.toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 12))}
+              placeholder="AWA229"
+              hint={t('4 à 12 lettres ou chiffres. Vos anciens liens continuent de marcher. 3 changements au plus.')}
+            />
+            {error && <Notice tone="error">{error}</Notice>}
+            <div className="flex flex-wrap gap-2">
+              <Button size="sm" loading={busy} disabled={codeEdit.length < 4 || codeEdit === info.code} onClick={() => void run(() => api.ambassadorCode(codeEdit)).then((ok) => ok && setCodeEdit(null))}>
+                {t('Enregistrer')}</Button>
+              <Button size="sm" variant="ghost" onClick={() => { setCodeEdit(null); setError(null); }}>
+                {t('Annuler')}</Button>
+            </div>
+          </div>
+        )}
       </Card>
 
       <section data-tour="ambassador-earnings" className="grid grid-cols-2 gap-2 sm:grid-cols-4">

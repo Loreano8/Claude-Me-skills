@@ -1281,6 +1281,12 @@ export const EN: Record<string, string> = {
   "Signez dans le cadre, au doigt ou à la souris": "Sign in the box, with your finger or mouse",
   "Signature :": "Signature:",
   "Votre signature": "Your signature",
+  "Code de parrainage (facultatif)": "Referral code (optional)",
+  "Quelqu’un vous a recommandé CVCasa ? Indiquez son code.": "Did someone recommend CVCasa to you? Enter their code.",
+  "Personnaliser mon code": "Customise my code",
+  "Votre code : {0}. Vos amis peuvent aussi le taper à l’inscription.": "Your code: {0}. Friends can also type it when they sign up.",
+  "Votre code personnalisé": "Your custom code",
+  "4 à 12 lettres ou chiffres. Vos anciens liens continuent de marcher. 3 changements au plus.": "4 to 12 letters or numbers. Your old links keep working. 3 changes at most.",
   // Messages du serveur (erreurs, veille) : traduits à l’envoi quand l’interface est en anglais.
   "Fichier trop volumineux (15 Mo maximum).": "File too large (15 MB maximum).",
   "Erreur interne du serveur.": "Internal server error.",
@@ -1405,4 +1411,10 @@ export const EN: Record<string, string> = {
   "Connectez-vous pour continuer.": "Sign in to continue.",
   "Signez le contrat dans le cadre prévu.": "Sign the agreement in the box provided.",
   "Signature trop lourde : signez à nouveau dans le cadre.": "Signature too large: sign again in the box.",
+  "Ce code de parrainage n’existe pas. Vérifiez-le ou laissez la case vide.": "This referral code doesn't exist. Check it or leave the box empty.",
+  "Choisissez un code de 4 à 12 lettres ou chiffres, sans espace ni accent.": "Choose a code of 4 to 12 letters or numbers, with no spaces or accents.",
+  "Ce code est réservé. Choisissez-en un autre.": "This code is reserved. Choose another one.",
+  "Ce code est déjà pris. Essayez une variante (par exemple avec votre ville ou un chiffre).": "This code is already taken. Try a variant (for example with your city or a number).",
+  "Vous avez déjà changé votre code 3 fois.": "You have already changed your code 3 times.",
+  "Le code personnalisé est réservé aux ambassadeurs.": "Custom codes are for ambassadors only.",
 };
