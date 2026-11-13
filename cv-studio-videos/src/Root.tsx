@@ -1,5 +1,6 @@
 import { Composition, Folder } from "remotion";
 import { WEB_TUTORIAL_SECONDS, WebTutorial } from "./demo/WebTutorial";
+import { WEB_TUTORIAL2_SECONDS, WebTutorial2 } from "./demo/WebTutorial2";
 import { AdVideo, durationFor, FPS } from "./ad/AdVideo";
 import { DEMO_SECONDS, DemoVideo } from "./demo/DemoVideo";
 
@@ -112,6 +113,14 @@ export const RemotionRoot: React.FC = () => {
         height={1080}
         fps={FPS}
         durationInFrames={Math.ceil(WEB_TUTORIAL_SECONDS * FPS)}
+      />
+      <Composition
+        id="Tutoriel-Site-v2"
+        component={WebTutorial2}
+        width={1920}
+        height={1080}
+        fps={FPS}
+        durationInFrames={Math.ceil(WEB_TUTORIAL2_SECONDS * FPS)}
       />
     </Folder>
   );
