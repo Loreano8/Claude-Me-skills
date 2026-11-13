@@ -421,7 +421,7 @@ export function AmbassadorPage() {
             ? t('Votre retrait de {0} est en cours : vous le recevez sous quelques jours.', [fcfa(e.requested)])
             : e.available >= r.minPayout
               ? t('{0} disponibles : vous recevrez {1} après les frais d’envoi Mobile Money.', [fcfa(e.available), fcfa(e.available - Math.ceil((e.available * r.payoutFeePercent) / 100))])
-              : t('Encore {0} à gagner avant le premier retrait.', [fcfa(r.minPayout - e.available)])}
+              : t('Encore {0} à gagner avant le prochain retrait.', [fcfa(r.minPayout - e.available)])}
         </p>
         {info.payouts.length > 0 && (
           <ul className="mt-3 divide-y divide-slate-100 text-sm">

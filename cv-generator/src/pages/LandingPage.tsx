@@ -459,7 +459,7 @@ export function LandingPage({ onNavigate }: { onNavigate: (t: Tab) => void }) {
             className="aspect-video w-full rounded-2xl bg-slate-900 shadow-lg ring-1 ring-white/15"
           >
             {t('Votre navigateur ne lit pas cette vidéo.')}</video>
-          <figcaption className="mt-2 text-center text-sm text-slate-400">{t('Le tutoriel complet : CV, modèle, offre, lettre, scanner et documents, pas à pas.')}</figcaption>
+          <figcaption className="mt-2 text-center text-sm text-slate-400">{t('Le tutoriel complet : CV, modèle, offre, lettre, veille emploi et suivi, pas à pas.')}</figcaption>
         </figure>
        </div>
       </section>
