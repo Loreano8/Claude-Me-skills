@@ -51,8 +51,8 @@ export function MorePage({ onNavigate }: { onNavigate: (t: Tab) => void }) {
   const unread = useSupportBadge((s) => s.unread);
   return (
     <div className="mx-auto max-w-2xl space-y-6">
-      {GROUPS.map((g) => (
-        <section key={g.title}>
+      {GROUPS.map((g, gi) => (
+        <section key={g.title} data-tour={['more-papers', 'more-search', 'more-help'][gi]}>
           <h2 className="mb-2 px-1 font-display text-lg font-semibold text-ink">{g.title}</h2>
           <ul className="divide-y divide-slate-100 overflow-hidden rounded-2xl border border-slate-200 bg-white">
             {g.entries.map((e) => {

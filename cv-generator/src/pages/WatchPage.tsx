@@ -265,7 +265,7 @@ export function WatchPage({ onNavigate }: { onNavigate: (t: Tab) => void }) {
         </div>
       )}
 
-      <Card title={t('Ce que vous cherchez')}>
+      <Card tour="watch-criteria" title={t('Ce que vous cherchez')}>
         <div className="space-y-5">
           <Group title={t('Métiers ou domaines')} hint={t('Repris de votre CV. Ajoutez-en ou retirez-en (5 au plus).')}>
             {criteria.jobs.map((j) => (
@@ -351,7 +351,7 @@ export function WatchPage({ onNavigate }: { onNavigate: (t: Tab) => void }) {
         </div>
       </Card>
 
-      <Card title={t('Voir les offres')}>
+      <Card tour="watch-run" title={t('Voir les offres')}>
         <p className="text-sm text-slate-600">{t('La recherche prend environ une minute. {0}', [freeRun ? t('La première est offerte.') : ''])}</p>
         <div className="mt-3">
           <Button size="lg" icon={<Search className="size-5" />} loading={busy === 'run'} disabled={busy !== null || Boolean(missing)} onClick={() => act('run')}>
@@ -369,7 +369,7 @@ export function WatchPage({ onNavigate }: { onNavigate: (t: Tab) => void }) {
         </section>
       )}
 
-      <Card title={t('Recevoir les offres automatiquement')}>
+      <Card tour="watch-auto" title={t('Recevoir les offres automatiquement')}>
         <div className="grid gap-2 sm:grid-cols-2" role="radiogroup" aria-label={t('Fréquence')}>
           {(['daily', 'weekly'] as const).map((f) => (
             <button

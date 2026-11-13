@@ -43,7 +43,26 @@ export const TOURS: Partial<Record<Tab, Step[]>> = {
     { target: 'letter-body', title: t('Relisez'), text: t('Tout est modifiable : destinataire, objet, chaque paragraphe.') },
     { target: 'letter-export', title: t('Télécharger'), text: t('La lettre en PDF, assortie à votre CV.') },
   ],
-  suivi: [{ target: 'applications', title: t('Vos candidatures'), text: t('Notez où vous avez postulé et où vous en êtes, pour ne relancer personne deux fois.') }],
+  suivi: [
+    { target: 'applications', title: t('Vos candidatures'), text: t('Notez où vous avez postulé et où vous en êtes, pour ne relancer personne deux fois.') },
+    { target: 'app-status', title: t('Où vous en êtes'), text: t('Touchez l’étape : envoyée, entretien, acceptée… Une semaine après l’envoi sans réponse, CVCasa vous propose un message de relance.') },
+    { target: 'app-add', title: t('Ajouter une candidature'), text: t('Une offre trouvée ailleurs ? Ajoutez-la ici. Chaque CV adapté à une offre s’ajoute tout seul.') },
+  ],
+  veille: [
+    { target: 'watch-criteria', title: t('Vos critères'), text: t('Votre métier est repris de votre CV. Cochez les contrats, les villes ou pays et votre niveau.') },
+    { target: 'watch-run', title: t('Voir les offres maintenant'), text: t('Lancez une recherche : les offres s’affichent ici, chacune avec un bouton pour adapter votre CV. La première est offerte.') },
+    { target: 'watch-auto', title: t('Chaque matin, sans rien faire'), text: t('Choisissez la fréquence et activez la veille : les nouvelles offres arrivent par e-mail. Arrêt possible à tout moment.') },
+  ],
+  plus: [
+    { target: 'more-papers', title: t('Vos papiers'), text: t('Scanner une page, réunir un dossier en un seul PDF, et le coffre-fort de vos documents.') },
+    { target: 'more-search', title: t('Votre recherche'), text: t('La veille emploi, le suivi de vos candidatures, le partage de votre CV et l’e-mail de candidature.') },
+    { target: 'more-help', title: t('Besoin d’aide ?'), text: t('Le tutoriel en vidéo, les guides, un message à l’équipe, et vos réglages.') },
+  ],
+  reglages: [
+    { target: 'settings-account', title: t('Votre compte'), text: t('Votre prénom, votre mot de passe et votre phrase secrète pour récupérer le compte.') },
+    { target: 'settings-lang', title: t('Langue'), text: t('Français ou anglais, pour toute l’application.') },
+    { target: 'settings-update', title: t('Mises à jour'), text: t('Vérifiez ici que vous avez la dernière version de l’application.') },
+  ],
   documents: [
     { target: 'doc-tabs', title: t('Vos documents'), text: t('Vos créations d’un côté, le coffre-fort de vos papiers de l’autre.') },
     { target: 'creations', title: t('Tout est ici'), text: t('Chaque CV, version adaptée ou traduite, et chaque lettre. Rouvrez-les quand vous voulez.') },

@@ -19,7 +19,7 @@ function AccountSection() {
 
   if (!user) {
     return (
-      <section className="rounded-2xl border border-slate-200 bg-white p-4">
+      <section data-tour="settings-account" className="rounded-2xl border border-slate-200 bg-white p-4">
         <h2 className="flex items-center gap-2 font-semibold text-slate-900">
           <UserRound className="size-5 text-brand-600" aria-hidden="true" /> {t('Mon compte')}
         </h2>
@@ -46,7 +46,7 @@ function AccountSection() {
   }
 
   return (
-    <section className="rounded-2xl border border-slate-200 bg-white p-4">
+    <section data-tour="settings-account" className="rounded-2xl border border-slate-200 bg-white p-4">
       <h2 className="flex items-center gap-2 font-semibold text-slate-900">
         <UserRound className="size-5 text-brand-600" aria-hidden="true" /> {t('Mon compte')}
       </h2>
@@ -80,7 +80,9 @@ export function SettingsPage({ onNavigate }: { onNavigate: (t: Tab) => void }) {
         </h1>
       </div>
       <AccountSection />
-      <LangPicker />
+      <div data-tour="settings-lang">
+        <LangPicker />
+      </div>
       <button
         type="button"
         onClick={() => onNavigate('confidentialite')}
@@ -93,7 +95,9 @@ export function SettingsPage({ onNavigate }: { onNavigate: (t: Tab) => void }) {
         </span>
         <ChevronRight className="size-5 shrink-0 text-slate-400" aria-hidden="true" />
       </button>
-      <AppUpdateCard />
+      <div data-tour="settings-update">
+        <AppUpdateCard />
+      </div>
     </div>
   );
 }

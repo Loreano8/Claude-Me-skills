@@ -140,7 +140,7 @@ function ApplicationCard({ app, onNavigate }: { app: Application; onNavigate: (t
         <span className={cx('shrink-0 rounded-full px-2.5 py-1 text-xs font-semibold', status.tone)}>{status.label}</span>
       </div>
 
-      <div className="mt-3 flex flex-wrap gap-1.5">
+      <div data-tour="app-status" className="mt-3 flex flex-wrap gap-1.5">
         {STATUSES.map((s) => (
           <button
             key={s.id}
@@ -252,7 +252,7 @@ export function ApplicationsPage({ onNavigate }: { onNavigate: (t: Tab) => void 
         }
         subtitle={t('Suivez chaque offre : CV adapté, fiche entretien, réponse. Tout reste sur votre appareil.')}
         actions={
-          <Button size="sm" icon={<Plus className="size-4" />} onClick={() => addApplication({ title: t('Nouvelle candidature') })}>
+          <Button size="sm" data-tour="app-add" icon={<Plus className="size-4" />} onClick={() => addApplication({ title: t('Nouvelle candidature') })}>
             {t('Ajouter')}</Button>
         }
       >
