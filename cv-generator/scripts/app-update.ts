@@ -20,7 +20,7 @@ const walk = (dir: string) => {
   for (const f of readdirSync(dir)) {
     const p = join(dir, f);
     if (statSync(p).isDirectory()) {
-      if (!['app-update', 'admin'].includes(relative(dist, p))) walk(p);
+      if (!['app-update', 'admin', (process.env.ADMIN_PATH ?? '').trim().replace(/^\/+|\/+$/g, '')].includes(relative(dist, p))) walk(p);
     } else files.push(relative(dist, p).split('\\').join('/'));
   }
 };
