@@ -146,7 +146,7 @@ export const api = {
     post<Session>('/api/auth/register', { identifier, password, name, captcha, ...(referralCode ? { referralCode } : {}), ...(pendingSource() ? { source: pendingSource() } : {}) }),
   referral: () => request<{ code: string; invited: number; rewarded: number; bonus: number }>('GET', '/api/referral'),
   ambassador: () => request<AmbassadorInfo>('GET', '/api/ambassador'),
-  ambassadorApply: (form: { firstName: string; lastName: string; momoNumber: string; motivation: string; contractVersion: string; accept: boolean; signature: string }) =>
+  ambassadorApply: (form: { firstName: string; lastName: string; momoNumber: string; motivation: string; contractVersion: string; accept: boolean; signature: string; signatureImage: string }) =>
     post<AmbassadorInfo>('/api/ambassador/apply', form),
   ambassadorNumber: (momoNumber: string, documents: { name: string; mediaType: string; data: string }[]) => post<AmbassadorInfo>('/api/ambassador/number', { momoNumber, documents }),
   ambassadorPayout: () => post<AmbassadorInfo>('/api/ambassador/payout', {}),
@@ -228,7 +228,7 @@ export interface AmbassadorInfo {
   momoName: string;
   legalFirstName: string;
   legalLastName: string;
-  contract: { version: string; signedAt: string; current: boolean } | null;
+  contract: { version: string; signedAt: string; current: boolean; signatureImage: string } | null;
   numberChange: { newNumber: string; status: string; requestedAt: string; note: string } | null;
   rules: { signupReward: number; signupRewardLimit: number; firstPurchaseReward: number; commissionPercent: number; commissionMonths: number; holdDays: number; minPayout: number; monthlyCap: number; payoutFeePercent: number };
   stats: { invited: number; signupsRewarded: number; buyers: number };

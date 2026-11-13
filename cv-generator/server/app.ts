@@ -321,6 +321,7 @@ export function createApp({ fetchPage = fetchJobPage, ai, aiEn = null, allowedOr
         contractVersion: String(b?.contractVersion ?? ''),
         accept: b?.accept === true,
         signature: String(b?.signature ?? ''),
+        signatureImage: String(b?.signatureImage ?? ''),
         ip: clientKey(c),
       });
       if (!before.status || before.status === 'refused') tellAdmin('CVCasa : nouvelle demande d’ambassadeur', `Nouvelle demande d'ambassadeur : ${summary.momoName} (${user.identifier}), contrat signé. À valider dans l'espace administrateur.`);

@@ -5,7 +5,7 @@ import { AMBASSADOR_CONTRACT_VERSION } from '../shared/ambassadorContract.ts';
 
 /** Demande avec contrat signé (nom légal + signature identique). */
 const form = (momoNumber = '+229 01 00 00 00 00', extra: Record<string, unknown> = {}) => ({
-  firstName: 'Prénom', lastName: 'Nom', momoNumber, contractVersion: AMBASSADOR_CONTRACT_VERSION, accept: true, signature: 'Prénom Nom', ...extra,
+  firstName: 'Prénom', lastName: 'Nom', momoNumber, contractVersion: AMBASSADOR_CONTRACT_VERSION, accept: true, signature: 'Prénom Nom', signatureImage: `data:image/png;base64,${'A'.repeat(400)}`, ...extra,
 });
 import { createPayments, type PaymentProvider } from '../server/payments.ts';
 import { testDb } from './pglite.ts';
@@ -194,6 +194,8 @@ describe('programme Ambassadeur', () => {
     await expect(ambassadors.apply(a.id, form(undefined, { contractVersion: 'ancienne' }))).rejects.toMatchObject({ status: 400 });
     await expect(ambassadors.apply(a.id, form(undefined, { signature: 'Quelqu’un d’autre' }))).rejects.toMatchObject({ status: 400 });
     await expect(ambassadors.apply(a.id, form(undefined, { lastName: 'N' }))).rejects.toMatchObject({ status: 400 });
+    await expect(ambassadors.apply(a.id, form(undefined, { signatureImage: '' }))).rejects.toMatchObject({ status: 400 });
+    await expect(ambassadors.apply(a.id, form(undefined, { signatureImage: 'data:text/html;base64,PHNjcmlwdD4=' }))).rejects.toMatchObject({ status: 400 });
     // Accents, majuscules et ordre « Nom Prénom » acceptés.
     const s = await ambassadors.apply(a.id, form(undefined, { signature: '  NOM   prenom ' }));
     expect(s).toMatchObject({ status: 'pending', legalFirstName: 'Prénom', legalLastName: 'Nom', momoName: 'Prénom Nom' });

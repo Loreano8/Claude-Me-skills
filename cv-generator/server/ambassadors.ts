@@ -65,6 +65,8 @@ alter table ambassadors add column if not exists contract_version text not null 
 alter table ambassadors add column if not exists contract_signature text not null default '';
 alter table ambassadors add column if not exists contract_signed_at timestamptz;
 alter table ambassadors add column if not exists contract_ip text not null default '';
+-- Signature dessinée à l'écran (image PNG), en plus du nom tapé.
+alter table ambassadors add column if not exists signature_image text not null default '';
 
 -- Changement du numéro de paiement d'un ambassadeur validé : seulement sur justificatifs, vérifiés par l'administrateur.
 -- Les justificatifs sont effacés dès que la demande est traitée.
@@ -117,7 +119,7 @@ export interface AmbassadorSummary {
   momoName: string;
   legalFirstName: string;
   legalLastName: string;
-  contract: { version: string; signedAt: string; current: boolean } | null;
+  contract: { version: string; signedAt: string; current: boolean; signatureImage: string } | null;
   numberChange: { newNumber: string; status: string; requestedAt: string; note: string } | null;
   rules: typeof AMBASSADOR_RULES;
   stats: { invited: number; signupsRewarded: number; buyers: number };
@@ -138,6 +140,8 @@ export type ApplyInput = {
   contractVersion: string;
   accept: boolean;
   signature: string;
+  /** Signature dessinée au doigt ou à la souris (data:image/png;base64,…). */
+  signatureImage: string;
   ip?: string;
 };
 
@@ -234,20 +238,23 @@ export function createAmbassadors(db: Db, now: () => Date = () => new Date()) {
       if (!sameName(input.signature, `${firstName} ${lastName}`) && !sameName(input.signature, `${lastName} ${firstName}`)) {
         throw new AmbassadorError('Pour signer, tapez exactement vos prénoms et votre nom.');
       }
+      const image = String(input.signatureImage ?? '');
+      if (!/^data:image\/(png|jpeg);base64,[A-Za-z0-9+/=]+$/.test(image) || image.length < 200) throw new AmbassadorError('Signez le contrat dans le cadre prévu.');
+      if (image.length > 500_000) throw new AmbassadorError('Signature trop lourde : signez à nouveau dans le cadre.', 413);
       const [current] = await db.query<{ status: string }>('select status from ambassadors where user_id = $1', [userId]);
       if (current && current.status !== 'pending' && current.status !== 'refused') {
         throw new AmbassadorError('Votre compte ambassadeur est déjà validé. Pour changer de numéro, envoyez une demande avec justificatifs.', 409);
       }
       await db.query(
-        `insert into ambassadors (user_id, momo_number, momo_name, motivation, legal_first_name, legal_last_name, contract_version, contract_signature, contract_signed_at, contract_ip)
-         values ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
+        `insert into ambassadors (user_id, momo_number, momo_name, motivation, legal_first_name, legal_last_name, contract_version, contract_signature, contract_signed_at, contract_ip, signature_image)
+         values ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
          on conflict (user_id) do update set momo_number = excluded.momo_number, momo_name = excluded.momo_name,
            motivation = case when excluded.motivation = '' then ambassadors.motivation else excluded.motivation end,
            legal_first_name = excluded.legal_first_name, legal_last_name = excluded.legal_last_name,
            contract_version = excluded.contract_version, contract_signature = excluded.contract_signature,
-           contract_signed_at = excluded.contract_signed_at, contract_ip = excluded.contract_ip,
+           contract_signed_at = excluded.contract_signed_at, contract_ip = excluded.contract_ip, signature_image = excluded.signature_image,
            status = 'pending'`,
-        [userId, momoNumber, `${firstName} ${lastName}`, (input.motivation ?? '').trim().slice(0, 500), firstName, lastName, AMBASSADOR_CONTRACT_VERSION, input.signature.trim().slice(0, 120), now().toISOString(), (input.ip ?? '').slice(0, 60)],
+        [userId, momoNumber, `${firstName} ${lastName}`, (input.motivation ?? '').trim().slice(0, 500), firstName, lastName, AMBASSADOR_CONTRACT_VERSION, input.signature.trim().slice(0, 120), now().toISOString(), (input.ip ?? '').slice(0, 60), image],
       );
       return this.summary(userId);
     },
@@ -274,8 +281,8 @@ export function createAmbassadors(db: Db, now: () => Date = () => new Date()) {
     },
 
     async summary(userId: number): Promise<AmbassadorSummary> {
-      const [a] = await db.query<{ status: AmbassadorStatus; momo_number: string; momo_name: string; legal_first_name: string; legal_last_name: string; contract_version: string; contract_signed_at: string | null }>(
-        'select status, momo_number, momo_name, legal_first_name, legal_last_name, contract_version, contract_signed_at from ambassadors where user_id = $1',
+      const [a] = await db.query<{ status: AmbassadorStatus; momo_number: string; momo_name: string; legal_first_name: string; legal_last_name: string; contract_version: string; contract_signed_at: string | null; signature_image: string }>(
+        'select status, momo_number, momo_name, legal_first_name, legal_last_name, contract_version, contract_signed_at, signature_image from ambassadors where user_id = $1',
         [userId],
       );
       const [change] = await db.query<{ new_number: string; status: string; created_at: string; note: string }>(
@@ -306,7 +313,7 @@ export function createAmbassadors(db: Db, now: () => Date = () => new Date()) {
         momoName: a?.momo_name ?? '',
         legalFirstName: a?.legal_first_name ?? '',
         legalLastName: a?.legal_last_name ?? '',
-        contract: a?.contract_signed_at ? { version: a.contract_version, signedAt: new Date(a.contract_signed_at).toISOString(), current: a.contract_version === AMBASSADOR_CONTRACT_VERSION } : null,
+        contract: a?.contract_signed_at ? { version: a.contract_version, signedAt: new Date(a.contract_signed_at).toISOString(), current: a.contract_version === AMBASSADOR_CONTRACT_VERSION, signatureImage: a.signature_image } : null,
         numberChange: change ? { newNumber: change.new_number, status: change.status, requestedAt: new Date(change.created_at).toISOString(), note: change.note } : null,
         rules: R,
         stats: { invited: stats.invited, signupsRewarded: stats.signups, buyers: stats.buyers },

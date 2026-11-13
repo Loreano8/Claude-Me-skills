@@ -1278,6 +1278,9 @@ export const EN: Record<string, string> = {
   "Programme Ambassadeur": "Ambassador programme",
   "Si vous devenez ambassadeur, nous gardons vos nom et prénoms légaux, votre numéro Mobile Money, la signature de votre contrat (date, version, adresse internet), vos statistiques de parrainage et l’historique de vos paiements, pour gérer le programme et vous payer.": "If you become an ambassador, we keep your legal first and last names, your Mobile Money number, your signature of the agreement (date, version, internet address), your referral statistics and your payment history, to run the programme and pay you.",
   "Les justificatifs envoyés pour changer de numéro (pièce d’identité, capture du compte) ne servent qu’à vérifier votre identité et sont supprimés dès que la demande est traitée.": "Documents sent to change your number (ID, account screenshot) are used only to verify your identity and are deleted as soon as the request is processed.",
+  "Signez dans le cadre, au doigt ou à la souris": "Sign in the box, with your finger or mouse",
+  "Signature :": "Signature:",
+  "Votre signature": "Your signature",
   // Messages du serveur (erreurs, veille) : traduits à l’envoi quand l’interface est en anglais.
   "Fichier trop volumineux (15 Mo maximum).": "File too large (15 MB maximum).",
   "Erreur interne du serveur.": "Internal server error.",
@@ -1400,4 +1403,6 @@ export const EN: Record<string, string> = {
   "Une demande de changement de numéro est déjà en cours d’examen.": "A number change request is already under review.",
   "Votre changement de numéro est en cours d’examen : le retrait sera possible ensuite.": "Your number change is under review: you can withdraw afterwards.",
   "Connectez-vous pour continuer.": "Sign in to continue.",
+  "Signez le contrat dans le cadre prévu.": "Sign the agreement in the box provided.",
+  "Signature trop lourde : signez à nouveau dans le cadre.": "Signature too large: sign again in the box.",
 };

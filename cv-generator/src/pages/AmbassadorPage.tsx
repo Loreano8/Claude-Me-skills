@@ -4,6 +4,7 @@ import { Capacitor } from '@capacitor/core';
 import { LANG, LOCALE, t } from '../i18n.ts';
 import { AMBASSADOR_CONTRACT_VERSION, ambassadorContract, sameName } from '../../shared/ambassadorContract.ts';
 import { fileToAttachment } from '../lib/files.ts';
+import { SignaturePad } from '../components/SignaturePad.tsx';
 import { useAccount } from '../lib/account.ts';
 import { api, ApiError, type AmbassadorInfo } from '../lib/api.ts';
 import { referralLink } from '../lib/referral.ts';
@@ -69,7 +70,7 @@ export function AmbassadorPage() {
   const [info, setInfo] = useState<AmbassadorInfo | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
-  const [form, setForm] = useState({ firstName: '', lastName: '', momoNumber: '', motivation: '', accept: false, signature: '' });
+  const [form, setForm] = useState({ firstName: '', lastName: '', momoNumber: '', motivation: '', accept: false, signature: '', signatureImage: '' });
   const [showContract, setShowContract] = useState(false);
   const [change, setChange] = useState<{ open: boolean; number: string; docs: { name: string; mediaType: string; data: string }[] }>({ open: false, number: '', docs: [] });
   const [copied, setCopied] = useState(false);
@@ -196,15 +197,17 @@ export function AmbassadorPage() {
               value={form.signature}
               onChange={(v) => setForm({ ...form, signature: v.slice(0, 120) })}
               placeholder={[form.firstName, form.lastName].filter(Boolean).join(' ') || t('Prénom Nom')}
-              hint={t('Signé en ligne le {0}. Une copie reste consultable dans votre espace.', [day(new Date().toISOString())])}
             />
+            <p className="mt-3 mb-1 text-sm font-medium text-slate-700">{t('Signez dans le cadre, au doigt ou à la souris')}</p>
+            <SignaturePad value={form.signatureImage || null} onChange={(v) => setForm((f) => ({ ...f, signatureImage: v ?? '' }))} />
+            <p className="mt-1 text-xs text-slate-500">{t('Signé en ligne le {0}. Une copie reste consultable dans votre espace.', [day(new Date().toISOString())])}</p>
           </div>
           {error && <div className="mt-3"><Notice tone="error">{error}</Notice></div>}
           <Button
             className="mt-3"
             icon={<FileSignature className="size-4" />}
             loading={busy}
-            disabled={!form.firstName.trim() || !form.lastName.trim() || !form.momoNumber.trim() || !form.accept || !(sameName(form.signature, `${form.firstName} ${form.lastName}`) || sameName(form.signature, `${form.lastName} ${form.firstName}`))}
+            disabled={!form.firstName.trim() || !form.lastName.trim() || !form.momoNumber.trim() || !form.accept || !form.signatureImage || !(sameName(form.signature, `${form.firstName} ${form.lastName}`) || sameName(form.signature, `${form.lastName} ${form.firstName}`))}
             onClick={() => void run(() => api.ambassadorApply({ ...form, contractVersion: AMBASSADOR_CONTRACT_VERSION }))}
           >
             {t('Signer et envoyer ma demande')}</Button>
@@ -355,7 +358,17 @@ export function AmbassadorPage() {
         <Card title={t('Votre contrat')} subtitle={t('Signé le {0} par {1} (version {2}).', [day(info.contract.signedAt), info.momoName, info.contract.version])}>
           <button type="button" onClick={() => setShowContract(!showContract)} className="min-h-11 text-sm font-semibold text-brand-700">
             {showContract ? t('Masquer le contrat') : t('Lire le contrat')}</button>
-          {showContract && <Contract r={r} />}
+          {showContract && (
+            <>
+              <Contract r={r} />
+              {info.contract.signatureImage && (
+                <div className="mt-3 flex items-end gap-3 text-sm text-slate-600">
+                  <span>{t('Signature :')}</span>
+                  <img src={info.contract.signatureImage} alt={t('Votre signature')} className="h-14 rounded bg-white px-2 ring-1 ring-slate-200" />
+                </div>
+              )}
+            </>
+          )}
         </Card>
       )}
     </div>
