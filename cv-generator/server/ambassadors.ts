@@ -25,7 +25,15 @@ export const AMBASSADOR_RULES = {
   minPayout: 2000,
   /** Plafond de gains par mois et par ambassadeur (FCFA). */
   monthlyCap: 25000,
+  /** Frais d'envoi Mobile Money, déduits du retrait (pourcentage, arrondi au franc supérieur). */
+  payoutFeePercent: 1,
 } as const;
+
+/** Frais d'envoi d'un retrait et montant réellement envoyé. */
+export function payoutSplit(amount: number) {
+  const fee = Math.ceil((amount * AMBASSADOR_RULES.payoutFeePercent) / 100);
+  return { fee, net: amount - fee };
+}
 
 export type AmbassadorStatus = 'pending' | 'active' | 'refused' | 'suspended';
 export type EarningKind = 'signup' | 'first_purchase' | 'commission';
@@ -57,6 +65,7 @@ create table if not exists ambassador_payouts (
   momo_number text not null,
   momo_name text not null default '',
   status text not null default 'requested',
+  fee integer not null default 0,
   note text not null default '',
   requested_at timestamptz not null default now(),
   decided_at timestamptz
@@ -65,7 +74,8 @@ create table if not exists ambassador_payouts (
 create table if not exists ambassador_earnings (
   id serial primary key,
   ambassador_id integer not null references users(id) on delete cascade,
-  filleul_id integer not null references users(id) on delete cascade,
+  -- Si le filleul supprime son compte, l'historique des gains (déjà payés ou non) est gardé.
+  filleul_id integer references users(id) on delete set null,
   kind text not null,
   payment_id integer references payments(id) on delete set null,
   amount integer not null,
@@ -86,7 +96,7 @@ export interface AmbassadorSummary {
   rules: typeof AMBASSADOR_RULES;
   stats: { invited: number; signupsRewarded: number; buyers: number };
   earnings: { pending: number; available: number; requested: number; paid: number };
-  payouts: { id: number; amount: number; status: string; requestedAt: string; decidedAt: string | null }[];
+  payouts: { id: number; amount: number; fee: number; net: number; status: string; requestedAt: string; decidedAt: string | null }[];
 }
 
 const cleanPhone = (v: string) => v.replace(/[^\d+]/g, '').slice(0, 20);
@@ -95,15 +105,20 @@ export function createAmbassadors(db: Db, now: () => Date = () => new Date()) {
   const R = AMBASSADOR_RULES;
   const availableAt = () => new Date(now().getTime() + R.holdDays * 86_400_000);
 
-  /** Ambassadeur actif d'un filleul, si le filleul n'a ni son appareil ni sa connexion (pas de gain sur soi-même). */
-  async function sponsorOf(tx: Db, filleulId: number) {
+  /**
+   * Ambassadeur actif d'un filleul, si le filleul n'utilise pas le même appareil (pas de gain sur soi-même).
+   * Pour la prime d'inscription, on exige aussi une connexion différente. Pour les achats, non : beaucoup de
+   * personnes partagent la même adresse internet (données mobiles, wifi d'école ou de cybercafé), et acheter
+   * pour soi via un faux filleul coûte plus que ce que ça rapporte.
+   */
+  async function sponsorOf(tx: Db, filleulId: number, strict = false) {
     const [row] = await tx.query<{ ambassador_id: number; filleul_created: string }>(
       `select a.user_id as ambassador_id, f.created_at as filleul_created
        from users f join users s on s.id = f.referred_by join ambassadors a on a.user_id = s.id
        where f.id = $1 and a.status = 'active'
-         and (f.signup_device = '' or f.signup_device <> s.signup_device)
-         and (f.signup_ip = '' or f.signup_ip <> s.signup_ip)`,
-      [filleulId],
+         and length(f.signup_device) >= 8 and f.signup_device <> s.signup_device
+         and (not $2 or f.signup_ip = '' or f.signup_ip <> s.signup_ip)`,
+      [filleulId, strict],
     );
     return row ?? null;
   }
@@ -133,7 +148,7 @@ export function createAmbassadors(db: Db, now: () => Date = () => new Date()) {
     /** Le filleul a créé son premier CV : prime d'inscription, pour les 3 premiers filleuls seulement. */
     async onFirstCv(filleulId: number): Promise<number> {
       return db.transaction(async (tx) => {
-        const sponsor = await sponsorOf(tx, filleulId);
+        const sponsor = await sponsorOf(tx, filleulId, true);
         if (!sponsor) return 0;
         // Verrou sur l'ambassadeur : deux filleuls en même temps ne dépassent pas la limite.
         await tx.query('select 1 from ambassadors where user_id = $1 for update', [sponsor.ambassador_id]);
@@ -173,7 +188,8 @@ export function createAmbassadors(db: Db, now: () => Date = () => new Date()) {
       await db.query(
         `insert into ambassadors (user_id, momo_number, momo_name, motivation) values ($1, $2, $3, $4)
          on conflict (user_id) do update set momo_number = excluded.momo_number, momo_name = excluded.momo_name,
-           motivation = case when ambassadors.motivation = '' then excluded.motivation else ambassadors.motivation end`,
+           motivation = case when excluded.motivation = '' then ambassadors.motivation else excluded.motivation end,
+           status = case when ambassadors.status = 'refused' then 'pending' else ambassadors.status end`,
         [userId, momoNumber, momoName, (input.motivation ?? '').trim().slice(0, 500)],
       );
       return this.summary(userId);
@@ -198,8 +214,8 @@ export function createAmbassadors(db: Db, now: () => Date = () => new Date()) {
         [userId, now().toISOString()],
       );
       const get = (b: string) => sums.find((s) => s.bucket === b)?.total ?? 0;
-      const payouts = await db.query<{ id: number; amount: number; status: string; requested_at: string; decided_at: string | null }>(
-        'select id, amount, status, requested_at, decided_at from ambassador_payouts where ambassador_id = $1 order by id desc limit 20',
+      const payouts = await db.query<{ id: number; amount: number; fee: number; status: string; requested_at: string; decided_at: string | null }>(
+        'select id, amount, fee, status, requested_at, decided_at from ambassador_payouts where ambassador_id = $1 order by id desc limit 20',
         [userId],
       );
       return {
@@ -209,7 +225,7 @@ export function createAmbassadors(db: Db, now: () => Date = () => new Date()) {
         rules: R,
         stats: { invited: stats.invited, signupsRewarded: stats.signups, buyers: stats.buyers },
         earnings: { pending: get('pending'), available: get('available'), requested: get('requested'), paid: get('paid') },
-        payouts: payouts.map((p) => ({ id: p.id, amount: p.amount, status: p.status, requestedAt: new Date(p.requested_at).toISOString(), decidedAt: p.decided_at ? new Date(p.decided_at).toISOString() : null })),
+        payouts: payouts.map((p) => ({ id: p.id, amount: p.amount, fee: p.fee, net: p.amount - p.fee, status: p.status, requestedAt: new Date(p.requested_at).toISOString(), decidedAt: p.decided_at ? new Date(p.decided_at).toISOString() : null })),
       };
     },
 
@@ -229,16 +245,17 @@ export function createAmbassadors(db: Db, now: () => Date = () => new Date()) {
           [userId, now().toISOString()],
         );
         if (total < R.minPayout) throw new AmbassadorError(`Le retrait est possible à partir de ${R.minPayout} FCFA disponibles.`, 400);
+        const { fee, net } = payoutSplit(total);
         const [p] = await tx.query<{ id: number }>(
-          'insert into ambassador_payouts (ambassador_id, amount, momo_number, momo_name) values ($1, $2, $3, $4) returning id',
-          [userId, total, a.momo_number, a.momo_name],
+          'insert into ambassador_payouts (ambassador_id, amount, fee, momo_number, momo_name) values ($1, $2, $3, $4, $5) returning id',
+          [userId, total, fee, a.momo_number, a.momo_name],
         );
         await tx.query(
           `update ambassador_earnings set status = 'requested', payout_id = $2
            where ambassador_id = $1 and status = 'pending' and available_at <= $3`,
           [userId, p.id, now().toISOString()],
         );
-        return { id: p.id, amount: total };
+        return { id: p.id, amount: total, fee, net };
       });
     },
 
@@ -257,14 +274,14 @@ export function createAmbassadors(db: Db, now: () => Date = () => new Date()) {
          from ambassadors a join users u on u.id = a.user_id
          order by (a.status = 'pending') desc, a.created_at desc limit 200`,
       );
-      const payouts = await db.query<{ id: number; ambassador_id: number; identifier: string; amount: number; momo_number: string; momo_name: string; status: string; requested_at: string }>(
-        `select p.id, p.ambassador_id, u.identifier, p.amount, p.momo_number, p.momo_name, p.status, p.requested_at
+      const payouts = await db.query<{ id: number; ambassador_id: number; identifier: string; amount: number; fee: number; momo_number: string; momo_name: string; status: string; requested_at: string }>(
+        `select p.id, p.ambassador_id, u.identifier, p.amount, p.fee, p.momo_number, p.momo_name, p.status, p.requested_at
          from ambassador_payouts p join users u on u.id = p.ambassador_id
          order by (p.status = 'requested') desc, p.id desc limit 100`,
       );
       return {
         ambassadors: rows.map((r) => ({ userId: r.user_id, identifier: r.identifier, name: r.name, status: r.status, momoNumber: r.momo_number, momoName: r.momo_name, motivation: r.motivation, createdAt: new Date(r.created_at).toISOString(), invited: r.invited, buyers: r.buyers, earned: r.earned, paid: r.paid })),
-        payouts: payouts.map((p) => ({ id: p.id, userId: p.ambassador_id, identifier: p.identifier, amount: p.amount, momoNumber: p.momo_number, momoName: p.momo_name, status: p.status, requestedAt: new Date(p.requested_at).toISOString() })),
+        payouts: payouts.map((p) => ({ id: p.id, userId: p.ambassador_id, identifier: p.identifier, amount: p.amount, fee: p.fee, net: p.amount - p.fee, momoNumber: p.momo_number, momoName: p.momo_name, status: p.status, requestedAt: new Date(p.requested_at).toISOString() })),
       };
     },
 
@@ -273,6 +290,13 @@ export function createAmbassadors(db: Db, now: () => Date = () => new Date()) {
       if (!Number.isInteger(userId)) throw new AmbassadorError('Ambassadeur introuvable.', 404);
       const rows = await db.query('update ambassadors set status = $2, decided_at = now() where user_id = $1 returning user_id', [userId, status]);
       if (!rows.length) throw new AmbassadorError('Ambassadeur introuvable.', 404);
+    },
+
+    /** Fraude constatée : annule les gains pas encore payés (ni demandés) de l'ambassadeur. */
+    async cancelUnpaid(userId: number) {
+      if (!Number.isInteger(userId)) throw new AmbassadorError('Ambassadeur introuvable.', 404);
+      const rows = await db.query(`update ambassador_earnings set status = 'cancelled' where ambassador_id = $1 and status = 'pending' returning id`, [userId]);
+      return rows.length;
     },
 
     /** Retrait envoyé par Mobile Money (paid) ou refusé (refused : les gains redeviennent disponibles). */

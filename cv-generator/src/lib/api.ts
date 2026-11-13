@@ -224,10 +224,10 @@ export interface AmbassadorInfo {
   code: string;
   momoNumber: string;
   momoName: string;
-  rules: { signupReward: number; signupRewardLimit: number; firstPurchaseReward: number; commissionPercent: number; commissionMonths: number; holdDays: number; minPayout: number; monthlyCap: number };
+  rules: { signupReward: number; signupRewardLimit: number; firstPurchaseReward: number; commissionPercent: number; commissionMonths: number; holdDays: number; minPayout: number; monthlyCap: number; payoutFeePercent: number };
   stats: { invited: number; signupsRewarded: number; buyers: number };
   earnings: { pending: number; available: number; requested: number; paid: number };
-  payouts: { id: number; amount: number; status: string; requestedAt: string; decidedAt: string | null }[];
+  payouts: { id: number; amount: number; fee: number; net: number; status: string; requestedAt: string; decidedAt: string | null }[];
 }
 
 export interface PublicTestimonial {

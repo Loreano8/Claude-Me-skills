@@ -65,14 +65,56 @@ describe('programme Ambassadeur', () => {
     expect(s.earnings.pending).toBe(3 * R.signupReward);
   });
 
-  it('ne paie rien pour un filleul sur le même téléphone ou la même connexion', async () => {
-    const { ambassadors, person, ambassador } = await setup();
+  it('même téléphone : rien du tout ; même connexion : pas de prime d’inscription, mais les achats comptent', async () => {
+    const { ambassadors, person, ambassador, buy } = await setup();
     const { a, code } = await ambassador();
-    const sameNet = await person(code, '10.0.0.1');
     const sameDevice = await person(code, '172.16.0.9', 'device-1-xxxxxxxx');
-    expect(await ambassadors.onFirstCv(sameNet.id)).toBe(0);
     expect(await ambassadors.onFirstCv(sameDevice.id)).toBe(0);
+    await buy(sameDevice.id, 'essentiel');
     expect((await ambassadors.summary(a.id)).earnings.pending).toBe(0);
+    // Même adresse internet (wifi d'école, données mobiles partagées) : vraie personne, autre téléphone.
+    const sameNet = await person(code, '10.0.0.1');
+    expect(await ambassadors.onFirstCv(sameNet.id)).toBe(0);
+    await buy(sameNet.id, 'essentiel');
+    expect((await ambassadors.summary(a.id)).earnings.pending).toBe(R.firstPurchaseReward + 50);
+  });
+
+  it('déduit les frais d’envoi Mobile Money du retrait', async () => {
+    const { clock, ambassadors, person, ambassador, buy } = await setup();
+    const { a, code } = await ambassador();
+    for (let i = 0; i < 6; i++) await buy((await person(code)).id, 'pro'); // 6 × (100 + 300) = 2 400
+    clock.t += (R.holdDays + 1) * DAY;
+    const p = await ambassadors.requestPayout(a.id);
+    expect(p).toMatchObject({ amount: 2400, fee: 24, net: 2376 });
+    expect((await ambassadors.summary(a.id)).payouts[0]).toMatchObject({ amount: 2400, fee: 24, net: 2376 });
+    const admin = await ambassadors.adminList();
+    expect(admin.payouts[0]).toMatchObject({ net: 2376, status: 'requested' });
+  });
+
+  it('une demande refusée peut être refaite ; la triche annule les gains non versés', async () => {
+    const { ambassadors, person, accounts, buy } = await setup();
+    const a = await person();
+    const { code } = await accounts.referral(a.id);
+    await ambassadors.apply(a.id, { momoNumber: '0100000000', momoName: 'Titulaire' });
+    await ambassadors.setStatus(a.id, 'refused');
+    expect((await ambassadors.apply(a.id, { momoNumber: '0100000001', momoName: 'Titulaire' })).status).toBe('pending');
+    await ambassadors.setStatus(a.id, 'active');
+    await buy((await person(code)).id, 'essentiel');
+    expect((await ambassadors.summary(a.id)).earnings.pending).toBe(150);
+    await ambassadors.setStatus(a.id, 'suspended');
+    await expect(ambassadors.requestPayout(a.id)).rejects.toMatchObject({ status: 403 });
+    expect(await ambassadors.cancelUnpaid(a.id)).toBe(2);
+    expect((await ambassadors.summary(a.id)).earnings.pending).toBe(0);
+  });
+
+  it('garde l’historique des gains si le filleul supprime son compte', async () => {
+    const { db, ambassadors, person, ambassador, buy } = await setup();
+    const { a, code } = await ambassador();
+    const f = await person(code);
+    await buy(f.id, 'essentiel');
+    await db.query('delete from payments where user_id = $1', [f.id]);
+    await db.query('delete from users where id = $1', [f.id]);
+    expect((await ambassadors.summary(a.id)).earnings.pending).toBe(150);
   });
 
   it('prime au premier achat puis 10 % de chaque achat, et l’entreprise reste gagnante', async () => {

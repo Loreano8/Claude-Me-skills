@@ -1247,6 +1247,10 @@ export const EN: Record<string, string> = {
   "Refusé": "Declined",
   "En cours": "In progress",
   "Recommandez CVCasa et gagnez de l’argent, versé par Mobile Money.": "Recommend CVCasa and earn money, paid by Mobile Money.",
+  "Retrait par Mobile Money à partir de {0} disponibles, envoyé par l’équipe sous quelques jours. Les frais d’envoi Mobile Money ({1} %) sont déduits du montant envoyé.": "Withdrawal by Mobile Money from {0} available, sent by the team within a few days. Mobile Money transfer fees ({1}%) are deducted from the amount sent.",
+  "Plafond de {0} de gains par mois. Les comptes qui trichent sont suspendus et leurs gains non versés annulés.": "Earnings are capped at {0} per month. Accounts that cheat are suspended and their unpaid earnings cancelled.",
+  "CVCasa peut faire évoluer ou arrêter le programme. Les gains déjà disponibles restent dus.": "CVCasa may change or end the programme. Earnings that are already available will still be paid.",
+  "{0} disponibles : vous recevrez {1} après les frais d’envoi Mobile Money.": "{0} available: you'll receive {1} after Mobile Money transfer fees.",
   // Messages du serveur (erreurs, veille) : traduits à l’envoi quand l’interface est en anglais.
   "Fichier trop volumineux (15 Mo maximum).": "File too large (15 MB maximum).",
   "Erreur interne du serveur.": "Internal server error.",

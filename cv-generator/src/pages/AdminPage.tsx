@@ -536,7 +536,7 @@ function TempPassword({ token }: { token: string }) {
 }
 
 type AdminAmbassador = { userId: number; identifier: string; name: string; status: string; momoNumber: string; momoName: string; motivation: string; createdAt: string; invited: number; buyers: number; earned: number; paid: number };
-type AdminPayout = { id: number; userId: number; identifier: string; amount: number; momoNumber: string; momoName: string; status: string; requestedAt: string };
+type AdminPayout = { id: number; userId: number; identifier: string; amount: number; fee: number; net: number; momoNumber: string; momoName: string; status: string; requestedAt: string };
 
 const AMB_STATUS: Record<string, string> = { pending: 'À valider', active: 'Actif', refused: 'Refusé', suspended: 'Suspendu' };
 const fcfaAdmin = (n: number) => `${n.toLocaleString('fr-FR')} FCFA`;
@@ -579,13 +579,14 @@ function Ambassadors({ token }: { token: string }) {
           {data.payouts.map((p) => (
             <li key={p.id} className={cx('rounded-xl border p-3 text-sm', p.status === 'requested' ? 'border-amber-300 bg-amber-50' : 'border-slate-200')}>
               <div className="flex flex-wrap items-center justify-between gap-2">
-                <span className="font-semibold">{fcfaAdmin(p.amount)} · {p.identifier}</span>
+                <span className="font-semibold">Envoyer {fcfaAdmin(p.net)} · {p.identifier}</span>
                 <span className="text-xs text-slate-500">{when(p.requestedAt)} · {p.status === 'requested' ? 'à payer' : p.status === 'paid' ? 'payé' : 'refusé'}</span>
               </div>
               <p className="mt-1 text-slate-700">Mobile Money : <strong>{p.momoNumber}</strong> ({p.momoName})</p>
+              <p className="text-xs text-slate-500">Gains {fcfaAdmin(p.amount)} − frais d’envoi {fcfaAdmin(p.fee)} = {fcfaAdmin(p.net)} à envoyer.</p>
               {p.status === 'requested' && (
                 <div className="mt-2 flex flex-wrap gap-2">
-                  <Button size="sm" loading={busy === `p${p.id}`} onClick={() => window.confirm(`Avez-vous bien envoyé ${fcfaAdmin(p.amount)} au ${p.momoNumber} ?`) && void act(`p${p.id}`, `/api/admin/payouts/${p.id}`, { decision: 'paid' })}>
+                  <Button size="sm" loading={busy === `p${p.id}`} onClick={() => window.confirm(`Avez-vous bien envoyé ${fcfaAdmin(p.net)} au ${p.momoNumber} ?`) && void act(`p${p.id}`, `/api/admin/payouts/${p.id}`, { decision: 'paid' })}>
                     Payé
                   </Button>
                   <Button size="sm" variant="ghost" onClick={() => { const note = window.prompt('Raison du refus (visible par vous seulement) :') ?? ''; void act(`p${p.id}`, `/api/admin/payouts/${p.id}`, { decision: 'refused', note }); }}>
@@ -624,8 +625,13 @@ function Ambassadors({ token }: { token: string }) {
                   </Button>
                 )}
                 {a.status === 'active' && (
-                  <Button size="sm" variant="ghost" onClick={() => window.confirm('Suspendre cet ambassadeur ? Il ne gagnera plus rien tant qu’il est suspendu.') && void act(`a${a.userId}`, `/api/admin/ambassadors/${a.userId}`, { status: 'suspended' })}>
+                  <Button size="sm" variant="ghost" onClick={() => window.confirm('Suspendre cet ambassadeur ? Il ne gagnera plus rien et ne pourra plus demander de retrait tant qu’il est suspendu.') && void act(`a${a.userId}`, `/api/admin/ambassadors/${a.userId}`, { status: 'suspended' })}>
                     Suspendre
+                  </Button>
+                )}
+                {a.status === 'suspended' && (
+                  <Button size="sm" variant="ghost" onClick={() => window.confirm('Annuler tous ses gains pas encore versés (en cas de triche) ? C’est définitif.') && void act(`a${a.userId}`, `/api/admin/ambassadors/${a.userId}/cancel`, {})}>
+                    Annuler ses gains non versés
                   </Button>
                 )}
               </div>

@@ -314,7 +314,9 @@ export function createApp({ fetchPage = fetchJobPage, ai, aiEn = null, allowedOr
     try {
       const before = await ambassadors.summary(user.id);
       const summary = await ambassadors.apply(user.id, { momoNumber: String(b?.momoNumber ?? ''), momoName: String(b?.momoName ?? ''), motivation: String(b?.motivation ?? '') });
-      if (!before.status) tellAdmin('CVCasa : nouvelle demande d’ambassadeur', `Nouvelle demande d'ambassadeur : ${user.identifier}. À valider dans l'espace administrateur.`);
+      if (!before.status || before.status === 'refused') tellAdmin('CVCasa : nouvelle demande d’ambassadeur', `Nouvelle demande d'ambassadeur : ${user.identifier}. À valider dans l'espace administrateur.`);
+      // Numéro de paiement changé sur un compte actif : on prévient (compte volé qui détourne les gains).
+      else if (before.momoNumber !== summary.momoNumber) tellAdmin('CVCasa : numéro Mobile Money modifié', `${user.identifier} a changé son numéro Mobile Money : ${before.momoNumber} → ${summary.momoNumber}. Vérifiez avant le prochain paiement.`);
       return c.json(summary);
     } catch (error) {
       return ambassadorError(c, error);
@@ -326,7 +328,7 @@ export function createApp({ fetchPage = fetchJobPage, ai, aiEn = null, allowedOr
     if (!user || !accounts || !ambassadors) return c.json({ error: 'Connectez-vous pour demander un retrait.' }, 401);
     try {
       const payout = await ambassadors.requestPayout(user.id);
-      tellAdmin('CVCasa : demande de retrait ambassadeur', `${user.identifier} demande un retrait de ${payout.amount} FCFA. À envoyer par Mobile Money puis marquer « Payé » dans l'espace administrateur.`);
+      tellAdmin('CVCasa : demande de retrait ambassadeur', `${user.identifier} demande un retrait de ${payout.amount} FCFA : envoyez ${payout.net} FCFA par Mobile Money (frais de ${payout.fee} FCFA déduits), puis marquez « Payé » dans l'espace administrateur.`);
       return c.json(await ambassadors.summary(user.id));
     } catch (error) {
       return ambassadorError(c, error);
@@ -343,6 +345,16 @@ export function createApp({ fetchPage = fetchJobPage, ai, aiEn = null, allowedOr
     const b = (await c.req.json().catch(() => null)) as { status?: string } | null;
     try {
       await ambassadors.setStatus(Number(c.req.param('id')), String(b?.status ?? '') as never);
+      return c.json(await ambassadors.adminList());
+    } catch (error) {
+      return ambassadorError(c, error);
+    }
+  });
+
+  app.post('/api/admin/ambassadors/:id/cancel', async (c) => {
+    if (!ambassadors || !isAdmin(c)) return c.json({ error: 'Accès refusé.' }, 403);
+    try {
+      await ambassadors.cancelUnpaid(Number(c.req.param('id')));
       return c.json(await ambassadors.adminList());
     } catch (error) {
       return ambassadorError(c, error);

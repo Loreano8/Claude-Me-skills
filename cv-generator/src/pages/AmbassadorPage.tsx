@@ -35,9 +35,10 @@ function Fine({ r }: { r: AmbassadorInfo['rules'] }) {
   return (
     <ul className="space-y-1 text-xs text-slate-500">
       <li>{t('Les gains deviennent disponibles {0} jours après l’inscription ou l’achat.', [r.holdDays])}</li>
-      <li>{t('Retrait par Mobile Money à partir de {0} disponibles, envoyé par l’équipe sous quelques jours.', [fcfa(r.minPayout)])}</li>
+      <li>{t('Retrait par Mobile Money à partir de {0} disponibles, envoyé par l’équipe sous quelques jours. Les frais d’envoi Mobile Money ({1} %) sont déduits du montant envoyé.', [fcfa(r.minPayout), r.payoutFeePercent])}</li>
       <li>{t('Rien n’est versé pour un compte créé sur votre propre téléphone ou votre connexion : invitez de vraies personnes.')}</li>
-      <li>{t('Plafond de {0} de gains par mois. Les comptes qui trichent sont suspendus.', [fcfa(r.monthlyCap)])}</li>
+      <li>{t('Plafond de {0} de gains par mois. Les comptes qui trichent sont suspendus et leurs gains non versés annulés.', [fcfa(r.monthlyCap)])}</li>
+      <li>{t('CVCasa peut faire évoluer ou arrêter le programme. Les gains déjà disponibles restent dus.')}</li>
     </ul>
   );
 }
@@ -224,7 +225,7 @@ export function AmbassadorPage() {
           {e.requested
             ? t('Votre retrait de {0} est en cours : vous le recevez sous quelques jours.', [fcfa(e.requested)])
             : e.available >= r.minPayout
-              ? t('{0} disponibles.', [fcfa(e.available)])
+              ? t('{0} disponibles : vous recevrez {1} après les frais d’envoi Mobile Money.', [fcfa(e.available), fcfa(e.available - Math.ceil((e.available * r.payoutFeePercent) / 100))])
               : t('Encore {0} à gagner avant le premier retrait.', [fcfa(r.minPayout - e.available)])}
         </p>
         {info.payouts.length > 0 && (
@@ -232,7 +233,7 @@ export function AmbassadorPage() {
             {info.payouts.map((p) => (
               <li key={p.id} className="flex items-center justify-between py-2">
                 <span>{day(p.requestedAt)}</span>
-                <span className="font-semibold">{fcfa(p.amount)}</span>
+                <span className="font-semibold">{fcfa(p.net)}</span>
                 <span className={cx('rounded-full px-2 py-0.5 text-xs font-semibold', p.status === 'paid' ? 'bg-emerald-100 text-emerald-900' : p.status === 'refused' ? 'bg-red-50 text-red-800' : 'bg-sun-100 text-sun-900')}>
                   {p.status === 'paid' ? t('Reçu') : p.status === 'refused' ? t('Refusé') : t('En cours')}
                 </span>
