@@ -38,6 +38,13 @@ const SECTIONS: { title: string; text: string[] }[] = [
     ],
   },
   {
+    title: t('Programme Ambassadeur'),
+    text: [
+      t('Si vous devenez ambassadeur, nous gardons vos nom et prénoms légaux, votre numéro Mobile Money, la signature de votre contrat (date, version, adresse internet), vos statistiques de parrainage et l’historique de vos paiements, pour gérer le programme et vous payer.'),
+      t('Les justificatifs envoyés pour changer de numéro (pièce d’identité, capture du compte) ne servent qu’à vérifier votre identité et sont supprimés dès que la demande est traitée.'),
+    ],
+  },
+  {
     title: t('Vos droits'),
     text: [t('Vous pouvez demander à consulter, corriger ou supprimer votre compte et vos données à tout moment en nous écrivant dans « Nous contacter ».')],
   },

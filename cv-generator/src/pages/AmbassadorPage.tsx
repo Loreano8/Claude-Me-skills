@@ -1,7 +1,9 @@
 import { useCallback, useEffect, useState } from 'react';
-import { Check, Clock, Copy, HandCoins, Share2, ShieldCheck, Wallet } from 'lucide-react';
+import { Check, Clock, Copy, FileSignature, FileUp, HandCoins, Share2, ShieldCheck, Wallet, X } from 'lucide-react';
 import { Capacitor } from '@capacitor/core';
-import { LOCALE, t } from '../i18n.ts';
+import { LANG, LOCALE, t } from '../i18n.ts';
+import { AMBASSADOR_CONTRACT_VERSION, ambassadorContract, sameName } from '../../shared/ambassadorContract.ts';
+import { fileToAttachment } from '../lib/files.ts';
 import { useAccount } from '../lib/account.ts';
 import { api, ApiError, type AmbassadorInfo } from '../lib/api.ts';
 import { referralLink } from '../lib/referral.ts';
@@ -31,6 +33,25 @@ function Rules({ r }: { r: AmbassadorInfo['rules'] }) {
   );
 }
 
+/** Le contrat, à lire dans une zone qui défile. */
+function Contract({ r }: { r: AmbassadorInfo['rules'] }) {
+  return (
+    <div className="max-h-72 space-y-3 overflow-y-auto rounded-xl bg-slate-50 p-4 text-sm leading-relaxed text-slate-700 ring-1 ring-slate-200" tabIndex={0} aria-label={t('Contrat Ambassadeur')}>
+      <p className="font-semibold text-ink">{t('Contrat Ambassadeur CVCasa (version {0})', [AMBASSADOR_CONTRACT_VERSION])}</p>
+      {ambassadorContract(LANG === 'en' ? 'en' : 'fr', r).map((sec) => (
+        <section key={sec.title}>
+          <h3 className="font-semibold text-slate-900">{sec.title}</h3>
+          {sec.text.map((p) => (
+            <p key={p} className="mt-1">
+              {p}
+            </p>
+          ))}
+        </section>
+      ))}
+    </div>
+  );
+}
+
 function Fine({ r }: { r: AmbassadorInfo['rules'] }) {
   return (
     <ul className="space-y-1 text-xs text-slate-500">
@@ -48,14 +69,16 @@ export function AmbassadorPage() {
   const [info, setInfo] = useState<AmbassadorInfo | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
-  const [form, setForm] = useState({ momoNumber: '', momoName: '', motivation: '' });
+  const [form, setForm] = useState({ firstName: '', lastName: '', momoNumber: '', motivation: '', accept: false, signature: '' });
+  const [showContract, setShowContract] = useState(false);
+  const [change, setChange] = useState<{ open: boolean; number: string; docs: { name: string; mediaType: string; data: string }[] }>({ open: false, number: '', docs: [] });
   const [copied, setCopied] = useState(false);
 
   const load = useCallback(async () => {
     try {
       const r = await api.ambassador();
       setInfo(r);
-      setForm((f) => ({ ...f, momoNumber: f.momoNumber || r.momoNumber, momoName: f.momoName || r.momoName }));
+      setForm((f) => ({ ...f, momoNumber: f.momoNumber || r.momoNumber, firstName: f.firstName || r.legalFirstName, lastName: f.lastName || r.legalLastName }));
     } catch (e) {
       setError(e instanceof ApiError ? e.message : t('Une erreur est survenue. Réessayez.'));
     }
@@ -69,8 +92,10 @@ export function AmbassadorPage() {
     setError(null);
     try {
       setInfo(await fn());
+      return true;
     } catch (e) {
       setError(e instanceof ApiError ? e.message : t('Une erreur est survenue. Réessayez.'));
+      return false;
     } finally {
       setBusy(false);
     }
@@ -134,10 +159,20 @@ export function AmbassadorPage() {
         </section>
         {info.status === 'refused' && <Notice tone="warn">{t('Votre précédente demande n’a pas été retenue. Vous pouvez en refaire une.')}</Notice>}
         <Card tour="ambassador-apply" title={t('Devenir ambassadeur')} subtitle={t('Votre demande est vérifiée par l’équipe, en général sous 48 heures.')}>
+          <p className="mb-3 text-sm text-slate-600">{t('Écrivez vos prénoms et votre nom exactement comme sur votre pièce d’identité : vos gains ne seront envoyés qu’à un numéro Mobile Money enregistré à ce nom.')}</p>
           <div className="grid gap-3 sm:grid-cols-2">
-            <Field label={t('Numéro Mobile Money')} value={form.momoNumber} onChange={(v) => setForm({ ...form, momoNumber: v.slice(0, 20) })} placeholder="+229 01 00 00 00 00" autoComplete="tel" />
-            <Field label={t('Nom du titulaire du compte')} value={form.momoName} onChange={(v) => setForm({ ...form, momoName: v.slice(0, 80) })} autoComplete="name" />
+            <Field label={t('Prénom(s)')} value={form.firstName} onChange={(v) => setForm({ ...form, firstName: v.slice(0, 80) })} autoComplete="given-name" />
+            <Field label={t('Nom de famille')} value={form.lastName} onChange={(v) => setForm({ ...form, lastName: v.slice(0, 80) })} autoComplete="family-name" />
           </div>
+          <Field
+            className="mt-3"
+            label={t('Numéro Mobile Money à votre nom')}
+            value={form.momoNumber}
+            onChange={(v) => setForm({ ...form, momoNumber: v.slice(0, 20) })}
+            placeholder="+229 01 00 00 00 00"
+            autoComplete="tel"
+            hint={t('Le numéro doit être enregistré au nom indiqué ci-dessus. Il ne pourra ensuite être changé que sur justificatifs.')}
+          />
           <TextArea
             className="mt-3"
             label={t('Comment allez-vous en parler ? (facultatif)')}
@@ -146,9 +181,33 @@ export function AmbassadorPage() {
             rows={2}
             placeholder={t('Ex. groupes WhatsApp d’étudiants, mon école, mon cybercafé…')}
           />
+          <div className="mt-4">
+            <p className="mb-2 flex items-center gap-2 font-semibold text-ink">
+              <FileSignature className="size-4 text-brand-600" aria-hidden="true" /> {t('Le contrat')}
+            </p>
+            <Contract r={r} />
+            <label className="mt-3 flex min-h-11 items-start gap-2.5 text-sm text-slate-800">
+              <input type="checkbox" className="mt-1 size-4 accent-brand-600" checked={form.accept} onChange={(ev) => setForm({ ...form, accept: ev.target.checked })} />
+              <span>{t('J’ai lu le contrat Ambassadeur et je l’accepte.')}</span>
+            </label>
+            <Field
+              className="mt-2"
+              label={t('Signature : tapez vos prénoms et votre nom')}
+              value={form.signature}
+              onChange={(v) => setForm({ ...form, signature: v.slice(0, 120) })}
+              placeholder={[form.firstName, form.lastName].filter(Boolean).join(' ') || t('Prénom Nom')}
+              hint={t('Signé en ligne le {0}. Une copie reste consultable dans votre espace.', [day(new Date().toISOString())])}
+            />
+          </div>
           {error && <div className="mt-3"><Notice tone="error">{error}</Notice></div>}
-          <Button className="mt-3" loading={busy} disabled={!form.momoNumber.trim() || !form.momoName.trim()} onClick={() => void run(() => api.ambassadorApply(form))}>
-            {t('Envoyer ma demande')}</Button>
+          <Button
+            className="mt-3"
+            icon={<FileSignature className="size-4" />}
+            loading={busy}
+            disabled={!form.firstName.trim() || !form.lastName.trim() || !form.momoNumber.trim() || !form.accept || !(sameName(form.signature, `${form.firstName} ${form.lastName}`) || sameName(form.signature, `${form.lastName} ${form.firstName}`))}
+            onClick={() => void run(() => api.ambassadorApply({ ...form, contractVersion: AMBASSADOR_CONTRACT_VERSION }))}
+          >
+            {t('Signer et envoyer ma demande')}</Button>
           <div className="mt-4">
             <Fine r={r} />
           </div>
@@ -176,7 +235,17 @@ export function AmbassadorPage() {
 
   // Ambassadeur actif.
   const e = info.earnings;
-  const canWithdraw = e.available >= r.minPayout && !e.requested;
+  const changing = info.numberChange?.status === 'requested';
+  const canWithdraw = e.available >= r.minPayout && !e.requested && !changing;
+  const addDocs = async (files: FileList | null) => {
+    setError(null);
+    try {
+      const docs = await Promise.all([...(files ?? [])].map((f) => fileToAttachment(f)));
+      setChange((c) => ({ ...c, docs: [...c.docs, ...docs.map(({ name, mediaType, data }) => ({ name, mediaType, data }))].slice(0, 4) }));
+    } catch (err) {
+      setError((err as Error).message);
+    }
+  };
   return (
     <div className="mx-auto max-w-2xl space-y-4">
       {header}
@@ -217,7 +286,7 @@ export function AmbassadorPage() {
         </div>
       </Card>
 
-      <Card tour="ambassador-payout" title={t('Retirer mes gains')} subtitle={t('Vers {0} ({1}).', [info.momoNumber, info.momoName])}>
+      <Card tour="ambassador-payout" title={t('Retirer mes gains')} subtitle={t('Vers {0}, au nom de {1}.', [info.momoNumber, info.momoName])}>
         {error && <div className="mb-3"><Notice tone="error">{error}</Notice></div>}
         <Button icon={<Wallet className="size-4" />} loading={busy} disabled={!canWithdraw} onClick={() => void run(() => api.ambassadorPayout())}>
           {t('Demander mon retrait')}</Button>
@@ -241,11 +310,54 @@ export function AmbassadorPage() {
             ))}
           </ul>
         )}
+        <div className="mt-4 border-t border-slate-100 pt-3">
+          {changing ? (
+            <Notice>{t('Changement de numéro vers {0} en cours d’examen. Les retraits reprendront ensuite.', [info.numberChange!.newNumber])}</Notice>
+          ) : !change.open ? (
+            <button type="button" onClick={() => setChange({ open: true, number: '', docs: [] })} className="min-h-11 text-sm font-semibold text-brand-700">
+              {t('Changer de numéro Mobile Money')}</button>
+          ) : (
+            <div className="space-y-3">
+              {info.numberChange?.status === 'refused' && <Notice tone="warn">{t('Votre dernière demande de changement a été refusée. Vérifiez vos justificatifs.')}</Notice>}
+              <p className="text-sm text-slate-600">{t('Pour votre sécurité, le nouveau numéro doit être à votre nom ({0}). Joignez une photo de votre pièce d’identité et une capture montrant le nom du titulaire du compte Mobile Money.', [info.momoName])}</p>
+              <Field label={t('Nouveau numéro Mobile Money')} value={change.number} onChange={(v) => setChange({ ...change, number: v.slice(0, 20) })} autoComplete="tel" />
+              <label className="flex min-h-11 w-fit cursor-pointer items-center gap-2 rounded-xl bg-slate-100 px-3 text-sm font-semibold text-slate-800 hover:bg-slate-200">
+                <FileUp className="size-4" aria-hidden="true" /> {t('Ajouter les justificatifs')}
+                <input type="file" accept="image/*,application/pdf" multiple className="sr-only" onChange={(ev) => void addDocs(ev.target.files)} />
+              </label>
+              {change.docs.length > 0 && (
+                <ul className="space-y-1 text-sm">
+                  {change.docs.map((d, i) => (
+                    <li key={i} className="flex items-center justify-between rounded-lg bg-slate-50 px-3 py-1.5">
+                      <span className="truncate">{d.name}</span>
+                      <button type="button" aria-label={t('Retirer {0}', [d.name])} className="flex size-9 items-center justify-center" onClick={() => setChange({ ...change, docs: change.docs.filter((_, j) => j !== i) })}>
+                        <X className="size-4" aria-hidden="true" />
+                      </button>
+                    </li>
+                  ))}
+                </ul>
+              )}
+              <div className="flex flex-wrap gap-2">
+                <Button loading={busy} disabled={change.number.replace(/\D/g, '').length < 8 || change.docs.length < 2} onClick={() => void run(() => api.ambassadorNumber(change.number, change.docs)).then((ok) => ok && setChange({ open: false, number: '', docs: [] }))}>
+                  {t('Envoyer la demande')}</Button>
+                <Button variant="ghost" onClick={() => setChange({ open: false, number: '', docs: [] })}>
+                  {t('Annuler')}</Button>
+              </div>
+            </div>
+          )}
+        </div>
         <div className="mt-4 flex items-start gap-2">
           <ShieldCheck className="mt-0.5 size-4 shrink-0 text-slate-400" aria-hidden="true" />
           <Fine r={r} />
         </div>
       </Card>
+      {info.contract && (
+        <Card title={t('Votre contrat')} subtitle={t('Signé le {0} par {1} (version {2}).', [day(info.contract.signedAt), info.momoName, info.contract.version])}>
+          <button type="button" onClick={() => setShowContract(!showContract)} className="min-h-11 text-sm font-semibold text-brand-700">
+            {showContract ? t('Masquer le contrat') : t('Lire le contrat')}</button>
+          {showContract && <Contract r={r} />}
+        </Card>
+      )}
     </div>
   );
 }

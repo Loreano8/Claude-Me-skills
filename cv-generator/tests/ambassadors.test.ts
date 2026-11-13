@@ -1,6 +1,12 @@
 import { describe, expect, it } from 'vitest';
 import { createAccounts } from '../server/accounts.ts';
 import { AMBASSADOR_RULES as R, createAmbassadors } from '../server/ambassadors.ts';
+import { AMBASSADOR_CONTRACT_VERSION } from '../shared/ambassadorContract.ts';
+
+/** Demande avec contrat signé (nom légal + signature identique). */
+const form = (momoNumber = '+229 01 00 00 00 00', extra: Record<string, unknown> = {}) => ({
+  firstName: 'Prénom', lastName: 'Nom', momoNumber, contractVersion: AMBASSADOR_CONTRACT_VERSION, accept: true, signature: 'Prénom Nom', ...extra,
+});
 import { createPayments, type PaymentProvider } from '../server/payments.ts';
 import { testDb } from './pglite.ts';
 
@@ -27,7 +33,7 @@ async function setup() {
   const ambassador = async () => {
     const a = await person();
     const { code } = await accounts.referral(a.id);
-    await ambassadors.apply(a.id, { momoNumber: '+229 01 00 00 00 00', momoName: 'Titulaire' });
+    await ambassadors.apply(a.id, form('+229 01 00 00 00 00'));
     await ambassadors.setStatus(a.id, 'active');
     return { a, code };
   };
@@ -44,7 +50,7 @@ describe('programme Ambassadeur', () => {
     const { accounts, ambassadors, person } = await setup();
     const a = await person();
     const { code } = await accounts.referral(a.id);
-    await ambassadors.apply(a.id, { momoNumber: '0100000000', momoName: 'Titulaire' });
+    await ambassadors.apply(a.id, form('0100000000'));
     const f = await person(code);
     expect(await ambassadors.onFirstCv(f.id)).toBe(0);
     expect((await ambassadors.summary(a.id)).status).toBe('pending');
@@ -95,9 +101,9 @@ describe('programme Ambassadeur', () => {
     const { ambassadors, person, accounts, buy } = await setup();
     const a = await person();
     const { code } = await accounts.referral(a.id);
-    await ambassadors.apply(a.id, { momoNumber: '0100000000', momoName: 'Titulaire' });
+    await ambassadors.apply(a.id, form('0100000000'));
     await ambassadors.setStatus(a.id, 'refused');
-    expect((await ambassadors.apply(a.id, { momoNumber: '0100000001', momoName: 'Titulaire' })).status).toBe('pending');
+    expect((await ambassadors.apply(a.id, form('0100000001'))).status).toBe('pending');
     await ambassadors.setStatus(a.id, 'active');
     await buy((await person(code)).id, 'essentiel');
     expect((await ambassadors.summary(a.id)).earnings.pending).toBe(150);
@@ -179,6 +185,38 @@ describe('programme Ambassadeur', () => {
   it('refuse un numéro Mobile Money vide', async () => {
     const { ambassadors, person } = await setup();
     const a = await person();
-    await expect(ambassadors.apply(a.id, { momoNumber: '12', momoName: 'X Y' })).rejects.toMatchObject({ status: 400 });
+    await expect(ambassadors.apply(a.id, form('12'))).rejects.toMatchObject({ status: 400 });
+  });
+  it('exige le contrat signé avec le nom légal exact', async () => {
+    const { ambassadors, person } = await setup();
+    const a = await person();
+    await expect(ambassadors.apply(a.id, form(undefined, { accept: false }))).rejects.toMatchObject({ status: 400 });
+    await expect(ambassadors.apply(a.id, form(undefined, { contractVersion: 'ancienne' }))).rejects.toMatchObject({ status: 400 });
+    await expect(ambassadors.apply(a.id, form(undefined, { signature: 'Quelqu’un d’autre' }))).rejects.toMatchObject({ status: 400 });
+    await expect(ambassadors.apply(a.id, form(undefined, { lastName: 'N' }))).rejects.toMatchObject({ status: 400 });
+    // Accents, majuscules et ordre « Nom Prénom » acceptés.
+    const s = await ambassadors.apply(a.id, form(undefined, { signature: '  NOM   prenom ' }));
+    expect(s).toMatchObject({ status: 'pending', legalFirstName: 'Prénom', legalLastName: 'Nom', momoName: 'Prénom Nom' });
+    expect(s.contract).toMatchObject({ version: AMBASSADOR_CONTRACT_VERSION, current: true });
+  });
+
+  it('une fois validé, le numéro ne change que sur justificatifs, et pas de retrait pendant l’examen', async () => {
+    const { clock, ambassadors, person, ambassador, buy } = await setup();
+    const { a, code } = await ambassador();
+    await expect(ambassadors.apply(a.id, form('+229 99 99 99 99 99'))).rejects.toMatchObject({ status: 409 });
+    const doc = (name: string) => ({ name, mediaType: 'image/jpeg', data: 'aGVsbG8=' });
+    await expect(ambassadors.requestNumberChange(a.id, { momoNumber: '+229 99 99 99 99 99', documents: [doc('cni.jpg')] })).rejects.toMatchObject({ status: 400 });
+    for (let i = 0; i < 6; i++) await buy((await person(code)).id, 'pro');
+    clock.t += (R.holdDays + 1) * DAY;
+    const change = await ambassadors.requestNumberChange(a.id, { momoNumber: '+229 99 99 99 99 99', documents: [doc('cni.jpg'), doc('compte.jpg')] });
+    await expect(ambassadors.requestPayout(a.id)).rejects.toMatchObject({ status: 409 });
+    expect((await ambassadors.summary(a.id)).numberChange).toMatchObject({ status: 'requested', newNumber: '+22999999999 99'.replace(' ', '') });
+    expect(await ambassadors.numberChangeDocuments(change.id)).toHaveLength(2);
+    await ambassadors.decideNumberChange(change.id, true);
+    expect(await ambassadors.numberChangeDocuments(change.id)).toHaveLength(0); // justificatifs effacés
+    const s = await ambassadors.summary(a.id);
+    expect(s.momoNumber).toBe('+22999999999' + '99');
+    expect((await ambassadors.requestPayout(a.id)).amount).toBe(2400);
+    expect((await ambassadors.adminList()).payouts[0]).toMatchObject({ momoNumber: '+2299999999999' });
   });
 });

@@ -535,7 +535,8 @@ function TempPassword({ token }: { token: string }) {
   );
 }
 
-type AdminAmbassador = { userId: number; identifier: string; name: string; status: string; momoNumber: string; momoName: string; motivation: string; createdAt: string; invited: number; buyers: number; earned: number; paid: number };
+type AdminAmbassador = { userId: number; identifier: string; name: string; status: string; momoNumber: string; momoName: string; contractVersion: string; contractSignedAt: string | null; motivation: string; createdAt: string; invited: number; buyers: number; earned: number; paid: number };
+type AdminNumberChange = { id: number; userId: number; identifier: string; legalName: string; oldNumber: string; newNumber: string; status: string; requestedAt: string; documents: number };
 type AdminPayout = { id: number; userId: number; identifier: string; amount: number; fee: number; net: number; momoNumber: string; momoName: string; status: string; requestedAt: string };
 
 const AMB_STATUS: Record<string, string> = { pending: 'À valider', active: 'Actif', refused: 'Refusé', suspended: 'Suspendu' };
@@ -543,7 +544,16 @@ const fcfaAdmin = (n: number) => `${n.toLocaleString('fr-FR')} FCFA`;
 
 /** Programme Ambassadeur : valider les demandes, puis payer les retraits (Mobile Money envoyé à la main, puis « Payé »). */
 function Ambassadors({ token }: { token: string }) {
-  const [data, setData] = useState<{ ambassadors: AdminAmbassador[]; payouts: AdminPayout[] } | null>(null);
+  const [data, setData] = useState<{ ambassadors: AdminAmbassador[]; payouts: AdminPayout[]; numberChanges: AdminNumberChange[] } | null>(null);
+  const [docs, setDocs] = useState<{ id: number; list: { name: string; mediaType: string; data: string }[] } | null>(null);
+  const showDocs = async (id: number) => {
+    try {
+      const r = await adminRequest<{ documents: { name: string; mediaType: string; data: string }[] }>(token, 'GET', `/api/admin/number-changes/${id}`);
+      setDocs({ id, list: r.documents });
+    } catch (e) {
+      setError((e as Error).message);
+    }
+  };
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState<string | null>(null);
   const load = useCallback(async () => {
@@ -582,11 +592,14 @@ function Ambassadors({ token }: { token: string }) {
                 <span className="font-semibold">Envoyer {fcfaAdmin(p.net)} · {p.identifier}</span>
                 <span className="text-xs text-slate-500">{when(p.requestedAt)} · {p.status === 'requested' ? 'à payer' : p.status === 'paid' ? 'payé' : 'refusé'}</span>
               </div>
-              <p className="mt-1 text-slate-700">Mobile Money : <strong>{p.momoNumber}</strong> ({p.momoName})</p>
+              <p className="mt-1 text-slate-700">Mobile Money : <strong>{p.momoNumber}</strong></p>
+              <p className="mt-1 rounded-lg bg-white px-2 py-1 text-slate-800 ring-1 ring-amber-200">
+                Avant de valider l’envoi, Mobile Money doit afficher le nom : <strong>{p.momoName}</strong>. Sinon, n’envoyez pas et refusez.
+              </p>
               <p className="text-xs text-slate-500">Gains {fcfaAdmin(p.amount)} − frais d’envoi {fcfaAdmin(p.fee)} = {fcfaAdmin(p.net)} à envoyer.</p>
               {p.status === 'requested' && (
                 <div className="mt-2 flex flex-wrap gap-2">
-                  <Button size="sm" loading={busy === `p${p.id}`} onClick={() => window.confirm(`Avez-vous bien envoyé ${fcfaAdmin(p.net)} au ${p.momoNumber} ?`) && void act(`p${p.id}`, `/api/admin/payouts/${p.id}`, { decision: 'paid' })}>
+                  <Button size="sm" loading={busy === `p${p.id}`} onClick={() => window.confirm(`Avez-vous bien envoyé ${fcfaAdmin(p.net)} au ${p.momoNumber}, au nom de ${p.momoName} ?`) && void act(`p${p.id}`, `/api/admin/payouts/${p.id}`, { decision: 'paid' })}>
                     Payé
                   </Button>
                   <Button size="sm" variant="ghost" onClick={() => { const note = window.prompt('Raison du refus (visible par vous seulement) :') ?? ''; void act(`p${p.id}`, `/api/admin/payouts/${p.id}`, { decision: 'refused', note }); }}>
@@ -598,6 +611,42 @@ function Ambassadors({ token }: { token: string }) {
           ))}
         </ul>
       </section>
+      {data.numberChanges.some((c) => c.status === 'requested') && (
+        <section>
+          <h3 className="mb-2 font-semibold text-slate-900">Changements de numéro à vérifier</h3>
+          <ul className="space-y-2">
+            {data.numberChanges.filter((c) => c.status === 'requested').map((c) => (
+              <li key={c.id} className="rounded-xl border border-amber-300 bg-amber-50 p-3 text-sm">
+                <p className="font-semibold">{c.legalName} · {c.identifier}</p>
+                <p className="text-slate-700">{c.oldNumber} → <strong>{c.newNumber}</strong> · {when(c.requestedAt)}</p>
+                <p className="mt-1 text-xs text-slate-600">Vérifiez que la pièce d’identité et le compte Mobile Money portent bien le nom « {c.legalName} ». Les justificatifs sont effacés après votre décision.</p>
+                <div className="mt-2 flex flex-wrap gap-2">
+                  <Button size="sm" variant="secondary" onClick={() => void showDocs(c.id)}>Voir les justificatifs ({c.documents})</Button>
+                  <Button size="sm" loading={busy === `c${c.id}`} onClick={() => window.confirm(`Accepter le nouveau numéro ${c.newNumber} pour ${c.legalName} ?`) && void act(`c${c.id}`, `/api/admin/number-changes/${c.id}`, { approve: true })}>
+                    Accepter
+                  </Button>
+                  <Button size="sm" variant="ghost" onClick={() => { const note = window.prompt('Raison du refus (affichée à l’ambassadeur) :') ?? ''; void act(`c${c.id}`, `/api/admin/number-changes/${c.id}`, { approve: false, note }); }}>
+                    Refuser
+                  </Button>
+                </div>
+                {docs?.id === c.id && (
+                  <div className="mt-3 grid gap-2 sm:grid-cols-2">
+                    {docs.list.map((d, i) =>
+                      d.mediaType.startsWith('image/') ? (
+                        <img key={i} src={`data:${d.mediaType};base64,${d.data}`} alt={d.name} className="w-full rounded-lg ring-1 ring-slate-200" />
+                      ) : (
+                        <a key={i} href={`data:${d.mediaType};base64,${d.data}`} download={d.name} className="rounded-lg bg-white p-3 text-brand-700 underline ring-1 ring-slate-200">
+                          {d.name}
+                        </a>
+                      ),
+                    )}
+                  </div>
+                )}
+              </li>
+            ))}
+          </ul>
+        </section>
+      )}
       <section>
         <h3 className="mb-2 font-semibold text-slate-900">Ambassadeurs ({data.ambassadors.length})</h3>
         {!data.ambassadors.length && <p className="text-sm text-slate-500">Aucune demande pour le moment.</p>}
@@ -611,7 +660,8 @@ function Ambassadors({ token }: { token: string }) {
               <p className="mt-1 text-slate-600">
                 {a.invited} inscrit(s) · {a.buyers} acheteur(s) · gagné {fcfaAdmin(a.earned)} · payé {fcfaAdmin(a.paid)}
               </p>
-              <p className="text-slate-600">Mobile Money : {a.momoNumber} ({a.momoName})</p>
+              <p className="text-slate-600">Nom légal : <strong>{a.momoName}</strong> · Mobile Money : {a.momoNumber}</p>
+              <p className="text-xs text-slate-500">{a.contractSignedAt ? `Contrat ${a.contractVersion} signé le ${when(a.contractSignedAt)}` : 'Contrat non signé'}</p>
               {a.motivation && <p className="mt-1 text-slate-700 italic">« {a.motivation} »</p>}
               <div className="mt-2 flex flex-wrap gap-2">
                 {a.status !== 'active' && (

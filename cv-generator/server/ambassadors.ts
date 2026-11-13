@@ -1,4 +1,5 @@
 import type { Db } from './db.ts';
+import { AMBASSADOR_CONTRACT_VERSION, sameName } from '../shared/ambassadorContract.ts';
 
 // Programme Ambassadeur : des personnes validées par l'administrateur gagnent de l'argent (FCFA, versé par Mobile Money)
 // quand des filleuls arrivent par leur lien. Tout est calculé pour que chaque filleul reste rentable :
@@ -57,6 +58,27 @@ create table if not exists ambassadors (
   created_at timestamptz not null default now(),
   decided_at timestamptz
 );
+-- Contrat signé en ligne : nom légal exact, version acceptée, signature tapée, date et adresse internet.
+alter table ambassadors add column if not exists legal_first_name text not null default '';
+alter table ambassadors add column if not exists legal_last_name text not null default '';
+alter table ambassadors add column if not exists contract_version text not null default '';
+alter table ambassadors add column if not exists contract_signature text not null default '';
+alter table ambassadors add column if not exists contract_signed_at timestamptz;
+alter table ambassadors add column if not exists contract_ip text not null default '';
+
+-- Changement du numéro de paiement d'un ambassadeur validé : seulement sur justificatifs, vérifiés par l'administrateur.
+-- Les justificatifs sont effacés dès que la demande est traitée.
+create table if not exists ambassador_number_changes (
+  id serial primary key,
+  ambassador_id integer not null references users(id) on delete cascade,
+  old_number text not null,
+  new_number text not null,
+  documents text,
+  status text not null default 'requested',
+  note text not null default '',
+  created_at timestamptz not null default now(),
+  decided_at timestamptz
+);
 
 create table if not exists ambassador_payouts (
   id serial primary key,
@@ -93,6 +115,10 @@ export interface AmbassadorSummary {
   status: AmbassadorStatus | null;
   momoNumber: string;
   momoName: string;
+  legalFirstName: string;
+  legalLastName: string;
+  contract: { version: string; signedAt: string; current: boolean } | null;
+  numberChange: { newNumber: string; status: string; requestedAt: string; note: string } | null;
   rules: typeof AMBASSADOR_RULES;
   stats: { invited: number; signupsRewarded: number; buyers: number };
   earnings: { pending: number; available: number; requested: number; paid: number };
@@ -100,6 +126,20 @@ export interface AmbassadorSummary {
 }
 
 const cleanPhone = (v: string) => v.replace(/[^\d+]/g, '').slice(0, 20);
+const cleanName = (v: string) => (v ?? '').replace(/\s+/g, ' ').trim().slice(0, 80);
+const DOC_TYPES = ['image/jpeg', 'image/png', 'image/webp', 'application/pdf'];
+
+export type ChangeDocument = { name: string; mediaType: string; data: string };
+export type ApplyInput = {
+  firstName: string;
+  lastName: string;
+  momoNumber: string;
+  motivation?: string;
+  contractVersion: string;
+  accept: boolean;
+  signature: string;
+  ip?: string;
+};
 
 export function createAmbassadors(db: Db, now: () => Date = () => new Date()) {
   const R = AMBASSADOR_RULES;
@@ -179,25 +219,67 @@ export function createAmbassadors(db: Db, now: () => Date = () => new Date()) {
       return total;
     },
 
-    /** Demande pour devenir ambassadeur (ou mise à jour du numéro Mobile Money). */
-    async apply(userId: number, input: { momoNumber: string; momoName: string; motivation?: string }) {
+    /**
+     * Demande pour devenir ambassadeur, avec signature du contrat : nom et prénoms légaux exacts (ceux de la pièce
+     * d'identité), numéro Mobile Money enregistré à ce nom, et signature tapée identique au nom complet.
+     * Une fois validé, le nom et le numéro ne se changent plus ici (changement de numéro sur justificatifs).
+     */
+    async apply(userId: number, input: ApplyInput) {
+      const firstName = cleanName(input.firstName);
+      const lastName = cleanName(input.lastName);
       const momoNumber = cleanPhone(input.momoNumber);
-      const momoName = input.momoName.replace(/\s+/g, ' ').trim().slice(0, 80);
+      if (firstName.length < 2 || lastName.length < 2) throw new AmbassadorError('Indiquez vos nom et prénoms exacts, comme sur votre pièce d’identité.');
       if (momoNumber.replace(/\D/g, '').length < 8) throw new AmbassadorError('Indiquez un numéro Mobile Money valide.');
-      if (momoName.length < 2) throw new AmbassadorError('Indiquez le nom du titulaire du compte Mobile Money.');
+      if (input.contractVersion !== AMBASSADOR_CONTRACT_VERSION || !input.accept) throw new AmbassadorError('Lisez et acceptez le contrat Ambassadeur pour continuer.');
+      if (!sameName(input.signature, `${firstName} ${lastName}`) && !sameName(input.signature, `${lastName} ${firstName}`)) {
+        throw new AmbassadorError('Pour signer, tapez exactement vos prénoms et votre nom.');
+      }
+      const [current] = await db.query<{ status: string }>('select status from ambassadors where user_id = $1', [userId]);
+      if (current && current.status !== 'pending' && current.status !== 'refused') {
+        throw new AmbassadorError('Votre compte ambassadeur est déjà validé. Pour changer de numéro, envoyez une demande avec justificatifs.', 409);
+      }
       await db.query(
-        `insert into ambassadors (user_id, momo_number, momo_name, motivation) values ($1, $2, $3, $4)
+        `insert into ambassadors (user_id, momo_number, momo_name, motivation, legal_first_name, legal_last_name, contract_version, contract_signature, contract_signed_at, contract_ip)
+         values ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
          on conflict (user_id) do update set momo_number = excluded.momo_number, momo_name = excluded.momo_name,
            motivation = case when excluded.motivation = '' then ambassadors.motivation else excluded.motivation end,
-           status = case when ambassadors.status = 'refused' then 'pending' else ambassadors.status end`,
-        [userId, momoNumber, momoName, (input.motivation ?? '').trim().slice(0, 500)],
+           legal_first_name = excluded.legal_first_name, legal_last_name = excluded.legal_last_name,
+           contract_version = excluded.contract_version, contract_signature = excluded.contract_signature,
+           contract_signed_at = excluded.contract_signed_at, contract_ip = excluded.contract_ip,
+           status = 'pending'`,
+        [userId, momoNumber, `${firstName} ${lastName}`, (input.motivation ?? '').trim().slice(0, 500), firstName, lastName, AMBASSADOR_CONTRACT_VERSION, input.signature.trim().slice(0, 120), now().toISOString(), (input.ip ?? '').slice(0, 60)],
       );
       return this.summary(userId);
     },
 
+    /** Ambassadeur validé : demande de nouveau numéro, avec pièce d'identité et preuve que le numéro est à son nom. */
+    async requestNumberChange(userId: number, input: { momoNumber: string; documents: ChangeDocument[] }) {
+      const momoNumber = cleanPhone(input.momoNumber);
+      if (momoNumber.replace(/\D/g, '').length < 8) throw new AmbassadorError('Indiquez un numéro Mobile Money valide.');
+      const docs = (input.documents ?? []).filter((d) => d && typeof d.data === 'string' && DOC_TYPES.includes(d.mediaType));
+      if (docs.length < 2) throw new AmbassadorError('Joignez votre pièce d’identité et une preuve que le numéro est à votre nom (capture du compte Mobile Money).');
+      if (docs.length > 4 || docs.some((d) => d.data.length > 4_000_000)) throw new AmbassadorError('Fichiers trop lourds : 4 fichiers de 3 Mo au plus.', 413);
+      return db.transaction(async (tx) => {
+        const [a] = await tx.query<{ status: string; momo_number: string }>('select status, momo_number from ambassadors where user_id = $1 for update', [userId]);
+        if (!a || (a.status !== 'active' && a.status !== 'suspended')) throw new AmbassadorError('Votre compte ambassadeur n’est pas actif.', 403);
+        if (cleanPhone(a.momo_number) === momoNumber) throw new AmbassadorError('C’est déjà votre numéro de paiement.');
+        const [open] = await tx.query(`select 1 from ambassador_number_changes where ambassador_id = $1 and status = 'requested'`, [userId]);
+        if (open) throw new AmbassadorError('Une demande de changement de numéro est déjà en cours d’examen.', 409);
+        const [row] = await tx.query<{ id: number }>(
+          'insert into ambassador_number_changes (ambassador_id, old_number, new_number, documents) values ($1, $2, $3, $4) returning id',
+          [userId, a.momo_number, momoNumber, JSON.stringify(docs.map((d) => ({ name: String(d.name).slice(0, 120), mediaType: d.mediaType, data: d.data })))],
+        );
+        return { id: row.id, oldNumber: a.momo_number, newNumber: momoNumber };
+      });
+    },
+
     async summary(userId: number): Promise<AmbassadorSummary> {
-      const [a] = await db.query<{ status: AmbassadorStatus; momo_number: string; momo_name: string }>(
-        'select status, momo_number, momo_name from ambassadors where user_id = $1',
+      const [a] = await db.query<{ status: AmbassadorStatus; momo_number: string; momo_name: string; legal_first_name: string; legal_last_name: string; contract_version: string; contract_signed_at: string | null }>(
+        'select status, momo_number, momo_name, legal_first_name, legal_last_name, contract_version, contract_signed_at from ambassadors where user_id = $1',
+        [userId],
+      );
+      const [change] = await db.query<{ new_number: string; status: string; created_at: string; note: string }>(
+        `select new_number, status, created_at, note from ambassador_number_changes where ambassador_id = $1 order by id desc limit 1`,
         [userId],
       );
       const [stats] = await db.query<{ invited: number; signups: number; buyers: number }>(
@@ -222,6 +304,10 @@ export function createAmbassadors(db: Db, now: () => Date = () => new Date()) {
         status: a?.status ?? null,
         momoNumber: a?.momo_number ?? '',
         momoName: a?.momo_name ?? '',
+        legalFirstName: a?.legal_first_name ?? '',
+        legalLastName: a?.legal_last_name ?? '',
+        contract: a?.contract_signed_at ? { version: a.contract_version, signedAt: new Date(a.contract_signed_at).toISOString(), current: a.contract_version === AMBASSADOR_CONTRACT_VERSION } : null,
+        numberChange: change ? { newNumber: change.new_number, status: change.status, requestedAt: new Date(change.created_at).toISOString(), note: change.note } : null,
         rules: R,
         stats: { invited: stats.invited, signupsRewarded: stats.signups, buyers: stats.buyers },
         earnings: { pending: get('pending'), available: get('available'), requested: get('requested'), paid: get('paid') },
@@ -239,6 +325,8 @@ export function createAmbassadors(db: Db, now: () => Date = () => new Date()) {
         if (!a || a.status !== 'active') throw new AmbassadorError('Votre compte ambassadeur n’est pas actif.', 403);
         const [open] = await tx.query(`select 1 from ambassador_payouts where ambassador_id = $1 and status = 'requested'`, [userId]);
         if (open) throw new AmbassadorError('Un retrait est déjà en cours de traitement.', 409);
+        const [changing] = await tx.query(`select 1 from ambassador_number_changes where ambassador_id = $1 and status = 'requested'`, [userId]);
+        if (changing) throw new AmbassadorError('Votre changement de numéro est en cours d’examen : le retrait sera possible ensuite.', 409);
         const [{ total }] = await tx.query<{ total: number }>(
           `select coalesce(sum(amount), 0)::int as total from ambassador_earnings
            where ambassador_id = $1 and status = 'pending' and available_at <= $2`,
@@ -264,9 +352,9 @@ export function createAmbassadors(db: Db, now: () => Date = () => new Date()) {
     async adminList() {
       const rows = await db.query<{
         user_id: number; identifier: string; name: string; status: string; momo_number: string; momo_name: string; motivation: string;
-        created_at: string; invited: number; buyers: number; earned: number; paid: number;
+        created_at: string; invited: number; buyers: number; earned: number; paid: number; contract_version: string; contract_signed_at: string | null;
       }>(
-        `select a.user_id, u.identifier, u.name, a.status, a.momo_number, a.momo_name, a.motivation, a.created_at,
+        `select a.user_id, u.identifier, u.name, a.status, a.momo_number, a.momo_name, a.motivation, a.created_at, a.contract_version, a.contract_signed_at,
                 (select count(*)::int from users f where f.referred_by = a.user_id) as invited,
                 (select count(*)::int from ambassador_earnings e where e.ambassador_id = a.user_id and e.kind = 'first_purchase' and e.status <> 'cancelled') as buyers,
                 (select coalesce(sum(amount), 0)::int from ambassador_earnings e where e.ambassador_id = a.user_id and e.status <> 'cancelled') as earned,
@@ -279,8 +367,15 @@ export function createAmbassadors(db: Db, now: () => Date = () => new Date()) {
          from ambassador_payouts p join users u on u.id = p.ambassador_id
          order by (p.status = 'requested') desc, p.id desc limit 100`,
       );
+      const changes = await db.query<{ id: number; ambassador_id: number; identifier: string; momo_name: string; old_number: string; new_number: string; status: string; created_at: string; docs: number }>(
+        `select c.id, c.ambassador_id, u.identifier, a.momo_name, c.old_number, c.new_number, c.status, c.created_at,
+                coalesce(json_array_length(c.documents::json), 0) as docs
+         from ambassador_number_changes c join users u on u.id = c.ambassador_id join ambassadors a on a.user_id = c.ambassador_id
+         order by (c.status = 'requested') desc, c.id desc limit 50`,
+      );
       return {
-        ambassadors: rows.map((r) => ({ userId: r.user_id, identifier: r.identifier, name: r.name, status: r.status, momoNumber: r.momo_number, momoName: r.momo_name, motivation: r.motivation, createdAt: new Date(r.created_at).toISOString(), invited: r.invited, buyers: r.buyers, earned: r.earned, paid: r.paid })),
+        numberChanges: changes.map((c) => ({ id: c.id, userId: c.ambassador_id, identifier: c.identifier, legalName: c.momo_name, oldNumber: c.old_number, newNumber: c.new_number, status: c.status, requestedAt: new Date(c.created_at).toISOString(), documents: Number(c.docs) })),
+        ambassadors: rows.map((r) => ({ userId: r.user_id, identifier: r.identifier, name: r.name, status: r.status, momoNumber: r.momo_number, momoName: r.momo_name, contractVersion: r.contract_version, contractSignedAt: r.contract_signed_at ? new Date(r.contract_signed_at).toISOString() : null, motivation: r.motivation, createdAt: new Date(r.created_at).toISOString(), invited: r.invited, buyers: r.buyers, earned: r.earned, paid: r.paid })),
         payouts: payouts.map((p) => ({ id: p.id, userId: p.ambassador_id, identifier: p.identifier, amount: p.amount, fee: p.fee, net: p.amount - p.fee, momoNumber: p.momo_number, momoName: p.momo_name, status: p.status, requestedAt: new Date(p.requested_at).toISOString() })),
       };
     },
@@ -290,6 +385,26 @@ export function createAmbassadors(db: Db, now: () => Date = () => new Date()) {
       if (!Number.isInteger(userId)) throw new AmbassadorError('Ambassadeur introuvable.', 404);
       const rows = await db.query('update ambassadors set status = $2, decided_at = now() where user_id = $1 returning user_id', [userId, status]);
       if (!rows.length) throw new AmbassadorError('Ambassadeur introuvable.', 404);
+    },
+
+    /** Justificatifs d'une demande de changement de numéro (pour l'administrateur). */
+    async numberChangeDocuments(id: number): Promise<ChangeDocument[]> {
+      if (!Number.isInteger(id)) throw new AmbassadorError('Demande introuvable.', 404);
+      const [row] = await db.query<{ documents: string | null }>('select documents from ambassador_number_changes where id = $1', [id]);
+      if (!row) throw new AmbassadorError('Demande introuvable.', 404);
+      return row.documents ? (JSON.parse(row.documents) as ChangeDocument[]) : [];
+    },
+
+    /** Changement de numéro accepté (le numéro est mis à jour) ou refusé ; les justificatifs sont effacés dans les deux cas. */
+    async decideNumberChange(id: number, approve: boolean, note = '') {
+      if (!Number.isInteger(id)) throw new AmbassadorError('Demande introuvable.', 404);
+      return db.transaction(async (tx) => {
+        const [c] = await tx.query<{ ambassador_id: number; new_number: string; status: string }>('select ambassador_id, new_number, status from ambassador_number_changes where id = $1 for update', [id]);
+        if (!c) throw new AmbassadorError('Demande introuvable.', 404);
+        if (c.status !== 'requested') throw new AmbassadorError('Cette demande a déjà été traitée.', 409);
+        await tx.query(`update ambassador_number_changes set status = $2, note = $3, documents = null, decided_at = now() where id = $1`, [id, approve ? 'approved' : 'refused', note.slice(0, 300)]);
+        if (approve) await tx.query('update ambassadors set momo_number = $2 where user_id = $1', [c.ambassador_id, c.new_number]);
+      });
     },
 
     /** Fraude constatée : annule les gains pas encore payés (ni demandés) de l'ambassadeur. */

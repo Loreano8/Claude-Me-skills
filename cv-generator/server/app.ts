@@ -310,14 +310,34 @@ export function createApp({ fetchPage = fetchJobPage, ai, aiEn = null, allowedOr
   app.post('/api/ambassador/apply', async (c) => {
     const user = await currentUser(c);
     if (!user || !accounts || !ambassadors) return c.json({ error: 'Connectez-vous pour devenir ambassadeur.' }, 401);
-    const b = (await c.req.json().catch(() => null)) as { momoNumber?: string; momoName?: string; motivation?: string } | null;
+    const b = (await c.req.json().catch(() => null)) as Record<string, unknown> | null;
     try {
       const before = await ambassadors.summary(user.id);
-      const summary = await ambassadors.apply(user.id, { momoNumber: String(b?.momoNumber ?? ''), momoName: String(b?.momoName ?? ''), motivation: String(b?.motivation ?? '') });
-      if (!before.status || before.status === 'refused') tellAdmin('CVCasa : nouvelle demande d’ambassadeur', `Nouvelle demande d'ambassadeur : ${user.identifier}. À valider dans l'espace administrateur.`);
-      // Numéro de paiement changé sur un compte actif : on prévient (compte volé qui détourne les gains).
-      else if (before.momoNumber !== summary.momoNumber) tellAdmin('CVCasa : numéro Mobile Money modifié', `${user.identifier} a changé son numéro Mobile Money : ${before.momoNumber} → ${summary.momoNumber}. Vérifiez avant le prochain paiement.`);
+      const summary = await ambassadors.apply(user.id, {
+        firstName: String(b?.firstName ?? ''),
+        lastName: String(b?.lastName ?? ''),
+        momoNumber: String(b?.momoNumber ?? ''),
+        motivation: String(b?.motivation ?? ''),
+        contractVersion: String(b?.contractVersion ?? ''),
+        accept: b?.accept === true,
+        signature: String(b?.signature ?? ''),
+        ip: clientKey(c),
+      });
+      if (!before.status || before.status === 'refused') tellAdmin('CVCasa : nouvelle demande d’ambassadeur', `Nouvelle demande d'ambassadeur : ${summary.momoName} (${user.identifier}), contrat signé. À valider dans l'espace administrateur.`);
       return c.json(summary);
+    } catch (error) {
+      return ambassadorError(c, error);
+    }
+  });
+
+  app.post('/api/ambassador/number', async (c) => {
+    const user = await currentUser(c);
+    if (!user || !accounts || !ambassadors) return c.json({ error: 'Connectez-vous pour continuer.' }, 401);
+    const b = (await c.req.json().catch(() => null)) as { momoNumber?: string; documents?: unknown } | null;
+    try {
+      const change = await ambassadors.requestNumberChange(user.id, { momoNumber: String(b?.momoNumber ?? ''), documents: Array.isArray(b?.documents) ? (b!.documents as never) : [] });
+      tellAdmin('CVCasa : changement de numéro ambassadeur', `${user.identifier} demande à recevoir ses gains sur ${change.newNumber} (au lieu de ${change.oldNumber}). Justificatifs à vérifier dans l'espace administrateur.`);
+      return c.json(await ambassadors.summary(user.id));
     } catch (error) {
       return ambassadorError(c, error);
     }
@@ -355,6 +375,26 @@ export function createApp({ fetchPage = fetchJobPage, ai, aiEn = null, allowedOr
     if (!ambassadors || !isAdmin(c)) return c.json({ error: 'Accès refusé.' }, 403);
     try {
       await ambassadors.cancelUnpaid(Number(c.req.param('id')));
+      return c.json(await ambassadors.adminList());
+    } catch (error) {
+      return ambassadorError(c, error);
+    }
+  });
+
+  app.get('/api/admin/number-changes/:id', async (c) => {
+    if (!ambassadors || !isAdmin(c)) return c.json({ error: 'Accès refusé.' }, 403);
+    try {
+      return c.json({ documents: await ambassadors.numberChangeDocuments(Number(c.req.param('id'))) });
+    } catch (error) {
+      return ambassadorError(c, error);
+    }
+  });
+
+  app.post('/api/admin/number-changes/:id', async (c) => {
+    if (!ambassadors || !isAdmin(c)) return c.json({ error: 'Accès refusé.' }, 403);
+    const b = (await c.req.json().catch(() => null)) as { approve?: boolean; note?: string } | null;
+    try {
+      await ambassadors.decideNumberChange(Number(c.req.param('id')), b?.approve === true, String(b?.note ?? ''));
       return c.json(await ambassadors.adminList());
     } catch (error) {
       return ambassadorError(c, error);
