@@ -204,6 +204,117 @@ function Testimonials() {
   );
 }
 
+/**
+ * « Plus qu'un CV » : la recherche d'emploi complète, juste après le haut de page.
+ * La veille emploi est mise en avant (grande carte sombre) ; lettre et suivi à côté. Les petites
+ * maquettes sont illustratives (entreprises génériques, aucun nom réel).
+ */
+function BeyondCv({ onNavigate }: { onNavigate: (t: Tab) => void }) {
+  const offers = [
+    { job: t('Comptable'), where: t('Société de transport · Cotonou'), when: t('il y a 2 h') },
+    { job: t('Assistant·e comptable'), where: t('Cabinet d’audit · Cotonou'), when: t('ce matin') },
+    { job: t('Chargé·e de paie'), where: t('ONG internationale · télétravail'), when: t('hier') },
+  ];
+  const steps = [
+    { label: t('Envoyée'), tone: 'bg-slate-100 text-slate-700' },
+    { label: t('Entretien'), tone: 'bg-sun-100 text-sun-900' },
+    { label: t('Réponse'), tone: 'bg-emerald-100 text-emerald-900' },
+  ];
+  const link = 'mt-auto inline-flex min-h-11 items-center gap-1.5 pt-4 text-sm font-semibold';
+  return (
+    <section className="bg-white px-4 py-14" aria-labelledby="plus-quun-cv">
+      <div className="mx-auto max-w-6xl">
+        <div id="plus-quun-cv">
+          <SectionTitle title={t('Bien plus qu’un CV : *toute votre recherche d’emploi*')} subtitle={t('Trouver les offres, postuler avec la bonne lettre, suivre chaque candidature. Au même endroit.')} />
+        </div>
+        <div className="grid gap-4 md:grid-cols-2">
+          {/* Veille emploi : la grande carte */}
+          <article className="relative overflow-hidden rounded-3xl bg-ink p-6 text-white sm:p-8 md:col-span-2">
+            <div className="pointer-events-none absolute inset-0 opacity-[0.1] [background-image:radial-gradient(#fff_1px,transparent_1px)] [background-size:18px_18px]" />
+            <div className="relative grid items-center gap-x-10 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.1fr)]">
+             <div>
+              <span className="inline-flex items-center gap-2 rounded-full bg-sun-400 px-3 py-1 text-xs font-bold text-ink">
+                <BellRing className="size-3.5" aria-hidden="true" /> {t('Veille emploi')}
+              </span>
+              <h3 className="mt-4 font-display text-2xl leading-tight font-bold sm:text-3xl">
+                <Accented text={t('Les offres viennent *à vous*, chaque matin.')} accent="text-sun-400" />
+              </h3>
+              <p className="mt-2 max-w-xl text-slate-300">
+                {t('Cochez votre métier, vos contrats et vos villes. CVCasa cherche les nouvelles offres pour vous et vous les envoie par e-mail, avec un bouton pour adapter votre CV à chacune. Plus besoin de faire le tour des sites tous les jours.')}
+              </p>
+              <div className="mt-5 hidden flex-wrap items-center gap-x-4 gap-y-1 lg:flex">
+                <button type="button" onClick={() => onNavigate('veille')} className="inline-flex min-h-12 items-center gap-2 rounded-xl bg-sun-400 px-5 font-semibold text-ink transition hover:brightness-95">
+                  <BellRing className="size-4" aria-hidden="true" /> {t('Activer ma veille')}
+                </button>
+                <span className="text-sm text-slate-300">{t('Première recherche offerte.')}</span>
+              </div>
+             </div>
+              <div className="mt-6 grid gap-4 sm:grid-cols-[minmax(0,0.8fr)_minmax(0,1.2fr)] lg:mt-0 lg:grid-cols-1">
+                <ul className="space-y-2 rounded-2xl bg-white/[0.06] p-4 text-sm ring-1 ring-white/10" aria-label={t('Exemple de critères')}>
+                  {[t('Comptable'), t('CDI ou CDD'), t('Cotonou'), t('Chaque matin')].map((x) => (
+                    <li key={x} className="flex items-center gap-2.5">
+                      <span className="flex size-5 items-center justify-center rounded-md bg-sun-400 text-ink"><Check className="size-3.5" aria-hidden="true" /></span>
+                      {x}
+                    </li>
+                  ))}
+                </ul>
+                <ul className="space-y-2" aria-label={t('Exemple d’offres reçues')}>
+                  {offers.map((o) => (
+                    <li key={o.job} className="flex items-center justify-between gap-3 rounded-2xl bg-white p-3 text-ink">
+                      <span className="min-w-0">
+                        <span className="block truncate text-sm font-semibold">{o.job}</span>
+                        <span className="block text-xs text-slate-500">{o.where} · {o.when}</span>
+                      </span>
+                      <span className="shrink-0 rounded-full bg-brand-50 px-2.5 py-1 text-xs font-semibold text-brand-700">{t('Adapter mon CV')}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+              <div className="mt-5 flex flex-wrap items-center gap-x-4 gap-y-1 lg:hidden">
+                <button type="button" onClick={() => onNavigate('veille')} className="inline-flex min-h-12 items-center gap-2 rounded-xl bg-sun-400 px-5 font-semibold text-ink transition hover:brightness-95">
+                  <BellRing className="size-4" aria-hidden="true" /> {t('Activer ma veille')}
+                </button>
+                <span className="text-sm text-slate-300">{t('Première recherche offerte.')}</span>
+              </div>
+            </div>
+          </article>
+
+          {/* Lettre de motivation */}
+          <article className="flex flex-col rounded-3xl bg-brand-50/70 p-6 ring-1 ring-brand-100">
+            <span className="flex size-10 items-center justify-center rounded-xl bg-white text-brand-700 shadow-sm"><Mail className="size-5" aria-hidden="true" /></span>
+            <h3 className="mt-3 text-lg font-bold text-ink">{t('La lettre qui va avec')}</h3>
+            <p className="mt-1 text-sm text-slate-600">{t('Écrite à partir de votre CV et de l’offre, au ton choisi. En français ou en anglais, prête à envoyer avec l’e-mail de candidature.')}</p>
+            <div aria-hidden="true" className="mt-4 space-y-1.5 rounded-xl bg-white p-3 shadow-sm">
+              <div className="h-2 w-1/3 rounded bg-slate-300" />
+              <div className="h-2 w-full rounded bg-slate-200" />
+              <div className="h-2 w-11/12 rounded bg-slate-200" />
+              <div className="h-2 w-4/5 rounded bg-brand-200" />
+            </div>
+            <button type="button" onClick={() => onNavigate('lettre')} className={cx(link, 'text-brand-700 hover:text-brand-800')}>
+              {t('Écrire ma lettre')} <ArrowRight className="size-4" aria-hidden="true" />
+            </button>
+          </article>
+
+          {/* Suivi des candidatures */}
+          <article className="flex flex-col rounded-3xl bg-slate-50 p-6 ring-1 ring-slate-200">
+            <span className="flex size-10 items-center justify-center rounded-xl bg-white text-brand-700 shadow-sm"><ClipboardList className="size-5" aria-hidden="true" /></span>
+            <h3 className="mt-3 text-lg font-bold text-ink">{t('Chaque candidature suivie')}</h3>
+            <p className="mt-1 text-sm text-slate-600">{t('Envoyée, entretien, réponse : vous savez où vous en êtes, avec le bon CV pour chaque offre et un rappel pour relancer.')}</p>
+            <div aria-hidden="true" className="mt-4 flex flex-wrap gap-1.5">
+              {steps.map((x) => (
+                <span key={x.label} className={cx('rounded-full px-2.5 py-1 text-xs font-semibold', x.tone)}>{x.label}</span>
+              ))}
+            </div>
+            <button type="button" onClick={() => onNavigate('suivi')} className={cx(link, 'text-brand-700 hover:text-brand-800')}>
+              {t('Voir mon suivi')} <ArrowRight className="size-4" aria-hidden="true" />
+            </button>
+          </article>
+        </div>
+      </div>
+    </section>
+  );
+}
+
 export function LandingPage({ onNavigate }: { onNavigate: (t: Tab) => void }) {
   const start = () => onNavigate('infos');
 
@@ -246,6 +357,8 @@ export function LandingPage({ onNavigate }: { onNavigate: (t: Tab) => void }) {
           </div>
         </div>
       </section>
+
+      <BeyondCv onNavigate={onNavigate} />
 
       <TemplatesShowcase onNavigate={onNavigate} />
 
