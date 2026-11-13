@@ -72,6 +72,8 @@ export function AmbassadorPage() {
   const [busy, setBusy] = useState(false);
   const [form, setForm] = useState({ firstName: '', lastName: '', momoNumber: '', motivation: '', accept: false, signature: '', signatureImage: '' });
   const [showContract, setShowContract] = useState(false);
+  const [signature, setSignature] = useState<string | null>(null);
+  const [codeError, setCodeError] = useState<string | null>(null);
   const [change, setChange] = useState<{ open: boolean; number: string; docs: { name: string; mediaType: string; data: string }[] }>({ open: false, number: '', docs: [] });
   const [copied, setCopied] = useState(false);
   const [codeEdit, setCodeEdit] = useState<string | null>(null);
@@ -148,8 +150,38 @@ export function AmbassadorPage() {
     }
   };
 
-  // Pas encore ambassadeur : explication et demande.
-  if (!info.status || info.status === 'refused') {
+  // Contrat arrêté pour triche : pas de nouvelle demande.
+  if (info.status === 'ended' && info.endedReason === 'fraud') {
+    return (
+      <div className="mx-auto max-w-2xl space-y-4">
+        {header}
+        <Notice tone="warn">{t('Votre contrat Ambassadeur a été arrêté pour non-respect des règles.')}</Notice>
+      </div>
+    );
+  }
+
+  // Programme arrêté par CVCasa : le solde reste dû, même petit.
+  if (info.status === 'ended' && info.endedReason === 'company') {
+    const left = info.earnings.available + info.earnings.pending;
+    return (
+      <div className="mx-auto max-w-2xl space-y-4">
+        {header}
+        <Card title={t('Le programme a pris fin')} subtitle={t('Merci pour votre aide. Votre solde vous reste dû, même sous le seuil habituel.')}>
+          {error && <div className="mb-3"><Notice tone="error">{error}</Notice></div>}
+          <p className="text-sm text-slate-700">
+            {info.earnings.requested ? t('Votre retrait de {0} est en cours : vous le recevez sous quelques jours.', [fcfa(info.earnings.requested)]) : t('Solde : {0}.', [fcfa(left)])}
+          </p>
+          {!info.earnings.requested && left > 0 && (
+            <Button className="mt-3" icon={<Wallet className="size-4" />} loading={busy} onClick={() => void run(() => api.ambassadorPayout())}>
+              {t('Demander mon retrait')}</Button>
+          )}
+        </Card>
+      </div>
+    );
+  }
+
+  // Pas encore ambassadeur (ou ancien ambassadeur) : explication et demande.
+  if (!info.status || info.status === 'refused' || info.status === 'ended') {
     return (
       <div className="mx-auto max-w-2xl space-y-4">
         {header}
@@ -160,6 +192,13 @@ export function AmbassadorPage() {
             {t('Exemple : 10 amis qui achètent chacun un pack à {0} vous rapportent {1}.', [fcfa(500), fcfa(10 * (r.firstPurchaseReward + Math.floor((500 * r.commissionPercent) / 100)))])}</p>
         </section>
         {info.status === 'refused' && <Notice tone="warn">{t('Votre précédente demande n’a pas été retenue. Vous pouvez en refaire une.')}</Notice>}
+        {info.status === 'ended' && (
+          <Notice>
+            {info.endedReason === 'inactive'
+              ? t('Votre précédent contrat a pris fin faute d’activité. Vous pouvez faire une nouvelle demande.')
+              : t('Vous avez quitté le programme. Vous pouvez faire une nouvelle demande quand vous voulez.')}
+          </Notice>
+        )}
         <Card tour="ambassador-apply" title={t('Devenir ambassadeur')} subtitle={t('Votre demande est vérifiée par l’équipe, en général sous 48 heures.')}>
           <p className="mb-3 text-sm text-slate-600">{t('Écrivez vos prénoms et votre nom exactement comme sur votre pièce d’identité : vos gains ne seront envoyés qu’à un numéro Mobile Money enregistré à ce nom.')}</p>
           <div className="grid gap-3 sm:grid-cols-2">
@@ -256,6 +295,11 @@ export function AmbassadorPage() {
   return (
     <div className="mx-auto max-w-2xl space-y-4">
       {header}
+      {info.inactivityWarning && (
+        <Notice tone="warn">
+          {t('Aucun nouveau filleul ni gain depuis 11 mois : sans activité d’ici le {0}, votre contrat prendra fin et les gains non retirés seront perdus. Un ami qui s’inscrit par votre lien suffit.', [day(info.inactivityWarning)])}
+        </Notice>
+      )}
       {info.contract && !info.contract.current && (
         <Card title={t('Nouvelle version du contrat à signer')} subtitle={t('Le contrat Ambassadeur a changé. Lisez-le et signez-le pour continuer à gagner.')}>
           <Contract r={r} />
@@ -319,11 +363,27 @@ export function AmbassadorPage() {
               placeholder="AWA229"
               hint={t('4 à 12 lettres ou chiffres. Vos anciens liens continuent de marcher. 3 changements au plus.')}
             />
-            {error && <Notice tone="error">{error}</Notice>}
+            {codeError && <Notice tone="error">{codeError}</Notice>}
             <div className="flex flex-wrap gap-2">
-              <Button size="sm" loading={busy} disabled={codeEdit.length < 4 || codeEdit === info.code} onClick={() => void run(() => api.ambassadorCode(codeEdit)).then((ok) => ok && setCodeEdit(null))}>
+              <Button
+                size="sm"
+                loading={busy}
+                disabled={codeEdit.length < 4 || codeEdit === info.code}
+                onClick={() => {
+                  setCodeError(null);
+                  setBusy(true);
+                  void api
+                    .ambassadorCode(codeEdit)
+                    .then((r2) => {
+                      setInfo(r2);
+                      setCodeEdit(null);
+                    })
+                    .catch((e) => setCodeError(e instanceof ApiError ? e.message : t('Une erreur est survenue. Réessayez.')))
+                    .finally(() => setBusy(false));
+                }}
+              >
                 {t('Enregistrer')}</Button>
-              <Button size="sm" variant="ghost" onClick={() => { setCodeEdit(null); setError(null); }}>
+              <Button size="sm" variant="ghost" onClick={() => { setCodeEdit(null); setCodeError(null); }}>
                 {t('Annuler')}</Button>
             </div>
           </div>
@@ -425,21 +485,47 @@ export function AmbassadorPage() {
       </Card>
       {info.contract && (
         <Card title={t('Votre contrat')} subtitle={t('Signé le {0} par {1} (version {2}).', [day(info.contract.signedAt), info.momoName, info.contract.version])}>
-          <button type="button" onClick={() => setShowContract(!showContract)} className="min-h-11 text-sm font-semibold text-brand-700">
+          <button
+            type="button"
+            onClick={() => {
+              setShowContract(!showContract);
+              if (!signature) void api.ambassadorContract().then((c) => setSignature(c.signatureImage)).catch(() => {});
+            }}
+            className="min-h-11 text-sm font-semibold text-brand-700"
+          >
             {showContract ? t('Masquer le contrat') : t('Lire le contrat')}</button>
           {showContract && (
             <>
               <Contract r={r} />
-              {info.contract.signatureImage && (
+              {signature && (
                 <div className="mt-3 flex items-end gap-3 text-sm text-slate-600">
                   <span>{t('Signature :')}</span>
-                  <img src={info.contract.signatureImage} alt={t('Votre signature')} className="h-14 rounded bg-white px-2 ring-1 ring-slate-200" />
+                  <img src={signature} alt={t('Votre signature')} className="h-14 rounded bg-white px-2 ring-1 ring-slate-200" />
                 </div>
               )}
             </>
           )}
         </Card>
       )}
+      <div className="px-1 pb-2">
+        <button
+          type="button"
+          className="min-h-11 text-sm font-semibold text-slate-500 hover:text-red-700"
+          onClick={() => {
+            const lost = info.earnings.available + info.earnings.pending;
+            const msg =
+              info.earnings.available >= r.minPayout
+                ? t('Demandez d’abord le retrait de vos {0} disponibles.', [fcfa(info.earnings.available)])
+                : t('Quitter le programme ? Votre lien ne rapportera plus rien et vos gains non retirés ({0}) seront perdus. Vous pourrez refaire une demande plus tard.', [fcfa(lost)]);
+            if (info.earnings.available >= r.minPayout) {
+              window.alert(msg);
+              return;
+            }
+            if (window.confirm(msg)) void run(() => api.ambassadorLeave());
+          }}
+        >
+          {t('Quitter le programme')}</button>
+      </div>
     </div>
   );
 }

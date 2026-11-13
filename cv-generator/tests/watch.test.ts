@@ -107,12 +107,12 @@ describe('veille emploi : parcours', () => {
     // Le planificateur doit donner le secret.
     expect((await post('/api/watch/cron', {}, { 'x-cron-secret': 'faux' })).status).toBe(401);
     await db.query(`update job_watches set next_run_at = now() - interval '1 minute' where user_id = $1`, [user.id]);
-    expect(await (await post('/api/watch/cron', {}, { 'x-cron-secret': 'cron-secret' })).json()).toEqual({ done: 1, paused: 0, failed: 0 });
+    expect(await (await post('/api/watch/cron', {}, { 'x-cron-secret': 'cron-secret' })).json()).toMatchObject({ done: 1, paused: 0, failed: 0 });
     expect(mails).toEqual([{ to: 'veille@x.co', subject: 'Votre veille emploi : 1 offre pour vous' }]);
 
     // Semaine terminée et plus assez de crédits : pause et e-mail.
     await db.query(`update job_watches set next_run_at = now() - interval '1 minute', paid_until = now() - interval '1 minute' where user_id = $1`, [user.id]);
-    expect(await (await post('/api/watch/cron', {}, { 'x-cron-secret': 'cron-secret' })).json()).toEqual({ done: 0, paused: 1, failed: 0 });
+    expect(await (await post('/api/watch/cron', {}, { 'x-cron-secret': 'cron-secret' })).json()).toMatchObject({ done: 0, paused: 1, failed: 0 });
     expect(mails[1].subject).toBe('Votre veille emploi est en pause');
     const state = await (await app.request('/api/watch', { headers: { authorization: `Bearer ${(await import('../server/auth.ts')).signToken(user.id, 's')}` } })).json();
     expect(state.watch.active).toBe(false);

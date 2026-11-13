@@ -132,14 +132,14 @@ export const api = {
   setSecret: (phrase: string, question: string | null = null) => post<{ set: true }>('/api/account/secret', { phrase, question }),
   recoveryQuestion: (identifier: string) => request<{ question: string | null }>('GET', `/api/auth/recovery/question?identifier=${encodeURIComponent(identifier)}`),
   setName: (name: string) => post<{ user: AccountUser }>('/api/account/name', { name }),
-  changePassword: (current: string, password: string) => post<{ ok: true }>('/api/account/password', { current, password }),
+  changePassword: (current: string, password: string) => post<{ ok: true; token: string }>('/api/account/password', { current, password }),
   /** Formulaire « mot de passe oublié » : la demande arrive dans « Nous contacter » (secret gardé sur l'appareil). */
   async recoveryRequest(form: { identifier: string; name: string; phrase: string; lastPurchase: string; credits: number | null; note: string }) {
     const res = await request<{ secret?: string }>('POST', '/api/auth/recovery', form, supportHeaders());
     if (res.secret) saveSupportSecret(res.secret);
     return res;
   },
-  forgotPassword: (identifier: string) => post<{ ok: true; to: string | null }>('/api/auth/forgot', { identifier }),
+  forgotPassword: (identifier: string) => post<{ ok: true }>('/api/auth/forgot', { identifier }),
   resetPassword: (identifier: string, code: string, password: string) => post<Session>('/api/auth/reset', { identifier, code, password }),
 
   register: (identifier: string, password: string, name: string, referralCode?: string | null, captcha = '') =>
@@ -150,6 +150,8 @@ export const api = {
     post<AmbassadorInfo>('/api/ambassador/apply', form),
   ambassadorNumber: (momoNumber: string, documents: { name: string; mediaType: string; data: string }[]) => post<AmbassadorInfo>('/api/ambassador/number', { momoNumber, documents }),
   ambassadorPayout: () => post<AmbassadorInfo>('/api/ambassador/payout', {}),
+  ambassadorContract: () => request<{ version: string; typedSignature: string; signedAt: string; ip: string; signatureImage: string; legalName: string }>('GET', '/api/ambassador/contract'),
+  ambassadorLeave: () => post<AmbassadorInfo>('/api/ambassador/leave', {}),
   ambassadorCode: (code: string) => post<AmbassadorInfo>('/api/ambassador/code', { code }),
   login: (identifier: string, password: string) => post<Session>('/api/auth/login', { identifier, password }),
   me: () => request<{ user: AccountUser }>('GET', '/api/me'),
@@ -223,15 +225,17 @@ export async function adminRequest<T>(token: string, method: 'GET' | 'POST', pat
 }
 
 export interface AmbassadorInfo {
-  status: 'pending' | 'active' | 'refused' | 'suspended' | null;
+  status: 'pending' | 'active' | 'refused' | 'suspended' | 'ended' | null;
+  endedReason: 'left' | 'inactive' | 'fraud' | 'company' | null;
+  inactivityWarning: string | null;
   code: string;
   momoNumber: string;
   momoName: string;
   legalFirstName: string;
   legalLastName: string;
-  contract: { version: string; signedAt: string; current: boolean; signatureImage: string } | null;
+  contract: { version: string; signedAt: string; current: boolean } | null;
   numberChange: { newNumber: string; status: string; requestedAt: string; note: string } | null;
-  rules: { signupReward: number; signupRewardLimit: number; firstPurchaseReward: number; commissionPercent: number; commissionMonths: number; holdDays: number; minPayout: number; monthlyCap: number; payoutFeePercent: number };
+  rules: { signupReward: number; signupRewardLimit: number; firstPurchaseReward: number; commissionPercent: number; commissionMonths: number; holdDays: number; minPayout: number; monthlyCap: number; payoutFeePercent: number; inactivityMonths: number };
   stats: { invited: number; signupsRewarded: number; buyers: number };
   earnings: { pending: number; available: number; requested: number; paid: number };
   payouts: { id: number; amount: number; fee: number; net: number; status: string; note: string; requestedAt: string; decidedAt: string | null }[];

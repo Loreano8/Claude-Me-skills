@@ -140,7 +140,17 @@ export function createAccounts(db: Db, opts: AccountOptions) {
     },
 
     async setPassword(userId: number, password: string): Promise<void> {
-      await db.query('update users set password_hash = $2 where id = $1', [userId, await hashPassword(password)]);
+      await db.query('update users set password_hash = $2, password_changed_at = now() where id = $1', [userId, await hashPassword(password)]);
+    },
+
+    /** Compte d'une session : refusé si le jeton date d'avant le dernier changement de mot de passe. */
+    async forSession(userId: number, issuedAt: number): Promise<User | null> {
+      const [row] = await db.query<User & { password_changed_at: string | null }>(`select ${USER_COLUMNS}, password_changed_at from users where id = $1`, [userId]);
+      if (!row) return null;
+      // Marge d'une seconde : le jeton remis juste après le changement reste valable.
+      if (row.password_changed_at && issuedAt < new Date(row.password_changed_at).getTime() - 1000) return null;
+      const { password_changed_at: _changed, ...user } = row;
+      return user;
     },
 
     async get(userId: number): Promise<User | null> {

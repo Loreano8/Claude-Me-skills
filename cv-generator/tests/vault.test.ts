@@ -53,7 +53,7 @@ describe('mot de passe oublié', () => {
   it('envoie un code puis change le mot de passe, sans révéler qui est inscrit', async () => {
     const { call, accounts, lastCode, sent } = await setup();
     const plain = { 'content-type': 'application/json' };
-    expect(await (await call('POST', '/api/auth/forgot', { identifier: 'inconnu@gmail.com' }, plain)).json()).toEqual({ ok: true, to: null });
+    expect(await (await call('POST', '/api/auth/forgot', { identifier: 'inconnu@gmail.com' }, plain)).json()).toEqual({ ok: true });
     expect(sent).toHaveLength(0);
     await call('POST', '/api/auth/forgot', { identifier: 'AWA@gmail.com' }, plain);
     const res = await call('POST', '/api/auth/reset', { identifier: 'awa@gmail.com', code: lastCode(), password: 'nouveau99' }, plain);

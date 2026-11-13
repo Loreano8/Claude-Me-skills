@@ -75,12 +75,15 @@ export function createVault(db: Db, accounts: Accounts, mailer: Mailer | null) {
       [user.id, purpose],
     );
     if (!row) throw new AccountError('Code expiré. Demandez-en un nouveau.', 400);
-    if (row.attempts >= MAX_ATTEMPTS) throw new AccountError('Trop d’essais. Demandez un nouveau code.', 429);
-    if (row.code_hash !== hash(code.trim())) {
-      await db.query('update email_codes set attempts = attempts + 1 where id = $1', [row.id]);
-      throw new AccountError('Code incorrect.', 400);
-    }
-    await db.query('update email_codes set used = true where id = $1', [row.id]);
+    // L'essai est compté AVANT la comparaison, en une seule opération : des essais simultanés ne dépassent pas la limite.
+    const [counted] = await db.query<{ attempts: number }>(
+      'update email_codes set attempts = attempts + 1 where id = $1 and attempts < $2 and not used returning attempts',
+      [row.id, MAX_ATTEMPTS],
+    );
+    if (!counted) throw new AccountError('Trop d’essais. Demandez un nouveau code.', 429);
+    if (row.code_hash !== hash(code.trim())) throw new AccountError('Code incorrect.', 400);
+    const used = await db.query('update email_codes set used = true where id = $1 and not used returning id', [row.id]);
+    if (!used.length) throw new AccountError('Code expiré. Demandez-en un nouveau.', 400);
   }
 
   async function key(userId: number): Promise<string> {
@@ -119,8 +122,9 @@ export function createVault(db: Db, accounts: Accounts, mailer: Mailer | null) {
     async sendPasswordCode(rawIdentifier: string, lang: 'fr' | 'en' = 'fr'): Promise<{ to: string } | null> {
       const identifier = normalizeIdentifier(rawIdentifier);
       const user = identifier ? await accounts.findByIdentifier(identifier) : null;
-      // Pas de compte : on ne le dit pas (sinon on révélerait qui est inscrit).
-      if (!user) return null;
+      // Pas de compte, ou compte avec un numéro de téléphone (pas d'e-mail) : on ne le dit pas,
+      // sinon on révélerait qui est inscrit. L'écran propose de toute façon la demande de récupération.
+      if (!user || !user.identifier.includes('@')) return null;
       return sendCode(user, 'password', lang);
     },
 

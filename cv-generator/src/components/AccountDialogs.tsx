@@ -332,7 +332,17 @@ export function AccountSecurity({ onboarding = false, onSaved }: { onboarding?: 
         <div className="mt-3 space-y-2">
           <Field label={t('Mot de passe actuel (ou provisoire)')} type="password" value={current} onChange={setCurrent} autoComplete="current-password" />
           <Field label={t('Nouveau mot de passe')} type="password" value={next} onChange={setNext} autoComplete="new-password" hint={t('8 caractères minimum.')} />
-          <Button size="sm" loading={busy} disabled={busy || !current || next.length < 8} onClick={() => void run(() => api.changePassword(current, next), t('Mot de passe changé.'))}>
+          <Button size="sm" loading={busy} disabled={busy || !current || next.length < 8} onClick={() =>
+              void run(
+                () =>
+                  api.changePassword(current, next).then((r) => {
+                    // Nouvelle session pour cet appareil (les autres sont déconnectés).
+                    const { user, setSession } = useAccount.getState();
+                    if (user && r.token) setSession(r.token, user);
+                  }),
+                t('Mot de passe changé. Vos autres appareils sont déconnectés.'),
+              )
+            }>
             {t('Changer')}</Button>
         </div>
       )}

@@ -17,6 +17,7 @@ export type ContractNumbers = {
   minPayout: number;
   monthlyCap: number;
   payoutFeePercent: number;
+  inactivityMonths: number;
 };
 
 const f = (n: number) => `${n.toLocaleString('fr-FR')} FCFA`;
@@ -57,7 +58,14 @@ export function ambassadorContract(lang: 'fr' | 'en', r: ContractNumbers): Contr
       { title: '6. Fraud and sanctions', text: ['In the event of fraud or breach of these commitments, CVCasa may suspend the account, cancel earnings not yet paid and end this agreement. Earnings obtained by fraud must be repaid.'] },
       { title: '7. Taxes', text: ['The Ambassador is responsible for declaring the income received under this agreement, according to the rules of their country.'] },
       { title: '8. Personal data', text: ['CVCasa keeps the Ambassador’s legal name, Mobile Money number, the signature of this agreement (typed name, drawn signature, date and internet address), referral statistics and payment history, in order to run the programme and pay the rewards. Documents sent to change the payment number are deleted once the request has been processed. The Ambassador can ask to see or correct this data via “Contact us”.'] },
-      { title: '9. Duration and changes', text: ['This agreement starts when CVCasa approves the application, for an indefinite period. Either party may end it at any time. CVCasa may change or end the programme: any change applies only after the Ambassador has been informed. Except in case of fraud, earnings already available remain payable: when the agreement ends, amounts below the withdrawal threshold are paid on request via “Contact us”.'] },
+      {
+        title: '9. Duration, end of the agreement and changes',
+        text: [
+          `This agreement starts when CVCasa approves the application, for an indefinite period. It ends: (a) when the Ambassador leaves the programme from their space; (b) after ${r.inactivityMonths} months without any new referral or earnings, with a warning one month before; (c) in case of fraud, by decision of CVCasa; (d) when CVCasa ends the programme, with 30 days’ notice; (e) when the Ambassador’s CVCasa account is deleted.`,
+          `Earnings when the agreement ends: available earnings of at least ${fe(r.minPayout)} must be withdrawn before leaving. In cases (a), (b) and (e), earnings not yet withdrawn below this threshold, and earnings still on hold, are lost. In case (c), nothing is paid. In case (d), all earnings become available immediately and are paid even below the threshold.`,
+          'CVCasa may change the programme: any change applies only after the Ambassador has been informed and has signed the new version of this agreement.',
+        ],
+      },
       { title: '10. Applicable law', text: ['This agreement is governed by Beninese law. The parties will first seek an amicable solution through “Contact us”.'] },
     ];
   }
@@ -93,7 +101,14 @@ export function ambassadorContract(lang: 'fr' | 'en', r: ContractNumbers): Contr
     { title: '6. Fraude et sanctions', text: ['En cas de fraude ou de manquement à ces engagements, CVCasa peut suspendre le compte, annuler les gains non encore versés et mettre fin à ce contrat. Les gains obtenus par fraude doivent être remboursés.'] },
     { title: '7. Fiscalité', text: ['L’Ambassadeur est responsable de la déclaration des revenus perçus au titre de ce contrat, selon les règles de son pays.'] },
     { title: '8. Données personnelles', text: ['CVCasa conserve les nom et prénoms légaux de l’Ambassadeur, son numéro Mobile Money, la signature de ce contrat (nom tapé, signature dessinée, date et adresse internet), les statistiques de parrainage et l’historique des paiements, pour gérer le programme et verser les gains. Les justificatifs envoyés pour changer de numéro sont supprimés une fois la demande traitée. L’Ambassadeur peut demander à consulter ou corriger ces données depuis « Nous contacter ».'] },
-    { title: '9. Durée et modifications', text: ['Le contrat commence à la validation de la demande par CVCasa, pour une durée indéterminée. Chaque partie peut y mettre fin à tout moment. CVCasa peut faire évoluer ou arrêter le programme : toute modification ne s’applique qu’après en avoir informé l’Ambassadeur. Sauf fraude, les gains déjà disponibles restent dus : à la fin du contrat, ceux sous le seuil de retrait sont versés sur demande via « Nous contacter ».'] },
+    {
+      title: '9. Durée, fin du contrat et modifications',
+      text: [
+        `Le contrat commence à la validation de la demande par CVCasa, pour une durée indéterminée. Il prend fin : (a) quand l’Ambassadeur quitte le programme depuis son espace ; (b) après ${r.inactivityMonths} mois sans nouveau filleul ni gain, avec un avertissement un mois avant ; (c) en cas de fraude, sur décision de CVCasa ; (d) quand CVCasa arrête le programme, avec un préavis de 30 jours ; (e) à la suppression du compte CVCasa de l’Ambassadeur.`,
+        `Gains à la fin du contrat : les gains disponibles d’au moins ${f(r.minPayout)} doivent être retirés avant de partir. Dans les cas (a), (b) et (e), les gains non retirés sous ce seuil et les gains encore en attente sont perdus. Dans le cas (c), rien n’est versé. Dans le cas (d), tous les gains deviennent disponibles tout de suite et sont versés même sous le seuil.`,
+        'CVCasa peut faire évoluer le programme : toute modification ne s’applique qu’après en avoir informé l’Ambassadeur et qu’il a signé la nouvelle version du contrat.',
+      ],
+    },
     { title: '10. Droit applicable', text: ['Ce contrat est soumis au droit béninois. Les parties chercheront d’abord une solution à l’amiable via « Nous contacter ».'] },
   ];
 }

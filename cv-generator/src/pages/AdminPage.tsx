@@ -535,17 +535,27 @@ function TempPassword({ token }: { token: string }) {
   );
 }
 
-type AdminAmbassador = { userId: number; identifier: string; name: string; status: string; momoNumber: string; momoName: string; contractVersion: string; contractSignedAt: string | null; motivation: string; createdAt: string; invited: number; buyers: number; earned: number; paid: number };
+type AdminAmbassador = { userId: number; identifier: string; name: string; status: string; sameNetwork: number; endedReason: string; momoNumber: string; momoName: string; contractVersion: string; contractSignedAt: string | null; motivation: string; createdAt: string; invited: number; buyers: number; earned: number; paid: number };
 type AdminNumberChange = { id: number; userId: number; identifier: string; legalName: string; oldNumber: string; newNumber: string; status: string; requestedAt: string; documents: number };
 type AdminPayout = { id: number; userId: number; identifier: string; amount: number; fee: number; net: number; momoNumber: string; momoName: string; status: string; ambassadorStatus: string; requestedAt: string };
 
-const AMB_STATUS: Record<string, string> = { pending: 'À valider', active: 'Actif', refused: 'Refusé', suspended: 'Suspendu' };
+const AMB_STATUS: Record<string, string> = { pending: 'À valider', active: 'Actif', refused: 'Refusé', suspended: 'Suspendu', ended: 'Contrat terminé' };
+const END_REASON: Record<string, string> = { left: 'parti de lui-même', inactive: 'inactivité', fraud: 'triche', company: 'programme arrêté' };
 const fcfaAdmin = (n: number) => `${n.toLocaleString('fr-FR')} FCFA`;
 
 /** Programme Ambassadeur : valider les demandes, puis payer les retraits (Mobile Money envoyé à la main, puis « Payé »). */
 function Ambassadors({ token }: { token: string }) {
   const [data, setData] = useState<{ ambassadors: AdminAmbassador[]; payouts: AdminPayout[]; numberChanges: AdminNumberChange[] } | null>(null);
   const [docs, setDocs] = useState<{ id: number; list: { name: string; mediaType: string; data: string }[] } | null>(null);
+  const [contract, setContract] = useState<{ userId: number; typedSignature: string; signedAt: string; ip: string; signatureImage: string; version: string } | null>(null);
+  const showContract = async (userId: number) => {
+    try {
+      const r = await adminRequest<{ typedSignature: string; signedAt: string; ip: string; signatureImage: string; version: string }>(token, 'GET', `/api/admin/ambassadors/${userId}/contract`);
+      setContract({ userId, ...r });
+    } catch (e) {
+      setError((e as Error).message);
+    }
+  };
   const showDocs = async (id: number) => {
     try {
       const r = await adminRequest<{ documents: { name: string; mediaType: string; data: string }[] }>(token, 'GET', `/api/admin/number-changes/${id}`);
@@ -658,17 +668,38 @@ function Ambassadors({ token }: { token: string }) {
             <li key={a.userId} className={cx('rounded-xl border p-3 text-sm', a.status === 'pending' ? 'border-brand-300 bg-brand-50' : 'border-slate-200')}>
               <div className="flex flex-wrap items-center justify-between gap-2">
                 <span className="font-semibold">{a.name || a.identifier} <span className="font-normal text-slate-500">· {a.identifier}</span></span>
-                <span className="rounded-full bg-slate-100 px-2 py-0.5 text-xs font-semibold">{AMB_STATUS[a.status] ?? a.status}</span>
+                <span className="rounded-full bg-slate-100 px-2 py-0.5 text-xs font-semibold">
+                  {AMB_STATUS[a.status] ?? a.status}
+                  {a.status === 'ended' && a.endedReason ? ` (${END_REASON[a.endedReason] ?? a.endedReason})` : ''}
+                </span>
               </div>
               <p className="mt-1 text-slate-600">
                 {a.invited} inscrit(s) · {a.buyers} acheteur(s) · gagné {fcfaAdmin(a.earned)} · payé {fcfaAdmin(a.paid)}
               </p>
               <p className="text-slate-600">Nom légal : <strong>{a.momoName}</strong> · Mobile Money : {a.momoNumber}</p>
-              <p className="text-xs text-slate-500">{a.contractSignedAt ? `Contrat ${a.contractVersion} signé le ${when(a.contractSignedAt)}` : 'Contrat non signé'}</p>
+              <p className="text-xs text-slate-500">
+                {a.contractSignedAt ? `Contrat ${a.contractVersion} signé le ${when(a.contractSignedAt)}` : 'Contrat non signé'}
+                {a.contractSignedAt && (
+                  <button type="button" className="ml-2 font-semibold text-brand-700 underline" onClick={() => void showContract(a.userId)}>
+                    voir la signature
+                  </button>
+                )}
+              </p>
+              {a.sameNetwork > 0 && (
+                <p className="text-xs font-semibold text-amber-700">
+                  ⚠ {a.sameNetwork} filleul(s) inscrit(s) depuis la même connexion ou le même téléphone que l’ambassadeur : vérifiez avant de payer.
+                </p>
+              )}
+              {contract?.userId === a.userId && (
+                <div className="mt-2 rounded-lg bg-white p-2 text-xs text-slate-600 ring-1 ring-slate-200">
+                  <img src={contract.signatureImage} alt="Signature" className="h-14 bg-white" />
+                  <p>Nom tapé : « {contract.typedSignature} » · {when(contract.signedAt)} · adresse internet {contract.ip || 'inconnue'} · version {contract.version}</p>
+                </div>
+              )}
               {a.motivation && <p className="mt-1 text-slate-700 italic">« {a.motivation} »</p>}
               <div className="mt-2 flex flex-wrap gap-2">
-                {a.status !== 'active' && (
-                  <Button size="sm" loading={busy === `a${a.userId}`} onClick={() => (a.status === 'pending' || window.confirm(`Réactiver ${a.momoName} (actuellement ${AMB_STATUS[a.status]?.toLowerCase()}) ?`)) && void act(`a${a.userId}`, `/api/admin/ambassadors/${a.userId}`, { status: 'active' })}>
+                {a.status !== 'active' && a.status !== 'ended' && (
+                  <Button size="sm" loading={busy === `a${a.userId}`} onClick={() => (a.status === 'pending' || window.confirm(`Réactiver ${a.momoName} (actuellement ${AMB_STATUS[a.status]?.toLowerCase()}) ?`)) && void act(`a${a.userId}`, `/api/admin/ambassadors/${a.userId}`, { status: 'active', signedAt: a.contractSignedAt })}>
                     {a.status === 'pending' ? 'Valider' : 'Réactiver'}
                   </Button>
                 )}
@@ -680,6 +711,16 @@ function Ambassadors({ token }: { token: string }) {
                 {a.status === 'active' && (
                   <Button size="sm" variant="ghost" onClick={() => window.confirm('Suspendre cet ambassadeur ? Il ne gagnera plus rien, son retrait en attente est refusé, et il ne pourra plus demander de retrait tant qu’il est suspendu.') && void act(`a${a.userId}`, `/api/admin/ambassadors/${a.userId}`, { status: 'suspended' })}>
                     Suspendre
+                  </Button>
+                )}
+                {a.status === 'active' && (
+                  <Button size="sm" variant="ghost" onClick={() => window.confirm(`Arrêter le programme pour ${a.momoName} (sans faute de sa part) ? Tous ses gains deviennent retirables, même sous le seuil.`) && void act(`a${a.userId}`, `/api/admin/ambassadors/${a.userId}/end`, { reason: 'company' })}>
+                    Arrêter (sans faute)
+                  </Button>
+                )}
+                {a.status === 'suspended' && (
+                  <Button size="sm" variant="ghost" onClick={() => window.confirm(`Mettre fin au contrat de ${a.momoName} pour triche ? Rien ne lui sera versé et il ne pourra plus refaire de demande.`) && void act(`a${a.userId}`, `/api/admin/ambassadors/${a.userId}/end`, { reason: 'fraud' })}>
+                    Mettre fin (triche)
                   </Button>
                 )}
                 {a.status === 'suspended' && (

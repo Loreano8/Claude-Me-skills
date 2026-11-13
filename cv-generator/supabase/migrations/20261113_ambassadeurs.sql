@@ -7,6 +7,10 @@ create table if not exists referral_aliases (
   user_id integer not null references users(id) on delete cascade,
   created_at timestamptz not null default now()
 );
+
+-- Sessions coupées après un changement de mot de passe.
+alter table users add column if not exists password_changed_at timestamptz;
+
 create table if not exists ambassadors (
   user_id integer primary key references users(id) on delete cascade,
   status text not null default 'pending',
@@ -27,6 +31,10 @@ alter table ambassadors add column if not exists contract_ip text not null defau
 alter table ambassadors add column if not exists signature_image text not null default '';
 -- Date de la première validation : seuls les filleuls inscrits après rapportent quelque chose.
 alter table ambassadors add column if not exists activated_at timestamptz;
+-- Fin du contrat et avertissement d'inactivité.
+alter table ambassadors add column if not exists ended_reason text not null default '';
+alter table ambassadors add column if not exists ended_at timestamptz;
+alter table ambassadors add column if not exists inactivity_warned_at timestamptz;
 
 -- Changement du numéro de paiement d'un ambassadeur validé : seulement sur justificatifs, vérifiés par l'administrateur.
 -- Les justificatifs sont effacés dès que la demande est traitée.

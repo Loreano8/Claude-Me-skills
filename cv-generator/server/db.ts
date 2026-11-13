@@ -27,6 +27,9 @@ alter table users add column if not exists referral_code text unique;
 alter table users add column if not exists referred_by integer references users(id);
 alter table users add column if not exists referral_rewarded boolean not null default false;
 
+-- Changement de mot de passe : les sessions ouvertes avant cette date sont refusées.
+alter table users add column if not exists password_changed_at timestamptz;
+
 -- Anciens codes de parrainage (après personnalisation) : les liens déjà partagés continuent de marcher.
 create table if not exists referral_aliases (
   code text primary key,

@@ -99,11 +99,13 @@ describe('programme Ambassadeur', () => {
   });
 
   it('une demande refusée peut être refaite ; la triche annule les gains non versés', async () => {
-    const { ambassadors, person, accounts, buy } = await setup();
+    const { clock, ambassadors, person, accounts, buy } = await setup();
     const a = await person();
     const { code } = await accounts.referral(a.id);
     await ambassadors.apply(a.id, form('0100000000'));
     await ambassadors.setStatus(a.id, 'refused');
+    await expect(ambassadors.apply(a.id, form('0100000001'))).rejects.toMatchObject({ status: 429 }); // pas tout de suite
+    clock.t += 8 * DAY;
     expect((await ambassadors.apply(a.id, form('0100000001'))).status).toBe('pending');
     await ambassadors.setStatus(a.id, 'active');
     await buy((await person(code)).id, 'essentiel');
@@ -288,5 +290,52 @@ describe('programme Ambassadeur', () => {
     await expect(ambassadors.requestNumberChange(a.id, { momoNumber: '+229 99 99 99 99 99', documents: [doc('a.jpg'), doc('b.jpg')] })).rejects.toMatchObject({ status: 409 });
     // Même version : refusé ; ancienne version simulée : la nouvelle se signe au même nom.
     await expect(ambassadors.apply(a.id, form())).rejects.toMatchObject({ status: 409 });
+  });
+  it('quitter : impossible avec 2 000 FCFA disponibles ; sinon les petits gains sont perdus', async () => {
+    const { clock, ambassadors, person, ambassador, buy } = await setup();
+    const { a, code } = await ambassador();
+    await buy((await person(code)).id, 'essentiel'); // 150 FCFA en attente
+    const s = await ambassadors.leave(a.id);
+    expect(s).toMatchObject({ status: 'ended', endedReason: 'left' });
+    expect(s.earnings).toMatchObject({ pending: 0, available: 0 });
+    // Nouvelle demande possible ensuite.
+    expect((await ambassadors.apply(a.id, form())).status).toBe('pending');
+    const b = await ambassador();
+    for (let i = 0; i < 6; i++) await buy((await person(b.code)).id, 'pro');
+    clock.t += (R.holdDays + 1) * DAY;
+    await expect(ambassadors.leave(b.a.id)).rejects.toMatchObject({ status: 409 });
+  });
+
+  it('arrêt par CVCasa : tout devient retirable, même sous le seuil ; triche : rien, et pas de nouvelle demande', async () => {
+    const { ambassadors, person, ambassador, buy } = await setup();
+    const { a, code } = await ambassador();
+    await buy((await person(code)).id, 'essentiel'); // 150 FCFA, encore bloqués 14 jours
+    await ambassadors.endByAdmin(a.id, 'company');
+    const p = await ambassadors.requestPayout(a.id);
+    expect(p.amount).toBe(150);
+    await ambassadors.decidePayout(p.id, 'paid');
+    const b = await ambassador();
+    await buy((await person(b.code)).id, 'essentiel');
+    await ambassadors.setStatus(b.a.id, 'suspended');
+    await ambassadors.endByAdmin(b.a.id, 'fraud');
+    expect((await ambassadors.summary(b.a.id)).earnings.pending).toBe(0);
+    await expect(ambassadors.apply(b.a.id, form())).rejects.toMatchObject({ status: 403 });
+  });
+
+  it('inactivité : avertissement à 11 mois, fin du contrat un mois plus tard, sauf nouvelle activité', async () => {
+    const { db, clock, ambassadors, person, ambassador } = await setup();
+    const quiet = await ambassador();
+    const busy = await ambassador();
+    clock.t += 11.2 * 30.44 * DAY;
+    const first = await ambassadors.inactivityRun();
+    expect(first.warned).toHaveLength(2);
+    expect((await ambassadors.summary(quiet.a.id)).inactivityWarning).not.toBeNull();
+    const friend = await person(busy.code); // un ami s'inscrit : l'avertissement tombe
+    await db.query('update users set created_at = $2 where id = $1', [friend.id, new Date(clock.t + 1000).toISOString()]);
+    clock.t += 31 * DAY;
+    const second = await ambassadors.inactivityRun();
+    expect(second.ended).toBe(1);
+    expect((await ambassadors.summary(quiet.a.id))).toMatchObject({ status: 'ended', endedReason: 'inactive' });
+    expect((await ambassadors.summary(busy.a.id)).status).toBe('active');
   });
 });

@@ -5,7 +5,7 @@ import { z } from 'zod';
 import { AdaptRequest, AnalyzeTemplateRequest, ClarifyRequest, KeywordsRequest, LetterQuestionsRequest, StyleRequest, TranscribeRequest, CoverLetterRequest, JobFetchRequest, InterviewRequest, ReviseRequest, StructureRequest, TranslateRequest } from '../shared/schema.ts';
 import { AiError, type Ai } from './ai.ts';
 import { AccountError, DOSSIER_COST, REFERRAL_BONUS, UNLOCK_COST, type Accounts, type User } from './accounts.ts';
-import { signToken, verifyToken } from './auth.ts';
+import { signToken, verifyTokenDetail } from './auth.ts';
 import { PACKS, PaymentError, type Payments } from './payments.ts';
 import { TestimonialInput, type Testimonials } from './testimonials.ts';
 import { SupportError, SupportMessageInput, type Support } from './support.ts';
@@ -129,8 +129,8 @@ export function createApp({ fetchPage = fetchJobPage, ai, aiEn = null, allowedOr
   async function currentUser(c: Context): Promise<User | null> {
     if (!accounts) return null;
     const token = c.req.header('authorization')?.replace(/^Bearer\s+/i, '') ?? '';
-    const uid = token ? verifyToken(token, sessionSecret) : null;
-    return uid ? accounts.get(uid) : null;
+    const session = token ? verifyTokenDetail(token, sessionSecret) : null;
+    return session ? accounts.forSession(session.uid, session.iat) : null;
   }
 
   const publicUser = (u: User) => ({ identifier: u.identifier, name: u.name, credits: u.credits });
@@ -351,6 +351,26 @@ export function createApp({ fetchPage = fetchJobPage, ai, aiEn = null, allowedOr
     }
   });
 
+  app.get('/api/ambassador/contract', async (c) => {
+    const user = await currentUser(c);
+    if (!user || !ambassadors) return c.json({ error: 'Connectez-vous pour continuer.' }, 401);
+    try {
+      return c.json(await ambassadors.contractDetail(user.id));
+    } catch (error) {
+      return ambassadorError(c, error);
+    }
+  });
+
+  app.post('/api/ambassador/leave', async (c) => {
+    const user = await currentUser(c);
+    if (!user || !accounts || !ambassadors) return c.json({ error: 'Connectez-vous pour continuer.' }, 401);
+    try {
+      return c.json({ ...(await ambassadors.leave(user.id)), code: (await accounts.referral(user.id)).code });
+    } catch (error) {
+      return ambassadorError(c, error);
+    }
+  });
+
   app.post('/api/ambassador/number', async (c) => {
     const user = await currentUser(c);
     if (!user || !accounts || !ambassadors) return c.json({ error: 'Connectez-vous pour continuer.' }, 401);
@@ -383,9 +403,31 @@ export function createApp({ fetchPage = fetchJobPage, ai, aiEn = null, allowedOr
 
   app.post('/api/admin/ambassadors/:id', async (c) => {
     if (!ambassadors || !isAdmin(c)) return c.json({ error: 'Accès refusé.' }, 403);
-    const b = (await c.req.json().catch(() => null)) as { status?: string } | null;
+    const b = (await c.req.json().catch(() => null)) as { status?: string; signedAt?: string } | null;
     try {
-      await ambassadors.setStatus(Number(c.req.param('id')), String(b?.status ?? '') as never);
+      await ambassadors.setStatus(Number(c.req.param('id')), String(b?.status ?? '') as never, b?.signedAt ? String(b.signedAt) : undefined);
+      return c.json(await ambassadors.adminList());
+    } catch (error) {
+      return ambassadorError(c, error);
+    }
+  });
+
+  app.get('/api/admin/ambassadors/:id/contract', async (c) => {
+    if (!ambassadors || !isAdmin(c)) return c.json({ error: 'Accès refusé.' }, 403);
+    try {
+      return c.json(await ambassadors.contractDetail(Number(c.req.param('id'))));
+    } catch (error) {
+      return ambassadorError(c, error);
+    }
+  });
+
+  app.post('/api/admin/ambassadors/:id/end', async (c) => {
+    if (!ambassadors || !isAdmin(c)) return c.json({ error: 'Accès refusé.' }, 403);
+    const b = (await c.req.json().catch(() => null)) as { reason?: string } | null;
+    const reason = b?.reason === 'fraud' ? 'fraud' : b?.reason === 'company' ? 'company' : null;
+    if (!reason) return c.json({ error: 'Raison inconnue.' }, 400);
+    try {
+      await ambassadors.endByAdmin(Number(c.req.param('id')), reason);
       return c.json(await ambassadors.adminList());
     } catch (error) {
       return ambassadorError(c, error);
@@ -544,8 +586,9 @@ export function createApp({ fetchPage = fetchJobPage, ai, aiEn = null, allowedOr
     if (!vault) return c.json({ error: 'Indisponible.' }, 503);
     if (!(await allowAuth(clientKey(c)))) return c.json({ error: 'Trop de demandes. Réessayez plus tard.' }, 429);
     try {
-      const sent = await vault.sendPasswordCode(String((await body(c)).identifier ?? ''), uiLang(c));
-      return c.json({ ok: true, to: sent?.to ?? null });
+      // Même réponse que le compte existe ou non (ne pas révéler qui est inscrit).
+      await vault.sendPasswordCode(String((await body(c)).identifier ?? ''), uiLang(c));
+      return c.json({ ok: true });
     } catch (error) {
       return vaultError(c, error);
     }
@@ -605,7 +648,8 @@ export function createApp({ fetchPage = fetchJobPage, ai, aiEn = null, allowedOr
       return c.json({ error: 'Mot de passe actuel incorrect.' }, 400);
     }
     await accounts.setPassword(user.id, next);
-    return c.json({ ok: true });
+    // Les autres appareils sont déconnectés ; celui-ci reçoit une nouvelle session.
+    return c.json({ ok: true, token: signToken(user.id, sessionSecret) });
   });
 
   app.get('/api/auth/recovery/question', async (c) => {
@@ -737,7 +781,26 @@ export function createApp({ fetchPage = fetchJobPage, ai, aiEn = null, allowedOr
   app.post('/api/watch/cron', async (c) => {
     const given = c.req.header('x-cron-secret') ?? '';
     if (!watches?.enabled || !cronSecret || !timingSafeEqual(digest(given), digest(cronSecret))) return c.json({ error: 'Non autorisé.' }, 401);
-    return c.json(await watches.runDue());
+    const result = await watches.runDue();
+    // Programme Ambassadeur : avertissement à 11 mois sans activité, fin du contrat à 12 mois.
+    let ambassadorsResult = null;
+    if (ambassadors) {
+      try {
+        const run = await ambassadors.inactivityRun();
+        for (const w of run.warned) {
+          if (!adminMailer || !w.identifier.includes('@')) continue;
+          await adminMailer(
+            w.identifier,
+            'CVCasa : votre contrat Ambassadeur prendra fin dans un mois',
+            `Bonjour${w.name ? ` ${w.name}` : ''},\n\nVous n'avez eu ni nouveau filleul ni gain depuis 11 mois. Sans nouvelle activité d'ici un mois, votre contrat Ambassadeur prendra fin et les gains non retirés seront perdus. Un ami qui s'inscrit par votre lien suffit à le prolonger.\n\nL'équipe CVCasa`,
+          ).catch((e) => console.error('Avertissement ambassadeur', e));
+        }
+        ambassadorsResult = { warned: run.warned.length, ended: run.ended };
+      } catch (error) {
+        console.error('Ambassadeurs (inactivité)', error);
+      }
+    }
+    return c.json({ ...result, ambassadors: ambassadorsResult });
   });
 
   // Lecture publique : le nom (pour la page de présentation) puis le PDF.

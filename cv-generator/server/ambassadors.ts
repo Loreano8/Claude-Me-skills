@@ -28,6 +28,8 @@ export const AMBASSADOR_RULES = {
   monthlyCap: 25000,
   /** Frais d'envoi Mobile Money, déduits du retrait (pourcentage, arrondi au franc supérieur). */
   payoutFeePercent: 1,
+  /** Sans nouveau filleul ni gain pendant ce nombre de mois, le contrat prend fin (avertissement un mois avant). */
+  inactivityMonths: 12,
 } as const;
 
 /** Frais d'envoi d'un retrait et montant réellement envoyé. */
@@ -36,7 +38,9 @@ export function payoutSplit(amount: number) {
   return { fee, net: amount - fee };
 }
 
-export type AmbassadorStatus = 'pending' | 'active' | 'refused' | 'suspended';
+export type AmbassadorStatus = 'pending' | 'active' | 'refused' | 'suspended' | 'ended';
+/** Fin du contrat : départ volontaire, inactivité, triche, ou arrêt décidé par CVCasa (sans faute de l'ambassadeur). */
+export type EndReason = 'left' | 'inactive' | 'fraud' | 'company';
 export type EarningKind = 'signup' | 'first_purchase' | 'commission';
 
 export class AmbassadorError extends Error {
@@ -69,6 +73,10 @@ alter table ambassadors add column if not exists contract_ip text not null defau
 alter table ambassadors add column if not exists signature_image text not null default '';
 -- Date de la première validation : seuls les filleuls inscrits après rapportent quelque chose.
 alter table ambassadors add column if not exists activated_at timestamptz;
+-- Fin du contrat et avertissement d'inactivité.
+alter table ambassadors add column if not exists ended_reason text not null default '';
+alter table ambassadors add column if not exists ended_at timestamptz;
+alter table ambassadors add column if not exists inactivity_warned_at timestamptz;
 
 -- Changement du numéro de paiement d'un ambassadeur validé : seulement sur justificatifs, vérifiés par l'administrateur.
 -- Les justificatifs sont effacés dès que la demande est traitée.
@@ -121,7 +129,10 @@ export interface AmbassadorSummary {
   momoName: string;
   legalFirstName: string;
   legalLastName: string;
-  contract: { version: string; signedAt: string; current: boolean; signatureImage: string } | null;
+  endedReason: EndReason | null;
+  /** Date de fin prévue si rien ne se passe (inactivité), sinon null. */
+  inactivityWarning: string | null;
+  contract: { version: string; signedAt: string; current: boolean } | null;
   numberChange: { newNumber: string; status: string; requestedAt: string; note: string } | null;
   rules: typeof AMBASSADOR_RULES;
   stats: { invited: number; signupsRewarded: number; buyers: number };
@@ -188,6 +199,30 @@ export function createAmbassadors(db: Db, now: () => Date = () => new Date()) {
       [ambassadorId, filleulId, kind, paymentId, value, availableAt().toISOString()],
     );
     return rows.length ? value : 0;
+  }
+
+  async function availableNow(tx: Db, userId: number) {
+    const [{ total }] = await tx.query<{ total: number }>(
+      `select coalesce(sum(amount), 0)::int as total from ambassador_earnings where ambassador_id = $1 and status = 'pending' and available_at <= $2`,
+      [userId, now().toISOString()],
+    );
+    return total;
+  }
+
+  /**
+   * Fin du contrat. Départ volontaire, inactivité ou triche : les gains non versés sont perdus.
+   * Arrêt par CVCasa : tous les gains deviennent disponibles tout de suite et restent dus, même sous le seuil.
+   */
+  async function endContract(tx: Db, userId: number, reason: EndReason) {
+    await refuseOpenPayouts(tx, userId, reason === 'company' ? 'Programme arrêté : refaites votre demande de retrait.' : 'Contrat terminé.');
+    if (reason === 'company') {
+      await tx.query(`update ambassador_earnings set available_at = least(available_at, $2) where ambassador_id = $1 and status = 'pending'`, [userId, now().toISOString()]);
+    } else {
+      await tx.query(`update ambassador_earnings set status = 'cancelled' where ambassador_id = $1 and status = 'pending'`, [userId]);
+    }
+    // Demande de changement de numéro en cours : refusée, justificatifs effacés.
+    await tx.query(`update ambassador_number_changes set status = 'refused', note = 'Contrat terminé.', documents = null, decided_at = now() where ambassador_id = $1 and status = 'requested'`, [userId]);
+    await tx.query(`update ambassadors set status = 'ended', ended_reason = $2, ended_at = now(), decided_at = now() where user_id = $1`, [userId, reason]);
   }
 
   async function refuseOpenPayouts(tx: Db, userId: number, note: string) {
@@ -258,11 +293,15 @@ export function createAmbassadors(db: Db, now: () => Date = () => new Date()) {
       const image = String(input.signatureImage ?? '');
       if (!/^data:image\/(png|jpeg);base64,[A-Za-z0-9+/=]+$/.test(image) || image.length < 200) throw new AmbassadorError('Signez le contrat dans le cadre prévu.');
       if (image.length > 500_000) throw new AmbassadorError('Signature trop lourde : signez à nouveau dans le cadre.', 413);
-      const [current] = await db.query<{ status: string; contract_version: string; legal_first_name: string; legal_last_name: string }>(
-        'select status, contract_version, legal_first_name, legal_last_name from ambassadors where user_id = $1',
+      const [current] = await db.query<{ status: string; contract_version: string; legal_first_name: string; legal_last_name: string; ended_reason: string; decided_at: string | null }>(
+        'select status, contract_version, legal_first_name, legal_last_name, ended_reason, decided_at from ambassadors where user_id = $1',
         [userId],
       );
-      if (current && current.status !== 'pending' && current.status !== 'refused') {
+      if (current?.status === 'refused' && current.decided_at && new Date(current.decided_at).getTime() > now().getTime() - 7 * 86_400_000) {
+        throw new AmbassadorError('Votre demande a été refusée récemment. Vous pourrez en refaire une dans quelques jours.', 429);
+      }
+      if (current?.status === 'ended' && current.ended_reason === 'fraud') throw new AmbassadorError('Votre contrat a été arrêté pour non-respect des règles : une nouvelle demande n’est pas possible.', 403);
+      if (current && current.status !== 'pending' && current.status !== 'refused' && current.status !== 'ended') {
         // Compte validé : seule une nouvelle version du contrat peut être signée, au même nom légal.
         if (current.contract_version === AMBASSADOR_CONTRACT_VERSION || !sameName(`${firstName} ${lastName}`, `${current.legal_first_name} ${current.legal_last_name}`)) {
           throw new AmbassadorError('Votre compte ambassadeur est déjà validé. Pour changer de numéro, envoyez une demande avec justificatifs.', 409);
@@ -313,8 +352,8 @@ export function createAmbassadors(db: Db, now: () => Date = () => new Date()) {
     },
 
     async summary(userId: number): Promise<AmbassadorSummary> {
-      const [a] = await db.query<{ status: AmbassadorStatus; momo_number: string; momo_name: string; legal_first_name: string; legal_last_name: string; contract_version: string; contract_signed_at: string | null; signature_image: string }>(
-        'select status, momo_number, momo_name, legal_first_name, legal_last_name, contract_version, contract_signed_at, signature_image from ambassadors where user_id = $1',
+      const [a] = await db.query<{ status: AmbassadorStatus; momo_number: string; momo_name: string; legal_first_name: string; legal_last_name: string; contract_version: string; contract_signed_at: string | null; signature_image: string; ended_reason: string; inactivity_warned_at: string | null }>(
+        'select status, momo_number, momo_name, legal_first_name, legal_last_name, contract_version, contract_signed_at, signature_image, ended_reason, inactivity_warned_at from ambassadors where user_id = $1',
         [userId],
       );
       const [change] = await db.query<{ new_number: string; status: string; created_at: string; note: string }>(
@@ -345,7 +384,9 @@ export function createAmbassadors(db: Db, now: () => Date = () => new Date()) {
         momoName: a?.momo_name ?? '',
         legalFirstName: a?.legal_first_name ?? '',
         legalLastName: a?.legal_last_name ?? '',
-        contract: a?.contract_signed_at ? { version: a.contract_version, signedAt: new Date(a.contract_signed_at).toISOString(), current: a.contract_version === AMBASSADOR_CONTRACT_VERSION, signatureImage: a.signature_image } : null,
+        endedReason: (a?.ended_reason || null) as EndReason | null,
+        inactivityWarning: a?.status === 'active' && a.inactivity_warned_at ? new Date(new Date(a.inactivity_warned_at).getTime() + 30 * 86_400_000).toISOString() : null,
+        contract: a?.contract_signed_at ? { version: a.contract_version, signedAt: new Date(a.contract_signed_at).toISOString(), current: a.contract_version === AMBASSADOR_CONTRACT_VERSION } : null,
         numberChange: change ? { newNumber: change.new_number, status: change.status, requestedAt: new Date(change.created_at).toISOString(), note: change.note } : null,
         rules: R,
         stats: { invited: stats.invited, signupsRewarded: stats.signups, buyers: stats.buyers },
@@ -357,11 +398,13 @@ export function createAmbassadors(db: Db, now: () => Date = () => new Date()) {
     /** Demande de retrait de tous les gains disponibles (au moins le seuil). */
     async requestPayout(userId: number) {
       return db.transaction(async (tx) => {
-        const [a] = await tx.query<{ status: string; momo_number: string; momo_name: string }>(
-          'select status, momo_number, momo_name from ambassadors where user_id = $1 for update',
+        const [a] = await tx.query<{ status: string; momo_number: string; momo_name: string; ended_reason: string }>(
+          'select status, momo_number, momo_name, ended_reason from ambassadors where user_id = $1 for update',
           [userId],
         );
-        if (!a || a.status !== 'active') throw new AmbassadorError('Votre compte ambassadeur n’est pas actif.', 403);
+        // Programme arrêté par CVCasa : le solde reste versé, même sous le seuil habituel.
+        const closedByUs = a?.status === 'ended' && a.ended_reason === 'company';
+        if (!a || (a.status !== 'active' && !closedByUs)) throw new AmbassadorError('Votre compte ambassadeur n’est pas actif.', 403);
         const [open] = await tx.query(`select 1 from ambassador_payouts where ambassador_id = $1 and status = 'requested'`, [userId]);
         if (open) throw new AmbassadorError('Un retrait est déjà en cours de traitement.', 409);
         const [changing] = await tx.query(`select 1 from ambassador_number_changes where ambassador_id = $1 and status = 'requested'`, [userId]);
@@ -372,7 +415,7 @@ export function createAmbassadors(db: Db, now: () => Date = () => new Date()) {
            where ambassador_id = $1 and status = 'pending' and available_at <= $2`,
           [userId, at],
         );
-        if (total < R.minPayout) throw new AmbassadorError(`Le retrait est possible à partir de ${R.minPayout} FCFA disponibles.`, 400);
+        if (total < (closedByUs ? 1 : R.minPayout)) throw new AmbassadorError(`Le retrait est possible à partir de ${R.minPayout} FCFA disponibles.`, 400);
         const { fee, net } = payoutSplit(total);
         const [p] = await tx.query<{ id: number }>(
           'insert into ambassador_payouts (ambassador_id, amount, fee, momo_number, momo_name) values ($1, $2, $3, $4, $5) returning id',
@@ -387,15 +430,77 @@ export function createAmbassadors(db: Db, now: () => Date = () => new Date()) {
       });
     },
 
+    /** L'ambassadeur quitte le programme. Ses gains disponibles doivent d'abord être retirés s'ils atteignent le seuil. */
+    async leave(userId: number) {
+      await db.transaction(async (tx) => {
+        const [a] = await tx.query<{ status: string }>('select status from ambassadors where user_id = $1 for update', [userId]);
+        if (!a || a.status !== 'active') throw new AmbassadorError('Votre compte ambassadeur n’est pas actif.', 403);
+        const [open] = await tx.query(`select 1 from ambassador_payouts where ambassador_id = $1 and status = 'requested'`, [userId]);
+        if (open) throw new AmbassadorError('Un retrait est en cours : attendez qu’il soit traité avant de quitter le programme.', 409);
+        const available = await availableNow(tx, userId);
+        if (available >= R.minPayout) throw new AmbassadorError(`Demandez d’abord le retrait de vos ${available} FCFA disponibles, puis quittez le programme.`, 409);
+        await endContract(tx, userId, 'left');
+      });
+      return this.summary(userId);
+    },
+
+    /**
+     * Tâche quotidienne : avertit les ambassadeurs sans activité depuis 11 mois, met fin au contrat à 12 mois
+     * (sauf s'ils ont encore de quoi retirer). Renvoie les personnes à prévenir par e-mail.
+     */
+    async inactivityRun() {
+      const at = now();
+      const months = (n: number) => new Date(at.getTime() - n * 30.44 * 86_400_000).toISOString();
+      const lastActivity = `greatest(a.activated_at, (select max(e.created_at) from ambassador_earnings e where e.ambassador_id = a.user_id),
+                                  (select max(f.created_at) from users f where f.referred_by = a.user_id))`;
+      const toWarn = await db.query<{ user_id: number; identifier: string; name: string }>(
+        `update ambassadors a set inactivity_warned_at = $2 from users u
+         where u.id = a.user_id and a.status = 'active' and a.inactivity_warned_at is null and ${lastActivity} < $1
+         returning a.user_id, u.identifier, u.name`,
+        [months(R.inactivityMonths - 1), at.toISOString()],
+      );
+      // Nouvelle activité depuis l'avertissement : on l'efface.
+      await db.query(`update ambassadors a set inactivity_warned_at = null where a.status = 'active' and a.inactivity_warned_at is not null and ${lastActivity} > a.inactivity_warned_at`);
+      const due = await db.query<{ user_id: number }>(
+        `select a.user_id from ambassadors a where a.status = 'active' and a.inactivity_warned_at is not null
+           and a.inactivity_warned_at < $1 and ${lastActivity} < $2`,
+        [new Date(at.getTime() - 30 * 86_400_000).toISOString(), months(R.inactivityMonths)],
+      );
+      let ended = 0;
+      for (const { user_id } of due) {
+        ended += await db.transaction(async (tx) => {
+          if ((await availableNow(tx, user_id)) >= R.minPayout) return 0;
+          const [open] = await tx.query(`select 1 from ambassador_payouts where ambassador_id = $1 and status = 'requested'`, [user_id]);
+          if (open) return 0;
+          await endContract(tx, user_id, 'inactive');
+          return 1;
+        });
+      }
+      return { warned: toWarn.map((w) => ({ identifier: w.identifier, name: w.name })), ended };
+    },
+
     // ——— Administration ———
+
+    /** Fin du contrat décidée par l'administrateur : triche (rien n'est versé) ou arrêt sans faute (le solde reste dû). */
+    async endByAdmin(userId: number, reason: 'fraud' | 'company') {
+      if (!Number.isInteger(userId)) throw new AmbassadorError('Ambassadeur introuvable.', 404);
+      return db.transaction(async (tx) => {
+        const [a] = await tx.query('select 1 from ambassadors where user_id = $1 for update', [userId]);
+        if (!a) throw new AmbassadorError('Ambassadeur introuvable.', 404);
+        await endContract(tx, userId, reason);
+      });
+    },
+
 
     async adminList() {
       const rows = await db.query<{
         user_id: number; identifier: string; name: string; status: string; momo_number: string; momo_name: string; motivation: string;
-        created_at: string; invited: number; buyers: number; earned: number; paid: number; contract_version: string; contract_signed_at: string | null;
+        created_at: string; invited: number; same_network: number; buyers: number; earned: number; paid: number; contract_version: string; contract_signed_at: string | null; ended_reason: string;
       }>(
-        `select a.user_id, u.identifier, u.name, a.status, a.momo_number, a.momo_name, a.motivation, a.created_at, a.contract_version, a.contract_signed_at,
+        `select a.user_id, u.identifier, u.name, a.status, a.momo_number, a.momo_name, a.motivation, a.created_at, a.contract_version, a.contract_signed_at, a.ended_reason,
                 (select count(*)::int from users f where f.referred_by = a.user_id) as invited,
+                (select count(*)::int from users f join users s on s.id = a.user_id where f.referred_by = a.user_id
+                   and (f.signup_ip = s.signup_ip or f.signup_ip = a.contract_ip or f.signup_device = s.signup_device)) as same_network,
                 (select count(*)::int from ambassador_earnings e where e.ambassador_id = a.user_id and e.kind = 'first_purchase' and e.status <> 'cancelled') as buyers,
                 (select coalesce(sum(amount), 0)::int from ambassador_earnings e where e.ambassador_id = a.user_id and e.status <> 'cancelled') as earned,
                 (select coalesce(sum(amount), 0)::int from ambassador_earnings e where e.ambassador_id = a.user_id and e.status = 'paid') as paid
@@ -415,15 +520,22 @@ export function createAmbassadors(db: Db, now: () => Date = () => new Date()) {
       );
       return {
         numberChanges: changes.map((c) => ({ id: c.id, userId: c.ambassador_id, identifier: c.identifier, legalName: c.momo_name, oldNumber: c.old_number, newNumber: c.new_number, status: c.status, requestedAt: new Date(c.created_at).toISOString(), documents: Number(c.docs) })),
-        ambassadors: rows.map((r) => ({ userId: r.user_id, identifier: r.identifier, name: r.name, status: r.status, momoNumber: r.momo_number, momoName: r.momo_name, contractVersion: r.contract_version, contractSignedAt: r.contract_signed_at ? new Date(r.contract_signed_at).toISOString() : null, motivation: r.motivation, createdAt: new Date(r.created_at).toISOString(), invited: r.invited, buyers: r.buyers, earned: r.earned, paid: r.paid })),
+        ambassadors: rows.map((r) => ({ userId: r.user_id, identifier: r.identifier, name: r.name, status: r.status, momoNumber: r.momo_number, momoName: r.momo_name, contractVersion: r.contract_version, contractSignedAt: r.contract_signed_at ? new Date(r.contract_signed_at).toISOString() : null, motivation: r.motivation, createdAt: new Date(r.created_at).toISOString(), invited: r.invited, sameNetwork: r.same_network, endedReason: r.ended_reason, buyers: r.buyers, earned: r.earned, paid: r.paid })),
         payouts: payouts.map((p) => ({ id: p.id, userId: p.ambassador_id, identifier: p.identifier, amount: p.amount, fee: p.fee, net: p.amount - p.fee, momoNumber: p.momo_number, momoName: p.momo_name, status: p.status, ambassadorStatus: p.ambassador_status, requestedAt: new Date(p.requested_at).toISOString() })),
       };
     },
 
-    async setStatus(userId: number, status: AmbassadorStatus) {
+    async setStatus(userId: number, status: AmbassadorStatus, expectedSignedAt?: string) {
       if (!['pending', 'active', 'refused', 'suspended'].includes(status)) throw new AmbassadorError('Statut inconnu.');
       if (!Number.isInteger(userId)) throw new AmbassadorError('Ambassadeur introuvable.', 404);
       return db.transaction(async (tx) => {
+        // Validation : l'administrateur valide la demande qu'il a vue. Si elle a été renvoyée entre-temps, on refuse.
+        if (expectedSignedAt) {
+          const [cur] = await tx.query<{ contract_signed_at: string | null }>('select contract_signed_at from ambassadors where user_id = $1 for update', [userId]);
+          if (cur && (!cur.contract_signed_at || new Date(cur.contract_signed_at).toISOString() !== expectedSignedAt)) {
+            throw new AmbassadorError('La demande a changé depuis votre affichage : rechargez la liste avant de valider.', 409);
+          }
+        }
         const rows = await tx.query(
           `update ambassadors set status = $2, decided_at = now(),
              activated_at = case when $2 = 'active' then coalesce(activated_at, now()) else activated_at end
@@ -434,6 +546,17 @@ export function createAmbassadors(db: Db, now: () => Date = () => new Date()) {
         // Suspendu ou refusé : le retrait en attente est refusé, ses gains redeviennent « non versés ».
         if (status !== 'active') await refuseOpenPayouts(tx, userId, 'Compte ambassadeur suspendu.');
       });
+    },
+
+    /** Contrat signé : signature dessinée et preuves (pour l'ambassadeur lui-même et pour l'administrateur). */
+    async contractDetail(userId: number) {
+      if (!Number.isInteger(userId)) throw new AmbassadorError('Ambassadeur introuvable.', 404);
+      const [a] = await db.query<{ contract_version: string; contract_signature: string; contract_signed_at: string | null; contract_ip: string; signature_image: string; momo_name: string }>(
+        'select contract_version, contract_signature, contract_signed_at, contract_ip, signature_image, momo_name from ambassadors where user_id = $1',
+        [userId],
+      );
+      if (!a || !a.contract_signed_at) throw new AmbassadorError('Aucun contrat signé.', 404);
+      return { version: a.contract_version, typedSignature: a.contract_signature, signedAt: new Date(a.contract_signed_at).toISOString(), ip: a.contract_ip, signatureImage: a.signature_image, legalName: a.momo_name };
     },
 
     /** Justificatifs d'une demande de changement de numéro (pour l'administrateur). */
@@ -480,7 +603,8 @@ export function createAmbassadors(db: Db, now: () => Date = () => new Date()) {
       if (!Number.isInteger(payoutId)) throw new AmbassadorError('Retrait introuvable.', 404);
       return db.transaction(async (tx) => {
         const [p] = await tx.query<{ status: string; ambassador_status: string }>(
-          `select p.status, a.status as ambassador_status from ambassador_payouts p join ambassadors a on a.user_id = p.ambassador_id where p.id = $1 for update of p`,
+          `select p.status, case when a.status = 'ended' and a.ended_reason = 'company' then 'active' else a.status end as ambassador_status
+           from ambassador_payouts p join ambassadors a on a.user_id = p.ambassador_id where p.id = $1 for update of p`,
           [payoutId],
         );
         if (!p) throw new AmbassadorError('Retrait introuvable.', 404);

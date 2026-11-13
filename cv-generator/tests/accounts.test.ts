@@ -228,3 +228,17 @@ describe('version Pro d’un CV', () => {
     expect(await res.json()).toEqual({ credits: 1 });
   });
 });
+
+describe('sessions', () => {
+  it('un changement de mot de passe déconnecte les anciennes sessions', async () => {
+    const { signToken } = await import('../server/auth.ts');
+    const accounts = createAccounts(await testDb(), opts);
+    const u = await accounts.register({ identifier: 's@x.co', password: 'secret12', ip: '4.4.4.4', device: dev() });
+    const old = Date.now() - 60_000;
+    expect(await accounts.forSession(u.id, old)).not.toBeNull();
+    await accounts.setPassword(u.id, 'nouveau123');
+    expect(await accounts.forSession(u.id, old)).toBeNull();
+    expect(await accounts.forSession(u.id, Date.now())).not.toBeNull();
+    expect(signToken(u.id, 's').split('.')).toHaveLength(2);
+  });
+});
