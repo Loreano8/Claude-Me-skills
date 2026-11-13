@@ -100,4 +100,17 @@ const vault = createVault(db, accounts, async (to, subject, text) => console.log
 const app = createApp({ ai, accounts, payments, ambassadors, vault, testimonials: createTestimonials(db), support, recovery: createRecovery(db, accounts, support), sources: createSources(db), shares: createShares(db), watches: createWatches(db, accounts, demoSearch, null, 'http://localhost:5173'), cronSecret: 'demo', sessionSecret: 'dev', adminToken: 'demo', publicUrl: 'http://localhost:5173', allowedOrigins: [], rateLimitPerHour: 100 });
 // Fausse page de paiement : « payer » puis revenir comme le ferait FedaPay.
 app.get('/fake-pay', (c) => { paid.add(c.req.query('id')!); return c.redirect(`/api/payments/return?id=${c.req.query('id')}&status=approved`); });
+// Démo seulement : donne à un ambassadeur validé quelques filleuls et des gains, pour les vidéos.
+app.post('/demo/seed-ambassador', async (c) => {
+  const { identifier } = await c.req.json();
+  const [u] = await db.query<{ id: number }>('select id from users where identifier = $1', [identifier]);
+  await db.query(`update ambassadors set status = 'active', activated_at = now() - interval '40 days', decided_at = now() where user_id = $1`, [u.id]);
+  const rows: [string, number, number][] = [['signup', 50, -20], ['signup', 50, -20], ['signup', 50, -18], ['first_purchase', 100, -17], ['commission', 50, -17], ['first_purchase', 100, -16], ['commission', 150, -16], ['first_purchase', 100, -15], ['commission', 50, -15], ['first_purchase', 100, -10], ['commission', 150, -10], ['first_purchase', 100, -3], ['commission', 50, -3]];
+  let n = 0;
+  for (const [kind, amount, days] of rows) {
+    const [f] = await db.query<{ id: number }>(`insert into users (identifier, name, password_hash, credits, referred_by) values ($1, 'Ami', 'x', 0, $2) returning id`, ['ami' + Date.now() + n++ + '@email.com', u.id]);
+    await db.query(`insert into ambassador_earnings (ambassador_id, filleul_id, kind, amount, status, available_at, created_at) values ($1, $2, $3, $4, 'pending', now() + ($5 || ' days')::interval + interval '14 days', now() + ($5 || ' days')::interval)`, [u.id, f.id, kind, amount, String(days)]);
+  }
+  return c.json({ ok: true });
+});
 serve({ fetch: app.fetch, port: 8787 }, () => console.log('e2e server ready'));

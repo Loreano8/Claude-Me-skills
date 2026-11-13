@@ -293,3 +293,27 @@ export const PUB3: PubProps = {
     { kind: "clip", src: "pub/p3-lettre.mp4", clipSeconds: 12.0, start: 11.1, end: 18.6, label: "Ta lettre, prête" },
   ],
 };
+
+export const PUB4: PubProps = {
+  voice: "pub/vo4.mp3",
+  voiceSeconds: 20.43,
+  hook: "Tes amis cherchent du travail ?",
+  hookEnd: 2.5,
+  subtitles: [
+    [0, "Tu as des amis qui cherchent du travail ?"],
+    [2.5, "Aide-les,"],
+    [3.25, "et gagne de l'argent."],
+    [5.2, "Deviens ambassadeur CVCasa :"],
+    [7.0, "tu signes ton contrat en ligne, en deux minutes."],
+    [9.6, "Partage ton lien."],
+    [10.65, "Tu gagnes 100 F au premier achat de chaque ami,"],
+    [13.3, "puis 10 % de ses achats pendant un an."],
+    [15.8, "Tes gains arrivent par Mobile Money."],
+    [17.85, "Rejoins le programme,"],
+    [19.0, "sur cvcasa.com"],
+  ],
+  parts: [
+    { kind: "clip", src: "pub/p4-demande.mp4", clipSeconds: 27.18, trim: 9, start: 2.5, end: 9.6, label: "Ton contrat, signé en ligne" },
+    { kind: "clip", src: "pub/p4-gains.mp4", clipSeconds: 13.15, start: 9.6, end: 20.43, label: "Tes gains, en direct" },
+  ],
+};

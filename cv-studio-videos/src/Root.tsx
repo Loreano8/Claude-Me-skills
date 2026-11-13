@@ -2,7 +2,7 @@ import { Composition, Folder } from "remotion";
 import { WEB_TUTORIAL_SECONDS, WebTutorial } from "./demo/WebTutorial";
 import { WEB_TUTORIAL2_SECONDS, WebTutorial2 } from "./demo/WebTutorial2";
 import { AdVideo, durationFor, FPS } from "./ad/AdVideo";
-import { PUB1, PUB2, PUB3, PUB_FPS, PubVideo, pubDuration } from "./ad/PubVideo";
+import { PUB1, PUB2, PUB3, PUB4, PUB_FPS, PubVideo, pubDuration } from "./ad/PubVideo";
 import { DEMO_SECONDS, DemoVideo } from "./demo/DemoVideo";
 
 // Quatre pubs verticales (statuts WhatsApp, TikTok, Reels). Accroches tirées de founder/marketing.md.
@@ -126,6 +126,7 @@ export const RemotionRoot: React.FC = () => {
       <Composition id="Pub1-Veille" component={PubVideo} defaultProps={PUB1} width={1080} height={1920} fps={PUB_FPS} durationInFrames={pubDuration(PUB1)} />
       <Composition id="Pub2-AncienCV" component={PubVideo} defaultProps={PUB2} width={1080} height={1920} fps={PUB_FPS} durationInFrames={pubDuration(PUB2)} />
       <Composition id="Pub3-Offre" component={PubVideo} defaultProps={PUB3} width={1080} height={1920} fps={PUB_FPS} durationInFrames={pubDuration(PUB3)} />
+      <Composition id="Pub4-Ambassadeur" component={PubVideo} defaultProps={PUB4} width={1080} height={1920} fps={PUB_FPS} durationInFrames={pubDuration(PUB4)} />
     </Folder>
   );
 };
