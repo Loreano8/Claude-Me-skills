@@ -118,7 +118,7 @@ function TemplatesShowcase({ onNavigate }: { onNavigate: (t: Tab) => void }) {
       <div className="relative mx-auto max-w-6xl">
         <div ref={strip} className="flex snap-x snap-mandatory gap-4 overflow-x-auto scroll-smooth px-4 pb-4 [scrollbar-width:none] sm:gap-5 [&::-webkit-scrollbar]:hidden">
           {CATALOG.map((e) => (
-            <article key={e.id} className="w-[68%] max-w-[250px] shrink-0 snap-center sm:w-[240px]">
+            <article key={e.id} className="flex w-[68%] max-w-[250px] shrink-0 snap-center flex-col sm:w-[240px]">
               <button type="button" onClick={() => choose(e)} className="group block w-full text-left" aria-label={t('Utiliser le modèle {0}', [e.name])}>
                 <img
                   src={`${import.meta.env.BASE_URL}modeles/${LANG === 'en' ? 'en/' : ''}${e.id}.webp`}
@@ -135,8 +135,8 @@ function TemplatesShowcase({ onNavigate }: { onNavigate: (t: Tab) => void }) {
                   {isProTemplate(e.id) ? 'Pro' : t('Gratuit')}
                 </span>
               </div>
-              <p className="mt-0.5 text-sm text-slate-600">{e.idealFor}</p>
-              <Button size="sm" variant="secondary" className="mt-2" onClick={() => choose(e)}>
+              <p className="mt-0.5 flex-1 text-sm text-slate-600">{e.idealFor}</p>
+              <Button size="sm" variant="secondary" className="mt-2 self-start" onClick={() => choose(e)}>
                 {t('Utiliser ce modèle')}
               </Button>
             </article>

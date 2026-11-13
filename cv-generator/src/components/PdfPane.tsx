@@ -5,7 +5,7 @@ import * as pdfjs from 'pdfjs-dist/legacy/build/pdf.mjs';
 import workerUrl from 'pdfjs-dist/legacy/build/pdf.worker.min.mjs?url';
 import { Loader2 } from 'lucide-react';
 import type { CoverLetter, CvDocument } from '../types.ts';
-import { renderCvPdf, renderLetterPdf } from '../pdf/render.tsx';
+import { renderCvPdfFitted, renderLetterPdf } from '../pdf/render.tsx';
 
 pdfjs.GlobalWorkerOptions.workerSrc = workerUrl;
 
@@ -39,7 +39,7 @@ export default function PdfPane({ source }: { source: PdfSource }) {
     setBusy(true);
     const timer = setTimeout(async () => {
       try {
-        const blob = letter ? await renderLetterPdf(letter, cv) : await renderCvPdf(cv);
+        const blob = letter ? await renderLetterPdf(letter, cv) : (await renderCvPdfFitted(cv)).blob;
         if (cancelled) return;
         const task = pdfjs.getDocument({ data: new Uint8Array(await blob.arrayBuffer()) });
         const doc = await task.promise;
@@ -84,6 +84,10 @@ export default function PdfPane({ source }: { source: PdfSource }) {
           <Loader2 className="size-3.5 animate-spin" /> {' '}{t('Mise à jour…')}</div>
       )}
       {!busy && pages > 1 && <p className="mt-2 text-center text-xs text-slate-500">{t('{0} pages', [pages])}</p>}
+      {!busy && !letter && pages > 1 && (
+        <p className="mt-2 rounded-xl bg-sun-100 px-3 py-2 text-sm text-sun-900 ring-1 ring-sun-400/50">
+          {t('Votre CV fait {0} pages. Les recruteurs préfèrent souvent une seule page : raccourcissez les expériences anciennes ou les moins utiles pour le poste, ou retirez une rubrique secondaire.', [pages])}</p>
+      )}
       {error && <p className="mt-2 text-sm text-red-600">{t('Erreur d’aperçu : {0}', [error])}</p>}
     </div>
   );

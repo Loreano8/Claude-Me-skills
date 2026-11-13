@@ -1303,6 +1303,12 @@ export const EN: Record<string, string> = {
   "Demandez d’abord le retrait de vos {0} disponibles.": "First request the withdrawal of your {0} available.",
   "Quitter le programme ? Votre lien ne rapportera plus rien et vos gains non retirés ({0}) seront perdus. Vous pourrez refaire une demande plus tard.": "Leave the programme? Your link will no longer earn anything and earnings not withdrawn ({0}) will be lost. You can apply again later.",
   "Quitter le programme": "Leave the programme",
+  "Photographier une autre page": "Photograph another page",
+  "Photographier mon CV papier": "Photograph my paper CV",
+  "Page {0}": "Page {0}",
+  "Pas encore de photo sur votre CV (facultatif).": "No photo on your CV yet (optional).",
+  "Ajouter ma photo": "Add my photo",
+  "Votre CV fait {0} pages. Les recruteurs préfèrent souvent une seule page : raccourcissez les expériences anciennes ou les moins utiles pour le poste, ou retirez une rubrique secondaire.": "Your CV is {0} pages long. Recruiters often prefer a single page: shorten older or less relevant experience, or remove a secondary section.",
   // Messages du serveur (erreurs, veille) : traduits à l’envoi quand l’interface est en anglais.
   "Fichier trop volumineux (15 Mo maximum).": "File too large (15 MB maximum).",
   "Erreur interne du serveur.": "Internal server error.",

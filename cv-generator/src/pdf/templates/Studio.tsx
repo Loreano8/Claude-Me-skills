@@ -1,5 +1,6 @@
 import type { ReactNode } from 'react';
-import { Document, Page, Text, View } from '@react-pdf/renderer';
+import { Document } from '@react-pdf/renderer';
+import { Page, Text, View } from '../fit.tsx';
 import type { Style } from '@react-pdf/types';
 import type { TemplateStyle } from '../../../shared/schema.ts';
 import type { CvDocument } from '../../types.ts';

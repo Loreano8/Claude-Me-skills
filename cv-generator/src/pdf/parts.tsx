@@ -1,4 +1,4 @@
-import { Image, Text, View } from '@react-pdf/renderer';
+import { Image, Text, View } from './fit.tsx';
 import type { Style } from '@react-pdf/types';
 import type { CvDocument } from '../types.ts';
 import { fullName } from '../lib/cv.ts';

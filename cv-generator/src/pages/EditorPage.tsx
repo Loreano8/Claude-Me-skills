@@ -159,7 +159,7 @@ function QuickFill() {
           {files.map((f, i) => (
             <span key={i} className="inline-flex max-w-full items-center gap-2 rounded-xl bg-slate-50 px-3 py-2 text-sm ring-1 ring-slate-200">
               <Paperclip className="size-4 shrink-0 text-slate-500" />
-              <span className="truncate">{f.mediaType.startsWith('image/') ? `Photo ${i + 1}` : f.name}</span>
+              <span className="truncate">{f.mediaType.startsWith('image/') ? t('Page {0}', [i + 1]) : f.name}</span>
               <button type="button" onClick={() => setFiles((cur) => cur.filter((_, j) => j !== i))} aria-label={t('Retirer ce document')} className="text-slate-400 hover:text-slate-700">
                 <X className="size-4" />
               </button>
@@ -171,7 +171,7 @@ function QuickFill() {
                 {files.length ? t('Ajouter un fichier') : t('Importer mon ancien CV')}
               </Button>
               <Button variant="secondary" icon={<Camera className="size-4" />} onClick={() => cameraInput.current?.click()}>
-                {files.length ? t('Ajouter une photo') : t('Le prendre en photo')}
+                {files.length ? t('Photographier une autre page') : t('Photographier mon CV papier')}
               </Button>
             </>
           )}
@@ -242,6 +242,23 @@ function QuickFill() {
               <li key={i}>{s}</li>
             ))}
           </ul>
+        </div>
+      )}
+      {suggestions.length > 0 && !cv.photo && (
+        <div className="mt-3 flex flex-wrap items-center gap-3 rounded-xl bg-white p-3 ring-1 ring-brand-100">
+          <Camera className="size-5 shrink-0 text-brand-600" aria-hidden="true" />
+          <p className="min-w-0 flex-1 text-sm text-slate-700">{t('Pas encore de photo sur votre CV (facultatif).')}</p>
+          <Button
+            size="sm"
+            variant="secondary"
+            onClick={() => {
+              const section = document.querySelector<HTMLElement>('[data-tour="photo"]');
+              const toggle = section?.querySelector<HTMLButtonElement>('button[aria-expanded]');
+              if (toggle?.getAttribute('aria-expanded') === 'false') toggle.click();
+              section?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            }}
+          >
+            {t('Ajouter ma photo')}</Button>
         </div>
       )}
       {suggestions.length > 0 && (
@@ -363,7 +380,7 @@ function PersonalSection({ cv, update }: { cv: CvDocument; update: Update }) {
 function PhotoSection({ cv, update }: { cv: CvDocument; update: Update }) {
   const setSettings = (patch: Partial<CvDocument['settings']>) => update((c) => ({ ...c, settings: { ...c.settings, ...patch } }));
   return (
-    <Section title={t('Photo')} icon={<Camera className="size-5" />} badge={cv.photo ? count(1) : null}>
+    <Section tour="photo" title={t('Photo')} icon={<Camera className="size-5" />} badge={cv.photo ? count(1) : null}>
       <PhotoInput value={cv.photo} onChange={(photo) => update((c) => ({ ...c, photo }))} round={cv.settings.photoShape === 'round'} />
       <div className="mt-4 grid gap-2 sm:grid-cols-2">
         <Toggle label={t('Afficher la photo sur le CV')} checked={cv.settings.showPhoto} onChange={(showPhoto) => setSettings({ showPhoto })} />

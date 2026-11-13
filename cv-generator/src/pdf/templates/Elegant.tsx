@@ -1,5 +1,6 @@
 import { orderMain } from '../order.ts';
-import { Document, Page, StyleSheet, Text, View } from '@react-pdf/renderer';
+import { Document, StyleSheet } from '@react-pdf/renderer';
+import { Page, Text, View } from '../fit.tsx';
 import type { CvDocument } from '../../types.ts';
 import { achievementsList, fullName } from '../../lib/cv.ts';
 import { LABELS } from '../labels.ts';
