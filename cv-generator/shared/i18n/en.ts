@@ -1170,6 +1170,12 @@ export const EN: Record<string, string> = {
   "hier": "yesterday",
   "Chaque matin": "Every morning",
   "Première recherche offerte.": "First search free.",
+  "chaque matin": "every morning",
+  "chaque semaine": "every week",
+  "Madame, Monsieur,\nComptable depuis 2021 dans le transport, j’ai réduit de 30 % les retards de paiement. Je souhaite mettre cette rigueur au service de votre équipe.": "Dear Hiring Manager,\nAn accountant in transport since 2021, I cut late payments by 30%. I would like to bring that same rigour to your team.",
+  "Comptable fournisseurs": "Accounts payable clerk",
+  "Groupe de distribution · Cotonou": "Retail group · Cotonou",
+  "à l’instant": "just now",
   // Messages du serveur (erreurs, veille) : traduits à l’envoi quand l’interface est en anglais.
   "Fichier trop volumineux (15 Mo maximum).": "File too large (15 MB maximum).",
   "Erreur interne du serveur.": "Internal server error.",

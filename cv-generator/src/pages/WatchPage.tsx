@@ -257,7 +257,7 @@ export function WatchPage({ onNavigate }: { onNavigate: (t: Tab) => void }) {
         <div className="flex flex-wrap items-center gap-3 rounded-2xl bg-emerald-50 p-4 ring-1 ring-emerald-200">
           <BellRing className="size-5 shrink-0 text-emerald-700" aria-hidden="true" />
           <p className="min-w-0 flex-1 text-sm text-emerald-900">
-            <span className="font-semibold">{t('Votre veille est active')}</span> ({watch.frequency === 'daily' ? 'chaque matin' : 'chaque semaine'}).
+            <span className="font-semibold">{t('Votre veille est active')}</span> ({watch.frequency === 'daily' ? t('chaque matin') : t('chaque semaine')}).
             {watch.nextRunAt && t(' Prochain envoi : {0}, vers 7 h 30.', [day(watch.nextRunAt)])}
           </p>
           <Button variant="ghost" size="sm" loading={busy === 'stop'} onClick={() => act('stop')}>

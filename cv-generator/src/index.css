@@ -86,3 +86,32 @@ h2 {
     animation: none;
   }
 }
+
+/* Accueil, « Bien plus qu'un CV » : une offre qui arrive, le curseur de la lettre qui s'écrit. */
+@keyframes arrive {
+  from {
+    opacity: 0;
+    transform: translateY(-14px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+.arrive {
+  animation: arrive 0.55s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+@keyframes caret {
+  50% {
+    opacity: 0;
+  }
+}
+.caret {
+  animation: caret 1s steps(1) infinite;
+}
+@media (prefers-reduced-motion: reduce) {
+  .arrive,
+  .caret {
+    animation: none;
+  }
+}

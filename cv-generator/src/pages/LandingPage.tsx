@@ -204,6 +204,32 @@ function Testimonials() {
   );
 }
 
+/** Démarre quand la partie est visible ; `null` si l'animation est réduite (on montre alors l'état final). */
+function useLiveTick(ms: number): [React.RefObject<HTMLDivElement | null>, number | null] {
+  const ref = useRef<HTMLDivElement>(null);
+  const [tick, setTick] = useState<number | null>(null);
+  useEffect(() => {
+    if (window.matchMedia?.('(prefers-reduced-motion: reduce)').matches) return;
+    let timer: number | undefined;
+    const io = new IntersectionObserver(([e]) => {
+      window.clearInterval(timer);
+      timer = undefined;
+      if (e.isIntersecting) {
+        setTick((n) => n ?? 0);
+        timer = window.setInterval(() => setTick((n) => (n ?? 0) + 1), ms);
+      }
+    }, { threshold: 0.25 });
+    if (ref.current) io.observe(ref.current);
+    return () => {
+      io.disconnect();
+      window.clearInterval(timer);
+    };
+  }, [ms]);
+  return [ref, tick];
+}
+
+const LETTER_DEMO = () => t('Madame, Monsieur,\nComptable depuis 2021 dans le transport, j’ai réduit de 30 % les retards de paiement. Je souhaite mettre cette rigueur au service de votre équipe.');
+
 /**
  * « Plus qu'un CV » : la recherche d'emploi complète, juste après le haut de page.
  * La veille emploi est mise en avant (grande carte sombre) ; lettre et suivi à côté. Les petites
@@ -214,15 +240,36 @@ function BeyondCv({ onNavigate }: { onNavigate: (t: Tab) => void }) {
     { job: t('Comptable'), where: t('Société de transport · Cotonou'), when: t('il y a 2 h') },
     { job: t('Assistant·e comptable'), where: t('Cabinet d’audit · Cotonou'), when: t('ce matin') },
     { job: t('Chargé·e de paie'), where: t('ONG internationale · télétravail'), when: t('hier') },
+    { job: t('Comptable fournisseurs'), where: t('Groupe de distribution · Cotonou'), when: t('à l’instant') },
   ];
   const steps = [
-    { label: t('Envoyée'), tone: 'bg-slate-100 text-slate-700' },
-    { label: t('Entretien'), tone: 'bg-sun-100 text-sun-900' },
-    { label: t('Réponse'), tone: 'bg-emerald-100 text-emerald-900' },
+    { label: t('Envoyée'), on: 'bg-slate-700 text-white' },
+    { label: t('Entretien'), on: 'bg-sun-400 text-ink' },
+    { label: t('Réponse'), on: 'bg-emerald-600 text-white' },
   ];
+  // Un « tic » toutes les 0,6 s quand la partie est à l'écran : critères cochés un à un, puis une nouvelle offre
+  // arrive en haut de la liste toutes les 4 tics ; le suivi avance d'une étape tous les 3 tics.
+  const [ref, tick] = useLiveTick(600);
+  const live = tick !== null;
+  const checked = live ? Math.min(4, tick + 1) : 4;
+  const shift = live ? Math.max(0, Math.floor((tick - 4) / 4) + 1) : 0;
+  const shown = Array.from({ length: 3 }, (_, i) => offers[(shift - i + offers.length * 99) % offers.length]);
+  const stepNow = live ? Math.floor(tick / 3) % 3 : 2;
+  // Lettre qui s'écrit (environ 40 caractères par seconde), pause, puis recommence.
+  const letter = LETTER_DEMO();
+  const [typed, setTyped] = useState(letter.length);
+  useEffect(() => {
+    if (!live) return;
+    let n = 0;
+    const id = window.setInterval(() => {
+      n = n >= letter.length + 90 ? 0 : n + 1;
+      setTyped(Math.min(n, letter.length));
+    }, 25);
+    return () => window.clearInterval(id);
+  }, [live, letter.length]);
   const link = 'mt-auto inline-flex min-h-11 items-center gap-1.5 pt-4 text-sm font-semibold';
   return (
-    <section className="bg-white px-4 py-14" aria-labelledby="plus-quun-cv">
+    <section ref={ref} className="bg-white px-4 py-14" aria-labelledby="plus-quun-cv">
       <div className="mx-auto max-w-6xl">
         <div id="plus-quun-cv">
           <SectionTitle title={t('Bien plus qu’un CV : *toute votre recherche d’emploi*')} subtitle={t('Trouver les offres, postuler avec la bonne lettre, suivre chaque candidature. Au même endroit.')} />
@@ -251,19 +298,29 @@ function BeyondCv({ onNavigate }: { onNavigate: (t: Tab) => void }) {
              </div>
               <div className="mt-6 grid gap-4 sm:grid-cols-[minmax(0,0.8fr)_minmax(0,1.2fr)] lg:mt-0 lg:grid-cols-1">
                 <ul className="space-y-2 rounded-2xl bg-white/[0.06] p-4 text-sm ring-1 ring-white/10" aria-label={t('Exemple de critères')}>
-                  {[t('Comptable'), t('CDI ou CDD'), t('Cotonou'), t('Chaque matin')].map((x) => (
+                  {[t('Comptable'), t('CDI ou CDD'), t('Cotonou'), t('Chaque matin')].map((x, i) => (
                     <li key={x} className="flex items-center gap-2.5">
-                      <span className="flex size-5 items-center justify-center rounded-md bg-sun-400 text-ink"><Check className="size-3.5" aria-hidden="true" /></span>
+                      <span className={cx('flex size-5 items-center justify-center rounded-md transition-all duration-300', i < checked ? 'scale-100 bg-sun-400 text-ink' : 'scale-90 bg-white/15 text-transparent')}>
+                        <Check className="size-3.5" aria-hidden="true" />
+                      </span>
                       {x}
                     </li>
                   ))}
                 </ul>
                 <ul className="space-y-2" aria-label={t('Exemple d’offres reçues')}>
-                  {offers.map((o) => (
-                    <li key={o.job} className="flex items-center justify-between gap-3 rounded-2xl bg-white p-3 text-ink">
+                  {shown.map((o, i) => (
+                    <li key={`${o.job}-${shift - i}`} className={cx('flex items-center justify-between gap-3 rounded-2xl bg-white p-3 text-ink', i === 0 && live && shift > 0 && 'arrive')}>
                       <span className="min-w-0">
-                        <span className="block truncate text-sm font-semibold">{o.job}</span>
-                        <span className="block text-xs text-slate-500">{o.where} · {o.when}</span>
+                        <span className="flex items-center gap-2 truncate text-sm font-semibold">
+                          {i === 0 && live && shift > 0 && (
+                            <span className="relative flex size-2 shrink-0" aria-hidden="true">
+                              <span className="absolute inline-flex size-full animate-ping rounded-full bg-emerald-500 opacity-75" />
+                              <span className="relative inline-flex size-2 rounded-full bg-emerald-500" />
+                            </span>
+                          )}
+                          {o.job}
+                        </span>
+                        <span className="block text-xs text-slate-500">{o.where} · {i === 0 && live && shift > 0 ? t('à l’instant') : o.when}</span>
                       </span>
                       <span className="shrink-0 rounded-full bg-brand-50 px-2.5 py-1 text-xs font-semibold text-brand-700">{t('Adapter mon CV')}</span>
                     </li>
@@ -284,11 +341,9 @@ function BeyondCv({ onNavigate }: { onNavigate: (t: Tab) => void }) {
             <span className="flex size-10 items-center justify-center rounded-xl bg-white text-brand-700 shadow-sm"><Mail className="size-5" aria-hidden="true" /></span>
             <h3 className="mt-3 text-lg font-bold text-ink">{t('La lettre qui va avec')}</h3>
             <p className="mt-1 text-sm text-slate-600">{t('Écrite à partir de votre CV et de l’offre, au ton choisi. En français ou en anglais, prête à envoyer avec l’e-mail de candidature.')}</p>
-            <div aria-hidden="true" className="mt-4 space-y-1.5 rounded-xl bg-white p-3 shadow-sm">
-              <div className="h-2 w-1/3 rounded bg-slate-300" />
-              <div className="h-2 w-full rounded bg-slate-200" />
-              <div className="h-2 w-11/12 rounded bg-slate-200" />
-              <div className="h-2 w-4/5 rounded bg-brand-200" />
+            <div aria-hidden="true" className="mt-4 min-h-28 rounded-xl bg-white p-4 text-[13px] leading-relaxed whitespace-pre-line text-slate-700 shadow-sm">
+              {letter.slice(0, typed)}
+              <span className="caret ml-px inline-block h-4 w-0.5 translate-y-0.5 bg-brand-600" />
             </div>
             <button type="button" onClick={() => onNavigate('lettre')} className={cx(link, 'text-brand-700 hover:text-brand-800')}>
               {t('Écrire ma lettre')} <ArrowRight className="size-4" aria-hidden="true" />
@@ -300,9 +355,18 @@ function BeyondCv({ onNavigate }: { onNavigate: (t: Tab) => void }) {
             <span className="flex size-10 items-center justify-center rounded-xl bg-white text-brand-700 shadow-sm"><ClipboardList className="size-5" aria-hidden="true" /></span>
             <h3 className="mt-3 text-lg font-bold text-ink">{t('Chaque candidature suivie')}</h3>
             <p className="mt-1 text-sm text-slate-600">{t('Envoyée, entretien, réponse : vous savez où vous en êtes, avec le bon CV pour chaque offre et un rappel pour relancer.')}</p>
-            <div aria-hidden="true" className="mt-4 flex flex-wrap gap-1.5">
-              {steps.map((x) => (
-                <span key={x.label} className={cx('rounded-full px-2.5 py-1 text-xs font-semibold', x.tone)}>{x.label}</span>
+            <div aria-hidden="true" className="mt-4 flex items-center">
+              {steps.map((x, i) => (
+                <div key={x.label} className="flex items-center">
+                  {i > 0 && (
+                    <span className="mx-1 h-0.5 w-5 overflow-hidden rounded-full bg-slate-200 sm:w-8">
+                      <span className={cx('block h-full bg-brand-500 transition-[width] duration-500', i <= stepNow ? 'w-full' : 'w-0')} />
+                    </span>
+                  )}
+                  <span className={cx('rounded-full px-2.5 py-1 text-xs font-semibold transition-all duration-300', i === stepNow ? cx(x.on, 'scale-110 shadow-md') : i < stepNow ? 'bg-brand-50 text-brand-700' : 'bg-white text-slate-500 ring-1 ring-slate-200')}>
+                    {x.label}
+                  </span>
+                </div>
               ))}
             </div>
             <button type="button" onClick={() => onNavigate('suivi')} className={cx(link, 'text-brand-700 hover:text-brand-800')}>
