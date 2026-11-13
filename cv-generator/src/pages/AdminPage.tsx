@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import { ArrowLeft, BarChart3, Check, Coins, Copy, KeyRound, LogOut, MessageCircle, RefreshCw, Send, ShieldCheck, Star, X } from 'lucide-react';
 import { PUBLIC_SITE } from '../lib/referral.ts';
-import { adminRequest, type SupportMessage } from '../lib/api.ts';
+import { ADMIN_SESSION_KEY, adminRequest, type SupportMessage } from '../lib/api.ts';
 import { Button, Card, cx, Field, Notice, TextArea } from '../components/ui.tsx';
 
 // Espace administrateur (adresse …/#admin) : répondre aux messages « Nous contacter »
@@ -38,6 +38,16 @@ function readToken(): string {
     return localStorage.getItem(TOKEN_KEY) ?? '';
   } catch {
     return '';
+  }
+}
+
+/** La session (ouverte par le code e-mail) dure 12 h : passé ce délai, on redemande un code. */
+function sessionAlive(): boolean {
+  try {
+    const exp = Number((localStorage.getItem(ADMIN_SESSION_KEY) ?? '').split('.')[0]);
+    return exp > Date.now() + 60_000;
+  } catch {
+    return false;
   }
 }
 
@@ -526,19 +536,49 @@ function TempPassword({ token }: { token: string }) {
 }
 
 export function AdminPage() {
-  const [token, setToken] = useState(readToken);
-  const [draft, setDraft] = useState('');
+  // Connecté seulement avec le jeton ET une session encore valide (code e-mail de moins de 12 h).
+  const [token, setToken] = useState(() => (sessionAlive() || !readToken() ? readToken() : ''));
+  const [draft, setDraft] = useState(readToken);
   const [tab, setTab] = useState<'messages' | 'recuperations' | 'temoignages' | 'credits' | 'pubs'>('messages');
   const [error, setError] = useState<string | null>(null);
   const [checking, setChecking] = useState(false);
+  // Étape 2 : code envoyé par e-mail.
+  const [challenge, setChallenge] = useState<{ value: string; to: string } | null>(null);
+  const [code, setCode] = useState('');
+
+  const finish = async (tok: string, session: string) => {
+    if (session) localStorage.setItem(ADMIN_SESSION_KEY, session);
+    await adminRequest(tok, 'GET', '/api/admin/support');
+    localStorage.setItem(TOKEN_KEY, tok);
+    setToken(tok);
+    setChallenge(null);
+    setCode('');
+  };
 
   async function login() {
     setChecking(true);
     setError(null);
     try {
-      await adminRequest(draft.trim(), 'GET', '/api/admin/support');
-      localStorage.setItem(TOKEN_KEY, draft.trim());
-      setToken(draft.trim());
+      const tok = draft.trim();
+      localStorage.removeItem(ADMIN_SESSION_KEY);
+      const r = await adminRequest<{ twoStep: boolean; challenge?: string; to?: string }>(tok, 'POST', '/api/admin/code');
+      if (r.twoStep && r.challenge) setChallenge({ value: r.challenge, to: r.to ?? '' });
+      else await finish(tok, '');
+    } catch (e) {
+      setError((e as Error).message);
+    } finally {
+      setChecking(false);
+    }
+  }
+
+  async function verify() {
+    if (!challenge) return;
+    setChecking(true);
+    setError(null);
+    try {
+      const tok = draft.trim();
+      const r = await adminRequest<{ session: string }>(tok, 'POST', '/api/admin/verify', { challenge: challenge.value, code });
+      await finish(tok, r.session);
     } catch (e) {
       setError((e as Error).message);
     } finally {
@@ -555,17 +595,38 @@ export function AdminPage() {
               <ShieldCheck className="size-5 text-brand-600" /> Espace administrateur
             </span>
           }
-          subtitle="Collez le jeton administrateur (ADMIN_TOKEN). Il reste enregistré sur cet appareil."
+          subtitle={
+            challenge
+              ? `Un code à 6 chiffres vient d'être envoyé à ${challenge.to}. Il est valable 10 minutes.`
+              : 'Collez le jeton administrateur (ADMIN_TOKEN). Un code vous sera ensuite envoyé par e-mail.'
+          }
         >
-          <Field label="Jeton administrateur" type="password" value={draft} onChange={setDraft} />
+          {challenge ? (
+            <Field label="Code reçu par e-mail" value={code} onChange={(v) => setCode(v.replace(/\D/g, '').slice(0, 6))} autoComplete="one-time-code" />
+          ) : (
+            <Field label="Jeton administrateur" type="password" value={draft} onChange={setDraft} />
+          )}
           {error && (
             <div className="mt-3">
               <Notice tone="error">{error}</Notice>
             </div>
           )}
-          <Button className="mt-3" loading={checking} disabled={!draft.trim()} onClick={() => void login()}>
-            Entrer
-          </Button>
+          <div className="mt-3 flex flex-wrap items-center gap-3">
+            {challenge ? (
+              <>
+                <Button loading={checking} disabled={code.length !== 6} onClick={() => void verify()}>
+                  Valider
+                </Button>
+                <button type="button" className="min-h-11 text-sm font-semibold text-brand-700" onClick={() => void login()}>
+                  Renvoyer un code
+                </button>
+              </>
+            ) : (
+              <Button loading={checking} disabled={!draft.trim()} onClick={() => void login()}>
+                Recevoir le code
+              </Button>
+            )}
+          </div>
         </Card>
       </div>
     );
@@ -590,6 +651,7 @@ export function AdminPage() {
               icon={<LogOut className="size-4" />}
               onClick={() => {
                 localStorage.removeItem(TOKEN_KEY);
+                localStorage.removeItem(ADMIN_SESSION_KEY);
                 setToken('');
               }}
             >

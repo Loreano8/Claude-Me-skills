@@ -10,7 +10,7 @@ import { PACKS, PaymentError, type Payments } from './payments.ts';
 import { TestimonialInput, type Testimonials } from './testimonials.ts';
 import { SupportError, SupportMessageInput, type Support } from './support.ts';
 import { fetchJobPage, JobPageError } from './jobPage.ts';
-import type { Vault } from './vault.ts';
+import type { Mailer, Vault } from './vault.ts';
 import type { Sources } from './sources.ts';
 import { RecoveryInput, type Recovery } from './recovery.ts';
 import { memoryRateLimiter, type RateLimiter } from './rateLimit.ts';
@@ -19,7 +19,7 @@ import type { Turnstile } from './turnstile.ts';
 import { WatchError, type Watches } from './watch.ts';
 import { LetterTranslateRequest, WatchSaveRequest } from '../shared/schema.ts';
 import { isUiLang, translate, type UiLang } from '../shared/i18n.ts';
-import { createHash, timingSafeEqual } from 'node:crypto';
+import { createHash, createHmac, randomInt, timingSafeEqual } from 'node:crypto';
 
 export interface AppOptions {
   /** Téléchargement des pages d'offres (remplaçable dans les tests). */
@@ -57,6 +57,9 @@ export interface AppOptions {
   apiPublicUrl?: string;
   /** Jeton secret de l'administrateur (ajout manuel de crédits). */
   adminToken?: string;
+  /** Deuxième vérification de l'administrateur : un code envoyé à cette adresse (actif si les deux sont réglés). */
+  adminEmail?: string;
+  adminMailer?: Mailer | null;
   /** Vérification anti-robot (inscription, message sans compte). Absente : pas de vérification. */
   turnstile?: Turnstile | null;
 }
@@ -81,7 +84,7 @@ const Credentials = z.object({
   source: z.string().max(60).optional(),
 });
 
-export function createApp({ fetchPage = fetchJobPage, ai, aiEn = null, allowedOrigins, rateLimitPerHour, accounts = null, payments = null, testimonials = null, support = null, vault = null, recovery = null, sources = null, sessionSecret = '', publicUrl = '', apiPublicUrl = '', adminToken = '', authLimiter = null, shares = null, watches = null, cronSecret = '', turnstile = null }: AppOptions) {
+export function createApp({ fetchPage = fetchJobPage, ai, aiEn = null, allowedOrigins, rateLimitPerHour, accounts = null, payments = null, testimonials = null, support = null, vault = null, recovery = null, sources = null, sessionSecret = '', publicUrl = '', apiPublicUrl = '', adminToken = '', adminEmail = '', adminMailer = null, authLimiter = null, shares = null, watches = null, cronSecret = '', turnstile = null }: AppOptions) {
   const app = new Hono();
   const allow = memoryRateLimiter(rateLimitPerHour);
   const allowAuth = authLimiter ?? memoryRateLimiter(20);
@@ -233,15 +236,55 @@ export function createApp({ fetchPage = fetchJobPage, ai, aiEn = null, allowedOr
     }
   });
 
-  // Espace administrateur : la page s'affiche pour tout le monde, mais aucune donnée ne sort sans le jeton secret.
-  // Comparaison à durée constante (le temps de réponse ne renseigne pas sur le jeton), et les essais ratés
-  // sont limités par adresse : impossible de deviner le jeton en essayant à la chaîne.
+  // Espace administrateur, deux serrures :
+  // 1. le jeton secret (comparé à durée constante ; essais ratés limités par adresse) ;
+  // 2. un code à 6 chiffres envoyé par e-mail à l'administrateur, qui ouvre une session de 12 h.
+  // Sans adresse ou sans envoi d'e-mails configurés (développement, tests), le jeton seul suffit.
   const digest = (v: string) => createHash('sha256').update(v).digest();
-  const isAdmin = (c: Context) => Boolean(adminToken) && timingSafeEqual(digest(c.req.header('authorization') ?? ''), digest(`Bearer ${adminToken}`));
-  app.use('/api/admin/*', async (c, next) => {
-    if (isAdmin(c)) return next();
+  const same = (a: string, b: string) => timingSafeEqual(digest(a), digest(b));
+  const tokenOk = (c: Context) => Boolean(adminToken) && same(c.req.header('authorization') ?? '', `Bearer ${adminToken}`);
+  const twoStep = Boolean(adminEmail && adminMailer);
+  // Clé de signature liée au jeton : changer ADMIN_TOKEN ferme toutes les sessions ouvertes.
+  const adminSign = (v: string) => createHmac('sha256', `${sessionSecret}|${adminToken}`).update(v).digest('base64url');
+  const signedOk = (value: string, kind: string, extra = '') => {
+    const [exp, sig] = value.split('.');
+    return Boolean(exp && sig) && Number(exp) > Date.now() && same(sig, adminSign(`${kind}|${exp}|${extra}`));
+  };
+  const isAdmin = (c: Context) => tokenOk(c) && (!twoStep || signedOk(c.req.header('x-admin-session') ?? '', 'session'));
+  const refuse = async (c: Context) => {
     if (!(await allowAuth(`admin:${clientKey(c)}`))) return c.json({ error: 'Trop de tentatives. Réessayez plus tard.' }, 429);
     return c.json({ error: 'Accès refusé.' }, 403);
+  };
+  app.use('/api/admin/*', async (c, next) => {
+    const step = c.req.path === '/api/admin/code' || c.req.path === '/api/admin/verify';
+    if (step ? tokenOk(c) : isAdmin(c)) return next();
+    return refuse(c);
+  });
+
+  // Étape 2 : envoi du code (valable 10 minutes) à l'adresse de l'administrateur.
+  app.post('/api/admin/code', async (c) => {
+    if (!twoStep) return c.json({ session: '', twoStep: false });
+    const code = String(randomInt(0, 1_000_000)).padStart(6, '0');
+    const exp = Date.now() + 10 * 60_000;
+    try {
+      await adminMailer!(adminEmail, `Code CVCasa administrateur : ${code}`, `Votre code pour ouvrir l'espace administrateur CVCasa : ${code}\n\nIl est valable 10 minutes. Si vous n'avez rien demandé, quelqu'un connaît votre jeton administrateur : changez ADMIN_TOKEN.`);
+    } catch (error) {
+      console.error('Code administrateur', error);
+      return c.json({ error: 'Envoi du code impossible pour le moment. Réessayez.' }, 502);
+    }
+    const [user, domain] = adminEmail.split('@');
+    return c.json({ twoStep: true, challenge: `${exp}.${adminSign(`code|${exp}|${code}`)}`, to: `${user.slice(0, 2)}•••@${domain}` });
+  });
+
+  // Vérification du code : ouvre une session de 12 h (le code n'est jamais gardé, seulement sa signature).
+  app.post('/api/admin/verify', async (c) => {
+    if (!twoStep) return c.json({ session: '' });
+    const b = (await c.req.json().catch(() => null)) as { challenge?: string; code?: string } | null;
+    const code = String(b?.code ?? '').replace(/\D/g, '');
+    if (!(await allowAuth(`admin-code:${clientKey(c)}`))) return c.json({ error: 'Trop de tentatives. Réessayez plus tard.' }, 429);
+    if (code.length !== 6 || !signedOk(String(b?.challenge ?? ''), 'code', code)) return c.json({ error: 'Code incorrect ou expiré.' }, 400);
+    const exp = Date.now() + 12 * 3600_000;
+    return c.json({ session: `${exp}.${adminSign(`session|${exp}|`)}` });
   });
 
   // Ajout manuel de crédits (ex. paiement reçu directement par mobile money).

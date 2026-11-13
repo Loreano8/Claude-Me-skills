@@ -191,12 +191,21 @@ export function saveSupportSecret(secret: string): void {
 }
 
 /** Appels de l'espace administrateur, avec le jeton admin (jamais celui du compte client). */
+/** Session de l'espace administrateur (après le code reçu par e-mail), gardée sur cet appareil. */
+export const ADMIN_SESSION_KEY = 'cv-studio-admin-session';
+
 export async function adminRequest<T>(token: string, method: 'GET' | 'POST', path: string, body?: unknown): Promise<T> {
   let res: Response;
+  let session = '';
+  try {
+    session = localStorage.getItem(ADMIN_SESSION_KEY) ?? '';
+  } catch {
+    /* stockage indisponible */
+  }
   try {
     res = await fetch(`${API_BASE}${path}`, {
       method,
-      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}`, ...(session ? { 'X-Admin-Session': session } : {}) },
       body: body === undefined ? undefined : JSON.stringify(body),
     });
   } catch {

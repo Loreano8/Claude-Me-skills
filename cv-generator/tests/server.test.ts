@@ -205,6 +205,26 @@ describe('API avec comptes et crédits', async () => {
     expect((await res.json()).credits).toBe(6);
   });
 
+  it('demande un code par e-mail à l’administrateur avant d’ouvrir l’espace', async () => {
+    const db = await testDb();
+    const accounts = createAccounts(db, { freeCredits: 1, freeIpCooldownDays: 0 });
+    const sent: string[] = [];
+    const app = createApp({ ai: fakeAi(), accounts, sessionSecret: 's', adminToken: 'adm', adminEmail: 'moi@ex.com', adminMailer: async (_to, _s, text) => void sent.push(text), allowedOrigins: [], rateLimitPerHour: 50 });
+    const call = (path: string, body: unknown, session = '') =>
+      app.request(path, { method: 'POST', headers: { 'content-type': 'application/json', authorization: 'Bearer adm', ...(session ? { 'x-admin-session': session } : {}) }, body: JSON.stringify(body) });
+    await post(app, '/api/auth/register', { identifier: 'e@f.co', password: 'secret12' });
+    // Le jeton seul ne suffit plus.
+    expect((await call('/api/admin/credits', { identifier: 'e@f.co', credits: 1 })).status).toBe(403);
+    const { challenge, to } = await (await call('/api/admin/code', {})).json();
+    expect(to).toBe('mo•••@ex.com');
+    const code = sent[0].match(/(\d{6})/)![1];
+    expect((await call('/api/admin/verify', { challenge, code: code === '000000' ? '111111' : '000000' })).status).toBe(400);
+    const { session } = await (await call('/api/admin/verify', { challenge, code })).json();
+    expect((await call('/api/admin/credits', { identifier: 'e@f.co', credits: 1 }, session)).status).toBe(200);
+    // Une session fabriquée est refusée.
+    expect((await call('/api/admin/credits', { identifier: 'e@f.co', credits: 1 }, `${Date.now() + 9e6}.faux`)).status).toBe(403);
+  });
+
   it('bloque les essais de jeton administrateur à la chaîne', async () => {
     const { app } = await setup();
     const codes: number[] = [];

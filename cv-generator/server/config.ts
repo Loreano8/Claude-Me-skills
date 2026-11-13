@@ -86,6 +86,8 @@ export async function createServer(env: Settings, opts: { db?: Db; migrate?: boo
     publicUrl: env.PUBLIC_URL ?? '',
     apiPublicUrl: env.API_PUBLIC_URL ?? '',
     adminToken: env.ADMIN_TOKEN ?? '',
+    adminEmail: env.ADMIN_EMAIL || env.SUPPORT_NOTIFY_EMAIL || '',
+    adminMailer: resendMailer(env),
     allowedOrigins: (env.ALLOWED_ORIGINS ?? 'http://localhost:5173,https://localhost,capacitor://localhost')
       .split(',')
       .map((o) => o.trim())
