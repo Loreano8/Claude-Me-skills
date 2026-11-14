@@ -268,7 +268,7 @@ export function createApp({ fetchPage = fetchJobPage, ai, aiEn = null, allowedOr
   app.post('/api/admin/crypto/:id', async (c) => {
     if (!cryptoPay || !isAdmin(c)) return c.json({ error: 'Accès refusé.' }, 403);
     const b = (await c.req.json().catch(() => null)) as { action?: string; note?: string } | null;
-    const action = b?.action === 'approve' ? 'approve' : b?.action === 'refuse' ? 'refuse' : null;
+    const action = b?.action === 'approve' || b?.action === 'refuse' || b?.action === 'prorata' ? b.action : null;
     if (!action) return c.json({ error: 'Décision inconnue.' }, 400);
     try {
       await cryptoPay.decide(Number(c.req.param('id')), action, String(b?.note ?? ''));

@@ -1386,6 +1386,7 @@ export const EN: Record<string, string> = {
   "Le montant exact, ni plus ni moins.": "The exact amount, no more, no less.",
   "Si vous envoyez moins : aucun crédit n’est ajouté automatiquement. Notre équipe vérifie, puis vous crédite selon le montant réellement reçu.": "If you send less: no credit is added automatically. Our team checks, then credits you according to the amount actually received.",
   "Si vous envoyez plus : votre pack est validé, mais le surplus n’est pas remboursé. Écrivez-nous depuis « Nous contacter » pour le recevoir en crédits.": "If you send more: your pack is approved, but the extra is not refunded. Write to us from “Contact us” to receive it as credits.",
+  "En dessous de la valeur d’un crédit, le montant n’est ni crédité ni remboursé.": "Below the value of one credit, the amount is neither credited nor refunded.",
   // Messages du serveur (erreurs, veille) : traduits à l’envoi quand l’interface est en anglais.
   "Fichier trop volumineux (15 Mo maximum).": "File too large (15 MB maximum).",
   "Erreur interne du serveur.": "Internal server error.",
@@ -1543,4 +1544,5 @@ export const EN: Record<string, string> = {
   "Cette transaction n’est pas dans la monnaie officielle demandée sur le réseau BEP20. Un jeton qui porte seulement le même nom est refusé.": "This transaction is not in the official requested currency on the BEP20 network. A token that only carries the same name is rejected.",
   "Ce paiement n’est plus en attente.": "This payment is no longer pending.",
   "Le paiement en crypto n’est pas activé.": "Crypto payment is not enabled.",
+  "Montant reçu trop faible : il ne vaut pas un crédit.": "Amount received too low: it is not worth one credit.",
 };

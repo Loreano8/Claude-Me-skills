@@ -155,6 +155,28 @@ describe('paiement crypto (USDT BEP20)', () => {
   });
 });
 
+describe('paiement crypto : montant inférieur', () => {
+  it('crédite au prorata du montant reçu, au tarif du petit pack, et rien sous la valeur d’un crédit', async () => {
+    const { crypto, person, send, credits, db } = await setup();
+    const u = await person();
+    const order = await crypto.open(u, 'candidature'); // 3 USDT pour 10 crédits
+    expect(await crypto.submit(u.id, order.id, send(1, 2), PROOF)).toEqual({ status: 'review' });
+    // Petit pack : 3 crédits pour 1 USDT → 2 USDT = 6 crédits.
+    expect((await crypto.adminList()).orders[0]).toMatchObject({ prorata: 6, status: 'review' });
+    expect(await crypto.decide(order.id, 'prorata')).toMatchObject({ status: 'paid', credits: 7 });
+    expect(await credits(u.id)).toBe(7);
+    const [pay] = await db.query<{ credits: number; amount: number }>(`select credits, amount from payments where user_id = $1`, [u.id]);
+    expect(pay).toMatchObject({ credits: 6, amount: 1000 }); // prix retenu : 2/3 de 1 500 FCFA
+    // Presque rien envoyé : pas de prorata possible.
+    const v = await person();
+    const tiny = await crypto.open(v, 'essentiel');
+    expect(await crypto.submit(v.id, tiny.id, send(2, 0.2), PROOF)).toEqual({ status: 'review' });
+    expect((await crypto.adminList()).orders.find((o) => o.id === tiny.id)?.prorata).toBe(0);
+    await expect(crypto.decide(tiny.id, 'prorata')).rejects.toThrow(/trop faible/);
+    expect(await credits(v.id)).toBe(1);
+  });
+});
+
 describe('offre de lancement', () => {
   it('donne plus de crédits par pack jusqu’à la date de fin, puis revient aux packs habituels', async () => {
     const db = await testDb();

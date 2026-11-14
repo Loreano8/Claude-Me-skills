@@ -21,6 +21,7 @@ interface Order {
   expiresAt: string;
   proof: string | null;
   chain: { amount: number; from: string; time: string; confirmations: number } | null;
+  prorata: number | null;
 }
 interface Data {
   auto: boolean;
@@ -88,9 +89,11 @@ export function AdminCrypto({ token }: { token: string }) {
             {o.identifier} · {o.credits} crédits · attendu : {o.amount} {o.token}
           </p>
           <Notice tone="warn">Pourquoi ce paiement attend : {o.reason || 'vérification demandée'}.</Notice>
-          {o.reason.includes('insuffisant') && (
+          {o.prorata !== null && (
             <p className="text-slate-700">
-              Montant trop faible : la règle annoncée au client est de le créditer selon le montant réellement reçu. Refusez ce paiement avec un motif (par exemple « Montant reçu inférieur au pack : crédits ajoutés au prorata »), puis ajoutez les crédits correspondants dans l’onglet « Comptes ».
+              {o.prorata > 0
+                ? `Montant trop faible pour le pack. Règle annoncée au client : le créditer selon le montant reçu, soit ${o.prorata} crédit${o.prorata > 1 ? 's' : ''} (tarif du petit pack, arrondi au crédit inférieur).`
+                : 'Montant trop faible : il ne vaut même pas un crédit. Règle annoncée au client : ni crédité ni remboursé. Refusez avec ce motif.'}
             </p>
           )}
           {o.chain && (
@@ -117,7 +120,12 @@ export function AdminCrypto({ token }: { token: string }) {
             </button>
           )}
           <div className="flex flex-wrap gap-2">
-            <Button size="sm" icon={<Check className="size-4" />} disabled={busy} onClick={() => void call('POST', `/api/admin/crypto/${o.id}`, { action: 'approve' })}>
+            {o.prorata !== null && o.prorata > 0 && (
+              <Button size="sm" icon={<Check className="size-4" />} disabled={busy} onClick={() => void call('POST', `/api/admin/crypto/${o.id}`, { action: 'prorata' })}>
+                Créditer au prorata : {o.prorata} crédit{o.prorata > 1 ? 's' : ''}
+              </Button>
+            )}
+            <Button size="sm" variant={o.prorata !== null ? 'secondary' : 'primary'} icon={<Check className="size-4" />} disabled={busy} onClick={() => void call('POST', `/api/admin/crypto/${o.id}`, { action: 'approve' })}>
               Valider et donner {o.credits} crédits
             </Button>
             <Button

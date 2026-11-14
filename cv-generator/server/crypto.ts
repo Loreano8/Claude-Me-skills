@@ -183,15 +183,26 @@ export function createCrypto(db: Db, payments: Payments, chain: Chain, cfg: Cryp
   }
 
   /** Crédite la commande : une seule fois par identifiant de transaction (index unique). */
-  async function pay(orderId: number, hash: string): Promise<number> {
+  /**
+   * Montant reçu inférieur au pack : crédits au prorata, au tarif du plus petit pack du moment, arrondis au crédit
+   * inférieur et jamais plus que le pack commandé. 0 si le montant ne vaut même pas un crédit.
+   */
+  function prorata(o: OrderRow, received: number): number {
+    const small = payments.currentPacks().packs[0];
+    const perUnit = small.credits / CRYPTO_PRICES[small.id];
+    return Math.max(0, Math.min(o.credits, Math.floor(received * perUnit + 1e-9)));
+  }
+  const received = (chain: string) => (chain ? Number((JSON.parse(chain) as { amount?: number }).amount ?? 0) : 0);
+
+  async function pay(orderId: number, hash: string, partial?: { credits: number; price: number }): Promise<number> {
     return db.transaction(async (tx) => {
       const [o] = await tx.query<OrderRow>(`select ${COLS} from crypto_orders where id = $1 for update`, [orderId]);
       if (!o || o.status === 'paid') throw new CryptoError('Cette commande a déjà été traitée.', 409);
       const [used] = await tx.query(`select 1 from crypto_orders where lower(tx_hash) = $1 and status = 'paid'`, [hash]);
       if (used) throw new CryptoError('Cette transaction a déjà été utilisée.', 409);
-      const pack = { id: o.pack_id, name: o.pack_id, credits: o.credits, price: o.price };
+      const pack = { id: o.pack_id, name: o.pack_id, credits: partial?.credits ?? o.credits, price: partial?.price ?? o.price };
       const { paymentId, credits } = await payments.recordPaidInTx(tx, o.user_id, pack, 'crypto', hash);
-      await tx.query(`update crypto_orders set status = 'paid', tx_hash = $2, decided_at = $3, payment_id = $4 where id = $1`, [orderId, hash, now().toISOString(), paymentId]);
+      await tx.query(`update crypto_orders set status = 'paid', tx_hash = $2, decided_at = $3, payment_id = $4, credits = $5, price = $6, note = $7 where id = $1`, [orderId, hash, now().toISOString(), paymentId, pack.credits, pack.price, partial ? 'crédité au prorata du montant reçu' : o.note]);
       return credits;
     });
   }
@@ -307,6 +318,8 @@ export function createCrypto(db: Db, payments: Payments, chain: Chain, cfg: Cryp
           decidedAt: iso(o.decided_at),
           proof: o.proof,
           chain: o.chain ? (JSON.parse(o.chain) as { amount: number; from: string; time: string; confirmations: number }) : null,
+          /** Crédits que donnerait un crédit au prorata (montant reçu inférieur au pack). */
+          prorata: o.status === 'review' && received(o.chain) < o.amount_usd - 0.0001 ? prorata(o, received(o.chain)) : null,
         })),
       };
     },
@@ -317,10 +330,18 @@ export function createCrypto(db: Db, payments: Payments, chain: Chain, cfg: Cryp
     },
 
     /** Décision de l'administrateur sur un paiement à vérifier. */
-    async decide(orderId: number, action: 'approve' | 'refuse', note = ''): Promise<{ status: 'paid' | 'refused'; userId: number; credits?: number }> {
-      const [o] = await db.query<OrderRow>(`select ${COLS} from crypto_orders where id = $1`, [orderId]);
+    async decide(orderId: number, action: 'approve' | 'refuse' | 'prorata', note = ''): Promise<{ status: 'paid' | 'refused'; userId: number; credits?: number }> {
+      const [o] = await db.query<OrderRow & { chain: string }>(`select ${COLS}, chain from crypto_orders where id = $1`, [orderId]);
       if (!o || o.status !== 'review' || !o.tx_hash) throw new CryptoError('Ce paiement n’est plus en attente.', 409);
       if (action === 'approve') return { status: 'paid', userId: o.user_id, credits: await pay(orderId, o.tx_hash.toLowerCase()) };
+      if (action === 'prorata') {
+        const got = received(o.chain);
+        const credits = prorata(o, got);
+        if (credits < 1) throw new CryptoError('Montant reçu trop faible : il ne vaut pas un crédit.', 400);
+        // Le prix retenu (pour les gains d'ambassadeur) suit le montant réellement reçu.
+        const price = Math.min(o.price, Math.round((o.price * got) / o.amount_usd));
+        return { status: 'paid', userId: o.user_id, credits: await pay(orderId, o.tx_hash.toLowerCase(), { credits, price }) };
+      }
       await db.query(`update crypto_orders set status = 'refused', note = $2, decided_at = $3 where id = $1 and status = 'review'`, [orderId, note.slice(0, 300), now().toISOString()]);
       return { status: 'refused', userId: o.user_id };
     },
