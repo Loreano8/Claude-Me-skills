@@ -7,6 +7,7 @@ import { AiError, type Ai } from './ai.ts';
 import { AccountError, DOSSIER_COST, REFERRAL_BONUS, UNLOCK_COST, type Accounts, type User } from './accounts.ts';
 import { signToken, verifyTokenDetail } from './auth.ts';
 import { PACKS, PaymentError, type Payments } from './payments.ts';
+import { CryptoError, type Crypto } from './crypto.ts';
 import { TestimonialInput, type Testimonials } from './testimonials.ts';
 import { SupportError, SupportMessageInput, type Support } from './support.ts';
 import { fetchJobPage, JobPageError } from './jobPage.ts';
@@ -41,6 +42,8 @@ export interface AppOptions {
   /** Comptes et crédits. Sans base de données (développement local), l'IA est en accès libre. */
   accounts?: Accounts | null;
   payments?: Payments | null;
+  /** Paiement en crypto (USDT BEP20), vérifié sur la blockchain. */
+  cryptoPay?: Crypto | null;
   /** Témoignages des utilisateurs embauchés (validés à la main avant publication). */
   testimonials?: Testimonials | null;
   /** Messagerie « Nous contacter ». */
@@ -91,7 +94,7 @@ const Credentials = z.object({
   source: z.string().max(60).optional(),
 });
 
-export function createApp({ fetchPage = fetchJobPage, ai, aiEn = null, allowedOrigins, rateLimitPerHour, accounts = null, payments = null, testimonials = null, support = null, vault = null, recovery = null, sources = null, sessionSecret = '', publicUrl = '', apiPublicUrl = '', adminToken = '', adminEmail = '', adminMailer = null, ambassadors = null, authLimiter = null, shares = null, watches = null, cronSecret = '', turnstile = null }: AppOptions) {
+export function createApp({ fetchPage = fetchJobPage, ai, aiEn = null, allowedOrigins, rateLimitPerHour, accounts = null, payments = null, cryptoPay = null, testimonials = null, support = null, vault = null, recovery = null, sources = null, sessionSecret = '', publicUrl = '', apiPublicUrl = '', adminToken = '', adminEmail = '', adminMailer = null, ambassadors = null, authLimiter = null, shares = null, watches = null, cronSecret = '', turnstile = null }: AppOptions) {
   const app = new Hono();
   const allow = memoryRateLimiter(rateLimitPerHour);
   const allowAuth = authLimiter ?? memoryRateLimiter(20);
@@ -136,7 +139,7 @@ export function createApp({ fetchPage = fetchJobPage, ai, aiEn = null, allowedOr
   const publicUser = (u: User) => ({ identifier: u.identifier, name: u.name, credits: u.credits });
 
   function accountError(c: Context, error: unknown) {
-    if (error instanceof AccountError || error instanceof PaymentError) {
+    if (error instanceof AccountError || error instanceof PaymentError || error instanceof CryptoError) {
       return c.json({ error: error.message }, error.status as 400);
     }
     console.error(error);
@@ -205,6 +208,71 @@ export function createApp({ fetchPage = fetchJobPage, ai, aiEn = null, allowedOr
     try {
       const returnUrl = `${apiPublicUrl || new URL(c.req.url).origin}/api/payments/return`;
       return c.json({ url: await payments.checkout(user, String(body?.packId ?? ''), returnUrl) });
+    } catch (error) {
+      return accountError(c, error);
+    }
+  });
+
+  // ---- Paiement en crypto (USDT, réseau BEP20) -----------------------------
+  // Le client envoie le montant à l'adresse de CVCasa, puis donne l'identifiant de la transaction et une capture.
+  // Le serveur vérifie lui-même sur la blockchain ; le moindre doute part en vérification manuelle.
+
+  app.get('/api/crypto', async (c) => {
+    if (!cryptoPay) return c.json({ enabled: false });
+    const user = await currentUser(c);
+    return c.json({ enabled: true, ...cryptoPay.config(), order: user ? await cryptoPay.current(user.id) : null });
+  });
+
+  app.post('/api/crypto/order', async (c) => {
+    const user = await currentUser(c);
+    if (!user || !cryptoPay) return c.json({ error: user ? 'Le paiement en crypto n’est pas activé.' : 'Connectez-vous pour acheter des crédits.' }, user ? 503 : 401);
+    const body = (await c.req.json().catch(() => null)) as { packId?: string; token?: string } | null;
+    try {
+      return c.json({ order: await cryptoPay.open(user, String(body?.packId ?? ''), body?.token ? String(body.token) : undefined) });
+    } catch (error) {
+      return accountError(c, error);
+    }
+  });
+
+  app.post('/api/crypto/submit', async (c) => {
+    const user = await currentUser(c);
+    if (!user || !cryptoPay) return c.json({ error: user ? 'Le paiement en crypto n’est pas activé.' : 'Connectez-vous pour acheter des crédits.' }, user ? 503 : 401);
+    if (!(await allowAuth(`crypto:${user.id}`))) return c.json({ error: 'Trop de tentatives. Réessayez plus tard.' }, 429);
+    const body = (await c.req.json().catch(() => null)) as { orderId?: number; hash?: string; proof?: string } | null;
+    try {
+      const result = await cryptoPay.submit(user.id, Number(body?.orderId), String(body?.hash ?? ''), String(body?.proof ?? ''));
+      tellAdmin(
+        result.status === 'paid' ? 'CVCasa : paiement crypto reçu' : 'CVCasa : paiement crypto à vérifier',
+        result.status === 'paid'
+          ? `${user.identifier} a payé en crypto. La transaction a été vérifiée sur la blockchain et les crédits ont été ajoutés automatiquement.`
+          : `${user.identifier} déclare un paiement en crypto qui demande une vérification. À valider ou refuser dans l'espace administrateur, onglet Crypto.`,
+      );
+      return c.json({ ...result, order: await cryptoPay.current(user.id) });
+    } catch (error) {
+      return accountError(c, error);
+    }
+  });
+
+  app.get('/api/admin/crypto', async (c) => {
+    if (!cryptoPay || !isAdmin(c)) return c.json({ error: 'Accès refusé.' }, 403);
+    return c.json(await cryptoPay.adminList());
+  });
+
+  app.post('/api/admin/crypto/auto', async (c) => {
+    if (!cryptoPay || !isAdmin(c)) return c.json({ error: 'Accès refusé.' }, 403);
+    const b = (await c.req.json().catch(() => null)) as { on?: boolean } | null;
+    await cryptoPay.setAuto(b?.on === true);
+    return c.json(await cryptoPay.adminList());
+  });
+
+  app.post('/api/admin/crypto/:id', async (c) => {
+    if (!cryptoPay || !isAdmin(c)) return c.json({ error: 'Accès refusé.' }, 403);
+    const b = (await c.req.json().catch(() => null)) as { action?: string; note?: string } | null;
+    const action = b?.action === 'approve' ? 'approve' : b?.action === 'refuse' ? 'refuse' : null;
+    if (!action) return c.json({ error: 'Décision inconnue.' }, 400);
+    try {
+      await cryptoPay.decide(Number(c.req.param('id')), action, String(b?.note ?? ''));
+      return c.json(await cryptoPay.adminList());
     } catch (error) {
       return accountError(c, error);
     }
@@ -783,6 +851,7 @@ export function createApp({ fetchPage = fetchJobPage, ai, aiEn = null, allowedOr
     if (!watches?.enabled || !cronSecret || !timingSafeEqual(digest(given), digest(cronSecret))) return c.json({ error: 'Non autorisé.' }, 401);
     const result = await watches.runDue();
     // Programme Ambassadeur : avertissement à 11 mois sans activité, fin du contrat à 12 mois.
+    if (cryptoPay) await cryptoPay.cleanup().catch((e) => console.error('Crypto (nettoyage)', e));
     let ambassadorsResult = null;
     if (ambassadors) {
       try {

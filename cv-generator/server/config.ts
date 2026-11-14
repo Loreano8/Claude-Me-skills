@@ -6,6 +6,7 @@ import { dbRateLimiter, type RateLimiter } from './rateLimit.ts';
 import { createShares, type Shares } from './shares.ts';
 import { createPgDb, migrate, type Db } from './db.ts';
 import { createPayments, fedapay } from './payments.ts';
+import { bscChain, createCrypto, type Crypto } from './crypto.ts';
 import { createTestimonials } from './testimonials.ts';
 import { createSupport, notifier } from './support.ts';
 import { createVault, resendMailer } from './vault.ts';
@@ -46,6 +47,7 @@ export async function createServer(env: Settings, opts: { db?: Db; migrate?: boo
   let shares: Shares | null = null;
   let watches: Watches | null = null;
   let ambassadors: Ambassadors | null = null;
+  let cryptoPay: Crypto | null = null;
   if (hasDb) {
     if (!env.SESSION_SECRET) throw new Error('SESSION_SECRET est obligatoire avec une base de données.');
     // DATABASE_SSL=true pour une base externe (Supabase…) ; inutile pour la base interne de Render.
@@ -68,6 +70,18 @@ export async function createServer(env: Settings, opts: { db?: Db; migrate?: boo
     if (env.FEDAPAY_SECRET_KEY) {
       payments = createPayments(db, accounts, fedapay(env.FEDAPAY_SECRET_KEY, env.FEDAPAY_ENV === 'live' ? 'live' : 'sandbox'), ambassadors);
     }
+    // Paiement crypto : actif dès qu'une adresse de réception BEP20 est réglée (adresse publique, pas un secret).
+    if (env.CRYPTO_BEP20_ADDRESS) {
+      try {
+        cryptoPay = createCrypto(db, payments ?? createPayments(db, accounts, null, ambassadors), bscChain(), {
+          address: env.CRYPTO_BEP20_ADDRESS,
+          tokens: (env.CRYPTO_TOKENS ?? 'USDT').split(',').map((t) => t.trim().toUpperCase()),
+          auto: env.CRYPTO_AUTO !== 'off',
+        });
+      } catch (error) {
+        console.error('Paiement crypto désactivé :', (error as Error).message);
+      }
+    }
   }
 
   const app = createApp({
@@ -81,6 +95,7 @@ export async function createServer(env: Settings, opts: { db?: Db; migrate?: boo
     turnstile: createTurnstile(env),
     accounts,
     payments,
+    cryptoPay,
     testimonials,
     support,
     vault,

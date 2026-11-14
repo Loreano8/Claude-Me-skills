@@ -6,6 +6,7 @@ import { api, refreshAccount } from '../lib/api.ts';
 import { clearReferral, pendingReferral, referralLink } from '../lib/referral.ts';
 import { Button, cx, Field, Notice } from './ui.tsx';
 import { Captcha } from './Captcha.tsx';
+import { CryptoPay } from './CryptoPay.tsx';
 
 import { LOCALE, t } from '../i18n.ts';
 export function Modal({ title, onClose, children }: { title: string; onClose: () => void; children: ReactNode }) {
@@ -655,6 +656,7 @@ function CreditsDialog() {
       </div>
       <p className="mt-3 flex items-center gap-1.5 text-xs text-slate-500">
         <Check className="size-3.5" /> {' '}{t('Paiement sécurisé par FedaPay : MTN MoMo ou Moov Money.')}</p>
+      {user && packs && <CryptoPay packs={offerOpen ? [offerOpen.pack, ...packs] : packs} />}
       {!paymentsOn && (
         <div className="mt-3">
           <Notice tone="info">{t('Le paiement en ligne sera ouvert très bientôt.')}</Notice>

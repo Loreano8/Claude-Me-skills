@@ -3,6 +3,7 @@ import { ArrowLeft, BarChart3, HandCoins, Check, Coins, Copy, KeyRound, LogOut, 
 import { PUBLIC_SITE } from '../lib/referral.ts';
 import { ADMIN_SESSION_KEY, adminRequest, type SupportMessage } from '../lib/api.ts';
 import { Button, Card, cx, Field, Notice, TextArea } from '../components/ui.tsx';
+import { AdminCrypto } from './AdminCrypto.tsx';
 
 // Espace administrateur (adresse …/#admin) : répondre aux messages « Nous contacter »
 // et valider les témoignages. Protégé par le jeton ADMIN_TOKEN du serveur, gardé sur cet appareil.
@@ -741,7 +742,7 @@ export function AdminPage() {
   // Connecté seulement avec le jeton ET une session encore valide (code e-mail de moins de 12 h).
   const [token, setToken] = useState(() => (sessionAlive() || !readToken() ? readToken() : ''));
   const [draft, setDraft] = useState(readToken);
-  const [tab, setTab] = useState<'messages' | 'recuperations' | 'temoignages' | 'credits' | 'pubs' | 'ambassadeurs'>('messages');
+  const [tab, setTab] = useState<'messages' | 'recuperations' | 'temoignages' | 'credits' | 'pubs' | 'ambassadeurs' | 'crypto'>('messages');
   const [error, setError] = useState<string | null>(null);
   const [checking, setChecking] = useState(false);
   // Étape 2 : code envoyé par e-mail.
@@ -871,6 +872,7 @@ export function AdminPage() {
               ['credits', 'Comptes', Coins],
               ['pubs', 'Pubs', BarChart3],
               ['ambassadeurs', 'Ambassadeurs', HandCoins],
+              ['crypto', 'Crypto', Coins],
             ] as const
           ).map(([id, label, Icon]) => (
             <button
@@ -893,6 +895,8 @@ export function AdminPage() {
           <Sources token={token} />
         ) : tab === 'ambassadeurs' ? (
           <Ambassadors token={token} />
+        ) : tab === 'crypto' ? (
+          <AdminCrypto token={token} />
         ) : (
           <>
             <Credits token={token} />

@@ -160,6 +160,9 @@ export const api = {
   offer: () => request<ReturnOffer>('GET', '/api/offer'),
   unlock: () => post<{ credits: number | null }>('/api/unlock', {}),
   checkout: (packId: string) => post<{ url: string }>('/api/payments/checkout', { packId }),
+  crypto: () => request<CryptoInfo>('GET', '/api/crypto'),
+  cryptoOrder: (packId: string, token?: string) => post<{ order: CryptoOrder }>('/api/crypto/order', { packId, token }),
+  cryptoSubmit: (orderId: number, hash: string, proof: string) => post<{ status: 'paid' | 'review'; credits?: number; order: CryptoOrder | null }>('/api/crypto/submit', { orderId, hash, proof }),
 
   support: () => request<{ messages: SupportMessage[] }>('GET', '/api/support', undefined, supportHeaders()),
   supportUnread: () => request<{ unread: number }>('GET', '/api/support/unread', undefined, supportHeaders()),
@@ -266,3 +269,22 @@ export async function refreshAccount(): Promise<void> {
     if (error instanceof ApiError && /session/i.test(error.message)) state.logout();
   }
 }
+
+/** Paiement en crypto (USDT, réseau BEP20). */
+export interface CryptoOrder {
+  id: number;
+  packId: string;
+  credits: number;
+  /** Montant à envoyer, en dollars (chiffre rond). */
+  amount: number;
+  token: string;
+  status: 'open' | 'review' | 'paid' | 'refused';
+  address: string;
+  network: string;
+  createdAt: string;
+  expiresAt: string;
+  note: string;
+}
+export type CryptoInfo =
+  | { enabled: false }
+  | { enabled: true; address: string; network: string; tokens: string[]; prices: Record<string, number>; minutes: number; order: CryptoOrder | null };

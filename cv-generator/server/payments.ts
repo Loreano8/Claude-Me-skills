@@ -122,9 +122,53 @@ export function createPayments(db: Db, accounts: Accounts, provider: PaymentProv
     return { active: { pack: RETURN_PACK, expiresAt: expiresAt.toISOString() }, possible: true, notBefore: null };
   }
 
+  /** Achat payé : crédits, bonus de parrainage et gains de l'ambassadeur. Renvoie le nouveau solde. */
+  async function creditPurchaseInTx(tx: Db, payment: { id: number; user_id: number; credits: number; amount: number }, ref: string): Promise<number> {
+    await accounts.addCreditsInTx(tx, payment.user_id, payment.credits, 'purchase', ref);
+    await accounts.rewardReferralInTx(tx, payment.user_id);
+    // Programme Ambassadeur : prime et pourcentage pour l'ambassadeur du filleul (s'il y en a un, actif).
+    // Isolé : une erreur ici ne doit jamais priver le client de ses crédits.
+    if (ambassadors) {
+      await tx.query('savepoint ambassador');
+      try {
+        await ambassadors.onPurchaseInTx(tx, payment.user_id, payment.id, payment.amount);
+        await tx.query('release savepoint ambassador');
+      } catch (error) {
+        await tx.query('rollback to savepoint ambassador');
+        console.error('Ambassadeur (achat)', error);
+      }
+    }
+    const [{ credits }] = await tx.query<{ credits: number }>('select credits from users where id = $1', [payment.user_id]);
+    return credits;
+  }
+
   return {
     packs: PACKS,
     returnOffer,
+
+    /** Pack achetable par cette personne (l'offre de retour seulement si elle lui est ouverte). */
+    async packFor(user: User, packId: string): Promise<Pack> {
+      const pack = PACKS.find((p) => p.id === packId);
+      if (pack) return pack;
+      if (packId === RETURN_PACK.id) {
+        if (!(await returnOffer(user)).active) throw new PaymentError('Cette offre n’est plus disponible.', 410);
+        return RETURN_PACK;
+      }
+      throw new PaymentError('Pack inconnu.', 400);
+    },
+
+    /**
+     * Enregistre un achat déjà vérifié par un autre moyen (paiement crypto contrôlé sur la blockchain) :
+     * même effet qu'un paiement FedaPay approuvé. La référence ne peut servir qu'une fois.
+     */
+    async recordPaidInTx(tx: Db, userId: number, pack: Pack, providerName: string, ref: string): Promise<{ paymentId: number; credits: number }> {
+      const [row] = await tx.query<{ id: number }>(
+        `insert into payments (user_id, provider, provider_ref, pack_id, credits, amount, currency, status) values ($1, $2, $3, $4, $5, $6, 'XOF', 'approved') returning id`,
+        [userId, providerName, ref, pack.id, pack.credits, pack.price],
+      );
+      const credits = await creditPurchaseInTx(tx, { id: row.id, user_id: userId, credits: pack.credits, amount: pack.price }, `${providerName}:${ref}`);
+      return { paymentId: row.id, credits };
+    },
 
     async checkout(user: User, packId: string, returnUrl: string): Promise<string> {
       if (!provider) throw new PaymentError('Le paiement en ligne n’est pas encore activé.', 503);
@@ -175,21 +219,7 @@ export function createPayments(db: Db, accounts: Accounts, provider: PaymentProv
         }
         await tx.query('update payments set status = $2, updated_at = now() where id = $1', [payment.id, status]);
         if (!paid(status)) return { status, userId: payment.user_id };
-        await accounts.addCreditsInTx(tx, payment.user_id, payment.credits, 'purchase', `${provider.name}:${ref}`);
-        await accounts.rewardReferralInTx(tx, payment.user_id);
-        // Programme Ambassadeur : prime et pourcentage pour l'ambassadeur du filleul (s'il y en a un, actif).
-        // Isolé : une erreur ici ne doit jamais priver le client de ses crédits.
-        if (ambassadors) {
-          await tx.query('savepoint ambassador');
-          try {
-            await ambassadors.onPurchaseInTx(tx, payment.user_id, payment.id, payment.amount);
-            await tx.query('release savepoint ambassador');
-          } catch (error) {
-            await tx.query('rollback to savepoint ambassador');
-            console.error('Ambassadeur (achat)', error);
-          }
-        }
-        const [{ credits }] = await tx.query<{ credits: number }>('select credits from users where id = $1', [payment.user_id]);
+        const credits = await creditPurchaseInTx(tx, payment, `${provider.name}:${ref}`);
         return { status, credits, userId: payment.user_id };
       });
     },
