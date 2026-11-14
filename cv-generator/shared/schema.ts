@@ -334,6 +334,11 @@ export const CatalogTemplateId = z.enum([
   'galerie',
   'cadre',
   'mosaique',
+  'clarte',
+  'epure',
+  'ligne',
+  'nord',
+  'pastel',
 ]);
 export type CatalogTemplateId = z.infer<typeof CatalogTemplateId>;
 

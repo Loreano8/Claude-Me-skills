@@ -7,6 +7,7 @@ import { ModernTemplate } from './templates/Modern.tsx';
 import { StudioTemplate } from './templates/Studio.tsx';
 import { PremiumTemplate } from './templates/Premium.tsx';
 import { CollectionTemplate } from './templates/Collection.tsx';
+import { PureTemplate } from './templates/Pure.tsx';
 
 export function CvPdf({ cv, fit = 1 }: { cv: CvDocument; fit?: number }) {
   return <FitContext.Provider value={fit}>{template(cv)}</FitContext.Provider>;
@@ -33,6 +34,12 @@ function template(cv: CvDocument) {
     case 'cadre':
     case 'mosaique':
       return <CollectionTemplate cv={cv} id={cv.settings.template} />;
+    case 'clarte':
+    case 'epure':
+    case 'ligne':
+    case 'nord':
+    case 'pastel':
+      return <PureTemplate cv={cv} id={cv.settings.template} />;
     default: {
       const style = resolveStyle(cv.settings);
       return style ? <StudioTemplate cv={cv} style={style} /> : <ModernTemplate cv={cv} />;

@@ -48,6 +48,11 @@ export const CATALOG: CatalogEntry[] = [
   { id: 'simple', name: t('Simple'), category: 'classique', accent: '#2563eb', idealFor: t('Une colonne claire, idéale pour les logiciels de tri et un premier emploi.') },
   { id: 'bicolore', name: t('Bicolore'), category: 'polyvalent', accent: '#0d9488', idealFor: t('Colonne gris clair pour le contact et les langues, titres colorés.') },
   { id: 'compact', name: t('Compact'), category: 'classique', accent: '#475569', idealFor: t('Titres dans la marge : beaucoup d’informations sur une seule page.') },
+  { id: 'clarte', name: t('Clarté'), category: 'polyvalent', accent: '#ea580c', idealFor: t('Net et lumineux : fine barre de couleur, titres soulignés d’un filet, frise des expériences.') },
+  { id: 'epure', name: t('Épure'), category: 'creatif', accent: '#059669', idealFor: t('Le plus minimal : beaucoup d’espace, filets très fins, dates en colonne.') },
+  { id: 'ligne', name: t('Ligne'), category: 'polyvalent', accent: '#4f46e5', idealFor: t('Un fil vertical relie les rubriques. Sobre, moderne et très lisible.') },
+  { id: 'nord', name: t('Nord'), category: 'classique', accent: '#9a3412', idealFor: t('Fond crème et titres à empattement. Doux et élégant.') },
+  { id: 'pastel', name: t('Pastel'), category: 'creatif', accent: '#0ea5e9', idealFor: t('En-tête dans une carte de couleur douce, coordonnées en pastilles.') },
   { id: 'prestige', name: t('Prestige'), category: 'polyvalent', accent: '#b8913a', idealFor: t('Profils confirmés et cadres. Colonne bleu nuit, filets dorés, frise chronologique.') },
   { id: 'horizon', name: t('Horizon'), category: 'creatif', accent: '#0e7490', idealFor: t('Moderne et dynamique. Bandeau en biais, photo mise en avant, niveaux de langue.') },
   { id: 'atelier', name: t('Atelier'), category: 'creatif', accent: '#c2410c', idealFor: t('Métiers créatifs, communication, commerce. Rubriques numérotées et monogramme.') },
@@ -143,7 +148,7 @@ export const CATALOG: CatalogEntry[] = [
 ];
 
 /** Modèles utilisables gratuitement ; les autres (et « Mon style ») demandent la version Pro. */
-export const FREE_TEMPLATES: readonly string[] = ['moderne', 'classique', 'elegant', 'simple', 'bicolore', 'compact'];
+export const FREE_TEMPLATES: readonly string[] = ['moderne', 'classique', 'elegant', 'simple', 'bicolore', 'compact', 'clarte'];
 export const isProTemplate = (id: string) => !FREE_TEMPLATES.includes(id);
 
 export const catalogEntry = (id: string) => CATALOG.find((t) => t.id === id);
