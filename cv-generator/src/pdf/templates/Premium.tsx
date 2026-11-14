@@ -304,13 +304,13 @@ function Horizon({ cv }: { cv: CvDocument }) {
   const sideHeading = (title: string) => <Text style={{ fontSize: 9, fontWeight: 700, letterSpacing: 1, textTransform: 'uppercase', color: accent, marginTop: 14, marginBottom: 6 }}>{title}</Text>;
   return doc(
     cv,
-    <Page size="A4" style={{ fontFamily: FONT, fontSize: 9.2, lineHeight: 1.4, paddingBottom: 30 }}>
+    <Page size="A4" style={{ fontFamily: FONT, fontSize: 9.2, lineHeight: 1.4, paddingTop: 30, paddingBottom: 30 }}>
       <View fixed style={{ position: 'absolute', top: BAND - 10, bottom: 0, right: 0, width: SIDE, backgroundColor: tint(accent, 0.92) }} />
       <Svg style={{ position: 'absolute', top: 0, left: 0 }} width={A4_W} height={BAND + 20}>
         <Polygon points={`0,0 ${A4_W},0 ${A4_W},${BAND - 18} 0,${BAND + 14}`} fill={accent} />
         <Polygon points={`0,${BAND + 14} ${A4_W},${BAND - 18} ${A4_W},${BAND - 12} 0,${BAND + 20}`} fill={tint(accent, 0.55)} />
       </Svg>
-      <View style={{ height: BAND, paddingLeft: 36, paddingRight: hasPhoto ? 170 : 36, justifyContent: 'center' }}>
+      <View style={{ height: BAND, marginTop: -30, paddingLeft: 36, paddingRight: hasPhoto ? 170 : 36, justifyContent: 'center' }}>
         <Text style={{ fontSize: 28, fontWeight: 700, color: '#ffffff', lineHeight: 1.1 }}>{fullName(cv.personal) || ' '}</Text>
         {cv.personal.title ? <Text style={{ fontSize: 11, fontWeight: 500, letterSpacing: 1.5, textTransform: 'uppercase', color: tint(accent, 0.75), marginTop: 5 }}>{cv.personal.title}</Text> : null}
       </View>

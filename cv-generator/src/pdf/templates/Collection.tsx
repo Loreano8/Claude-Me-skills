@@ -199,8 +199,8 @@ function Ardoise({ cv }: { cv: CvDocument }) {
   const noContact = { ...cv, personal: { ...cv.personal, email: '', phone: '', address: '', city: '', country: '', linkedin: '', website: '', drivingLicense: '', birthDate: '' }, settings: { ...cv.settings, showNationality: false, showBirthDate: false } };
   return doc(
     cv,
-    <Page size="A4" style={{ fontFamily: FONT, fontSize: 9.2, lineHeight: 1.4, paddingBottom: 30, color: '#1f2937' }}>
-      <View style={{ backgroundColor: slate, paddingHorizontal: 36, paddingVertical: 26, flexDirection: 'row', alignItems: 'center' }}>
+    <Page size="A4" style={{ fontFamily: FONT, fontSize: 9.2, lineHeight: 1.4, paddingTop: 30, paddingBottom: 30, color: '#1f2937' }}>
+      <View style={{ marginTop: -30, backgroundColor: slate, paddingHorizontal: 36, paddingVertical: 26, flexDirection: 'row', alignItems: 'center' }}>
         {hasPhoto(cv) ? <View style={{ marginRight: 20 }}><Photo cv={cv} size={86} border={accent} /></View> : null}
         <View style={{ flex: 1 }}>
           <Text style={{ fontSize: 27, fontWeight: 700, color: '#ffffff', lineHeight: 1.1 }}>{fullName(cv.personal) || ' '}</Text>

@@ -31,7 +31,7 @@ export function DesignPanel({ cv }: { cv: CvDocument }) {
 
   return (
     <div className="space-y-4">
-      <Card tour="templates" title={t('Modèle')} subtitle={t('29 modèles pensés pour chaque métier et chaque pays, ou le style d’un CV que vous aimez.')}>
+      <Card tour="templates" title={t('Modèle')} subtitle={t('33 modèles pensés pour chaque métier et chaque pays, ou le style d’un CV que vous aimez.')}>
         <TemplateGallery cv={cv} set={set} />
       </Card>
 
