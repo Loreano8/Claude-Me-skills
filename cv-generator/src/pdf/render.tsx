@@ -6,7 +6,9 @@ import { registerFonts } from './fonts.ts';
 import { TranscriptPdf } from './TranscriptPdf.tsx';
 
 /** Resserrages essayés, du plus léger au plus fort, quand le CV déborde un peu sur une 2e page. */
-const FITS = [0.95, 0.9, 0.85];
+const FITS = [0.95, 0.9];
+/** Resserrage maximal : en dessous, le texte deviendrait trop petit. */
+const TIGHTEST = 0.85;
 
 /** Nombre de pages d'un PDF produit par react-pdf (les objets « page » ne sont pas compressés). */
 export async function pdfPageCount(blob: Blob): Promise<number> {
@@ -28,11 +30,15 @@ export async function renderCvPdfFitted(cv: CvDocument): Promise<{ blob: Blob; f
   const blob = await pdf(<CvPdf cv={cv} />).toBlob();
   const pages = await pdfPageCount(blob);
   if (pages !== 2) return { blob, fit: 1, pages };
+  // On essaie d'abord le resserrage maximal : s'il ne suffit pas, inutile d'essayer les autres
+  // (l'aperçu se recalcule à chaque modification, autant ne pas générer quatre PDF pour rien).
+  const tightest = await pdf(<CvPdf cv={cv} fit={TIGHTEST} />).toBlob();
+  if ((await pdfPageCount(tightest)) !== 1) return { blob, fit: 1, pages };
   for (const fit of FITS) {
     const tight = await pdf(<CvPdf cv={cv} fit={fit} />).toBlob();
     if ((await pdfPageCount(tight)) === 1) return { blob: tight, fit, pages: 1 };
   }
-  return { blob, fit: 1, pages };
+  return { blob: tightest, fit: TIGHTEST, pages: 1 };
 }
 
 export async function renderLetterPdf(letter: CoverLetter, cv: CvDocument): Promise<Blob> {

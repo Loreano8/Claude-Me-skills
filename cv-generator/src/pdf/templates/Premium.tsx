@@ -20,12 +20,13 @@ const A4_W = 595.28;
 /** Niveau de langue (1 à 5) déduit du texte saisi : « C1 », « Courant », « Native »… */
 export function languageLevel(level: string): number {
   const l = level.toLowerCase();
+  // Les niveaux faibles d'abord : « bonnes notions » est un niveau de notions, pas un bon niveau.
+  if (/a1|débutant|beginner/.test(l)) return 1;
+  if (/a2|scolaire|élémentaire|elementary|notions|basic/.test(l)) return 2;
   if (/c2|natif|native|maternelle|mother|bilingue|bilingual/.test(l)) return 5;
   if (/c1|courant|fluent|avancé|advanced/.test(l)) return 4;
-  if (/b2|professionnel|professional|bon|good|upper/.test(l)) return 3.5;
+  if (/b2|professionnel|professional|\bbon|good|upper/.test(l)) return 3.5;
   if (/b1|intermédiaire|intermediate|moyen/.test(l)) return 3;
-  if (/a2|scolaire|élémentaire|elementary|notions|basic/.test(l)) return 2;
-  if (/a1|débutant|beginner/.test(l)) return 1;
   return 0;
 }
 
