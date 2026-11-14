@@ -1,11 +1,11 @@
 import type { Db } from './db.ts';
-import { AMBASSADOR_CONTRACT_VERSION, sameName } from '../shared/ambassadorContract.ts';
+import { AMBASSADOR_CONTRACT_VERSION, firstPurchaseRewardFor, sameName } from '../shared/ambassadorContract.ts';
 
 // Programme Ambassadeur : des personnes validées par l'administrateur gagnent de l'argent (FCFA, versé par Mobile Money)
 // quand des filleuls arrivent par leur lien. Tout est calculé pour que chaque filleul reste rentable :
 // - inscription d'un filleul qui crée son premier CV : petite prime, seulement pour les 3 premiers filleuls ;
-// - premier achat d'un filleul : prime fixe ;
-// - puis un pourcentage de chaque achat du filleul pendant 12 mois.
+// - premier achat d'un filleul : prime fixe selon le pack acheté (100, 200 ou 400 FCFA) ;
+// - puis un pourcentage de chacun de ses achats suivants pendant 12 mois.
 // Garde-fous : rien si le filleul a le même appareil ou la même connexion que l'ambassadeur, gains bloqués 14 jours,
 // retrait à partir d'un seuil, plafond mensuel, et chaque versement est validé à la main par l'administrateur.
 
@@ -14,9 +14,15 @@ export const AMBASSADOR_RULES = {
   signupReward: 50,
   /** Nombre de filleuls inscrits qui rapportent cette prime, par ambassadeur. */
   signupRewardLimit: 3,
-  /** Prime au premier achat d'un filleul (FCFA). */
+  /** Plus petite prime au premier achat d'un filleul (FCFA), gardée pour les anciennes versions de l'appli. */
   firstPurchaseReward: 100,
-  /** Pourcentage de chaque achat du filleul. */
+  /** Prime au premier achat selon le prix du pack : à partir de « from » FCFA, « reward » FCFA. */
+  firstPurchaseTiers: [
+    { from: 0, reward: 100 },
+    { from: 1500, reward: 200 },
+    { from: 3000, reward: 400 },
+  ],
+  /** Pourcentage de chaque achat du filleul, à partir du deuxième. */
   commissionPercent: 10,
   /** Durée pendant laquelle les achats du filleul rapportent un pourcentage. */
   commissionMonths: 12,
@@ -267,7 +273,8 @@ export function createAmbassadors(db: Db, now: () => Date = () => new Date()) {
               + (select count(*)::int from ambassador_earnings where filleul_id = $1 and kind = 'first_purchase') as bought`,
         [filleulId, paymentId],
       );
-      if (!bought) total += await earn(tx, sponsor.ambassador_id, filleulId, 'first_purchase', R.firstPurchaseReward, paymentId);
+      if (!bought) return earn(tx, sponsor.ambassador_id, filleulId, 'first_purchase', firstPurchaseRewardFor(R.firstPurchaseTiers, amount), paymentId);
+      // Achats suivants : pourcentage, pendant les 12 premiers mois du filleul.
       if (ageMonths <= R.commissionMonths) {
         const commission = Math.floor((amount * R.commissionPercent) / 100);
         if (commission > 0) total += await earn(tx, sponsor.ambassador_id, filleulId, 'commission', commission, paymentId);

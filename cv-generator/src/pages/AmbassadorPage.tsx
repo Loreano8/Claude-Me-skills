@@ -19,8 +19,11 @@ const day = (iso: string) => new Date(iso).toLocaleDateString(LOCALE, { day: 'nu
 function Rules({ r }: { r: AmbassadorInfo['rules'] }) {
   const items = [
     { amount: fcfa(r.signupReward), text: t('par ami qui s’inscrit et crée son premier CV (vos {0} premiers amis)', [r.signupRewardLimit]) },
-    { amount: fcfa(r.firstPurchaseReward), text: t('quand un ami fait son premier achat') },
-    { amount: `${r.commissionPercent} %`, text: t('de chaque achat de vos amis, pendant {0} mois', [r.commissionMonths]) },
+    {
+      amount: `${fcfa(r.firstPurchaseTiers[0].reward)} – ${fcfa(r.firstPurchaseTiers[r.firstPurchaseTiers.length - 1].reward)}`,
+      text: t('au premier achat d’un ami, selon le pack : {0}', [r.firstPurchaseTiers.map((x) => fcfa(x.reward)).join(' · ')]),
+    },
+    { amount: `${r.commissionPercent} %`, text: t('de chacun de ses achats suivants, pendant {0} mois', [r.commissionMonths]) },
   ];
   return (
     <ul className="grid gap-2 sm:grid-cols-3">
@@ -189,7 +192,8 @@ export function AmbassadorPage() {
           <h2 className="mb-3 font-display text-lg font-semibold text-ink">{t('Ce que vous gagnez')}</h2>
           <Rules r={r} />
           <p className="mt-3 text-sm text-slate-700">
-            {t('Exemple : 10 amis qui achètent chacun un pack à {0} vous rapportent {1}.', [fcfa(500), fcfa(10 * (r.firstPurchaseReward + Math.floor((500 * r.commissionPercent) / 100)))])}</p>
+            {t('Prime au premier achat : {0} pour le pack à {1}, {2} pour le pack à {3}, {4} pour le pack à {5}.', [fcfa(r.firstPurchaseTiers[0].reward), fcfa(500), fcfa(r.firstPurchaseTiers[1]?.reward ?? 0), fcfa(1500), fcfa(r.firstPurchaseTiers[2]?.reward ?? 0), fcfa(3000)])}{' '}
+            {t('Exemple : 10 amis qui achètent chacun un pack à {0} vous rapportent {1}, puis {2} % de tous leurs achats suivants pendant {3} mois.', [fcfa(500), fcfa(10 * r.firstPurchaseTiers[0].reward), r.commissionPercent, r.commissionMonths])}</p>
         </section>
         {info.status === 'refused' && <Notice tone="warn">{t('Votre précédente demande n’a pas été retenue. Vous pouvez en refaire une.')}</Notice>}
         {info.status === 'ended' && (

@@ -7,10 +7,20 @@ export const AMBASSADOR_CONTRACT_VERSION = '2026-11-v1';
 
 export type ContractSection = { title: string; text: string[] };
 
+/** Prime au premier achat d'un filleul selon le prix du pack acheté : la prime du palier le plus haut atteint. */
+export type FirstPurchaseTier = { readonly from: number; readonly reward: number };
+
+export function firstPurchaseRewardFor(tiers: readonly FirstPurchaseTier[], amount: number): number {
+  let reward = 0;
+  for (const t of tiers) if (amount >= t.from) reward = Math.max(reward, t.reward);
+  return reward;
+}
+
 export type ContractNumbers = {
   signupReward: number;
   signupRewardLimit: number;
   firstPurchaseReward: number;
+  firstPurchaseTiers: readonly FirstPurchaseTier[];
   commissionPercent: number;
   commissionMonths: number;
   holdDays: number;
@@ -22,6 +32,19 @@ export type ContractNumbers = {
 
 const f = (n: number) => `${n.toLocaleString('fr-FR')} FCFA`;
 const fe = (n: number) => `${n.toLocaleString('en-GB')} FCFA`;
+/** « 100 FCFA pour un pack jusqu’à 1 499 FCFA, 200 FCFA… » */
+const tiersText = (tiers: readonly FirstPurchaseTier[], money: (n: number) => string, en: boolean) =>
+  tiers
+    .map((t, i) => {
+      const next = tiers[i + 1];
+      const range = next
+        ? t.from === 0
+          ? en ? `under ${money(next.from)}` : `de moins de ${money(next.from)}`
+          : en ? `from ${money(t.from)} to ${money(next.from - 1)}` : `de ${money(t.from)} à ${money(next.from - 1)}`
+        : en ? `of ${money(t.from)} or more` : `de ${money(t.from)} ou plus`;
+      return en ? `${money(t.reward)} for a pack ${range}` : `${money(t.reward)} pour un pack ${range}`;
+    })
+    .join(en ? ', ' : ', ');
 
 /** Le contrat, dans la langue de l'interface (la version française fait foi). */
 export function ambassadorContract(lang: 'fr' | 'en', r: ContractNumbers): ContractSection[] {
@@ -33,7 +56,7 @@ export function ambassadorContract(lang: 'fr' | 'en', r: ContractNumbers): Contr
         title: '3. Rewards',
         text: [
           `${fe(r.signupReward)} for each new person who signs up through the link and creates their first CV, for the Ambassador's first ${r.signupRewardLimit} referrals only, and only if that person uses neither the Ambassador's phone nor the same internet connection.`,
-          `${fe(r.firstPurchaseReward)} when a referred person makes their first purchase, then ${r.commissionPercent}% of each of their purchases for ${r.commissionMonths} months after they sign up.`,
+          `When a referred person makes their first purchase, a one-off bonus depending on the pack bought: ${tiersText(r.firstPurchaseTiers, fe, true)}. Then ${r.commissionPercent}% of each of their following purchases for ${r.commissionMonths} months after they sign up (no percentage on the first purchase).`,
           `Earnings become available ${r.holdDays} days after the sign-up or purchase. They are capped at ${fe(r.monthlyCap)} per month.`,
           'Nothing is due for an account created by the Ambassador themself or on their own phone, for a person who signed up before the Ambassador was approved, or for a purchase that is refunded or cancelled.',
         ],
@@ -76,7 +99,7 @@ export function ambassadorContract(lang: 'fr' | 'en', r: ContractNumbers): Contr
       title: '3. Rémunération',
       text: [
         `${f(r.signupReward)} pour chaque nouvelle personne qui s’inscrit par le lien et crée son premier CV, pour les ${r.signupRewardLimit} premiers filleuls de l’Ambassadeur seulement, à condition qu’elle n’utilise ni le téléphone ni la connexion internet de l’Ambassadeur.`,
-        `${f(r.firstPurchaseReward)} au premier achat d’un filleul, puis ${r.commissionPercent} % de chacun de ses achats pendant ${r.commissionMonths} mois après son inscription.`,
+        `Au premier achat d’un filleul, une prime unique selon le pack acheté : ${tiersText(r.firstPurchaseTiers, f, false)}. Puis ${r.commissionPercent} % de chacun de ses achats suivants pendant ${r.commissionMonths} mois après son inscription (pas de pourcentage sur le premier achat).`,
         `Les gains deviennent disponibles ${r.holdDays} jours après l’inscription ou l’achat. Ils sont plafonnés à ${f(r.monthlyCap)} par mois.`,
         'Rien n’est dû pour un compte créé par l’Ambassadeur lui-même ou sur son propre téléphone, pour une personne inscrite avant la validation de l’Ambassadeur, ni pour un achat remboursé ou annulé.',
       ],

@@ -83,13 +83,13 @@ describe('programme Ambassadeur', () => {
     const sameNet = await person(code, '10.0.0.1');
     expect(await ambassadors.onFirstCv(sameNet.id)).toBe(0);
     await buy(sameNet.id, 'essentiel');
-    expect((await ambassadors.summary(a.id)).earnings.pending).toBe(R.firstPurchaseReward + 50);
+    expect((await ambassadors.summary(a.id)).earnings.pending).toBe(100);
   });
 
   it('déduit les frais d’envoi Mobile Money du retrait', async () => {
     const { clock, ambassadors, person, ambassador, buy } = await setup();
     const { a, code } = await ambassador();
-    for (let i = 0; i < 6; i++) await buy((await person(code)).id, 'pro'); // 6 × (100 + 300) = 2 400
+    for (let i = 0; i < 6; i++) await buy((await person(code)).id, 'pro'); // 6 × 400 = 2 400
     clock.t += (R.holdDays + 1) * DAY;
     const p = await ambassadors.requestPayout(a.id);
     expect(p).toMatchObject({ amount: 2400, fee: 24, net: 2376 });
@@ -108,7 +108,9 @@ describe('programme Ambassadeur', () => {
     clock.t += 8 * DAY;
     expect((await ambassadors.apply(a.id, form('0100000001'))).status).toBe('pending');
     await ambassadors.setStatus(a.id, 'active');
-    await buy((await person(code)).id, 'essentiel');
+    const f = await person(code);
+    await buy(f.id, 'essentiel');
+    await buy(f.id, 'essentiel');
     expect((await ambassadors.summary(a.id)).earnings.pending).toBe(150);
     await ambassadors.setStatus(a.id, 'suspended');
     await expect(ambassadors.requestPayout(a.id)).rejects.toMatchObject({ status: 403 });
@@ -121,31 +123,40 @@ describe('programme Ambassadeur', () => {
     const { a, code } = await ambassador();
     const f = await person(code);
     await buy(f.id, 'essentiel');
+    await buy(f.id, 'essentiel');
     await db.query('delete from payments where user_id = $1', [f.id]);
     await db.query('delete from users where id = $1', [f.id]);
     expect((await ambassadors.summary(a.id)).earnings.pending).toBe(150);
   });
 
-  it('prime au premier achat puis 10 % de chaque achat, et l’entreprise reste gagnante', async () => {
+  it('prime au premier achat selon le pack, puis 10 % des achats suivants, et l’entreprise reste gagnante', async () => {
     const { ambassadors, person, ambassador, buy } = await setup();
     const { a, code } = await ambassador();
     const f = await person(code);
-    await buy(f.id, 'essentiel'); // 500 FCFA
-    await buy(f.id, 'candidature'); // 1 500 FCFA
+    await buy(f.id, 'essentiel'); // 500 FCFA : prime de 100, pas de pourcentage sur le premier achat
+    await buy(f.id, 'candidature'); // 1 500 FCFA : 10 % = 150
     const s = await ambassadors.summary(a.id);
     expect(s.stats.buyers).toBe(1);
-    expect(s.earnings.pending).toBe(R.firstPurchaseReward + 50 + 150);
-    // Sur le pack à 500 : 100 + 50 = 150 FCFA reversés, bien moins que ce qu'il rapporte.
-    expect(R.firstPurchaseReward + 500 * (R.commissionPercent / 100)).toBeLessThan(500 * 0.4);
+    expect(s.earnings.pending).toBe(100 + 150);
+    // Prime selon le premier pack acheté.
+    const g = await person(code);
+    await buy(g.id, 'candidature');
+    const h = await person(code);
+    await buy(h.id, 'pro');
+    expect((await ambassadors.summary(a.id)).earnings.pending).toBe(100 + 150 + 200 + 400);
+    // La prime reste bien en dessous de ce que rapporte chaque pack.
+    for (const [price, reward] of [[500, 100], [1500, 200], [3000, 400]]) expect(reward).toBeLessThan(price * 0.25);
   });
 
   it('arrête le pourcentage après 12 mois', async () => {
     const { clock, ambassadors, person, ambassador, buy } = await setup();
     const { a, code } = await ambassador();
     const f = await person(code);
+    await buy(f.id, 'essentiel');
     clock.t += 13 * 31 * DAY;
     await buy(f.id, 'essentiel');
-    expect((await ambassadors.summary(a.id)).earnings.pending).toBe(R.firstPurchaseReward);
+    const e = (await ambassadors.summary(a.id)).earnings;
+    expect(e.available + e.pending).toBe(100); // la prime du premier achat, rien sur l'achat après 12 mois
   });
 
   it('bloque les gains 14 jours, retrait dès 2 000 FCFA, puis payé ou refusé par l’administrateur', async () => {
@@ -265,7 +276,7 @@ describe('programme Ambassadeur', () => {
     const { a, code } = await ambassador();
     const f = await person(code);
     await buy(f.id, 'candidature');
-    expect((await ambassadors.summary(a.id)).earnings.pending).toBe(250);
+    expect((await ambassadors.summary(a.id)).earnings.pending).toBe(200); // prime du pack à 1 500
     status.value = 'refunded';
     await payments.confirm(lastRef());
     expect((await ambassadors.summary(a.id)).earnings.pending).toBe(0);
@@ -309,10 +320,10 @@ describe('programme Ambassadeur', () => {
   it('arrêt par CVCasa : tout devient retirable, même sous le seuil ; triche : rien, et pas de nouvelle demande', async () => {
     const { ambassadors, person, ambassador, buy } = await setup();
     const { a, code } = await ambassador();
-    await buy((await person(code)).id, 'essentiel'); // 150 FCFA, encore bloqués 14 jours
+    await buy((await person(code)).id, 'essentiel'); // 100 FCFA, encore bloqués 14 jours
     await ambassadors.endByAdmin(a.id, 'company');
     const p = await ambassadors.requestPayout(a.id);
-    expect(p.amount).toBe(150);
+    expect(p.amount).toBe(100);
     await ambassadors.decidePayout(p.id, 'paid');
     const b = await ambassador();
     await buy((await person(b.code)).id, 'essentiel');

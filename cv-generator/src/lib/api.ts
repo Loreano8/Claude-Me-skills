@@ -235,7 +235,7 @@ export interface AmbassadorInfo {
   legalLastName: string;
   contract: { version: string; signedAt: string; current: boolean } | null;
   numberChange: { newNumber: string; status: string; requestedAt: string; note: string } | null;
-  rules: { signupReward: number; signupRewardLimit: number; firstPurchaseReward: number; commissionPercent: number; commissionMonths: number; holdDays: number; minPayout: number; monthlyCap: number; payoutFeePercent: number; inactivityMonths: number };
+  rules: { signupReward: number; signupRewardLimit: number; firstPurchaseReward: number; firstPurchaseTiers: { from: number; reward: number }[]; commissionPercent: number; commissionMonths: number; holdDays: number; minPayout: number; monthlyCap: number; payoutFeePercent: number; inactivityMonths: number };
   stats: { invited: number; signupsRewarded: number; buyers: number };
   earnings: { pending: number; available: number; requested: number; paid: number };
   payouts: { id: number; amount: number; fee: number; net: number; status: string; note: string; requestedAt: string; decidedAt: string | null }[];

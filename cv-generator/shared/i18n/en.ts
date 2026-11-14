@@ -1316,6 +1316,10 @@ export const EN: Record<string, string> = {
   "Atelier": "Atelier",
   "Métiers créatifs, communication, commerce. Rubriques numérotées et monogramme.": "Creative, communication and sales roles. Numbered sections and monogram.",
   "Sobre et haut de gamme. Nom en capitales, doubles filets, deux colonnes.": "Understated and upscale. Name in capitals, double rules, two columns.",
+  "au premier achat d’un ami, selon le pack : {0}": "on a friend’s first purchase, depending on the pack: {0}",
+  "de chacun de ses achats suivants, pendant {0} mois": "of each of their following purchases, for {0} months",
+  "Prime au premier achat : {0} pour le pack à {1}, {2} pour le pack à {3}, {4} pour le pack à {5}.": "First-purchase bonus: {0} for the {1} pack, {2} for the {3} pack, {4} for the {5} pack.",
+  "Exemple : 10 amis qui achètent chacun un pack à {0} vous rapportent {1}, puis {2} % de tous leurs achats suivants pendant {3} mois.": "Example: 10 friends who each buy a {0} pack earn you {1}, then {2}% of all their following purchases for {3} months.",
   // Messages du serveur (erreurs, veille) : traduits à l’envoi quand l’interface est en anglais.
   "Fichier trop volumineux (15 Mo maximum).": "File too large (15 MB maximum).",
   "Erreur interne du serveur.": "Internal server error.",
