@@ -29,7 +29,7 @@ export function languageLevel(level: string): number {
   return 0;
 }
 
-function Dots({ value, on, off, size = 6 }: { value: number; on: string; off: string; size?: number }) {
+export function Dots({ value, on, off, size = 6 }: { value: number; on: string; off: string; size?: number }) {
   if (!value) return null;
   return (
     <View style={{ flexDirection: 'row', marginTop: 2 }}>
@@ -40,7 +40,7 @@ function Dots({ value, on, off, size = 6 }: { value: number; on: string; off: st
   );
 }
 
-function BulletList({ items, color, size = 8.8 }: { items: string[]; color: string; size?: number }) {
+export function BulletList({ items, color, size = 8.8 }: { items: string[]; color: string; size?: number }) {
   return (
     <View style={{ marginTop: 3 }}>
       {items.map((item, i) => (
@@ -53,7 +53,7 @@ function BulletList({ items, color, size = 8.8 }: { items: string[]; color: stri
   );
 }
 
-interface Theme {
+export interface Theme {
   accent: string;
   text: string;
   muted: string;
@@ -62,7 +62,7 @@ interface Theme {
   timeline?: boolean;
 }
 
-function Experience({ cv, L, th }: { cv: CvDocument; L: Labels; th: Theme }) {
+export function Experience({ cv, L, th }: { cv: CvDocument; L: Labels; th: Theme }) {
   if (!cv.experiences.length) return null;
   return (
     <View>
@@ -103,7 +103,7 @@ function Experience({ cv, L, th }: { cv: CvDocument; L: Labels; th: Theme }) {
   );
 }
 
-function Education({ cv, L, th }: { cv: CvDocument; L: Labels; th: Theme }) {
+export function Education({ cv, L, th }: { cv: CvDocument; L: Labels; th: Theme }) {
   if (!cv.education.length) return null;
   return (
     <View>
@@ -122,7 +122,7 @@ function Education({ cv, L, th }: { cv: CvDocument; L: Labels; th: Theme }) {
   );
 }
 
-function Certifications({ cv, L, th, n }: { cv: CvDocument; L: Labels; th: Theme; n?: number }) {
+export function Certifications({ cv, L, th, n }: { cv: CvDocument; L: Labels; th: Theme; n?: number }) {
   if (!cv.certifications.length) return null;
   return (
     <View>
@@ -137,7 +137,7 @@ function Certifications({ cv, L, th, n }: { cv: CvDocument; L: Labels; th: Theme
   );
 }
 
-function Summary({ cv, L, th }: { cv: CvDocument; L: Labels; th: Theme }) {
+export function Summary({ cv, L, th }: { cv: CvDocument; L: Labels; th: Theme }) {
   if (!cv.summary) return null;
   return (
     <View>
@@ -147,7 +147,7 @@ function Summary({ cv, L, th }: { cv: CvDocument; L: Labels; th: Theme }) {
   );
 }
 
-function MainColumn({ cv, L, th }: { cv: CvDocument; L: Labels; th: Theme }) {
+export function MainColumn({ cv, L, th }: { cv: CvDocument; L: Labels; th: Theme }) {
   return (
     <>
       <Summary cv={cv} L={L} th={th} />
@@ -157,7 +157,7 @@ function MainColumn({ cv, L, th }: { cv: CvDocument; L: Labels; th: Theme }) {
 }
 
 /** Colonne d'informations : contact, compétences, langues (en points), qualités, centres d'intérêt. */
-function SideColumn({ cv, L, heading, text, muted, dot, dotOff, tags, extra }: { cv: CvDocument; L: Labels; heading: (t: string) => ReactNode; text: string; muted: string; dot: string; dotOff: string; tags?: { bg: string; fg: string }; extra?: ReactNode }) {
+export function SideColumn({ cv, L, heading, text, muted, dot, dotOff, tags, extra }: { cv: CvDocument; L: Labels; heading: (t: string) => ReactNode; text: string; muted: string; dot: string; dotOff: string; tags?: { bg: string; fg: string }; extra?: ReactNode }) {
   const contacts = contactItems(cv, L);
   return (
     <>
@@ -223,7 +223,7 @@ function SideColumn({ cv, L, heading, text, muted, dot, dotOff, tags, extra }: {
   );
 }
 
-const doc = (cv: CvDocument, children: ReactNode) => (
+export const doc = (cv: CvDocument, children: ReactNode) => (
   <Document title={`CV – ${fullName(cv.personal)}`} author={fullName(cv.personal)} creator="CVCasa">
     {children}
   </Document>

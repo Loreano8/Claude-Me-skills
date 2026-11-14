@@ -45,9 +45,16 @@ export const CATALOG: CatalogEntry[] = [
   { id: 'moderne', name: t('Moderne'), category: 'polyvalent', accent: '#1d4ed8', idealFor: t('La plupart des métiers. Colonne colorée avec photo.') },
   { id: 'classique', name: t('Classique ATS'), category: 'classique', accent: '#1f2937', idealFor: t('Grandes entreprises : le mieux lu par les logiciels de tri.') },
   { id: 'elegant', name: t('Élégant'), category: 'polyvalent', accent: '#0f766e', idealFor: t('Se démarquer avec sobriété. Bandeau et frise des dates.') },
+  { id: 'simple', name: t('Simple'), category: 'classique', accent: '#2563eb', idealFor: t('Une colonne claire, idéale pour les logiciels de tri et un premier emploi.') },
+  { id: 'bicolore', name: t('Bicolore'), category: 'polyvalent', accent: '#0d9488', idealFor: t('Colonne gris clair pour le contact et les langues, titres colorés.') },
+  { id: 'compact', name: t('Compact'), category: 'classique', accent: '#475569', idealFor: t('Titres dans la marge : beaucoup d’informations sur une seule page.') },
   { id: 'prestige', name: t('Prestige'), category: 'polyvalent', accent: '#b8913a', idealFor: t('Profils confirmés et cadres. Colonne bleu nuit, filets dorés, frise chronologique.') },
   { id: 'horizon', name: t('Horizon'), category: 'creatif', accent: '#0e7490', idealFor: t('Moderne et dynamique. Bandeau en biais, photo mise en avant, niveaux de langue.') },
   { id: 'atelier', name: t('Atelier'), category: 'creatif', accent: '#c2410c', idealFor: t('Métiers créatifs, communication, commerce. Rubriques numérotées et monogramme.') },
+  { id: 'ardoise', name: t('Ardoise'), category: 'polyvalent', accent: '#f59e0b', idealFor: t('En-tête sombre et bande de contact colorée. Moderne et affirmé.') },
+  { id: 'galerie', name: t('Galerie'), category: 'creatif', accent: '#be123c', idealFor: t('Grand bloc photo, accroche mise en avant, dates en colonne.') },
+  { id: 'cadre', name: t('Cadre'), category: 'classique', accent: '#1e3a8a', idealFor: t('Page encadrée et typographie classique : administration, juridique, enseignement.') },
+  { id: 'mosaique', name: t('Mosaïque'), category: 'creatif', accent: '#7c3aed', idealFor: t('Rubriques présentées en cartes. Frais et facile à parcourir.') },
   { id: 'signature', name: t('Signature'), category: 'classique', accent: '#7f1d3f', idealFor: t('Sobre et haut de gamme. Nom en capitales, doubles filets, deux colonnes.') },
   {
     id: 'finance',
@@ -136,7 +143,7 @@ export const CATALOG: CatalogEntry[] = [
 ];
 
 /** Modèles utilisables gratuitement ; les autres (et « Mon style ») demandent la version Pro. */
-export const FREE_TEMPLATES: readonly string[] = ['moderne', 'classique', 'elegant'];
+export const FREE_TEMPLATES: readonly string[] = ['moderne', 'classique', 'elegant', 'simple', 'bicolore', 'compact'];
 export const isProTemplate = (id: string) => !FREE_TEMPLATES.includes(id);
 
 export const catalogEntry = (id: string) => CATALOG.find((t) => t.id === id);

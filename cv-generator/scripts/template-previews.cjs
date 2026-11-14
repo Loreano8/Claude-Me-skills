@@ -8,7 +8,7 @@ const { execFileSync } = require('child_process');
 
 const APP = 'http://localhost:5173';
 const ROOT = path.join(__dirname, '..', 'public', 'modeles');
-const IDS = ['moderne', 'classique', 'elegant', 'prestige', 'horizon', 'atelier', 'signature', 'finance', 'ingenieur', 'creatif', 'canada', 'europass', 'concours', 'etudiant', 'executif', 'sante', 'minimal'];
+const IDS = ['moderne', 'classique', 'elegant', 'simple', 'bicolore', 'compact', 'prestige', 'horizon', 'atelier', 'ardoise', 'galerie', 'cadre', 'mosaique', 'signature', 'finance', 'ingenieur', 'creatif', 'canada', 'europass', 'concours', 'etudiant', 'executif', 'sante', 'minimal'];
 const NO_PHOTO = ['classique', 'canada'];
 const u = () => Math.random().toString(36).slice(2, 10);
 
@@ -86,7 +86,7 @@ async function run(browser, lang, photo) {
   if (count !== IDS.length) throw new Error(`${count} modèles affichés, ${IDS.length} attendus`);
   for (let i = 0; i < IDS.length; i++) {
     if (NO_PHOTO.includes(IDS[i]) === photo) continue;
-    await btns.nth(i).click(); await p.waitForTimeout(2800);
+    await btns.nth(i).click(); await p.waitForTimeout(4000);
     const png = path.join(tmp, IDS[i] + '.png');
     await p.locator('[data-tour="preview"] canvas').first().screenshot({ path: png });
     execFileSync('ffmpeg', ['-v', 'error', '-y', '-i', png, '-vf', 'scale=560:792', '-quality', '82', path.join(out, IDS[i] + '.webp')]);
