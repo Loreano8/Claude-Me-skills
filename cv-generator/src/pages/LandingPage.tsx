@@ -38,7 +38,7 @@ const FEATURES: { icon: typeof Target; title: string; text: string }[] = [
   { icon: FileStack, title: t('Scanner et dossier PDF'), text: t('Scannez vos papiers avec le téléphone : la page est redressée et nettoyée, gratuit jusqu’à 2 pages. Un document écrit à la main devient du texte tapé (PDF ou Word). Ou réunissez CV, lettre et pièces en un seul fichier.') },
   { icon: Languages, title: t('CV en anglais'), text: t('Traduit et mis aux normes du pays visé, pour postuler dans une entreprise internationale ou à l’étranger.') },
   { icon: ClipboardList, title: t('Suivi des candidatures'), text: t('Envoyée, entretien, réponse : toutes vos offres au même endroit, avec le bon CV pour chacune.') },
-  { icon: Globe2, title: t('Aux normes de chaque pays'), text: t('Photo, date de naissance ou nationalité seulement quand elles sont attendues, CV en français ou en anglais. Paiement simple par Mobile Money.') },
+  { icon: Globe2, title: t('Aux normes de chaque pays'), text: t('Photo, date de naissance ou nationalité seulement quand elles sont attendues, CV en français ou en anglais. Paiement simple par Mobile Money ou en crypto.') },
   { icon: BellRing, title: t('Veille emploi'), text: t('Cochez votre métier, vos contrats et vos zones : les nouvelles offres arrivent chaque matin par e-mail, avec un bouton pour y adapter votre CV. Première recherche offerte.') },
   { icon: Send, title: t('Envoyer et relancer'), text: t('L’e-mail de candidature prêt à copier, et un message de relance proposé au bout d’une semaine sans réponse. Gratuit.') },
   { icon: Link2, title: t('Votre CV en lien et QR code'), text: t('Un lien à envoyer à un recruteur, ou un QR code à imprimer pour les salons et forums emploi. Gratuit.') },
@@ -492,7 +492,7 @@ export function LandingPage({ onNavigate }: { onNavigate: (t: Tab) => void }) {
           </div>
           <p className="mt-5 text-center text-sm text-slate-600">
             <span className="mr-1.5 rounded-full bg-sun-100 px-2 py-0.5 text-xs font-semibold text-sun-900">{t('Bientôt')}</span>
-            {t('L’entraînement à l’entretien à l’oral, et le paiement par carte bancaire ou en crypto.')}</p>
+            {t('L’entraînement à l’entretien à l’oral, et le paiement par carte bancaire.')}</p>
         </div>
       </section>
 
@@ -525,7 +525,7 @@ export function LandingPage({ onNavigate }: { onNavigate: (t: Tab) => void }) {
             </div>
           ))}
         </div>
-        <p className="mt-4 text-center text-sm text-slate-500">{t('Sans abonnement · MTN MoMo ou Moov Money · Crédit rendu en cas d’échec')}</p>
+        <p className="mt-4 text-center text-sm text-slate-500">{t('Sans abonnement · Mobile Money ou crypto (USDT, USDC) · Crédit rendu en cas d’échec')}</p>
       </section>
 
       {/* Les guides sont écrits en français : on ne les met pas en avant dans la version anglaise. */}

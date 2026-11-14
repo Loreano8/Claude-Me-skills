@@ -1,4 +1,4 @@
-import { BellRing, BookOpen, Settings, ChevronRight, ClipboardList, CreditCard, FileStack, FolderOpen, Link2, Mail, MessageCircle, Mic, PlayCircle, ScanLine, Bitcoin , HandCoins } from 'lucide-react';
+import { BellRing, BookOpen, Settings, ChevronRight, ClipboardList, CreditCard, FileStack, FolderOpen, Link2, Mail, MessageCircle, Mic, PlayCircle, ScanLine, HandCoins } from 'lucide-react';
 import { Capacitor } from '@capacitor/core';
 import type { Tab } from '../App.tsx';
 import { PUBLIC_SITE } from '../lib/referral.ts';
@@ -44,7 +44,6 @@ const GROUPS: { title: string; entries: Entry[] }[] = [
 const SOON: { icon: typeof Mic; title: string; text: string }[] = [
   { icon: Mic, title: t('Entraînement à l’entretien, à l’oral'), text: t('L’appli vous pose les questions du recruteur, vous répondez au micro, elle vous conseille.') },
   { icon: CreditCard, title: t('Paiement par carte bancaire'), text: t('En plus du Mobile Money, pour payer depuis l’étranger.') },
-  { icon: Bitcoin, title: t('Paiement en crypto'), text: t('Pour payer depuis n’importe quel pays.') },
 ];
 
 /** « Plus » : tout ce qui ne fait pas partie du parcours CV → offre → lettre, rangé au même endroit. */

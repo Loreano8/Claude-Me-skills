@@ -28,7 +28,7 @@ const SECTIONS: { title: string; text: string[] }[] = [
   },
   {
     title: t('Paiements'),
-    text: [t('Les paiements Mobile Money sont traités par FedaPay. Nous ne voyons ni ne gardons vos informations de paiement, seulement le montant, la date et le résultat.')],
+    text: [t('Les paiements Mobile Money sont traités par FedaPay. Nous ne voyons ni ne gardons vos informations de paiement, seulement le montant, la date et le résultat.'), t('Pour un paiement en crypto, nous gardons l’identifiant de la transaction (public sur la blockchain) et la capture d’écran que vous envoyez comme preuve. La capture est supprimée 30 jours après la validation ou le refus.')],
   },
   {
     title: t('Messages et témoignages'),
