@@ -196,10 +196,10 @@ const QUESTIONS = [
 /** Ce que coûte chaque action, en une ligne chacune. */
 const PRICES: [string, string][] = [
   [t('Remplir son CV à la main et le télécharger en PDF'), t('Gratuit')],
-  [t('Une action : générer ou corriger le CV, l’adapter à une offre, la lettre, la fiche entretien, la traduction'), t('1 crédit')],
+  [t('Une action : générer ou corriger le CV, l’adapter à une offre, une lettre, une fiche entretien, une traduction'), t('1 crédit')],
   [t('Version Pro d’un CV, pour toujours : sans mention, tous les modèles, Word'), t('2 crédits')],
-  [t('Scanner ou dossier PDF : gratuit jusqu’à 2 pages ou 2 pièces, puis'), t('1 crédit')],
-  [t('Texte écrit à la main tapé au propre, par page'), t('1 crédit')],
+  [t('Scanner ou dossier PDF de plus de 2 pages ou 2 pièces (gratuit en dessous)'), t('1 crédit')],
+  [t('Une page écrite à la main, tapée au propre'), t('1 crédit')],
 ];
 
 /** « Mes crédits » : phrase ou question secrète (récupération du compte) et changement de mot de passe. */
