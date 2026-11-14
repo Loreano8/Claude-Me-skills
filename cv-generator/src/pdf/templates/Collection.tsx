@@ -380,7 +380,7 @@ function Cadre({ cv }: { cv: CvDocument }) {
         </View>
         {cv.personal.title ? (
           <View style={{ width: '100%' }}>
-            <Text style={{ fontFamily: SERIF, fontSize: 11.5, fontStyle: 'italic', color: accent, textAlign: 'center', marginTop: 2 }}>{cv.personal.title}</Text>
+            <Text style={{ fontFamily: SERIF, fontSize: 11.5, letterSpacing: 0.6, color: accent, textAlign: 'center', marginTop: 2 }}>{cv.personal.title}</Text>
           </View>
         ) : null}
         {contacts.length ? (
