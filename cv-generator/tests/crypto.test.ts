@@ -124,6 +124,23 @@ describe('paiement crypto (USDT BEP20)', () => {
     await expect(crypto.submit(u.id, second.id, send(2, 1), PROOF)).rejects.toMatchObject({ status: 410 });
   });
 
+  it('deux monnaies acceptées : l’USDC envoyé pour une commande en USDT est refusé', async () => {
+    const db = await testDb();
+    const accounts = createAccounts(db, { freeCredits: 1, freeIpCooldownDays: 0 });
+    const txs = new Map<string, ChainTx>();
+    const crypto = createCrypto(db, createPayments(db, accounts, null, null), { fetch: async (h) => txs.get(h) ?? null }, { address: US, tokens: ['USDT', 'USDC'], auto: true });
+    const u = await accounts.register({ identifier: 'two@ex.com', password: 'secret12', ip: '10.2.0.1', device: 'device-two-xxxxxx' });
+    const tx = (token: string): ChainTx => ({ success: true, confirmations: 20, time: new Date(), transfers: [{ token, from: '0x2222222222222222222222222222222222222222', to: US, amount: 1 }] });
+    expect(crypto.config().tokens).toEqual(['USDT', 'USDC']);
+    const order = await crypto.open(u, 'essentiel', 'USDT');
+    txs.set(hash(1), tx(BEP20_TOKENS.USDC));
+    await expect(crypto.submit(u.id, order.id, hash(1), PROOF)).rejects.toThrow(/officielle/);
+    const usdc = await crypto.open(u, 'essentiel', 'USDC');
+    expect(usdc.token).toBe('USDC');
+    expect(await crypto.submit(u.id, usdc.id, hash(1), PROOF)).toMatchObject({ status: 'paid', credits: 4 });
+    await expect(crypto.open(u, 'essentiel', 'DOGE')).rejects.toThrow(/acceptée/);
+  });
+
   it('lit un transfert BEP20 depuis la réponse d’un nœud', async () => {
     const pad = (a: string) => '0x' + a.slice(2).padStart(64, '0');
     const replies: Record<string, unknown> = {

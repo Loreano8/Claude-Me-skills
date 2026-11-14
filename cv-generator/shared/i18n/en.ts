@@ -1376,6 +1376,7 @@ export const EN: Record<string, string> = {
   "Le paiement est vérifié directement sur la blockchain. Il faut parfois attendre une minute après l’envoi.": "The payment is verified directly on the blockchain. You may need to wait a minute after sending.",
   "Votre dernier paiement n’a pas été validé : {0}": "Your last payment was not approved: {0}",
   "QR code de l’adresse": "QR code of the address",
+  "Monnaie": "Currency",
   // Messages du serveur (erreurs, veille) : traduits à l’envoi quand l’interface est en anglais.
   "Fichier trop volumineux (15 Mo maximum).": "File too large (15 MB maximum).",
   "Erreur interne du serveur.": "Internal server error.",

@@ -45,6 +45,7 @@ export function CryptoPay({ packs }: { packs: Pack[] }) {
   const [help, setHelp] = useState(false);
   const file = useRef<HTMLInputElement>(null);
   const [qr, setQr] = useState<string | null>(null);
+  const [choice, setChoice] = useState('');
   const address = order?.status === 'open' ? order.address : null;
 
   // QR code de l'adresse : la plupart des portefeuilles savent le scanner.
@@ -67,7 +68,7 @@ export function CryptoPay({ packs }: { packs: Pack[] }) {
   }, []);
 
   if (!info?.enabled) return null;
-  const token = info.tokens[0];
+  const token = info.tokens.includes(choice) ? choice : info.tokens[0];
   const payable = packs.filter((p) => info.prices[p.id]);
 
   async function run(key: string, fn: () => Promise<void>) {
@@ -118,6 +119,21 @@ export function CryptoPay({ packs }: { packs: Pack[] }) {
           {(!order || order.status !== 'open') && order?.status !== 'review' && (
             <>
               <p className="text-sm text-slate-600">{t('Choisissez un pack. Vous aurez {0} minutes pour envoyer le montant.', [info.minutes])}</p>
+              {info.tokens.length > 1 && (
+                <div className="flex gap-2" role="group" aria-label={t('Monnaie')}>
+                  {info.tokens.map((tk) => (
+                    <button
+                      key={tk}
+                      type="button"
+                      aria-pressed={tk === token}
+                      onClick={() => setChoice(tk)}
+                      className={cx('min-h-11 flex-1 rounded-xl border-2 px-3 text-sm font-semibold', tk === token ? 'border-brand-500 bg-brand-50 text-brand-800' : 'border-slate-200 text-slate-700')}
+                    >
+                      {tk}
+                    </button>
+                  ))}
+                </div>
+              )}
               <div className="space-y-2">
                 {payable.map((p) => (
                   <div key={p.id} className="flex items-center gap-3 rounded-xl bg-slate-50 p-2.5">
