@@ -51,7 +51,7 @@ const payments = createPayments(db, accounts, {
   name: 'fedapay',
   createCheckout: async () => ({ ref: 'tx42', url: 'http://localhost:8787/fake-pay?id=tx42' }),
   fetchStatus: async (ref) => (paid.has(ref) ? 'approved' : 'pending'),
-}, ambassadors);
+}, ambassadors, { launchUntil: process.env.DEMO_LAUNCH_UNTIL ? new Date(process.env.DEMO_LAUNCH_UNTIL) : null });
 // DEMO_DELAY_MS : simule le temps de réponse réel (vidéos de démonstration).
 const wait = () => new Promise((r) => setTimeout(r, Number(process.env.DEMO_DELAY_MS ?? 0)));
 const anonymous = (cv: typeof sampleAdapt.cv) => {

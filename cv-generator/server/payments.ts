@@ -8,6 +8,8 @@ export interface Pack {
   credits: number;
   /** Prix en FCFA (XOF). */
   price: number;
+  /** Nombre de crédits habituel, quand une offre en donne davantage (affiché barré). */
+  baseCredits?: number;
 }
 
 // 1 crédit = 1 action de l'IA (générer, améliorer, adapter à une offre, lettre, traduction).
@@ -19,6 +21,15 @@ export const PACKS: Pack[] = [
 
 /** Offre de retour : 4 crédits au prix du pack de 3, une seule fois, pour qui revient après une absence. */
 export const RETURN_PACK: Pack = { id: 'retour', name: 'Offre de retour', credits: 4, price: 500 };
+/** Offre de lancement : davantage de crédits par pack, au même prix, jusqu'à une date réglée sur le serveur. */
+export const LAUNCH_CREDITS: Record<string, number> = { essentiel: 5, candidature: 16, pro: 35, retour: 6 };
+
+/** Le pack tel qu'il se vend à cet instant (avec les crédits de l'offre de lancement si elle est ouverte). */
+export function withLaunch(pack: Pack, launch: boolean): Pack {
+  const credits = launch ? LAUNCH_CREDITS[pack.id] : undefined;
+  return credits && credits > pack.credits ? { ...pack, credits, baseCredits: pack.credits } : pack;
+}
+
 /** Absence minimale (aucun mouvement de crédits) et pas d'achat récent pour ouvrir l'offre. */
 export const RETURN_AFTER_DAYS = 10;
 export const RETURN_NO_PURCHASE_DAYS = 30;
@@ -94,7 +105,19 @@ export function fedapay(secretKey: string, env: 'sandbox' | 'live', fetchImpl: t
   };
 }
 
-export function createPayments(db: Db, accounts: Accounts, provider: PaymentProvider | null, ambassadors: Ambassadors | null = null) {
+export function createPayments(
+  db: Db,
+  accounts: Accounts,
+  provider: PaymentProvider | null,
+  ambassadors: Ambassadors | null = null,
+  opts: { /** Fin de l'offre de lancement (absente : pas d'offre). */ launchUntil?: Date | null; now?: () => Date } = {},
+) {
+  const clock = opts.now ?? (() => new Date());
+  const launchUntil = opts.launchUntil && !Number.isNaN(opts.launchUntil.getTime()) ? opts.launchUntil : null;
+  const launchOpen = () => launchUntil !== null && clock() < launchUntil;
+  const packsNow = () => PACKS.map((p) => withLaunch(p, launchOpen()));
+  const returnPackNow = () => withLaunch(RETURN_PACK, launchOpen());
+
   /**
    * Offre de retour : ouverte (72 h) au moment où la personne revient après au moins 10 jours
    * sans mouvement de crédits, si elle n'a rien acheté depuis 30 jours. Une seule fois par compte.
@@ -111,7 +134,7 @@ export function createPayments(db: Db, accounts: Accounts, provider: PaymentProv
     const none = { active: null, possible: false, notBefore: null };
     if (!row || row.used) return none;
     const until = row.until ? new Date(row.until) : null;
-    if (until && until > now) return { active: { pack: RETURN_PACK, expiresAt: until.toISOString() }, possible: true, notBefore: null };
+    if (until && until > now) return { active: { pack: returnPackNow(), expiresAt: until.toISOString() }, possible: true, notBefore: null };
     if (until) return none;
     const purchaseEnd = row.last_purchase ? new Date(new Date(row.last_purchase).getTime() + RETURN_NO_PURCHASE_DAYS * 86_400_000) : null;
     if (purchaseEnd && purchaseEnd > now) return { active: null, possible: true, notBefore: purchaseEnd.toISOString() };
@@ -119,7 +142,7 @@ export function createPayments(db: Db, accounts: Accounts, provider: PaymentProv
     if (last && now.getTime() - last.getTime() < RETURN_AFTER_DAYS * 86_400_000) return { active: null, possible: true, notBefore: null };
     const expiresAt = new Date(now.getTime() + RETURN_OFFER_HOURS * 3_600_000);
     await db.query('update users set return_offer_until = $2 where id = $1 and return_offer_until is null', [user.id, expiresAt.toISOString()]);
-    return { active: { pack: RETURN_PACK, expiresAt: expiresAt.toISOString() }, possible: true, notBefore: null };
+    return { active: { pack: returnPackNow(), expiresAt: expiresAt.toISOString() }, possible: true, notBefore: null };
   }
 
   /** Achat payé : crédits, bonus de parrainage et gains de l'ambassadeur. Renvoie le nouveau solde. */
@@ -143,16 +166,17 @@ export function createPayments(db: Db, accounts: Accounts, provider: PaymentProv
   }
 
   return {
-    packs: PACKS,
+    /** Packs en vente à cet instant, et date de fin de l'offre de lancement si elle est ouverte. */
+    currentPacks: () => ({ packs: packsNow(), launchUntil: launchOpen() ? launchUntil!.toISOString() : null }),
     returnOffer,
 
     /** Pack achetable par cette personne (l'offre de retour seulement si elle lui est ouverte). */
     async packFor(user: User, packId: string): Promise<Pack> {
-      const pack = PACKS.find((p) => p.id === packId);
+      const pack = packsNow().find((p) => p.id === packId);
       if (pack) return pack;
       if (packId === RETURN_PACK.id) {
         if (!(await returnOffer(user)).active) throw new PaymentError('Cette offre n’est plus disponible.', 410);
-        return RETURN_PACK;
+        return returnPackNow();
       }
       throw new PaymentError('Pack inconnu.', 400);
     },
@@ -172,11 +196,11 @@ export function createPayments(db: Db, accounts: Accounts, provider: PaymentProv
 
     async checkout(user: User, packId: string, returnUrl: string): Promise<string> {
       if (!provider) throw new PaymentError('Le paiement en ligne n’est pas encore activé.', 503);
-      let pack = PACKS.find((p) => p.id === packId);
+      let pack = packsNow().find((p) => p.id === packId);
       if (!pack && packId === RETURN_PACK.id) {
         const { active } = await returnOffer(user);
         if (!active) throw new PaymentError('Cette offre n’est plus disponible.', 410);
-        pack = RETURN_PACK;
+        pack = returnPackNow();
       }
       if (!pack) throw new PaymentError('Pack inconnu.', 400);
       const { ref, url } = await provider.createCheckout({ user, pack, returnUrl });

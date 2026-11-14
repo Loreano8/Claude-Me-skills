@@ -67,13 +67,15 @@ export async function createServer(env: Settings, opts: { db?: Db; migrate?: boo
     shares = createShares(db);
     // Veille emploi : même modèle que le reste, sauf réglage WATCH_MODEL (ex. un modèle plus léger pour baisser le coût).
     watches = createWatches(db, accounts, client ? claudeWatchSearch(client, env.WATCH_MODEL || model) : null, resendMailer(env), env.PUBLIC_URL ?? '');
+    // Offre de lancement : plus de crédits par pack jusqu'à LAUNCH_OFFER_UNTIL (date ISO). Absente : pas d'offre.
+    const launch = { launchUntil: env.LAUNCH_OFFER_UNTIL ? new Date(env.LAUNCH_OFFER_UNTIL) : null };
     if (env.FEDAPAY_SECRET_KEY) {
-      payments = createPayments(db, accounts, fedapay(env.FEDAPAY_SECRET_KEY, env.FEDAPAY_ENV === 'live' ? 'live' : 'sandbox'), ambassadors);
+      payments = createPayments(db, accounts, fedapay(env.FEDAPAY_SECRET_KEY, env.FEDAPAY_ENV === 'live' ? 'live' : 'sandbox'), ambassadors, launch);
     }
     // Paiement crypto : actif dès qu'une adresse de réception BEP20 est réglée (adresse publique, pas un secret).
     if (env.CRYPTO_BEP20_ADDRESS) {
       try {
-        cryptoPay = createCrypto(db, payments ?? createPayments(db, accounts, null, ambassadors), bscChain(), {
+        cryptoPay = createCrypto(db, payments ?? createPayments(db, accounts, null, ambassadors, launch), bscChain(), {
           address: env.CRYPTO_BEP20_ADDRESS,
           tokens: (env.CRYPTO_TOKENS ?? 'USDT').split(',').map((t) => t.trim().toUpperCase()),
           auto: env.CRYPTO_AUTO !== 'off',

@@ -12,6 +12,8 @@ export interface Pack {
   name: string;
   credits: number;
   price: number;
+  /** Nombre de crédits habituel, quand une offre en donne davantage. */
+  baseCredits?: number;
 }
 
 /** Offre de retour (4 crédits au prix de 3), ouverte par le serveur au retour après une absence. */

@@ -551,6 +551,7 @@ function CreditsDialog() {
   const { user, dialogReason, close, logout } = useAccount();
   const [packs, setPacks] = useState<Pack[] | null>(null);
   const [paymentsOn, setPaymentsOn] = useState(true);
+  const [launchUntil, setLaunchUntil] = useState<string | null>(null);
   const [busy, setBusy] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
@@ -560,6 +561,7 @@ function CreditsDialog() {
       .then((r) => {
         setPacks(r.packs);
         setPaymentsOn(r.payments);
+        setLaunchUntil(r.launchUntil ?? null);
       })
       .catch((e) => setError((e as Error).message));
   }, []);
@@ -630,18 +632,23 @@ function CreditsDialog() {
               <p className="font-semibold text-slate-900">
                 {t('{0} crédits', [offerOpen.pack.credits])}{' '}<span className="ml-1 rounded-full bg-amber-200 px-2 py-0.5 text-xs font-semibold text-amber-900">{t('Offre de retour')}</span>
               </p>
-              <p className="text-sm text-slate-600">{t('1 crédit offert en plus, jusqu’au {0}. Une seule fois.', [offerEnd(offerOpen.expiresAt)])}</p>
+              <p className="text-sm text-slate-600">{t('Encore plus de crédits pour le même prix, jusqu’au {0}. Une seule fois.', [offerEnd(offerOpen.expiresAt)])}</p>
             </div>
             <Button size="sm" loading={busy === offerOpen.pack.id} disabled={!paymentsOn || busy !== null} onClick={() => buy(offerOpen.pack)}>
               {fcfa(offerOpen.pack.price)}
             </Button>
           </div>
         )}
+        {launchUntil && (
+          <p className="rounded-xl bg-emerald-50 px-3 py-2 text-sm font-medium text-emerald-900 ring-1 ring-emerald-200">
+            {t('Offre de lancement : plus de crédits pour le même prix, jusqu’au {0}.', [new Date(launchUntil).toLocaleDateString(LOCALE, { day: 'numeric', month: 'long' })])}</p>
+        )}
         {packs?.map((p) => (
           <div key={p.id} className={cx('flex items-center gap-3 rounded-2xl border-2 p-3', p.id === best ? 'border-brand-500' : 'border-slate-200')}>
             <div className="flex-1">
               <p className="font-semibold text-slate-900">
                 {t('{0} crédits', [p.credits])}{' '}
+                {p.baseCredits ? <s className="mr-1 text-sm font-normal text-slate-400">{p.baseCredits}</s> : null}
                 {p.id === best && <span className="ml-1 rounded-full bg-brand-100 px-2 py-0.5 text-xs font-semibold text-brand-800">{t('Le plus choisi')}</span>}
               </p>
               <p className="text-sm text-slate-500">

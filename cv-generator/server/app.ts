@@ -191,7 +191,7 @@ export function createApp({ fetchPage = fetchJobPage, ai, aiEn = null, allowedOr
 
   // ---- Crédits et paiement ------------------------------------------------
 
-  app.get('/api/packs', (c) => c.json({ packs: PACKS, payments: payments !== null }));
+  app.get('/api/packs', (c) => c.json({ ...(payments ? payments.currentPacks() : { packs: PACKS, launchUntil: null }), payments: payments !== null }));
 
   // Offre de retour : consultée à chaque ouverture de l'appli (c'est ce qui l'ouvre au retour).
   app.get('/api/offer', async (c) => {

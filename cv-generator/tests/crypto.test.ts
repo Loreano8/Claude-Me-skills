@@ -154,3 +154,27 @@ describe('paiement crypto (USDT BEP20)', () => {
     expect(tx!.time.getTime()).toBe(1_800_000_000_000);
   });
 });
+
+describe('offre de lancement', () => {
+  it('donne plus de crédits par pack jusqu’à la date de fin, puis revient aux packs habituels', async () => {
+    const db = await testDb();
+    const clock = { t: Date.parse('2026-12-01T10:00:00Z') };
+    const accounts = createAccounts(db, { freeCredits: 1, freeIpCooldownDays: 0 });
+    const payments = createPayments(db, accounts, null, null, { launchUntil: new Date('2026-12-31T23:00:00Z'), now: () => new Date(clock.t) });
+    const u = await accounts.register({ identifier: 'launch@ex.com', password: 'secret12', ip: '10.3.0.1', device: 'device-launch-xxxx' });
+    const now = payments.currentPacks();
+    expect(now.launchUntil).toBe('2026-12-31T23:00:00.000Z');
+    expect(now.packs.map((p) => [p.credits, p.baseCredits, p.price])).toEqual([[5, 3, 500], [16, 10, 1500], [35, 25, 3000]]);
+    expect((await payments.packFor(u, 'candidature')).credits).toBe(16);
+    // Un achat pendant l'offre crédite bien 5 crédits.
+    await db.transaction(async (tx) => { await payments.recordPaidInTx(tx, u.id, await payments.packFor(u, 'essentiel'), 'crypto', '0xabc'); });
+    expect((await accounts.get(u.id))!.credits).toBe(6);
+    clock.t = Date.parse('2027-01-01T00:00:00Z');
+    const after = payments.currentPacks();
+    expect(after.launchUntil).toBeNull();
+    expect(after.packs.map((p) => p.credits)).toEqual([3, 10, 25]);
+    expect(after.packs[0].baseCredits).toBeUndefined();
+    // Sans date réglée : pas d'offre.
+    expect(createPayments(db, accounts, null, null).currentPacks()).toMatchObject({ launchUntil: null, packs: [{ credits: 3 }, { credits: 10 }, { credits: 25 }] });
+  });
+});

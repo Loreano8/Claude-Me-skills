@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { ArrowRight, BadgeCheck, ChevronLeft, ChevronRight, FileUp, BellRing, Briefcase, Check, ClipboardList, FileDown, FileStack, Globe2, GraduationCap, Languages, Link2, Mail, MessagesSquare, PenLine, PlayCircle, Send, ShieldCheck, Target, UserRound } from 'lucide-react';
-import { PACKS } from '../../server/payments.ts';
+import { PACKS, type Pack } from '../../server/payments.ts';
 import { HeroScene } from '../components/HeroScene.tsx';
 import type { Tab } from '../App.tsx';
 import { Button, cx } from '../components/ui.tsx';
@@ -12,7 +12,7 @@ import { GUIDES, KIND_LABEL, type GuideKind } from '../../seo/guides.ts';
 import { Capacitor } from '@capacitor/core';
 import { PUBLIC_SITE } from '../lib/referral.ts';
 
-import { LANG, t } from '../i18n.ts';
+import { LANG, LOCALE, t } from '../i18n.ts';
 import { CATALOG, isProTemplate, settingsForTemplate } from '../pdf/catalog.ts';
 // Dans l'application Android, les guides s'ouvrent sur le site.
 const GUIDE_BASE = Capacitor.isNativePlatform() ? PUBLIC_SITE.replace(/\/$/, '') : '';
@@ -381,6 +381,18 @@ function BeyondCv({ onNavigate }: { onNavigate: (t: Tab) => void }) {
 
 export function LandingPage({ onNavigate }: { onNavigate: (t: Tab) => void }) {
   const start = () => onNavigate('infos');
+  // Packs en vente : ceux du serveur (offre de lancement comprise), avec les packs habituels en attendant.
+  const [packs, setPacks] = useState<Pack[]>(PACKS);
+  const [launchUntil, setLaunchUntil] = useState<string | null>(null);
+  useEffect(() => {
+    api.packs().then(
+      (r) => {
+        setPacks(r.packs);
+        setLaunchUntil(r.launchUntil ?? null);
+      },
+      () => {},
+    );
+  }, []);
 
   return (
     <div className="-mx-4 -mt-4">
@@ -491,19 +503,24 @@ export function LandingPage({ onNavigate }: { onNavigate: (t: Tab) => void }) {
             <h3 className="font-semibold text-slate-900">{t('Gratuit')}</h3>
             <p className="mt-1 text-2xl font-bold text-slate-900">{t('0 FCFA')}</p>
             <ul className="mt-3 space-y-1.5 text-sm text-slate-600">
-              {[t('CV complet, 3 modèles'), t('Export PDF (avec mention CVCasa)'), t('Photo et signature'), '1re adaptation offerte'].map((x) => (
+              {[t('CV complet, 7 modèles'), t('Export PDF (avec mention CVCasa)'), t('Photo et signature'), '1re adaptation offerte'].map((x) => (
                 <li key={x} className="flex gap-2">
                   <Check className="mt-0.5 size-4 shrink-0 text-emerald-600" /> {x}
                 </li>
               ))}
             </ul>
           </div>
-          {PACKS.map((p, i) => (
+          {packs.map((p, i) => (
             <div key={p.id} className={i === 1 ? 'rounded-2xl border-2 border-brand-500 bg-white p-5 shadow-md' : 'rounded-2xl border border-slate-200 bg-white p-5 shadow-sm'}>
               <h3 className="font-semibold text-slate-900">{p.name}</h3>
               <p className="mt-1 text-2xl font-bold text-slate-900">{fcfa(p.price)}</p>
               <p className="mt-1 text-sm text-slate-600">
+                {p.baseCredits ? <s className="mr-1 text-slate-400">{p.baseCredits}</s> : null}
                 {t('{0} crédits · {1} l’action', [p.credits, fcfa(Math.round(p.price / p.credits))])}</p>
+              {p.baseCredits && launchUntil ? (
+                <p className="mt-2 inline-block rounded-full bg-emerald-100 px-2.5 py-0.5 text-xs font-semibold text-emerald-900">
+                  {t('Offre de lancement, jusqu’au {0}', [new Date(launchUntil).toLocaleDateString(LOCALE, { day: 'numeric', month: 'long' })])}</p>
+              ) : null}
               <p className="mt-3 text-xs text-slate-500">{t('1 crédit = 1 CV adapté, 1 lettre, 1 fiche entretien, 1 traduction, 1 page manuscrite tapée, ou 1 PDF scanné de plus de 2 pages. 2 crédits = 1 CV en version Pro.')}</p>
             </div>
           ))}

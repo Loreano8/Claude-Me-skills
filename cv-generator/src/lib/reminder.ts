@@ -11,7 +11,7 @@ import { t } from '../i18n.ts';
 export const REMINDER_TITLE = t('Une nouvelle offre d’emploi ?');
 export const REMINDER_TEXT = t('Adaptez votre CV à l’annonce en 1 crédit, et la lettre suit si besoin.');
 export const OFFER_TITLE = t('Une offre pour votre retour');
-export const OFFER_TEXT = t('4 crédits pour 500 F au lieu de 3, pendant 3 jours. Une seule fois.');
+export const OFFER_TEXT = t('Des crédits en plus pour 500 F, pendant 3 jours. Une seule fois.');
 
 const LAST_VISIT_KEY = 'cv-studio-last-visit';
 const SNOOZE_KEY = 'cv-studio-reminder-snooze';

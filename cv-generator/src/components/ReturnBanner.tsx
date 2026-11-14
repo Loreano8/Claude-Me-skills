@@ -25,7 +25,7 @@ export function ReturnBanner({ onAdapt }: { onAdapt: () => void }) {
         tone="amber"
         icon={<Gift className="size-5" aria-hidden />}
         title={OFFER_TITLE}
-        text={t('{0} crédits pour {1} F au lieu de 3, jusqu’au {2}. Une seule fois.', [offer.pack.credits, offer.pack.price, offerEnd(offer.expiresAt)])}
+        text={t('{0} crédits pour {1} F, plus que dans le pack habituel, jusqu’au {2}. Une seule fois.', [offer.pack.credits, offer.pack.price, offerEnd(offer.expiresAt)])}
         action={t('En profiter')}
         onAction={() => {
           close();
