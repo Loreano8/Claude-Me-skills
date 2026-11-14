@@ -88,6 +88,11 @@ export function AdminCrypto({ token }: { token: string }) {
             {o.identifier} · {o.credits} crédits · attendu : {o.amount} {o.token}
           </p>
           <Notice tone="warn">Pourquoi ce paiement attend : {o.reason || 'vérification demandée'}.</Notice>
+          {o.reason.includes('insuffisant') && (
+            <p className="text-slate-700">
+              Montant trop faible : la règle annoncée au client est de le créditer selon le montant réellement reçu. Refusez ce paiement avec un motif (par exemple « Montant reçu inférieur au pack : crédits ajoutés au prorata »), puis ajoutez les crédits correspondants dans l’onglet « Comptes ».
+            </p>
+          )}
           {o.chain && (
             <ul className="space-y-0.5 text-slate-700">
               <li>
@@ -141,6 +146,7 @@ export function AdminCrypto({ token }: { token: string }) {
                 <span>{o.identifier}</span>
                 <span>
                   {o.amount} {o.token} · {o.credits} crédits
+                  {o.chain && o.chain.amount > o.amount + 0.0001 ? ` · reçu ${o.chain.amount} (surplus à convertir en crédits si le client le demande)` : ''}
                 </span>
                 <span className="text-slate-500">{when(o.decidedAt)}</span>
                 {o.txHash && (

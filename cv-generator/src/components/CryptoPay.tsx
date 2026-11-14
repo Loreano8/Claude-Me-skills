@@ -155,7 +155,12 @@ export function CryptoPay({ packs }: { packs: Pack[] }) {
                   <p className="mt-1 font-display text-2xl font-bold text-brand-700">
                     {order.amount} {order.token}
                   </p>
+                  <p className="text-sm font-semibold text-slate-900">{t('Le montant exact, ni plus ni moins.')}</p>
                   <p className="text-xs text-slate-500">{t('pour {0} crédits. Si votre plateforme prélève des frais, vérifiez que le montant reçu est bien de {1} {2}.', [order.credits, order.amount, order.token])}</p>
+                  <ul className="mt-1.5 list-disc space-y-1 pl-4 text-xs text-slate-600">
+                    <li>{t('Si vous envoyez moins : aucun crédit n’est ajouté automatiquement. Notre équipe vérifie, puis vous crédite selon le montant réellement reçu.')}</li>
+                    <li>{t('Si vous envoyez plus : votre pack est validé, mais le surplus n’est pas remboursé. Écrivez-nous depuis « Nous contacter » pour le recevoir en crédits.')}</li>
+                  </ul>
                 </li>
                 <li>
                   <p className="font-semibold text-slate-900">{t('2. Sur le réseau {0} (BNB Smart Chain), à cette adresse', [order.network])}</p>

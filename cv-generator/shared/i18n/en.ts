@@ -1383,6 +1383,9 @@ export const EN: Record<string, string> = {
   "Des crédits en plus pour 500 F, pendant 3 jours. Une seule fois.": "Extra credits for 500 F, for 3 days. One time only.",
   "Offre de lancement, jusqu’au {0}": "Launch offer, until {0}",
   "Pour un paiement en crypto, nous gardons l’identifiant de la transaction (public sur la blockchain) et la capture d’écran que vous envoyez comme preuve. La capture est supprimée 30 jours après la validation ou le refus.": "For a crypto payment, we keep the transaction ID (public on the blockchain) and the screenshot you send as proof. The screenshot is deleted 30 days after approval or refusal.",
+  "Le montant exact, ni plus ni moins.": "The exact amount, no more, no less.",
+  "Si vous envoyez moins : aucun crédit n’est ajouté automatiquement. Notre équipe vérifie, puis vous crédite selon le montant réellement reçu.": "If you send less: no credit is added automatically. Our team checks, then credits you according to the amount actually received.",
+  "Si vous envoyez plus : votre pack est validé, mais le surplus n’est pas remboursé. Écrivez-nous depuis « Nous contacter » pour le recevoir en crédits.": "If you send more: your pack is approved, but the extra is not refunded. Write to us from “Contact us” to receive it as credits.",
   // Messages du serveur (erreurs, veille) : traduits à l’envoi quand l’interface est en anglais.
   "Fichier trop volumineux (15 Mo maximum).": "File too large (15 MB maximum).",
   "Erreur interne du serveur.": "Internal server error.",
