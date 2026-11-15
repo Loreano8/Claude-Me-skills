@@ -200,3 +200,28 @@ describe('offre de lancement', () => {
     expect(createPayments(db, accounts, null, null).currentPacks()).toMatchObject({ launchUntil: null, packs: [{ credits: 3 }, { credits: 10 }, { credits: 25 }] });
   });
 });
+
+describe('historique des crédits', () => {
+  it('retrace chaque mouvement avec le solde qui en résulte, et le montant des achats', async () => {
+    const db = await testDb();
+    const accounts = createAccounts(db, { freeCredits: 1, freeIpCooldownDays: 0 });
+    const payments = createPayments(db, accounts, null, null);
+    const u = await accounts.register({ identifier: 'hist@ex.com', password: 'secret12', ip: '10.4.0.1', device: 'device-hist-xxxxx' });
+    await accounts.spend(u.id, 'structure');
+    await db.transaction(async (tx) => { await payments.recordPaidInTx(tx, u.id, await payments.packFor(u, 'candidature'), 'crypto', '0xhist'); });
+    await accounts.spend(u.id, 'unlock', 2);
+    await accounts.refund(u.id, 'adapt');
+    const h = await accounts.history(u.id);
+    expect(h.credits).toBe(9);
+    expect(h.items.map((m) => [m.reason, m.delta, m.balance])).toEqual([
+      ['refund:adapt', 1, 9],
+      ['unlock', -2, 8],
+      ['purchase', 10, 10],
+      ['structure', -1, 0],
+      ['welcome', 1, 1],
+    ]);
+    expect(h.items[2]).toMatchObject({ amount: 1500, provider: 'crypto' });
+    expect(h.items[0].amount).toBeNull();
+    expect((await accounts.history(999_999)).items).toEqual([]);
+  });
+});

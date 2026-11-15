@@ -193,6 +193,13 @@ export function createApp({ fetchPage = fetchJobPage, ai, aiEn = null, allowedOr
 
   app.get('/api/packs', (c) => c.json({ ...(payments ? payments.currentPacks() : { packs: PACKS, launchUntil: null }), payments: payments !== null }));
 
+  // Historique des crédits : achats, crédits offerts et actions qui en ont dépensé.
+  app.get('/api/credits/history', async (c) => {
+    const user = await currentUser(c);
+    if (!user || !accounts) return c.json({ error: 'Session expirée. Reconnectez-vous.' }, 401);
+    return c.json(await accounts.history(user.id));
+  });
+
   // Offre de retour : consultée à chaque ouverture de l'appli (c'est ce qui l'ouvre au retour).
   app.get('/api/offer', async (c) => {
     const user = await currentUser(c);

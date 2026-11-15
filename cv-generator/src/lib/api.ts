@@ -160,6 +160,7 @@ export const api = {
   offer: () => request<ReturnOffer>('GET', '/api/offer'),
   unlock: () => post<{ credits: number | null }>('/api/unlock', {}),
   checkout: (packId: string) => post<{ url: string }>('/api/payments/checkout', { packId }),
+  creditHistory: () => request<{ credits: number; items: CreditMove[] }>('GET', '/api/credits/history'),
   crypto: () => request<CryptoInfo>('GET', '/api/crypto'),
   cryptoOrder: (packId: string, token?: string) => post<{ order: CryptoOrder }>('/api/crypto/order', { packId, token }),
   cryptoSubmit: (orderId: number, hash: string, proof: string) => post<{ status: 'paid' | 'review'; credits?: number; order: CryptoOrder | null }>('/api/crypto/submit', { orderId, hash, proof }),
@@ -290,3 +291,16 @@ export interface CryptoOrder {
 export type CryptoInfo =
   | { enabled: false }
   | { enabled: true; address: string; network: string; tokens: string[]; prices: Record<string, number>; minutes: number; order: CryptoOrder | null };
+
+/** Un mouvement de crédits (achat, crédit offert, action). */
+export interface CreditMove {
+  id: number;
+  at: string;
+  delta: number;
+  reason: string;
+  /** Solde après ce mouvement. */
+  balance: number;
+  /** Achat : montant payé en FCFA et moyen de paiement. */
+  amount: number | null;
+  provider: string | null;
+}

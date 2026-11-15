@@ -236,6 +236,29 @@ export function createAccounts(db: Db, opts: AccountOptions) {
     grant: (userId: number, credits: number, reason: string, ref = '') =>
       db.transaction((tx) => addCredits(tx, userId, credits, reason, ref)),
     addCreditsInTx: addCredits,
+
+    /**
+     * Historique des crédits du compte, du plus récent au plus ancien : chaque mouvement avec le solde qui en résulte
+     * (reconstitué à partir du solde actuel) et, pour un achat, le montant payé et le moyen de paiement.
+     */
+    async history(userId: number, limit = 100) {
+      const [user] = await db.query<{ credits: number }>('select credits from users where id = $1', [userId]);
+      if (!user) return { credits: 0, items: [] };
+      const rows = await db.query<{ id: number; delta: number; reason: string; created_at: string | Date; amount: number | null; provider: string | null }>(
+        `select l.id, l.delta, l.reason, l.created_at, p.amount, p.provider
+         from credit_ledger l
+         left join payments p on l.reason = 'purchase' and p.user_id = l.user_id and l.ref = p.provider || ':' || p.provider_ref
+         where l.user_id = $1 order by l.id desc limit $2`,
+        [userId, limit],
+      );
+      let balance = user.credits;
+      const items = rows.map((r) => {
+        const item = { id: r.id, at: new Date(r.created_at).toISOString(), delta: r.delta, reason: r.reason, balance, amount: r.amount, provider: r.provider };
+        balance -= r.delta;
+        return item;
+      });
+      return { credits: user.credits, items };
+    },
   };
 }
 

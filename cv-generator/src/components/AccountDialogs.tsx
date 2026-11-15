@@ -7,6 +7,7 @@ import { clearReferral, pendingReferral, referralLink } from '../lib/referral.ts
 import { Button, cx, Field, Notice } from './ui.tsx';
 import { Captcha } from './Captcha.tsx';
 import { CryptoPay } from './CryptoPay.tsx';
+import { CreditHistory } from './CreditHistory.tsx';
 
 import { LOCALE, t } from '../i18n.ts';
 export function Modal({ title, onClose, children }: { title: string; onClose: () => void; children: ReactNode }) {
@@ -674,6 +675,7 @@ function CreditsDialog() {
           <Notice tone="error">{error}</Notice>
         </div>
       )}
+      {user && <CreditHistory />}
       {user && <ReferralCard />}
       {/* Compte (prénom, mot de passe, phrase secrète, déconnexion) : dans Réglages. */}
       {user && (
