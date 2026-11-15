@@ -71,20 +71,9 @@ function Marquee({ items, reverse = false, duration }: { items: string[]; revers
 
 
 /** Titre où le passage entre *astérisques* est mis en couleur (« Des modèles de CV *professionnels* »). */
-function Accented({ text, accent = 'text-brand-600' }: { text: string; accent?: string }) {
-  return (
-    <>
-      {text.split('*').map((part, i) =>
-        i % 2 ? (
-          <span key={i} className={accent}>
-            {part}
-          </span>
-        ) : (
-          part
-        ),
-      )}
-    </>
-  );
+/** Les titres ne mettent plus un mot en couleur : on retire seulement les repères « *mot* » des textes. */
+function Accented({ text }: { text: string; accent?: string }) {
+  return <>{text.replaceAll('*', '')}</>;
 }
 
 function SectionTitle({ title, subtitle, dark = false }: { title: string; subtitle?: string; dark?: boolean }) {
@@ -346,7 +335,7 @@ function BeyondCv({ onNavigate }: { onNavigate: (t: Tab) => void }) {
               <span className="caret ml-px inline-block h-4 w-0.5 translate-y-0.5 bg-brand-600" />
             </div>
             <button type="button" onClick={() => onNavigate('lettre')} className={cx(link, 'text-brand-700 hover:text-brand-800')}>
-              {t('Écrire ma lettre')} <ArrowRight className="size-4" aria-hidden="true" />
+              {t('Écrire ma lettre')}
             </button>
           </article>
 
@@ -370,7 +359,7 @@ function BeyondCv({ onNavigate }: { onNavigate: (t: Tab) => void }) {
               ))}
             </div>
             <button type="button" onClick={() => onNavigate('suivi')} className={cx(link, 'text-brand-700 hover:text-brand-800')}>
-              {t('Voir mon suivi')} <ArrowRight className="size-4" aria-hidden="true" />
+              {t('Voir mon suivi')}
             </button>
           </article>
         </div>
@@ -411,7 +400,7 @@ export function LandingPage({ onNavigate }: { onNavigate: (t: Tab) => void }) {
             <p className="mx-auto max-w-xl text-base text-slate-600 sm:text-lg lg:mx-0">
               {t('Importez votre ancien CV, écrivez quelques lignes ou dictez si vous préférez : votre parcours est rangé, reformulé et mis en page, puis adapté à chaque offre. Créer et télécharger son CV est gratuit.')}</p>
             <div className="mt-7 flex flex-col items-stretch justify-center gap-3 sm:flex-row sm:items-center lg:justify-start">
-              <Button size="lg" onClick={start} icon={<ArrowRight className="size-5" />}>
+              <Button size="lg" onClick={start}>
                 {t('Créer mon CV gratuitement')}</Button>
               <Button size="lg" variant="secondary" onClick={start} icon={<FileUp className="size-5" />}>
                 {t('Importer mon ancien CV')}</Button>
@@ -425,7 +414,7 @@ export function LandingPage({ onNavigate }: { onNavigate: (t: Tab) => void }) {
             </ul>
             <div className="mt-3 flex flex-wrap items-center justify-center gap-x-5 lg:justify-start">
             <button type="button" onClick={() => onNavigate('offre')} className="inline-flex min-h-11 items-center gap-1.5 text-sm font-semibold text-brand-700 hover:text-brand-800">
-              {t('J’ai déjà une offre d’emploi')} <ArrowRight className="size-4" aria-hidden="true" />
+              {t('J’ai déjà une offre d’emploi')}
             </button>
             <a href="#tutoriel" onClick={(e) => { e.preventDefault(); document.getElementById('tutoriel')?.scrollIntoView({ behavior: 'smooth', block: 'center' }); }} className="inline-flex min-h-11 items-center gap-2 text-sm font-semibold text-slate-600 hover:text-slate-900">
               <PlayCircle className="size-5" /> {' '}{t('Voir le tutoriel en vidéo (2 min)')}</a>
@@ -564,7 +553,7 @@ export function LandingPage({ onNavigate }: { onNavigate: (t: Tab) => void }) {
           </div>
           <p className="mt-5 text-center">
             <a href={`${GUIDE_BASE}/guides/`} className="inline-flex min-h-11 items-center gap-1.5 px-2 text-sm font-semibold text-brand-700 hover:text-brand-800">
-              {t('Tous les guides')}{' '}<ArrowRight className="size-4" />
+              {t('Tous les guides')}
             </a>
           </p>
         </div>
@@ -601,7 +590,7 @@ export function LandingPage({ onNavigate }: { onNavigate: (t: Tab) => void }) {
         <ShieldCheck className="mx-auto size-8 text-brand-600" />
         <h2 className="mt-3 text-2xl font-bold tracking-tight text-slate-900">{t('Prêt à postuler ?')}</h2>
         <p className="mx-auto mt-2 max-w-xl text-slate-600">{t('Votre CV reste sur votre appareil. Commencez maintenant, sans compte.')}</p>
-        <Button size="lg" className="mt-6" onClick={start} icon={<ArrowRight className="size-5" />}>
+        <Button size="lg" className="mt-6" onClick={start}>
           {t('Créer mon CV gratuitement')}</Button>
       </section>
 
