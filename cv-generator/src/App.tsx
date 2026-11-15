@@ -6,6 +6,7 @@ import { CvSwitcher } from './components/CvSwitcher.tsx';
 import { AccountButton, AccountDialogs } from './components/AccountDialogs.tsx';
 import { SaveDialog } from './components/SaveDialog.tsx';
 import { ReturnBanner } from './components/ReturnBanner.tsx';
+import { CryptoReminder } from './components/CryptoReminder.tsx';
 import { Tour } from './components/Tour.tsx';
 import { decideBanner as decideReturnBanner } from './lib/reminder.ts';
 import { refreshAccount } from './lib/api.ts';
@@ -353,6 +354,7 @@ export default function App() {
       <SaveDialog />
 
       <main className="mx-auto max-w-7xl px-4 pt-4 pb-28 lg:pb-10">
+        {BANNER_TABS.includes(tab) && <CryptoReminder />}
         {BANNER_TABS.includes(tab) && <ReturnBanner onAdapt={() => setTab('offre')} />}
         {['infos', 'apercu', 'offre', 'lettre', 'plus'].includes(tab) && <FollowUpNudge onNavigate={setTab} />}
         {MORE_PAGES.includes(tab) && (

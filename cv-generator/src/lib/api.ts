@@ -283,6 +283,8 @@ export interface CryptoOrder {
   network: string;
   createdAt: string;
   expiresAt: string;
+  /** Secondes restantes avant la fin de validité, à la réception de la réponse. */
+  secondsLeft: number;
   note: string;
 }
 export type CryptoInfo =

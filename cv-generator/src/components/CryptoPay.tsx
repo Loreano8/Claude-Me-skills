@@ -1,8 +1,8 @@
 import { useEffect, useRef, useState } from 'react';
-import { Check, ChevronDown, Coins, Copy, ImagePlus, ShieldCheck } from 'lucide-react';
+import { Check, ChevronDown, Coins, Copy, ImagePlus, ShieldCheck, Timer } from 'lucide-react';
 import type { Pack } from '../lib/account.ts';
 import { api, refreshAccount, type CryptoInfo, type CryptoOrder } from '../lib/api.ts';
-import { LOCALE, t } from '../i18n.ts';
+import { t } from '../i18n.ts';
 import { Button, cx, Field, Notice } from './ui.tsx';
 
 /** Réduit la capture (1 400 px au plus, JPEG) pour qu'elle parte vite, même avec une petite connexion. */
@@ -26,8 +26,6 @@ async function shrink(file: File): Promise<string> {
   }
 }
 
-const hour = (iso: string) => new Date(iso).toLocaleTimeString(LOCALE, { hour: '2-digit', minute: '2-digit' });
-
 /**
  * Paiement en crypto, dans « Mes crédits » : choisir un pack, envoyer le montant à l'adresse affichée,
  * puis donner l'identifiant de la transaction et la capture de l'envoi. Rien ne s'affiche si le paiement crypto est désactivé.
@@ -47,6 +45,20 @@ export function CryptoPay({ packs }: { packs: Pack[] }) {
   const [qr, setQr] = useState<string | null>(null);
   const [choice, setChoice] = useState('');
   const address = order?.status === 'open' ? order.address : null;
+
+  // Compte à rebours de la commande : part du temps restant donné par le serveur.
+  const [left, setLeft] = useState<number | null>(null);
+  const openId = order?.status === 'open' ? order.id : null;
+  const startLeft = order?.status === 'open' ? order.secondsLeft : null;
+  useEffect(() => {
+    if (openId === null || startLeft === null) return setLeft(null);
+    const end = Date.now() + startLeft * 1000;
+    const tick = () => setLeft(Math.max(0, Math.round((end - Date.now()) / 1000)));
+    tick();
+    const timer = setInterval(tick, 1000);
+    return () => clearInterval(timer);
+  }, [openId, startLeft]);
+  const clock = left === null ? '' : `${Math.floor(left / 60)}:${String(left % 60).padStart(2, '0')}`;
 
   // QR code de l'adresse : la plupart des portefeuilles savent le scanner.
   useEffect(() => {
@@ -149,6 +161,31 @@ export function CryptoPay({ packs }: { packs: Pack[] }) {
 
           {order?.status === 'open' && (
             <>
+              {left !== null && left > 0 && (
+                <div className="flex items-center gap-3 rounded-xl bg-brand-50 p-3 ring-1 ring-brand-100" role="timer" aria-live="off">
+                  <Timer className="size-5 shrink-0 text-brand-700" aria-hidden="true" />
+                  <p className="flex-1 text-sm text-slate-700">{t('Temps restant pour envoyer et confirmer')}</p>
+                  <p className={cx('font-display text-2xl font-bold tabular-nums', left <= 300 ? 'text-red-600' : 'text-brand-700')}>{clock}</p>
+                </div>
+              )}
+              {left === 0 && (
+                <Notice tone="warn">
+                  {t('Le délai de 30 minutes est dépassé. Si vous avez déjà envoyé le montant, confirmez quand même ci-dessous : notre équipe vérifiera votre paiement. Sinon, recommencez une commande.')}
+                  <span className="mt-2 block">
+                    <Button
+                      size="sm"
+                      variant="secondary"
+                      disabled={busy !== null}
+                      onClick={() => {
+                        const pack = packs.find((p) => p.id === order.packId);
+                        if (pack) void start(pack);
+                      }}
+                    >
+                      {t('Recommencer une commande')}
+                    </Button>
+                  </span>
+                </Notice>
+              )}
               <ol className="space-y-3 text-sm text-slate-700">
                 <li>
                   <p className="font-semibold text-slate-900">{t('1. Envoyez exactement')}</p>
@@ -177,7 +214,6 @@ export function CryptoPay({ packs }: { packs: Pack[] }) {
                   </div>
                   {qr && <img src={qr} alt={t('QR code de l’adresse')} width={150} height={150} className="mt-2 rounded-lg ring-1 ring-slate-200" />}
                   <p className="mt-1 text-xs text-amber-800">{t('Attention : seulement en {0} et seulement sur le réseau {1}. Un envoi sur un autre réseau ou dans une autre monnaie est perdu.', [order.token, order.network])}</p>
-                  <p className="text-xs text-slate-500">{t('Commande valable jusqu’à {0}.', [hour(order.expiresAt)])}</p>
                 </li>
                 <li>
                   <p className="font-semibold text-slate-900">{t('3. Une fois l’envoi fait, confirmez ici')}</p>

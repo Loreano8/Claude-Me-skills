@@ -52,7 +52,7 @@ export function ReturnBanner({ onAdapt }: { onAdapt: () => void }) {
   );
 }
 
-function Banner(props: { tone: 'brand' | 'amber'; icon: ReactNode; title: string; text: string; action: string; onAction: () => void; onClose: () => void }) {
+export function Banner(props: { tone: 'brand' | 'amber'; icon: ReactNode; title: string; text: string; action: string; onAction: () => void; onClose: () => void }) {
   const amber = props.tone === 'amber';
   return (
     <div className={`mb-4 flex items-start gap-3 rounded-2xl border p-3.5 sm:items-center ${amber ? 'border-amber-300 bg-amber-50' : 'border-brand-200 bg-brand-50'}`}>

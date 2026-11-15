@@ -174,6 +174,8 @@ export function createCrypto(db: Db, payments: Payments, chain: Chain, cfg: Cryp
     network: 'BEP20',
     createdAt: iso(o.created_at)!,
     expiresAt: iso(o.expires_at)!,
+    /** Secondes restantes avant la fin de validité (calculées par le serveur : l'horloge du téléphone peut être fausse). */
+    secondsLeft: Math.max(0, Math.round((new Date(o.expires_at).getTime() - now().getTime()) / 1000)),
     note: o.note,
   });
 
