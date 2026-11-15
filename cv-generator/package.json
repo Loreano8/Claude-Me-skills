@@ -54,7 +54,7 @@
   "devDependencies": {
     "@capacitor/cli": "^8.5.3",
     "@electric-sql/pglite": "^0.5.10",
-    "@fontsource-variable/besley": "^5.3.0",
+    "@fontsource-variable/funnel-display": "^5.3.0",
     "@fontsource-variable/libre-franklin": "^5.3.0",
     "@react-pdf/types": "^2.14.0",
     "@tailwindcss/vite": "^4.3.3",

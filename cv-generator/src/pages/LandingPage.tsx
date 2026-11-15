@@ -71,9 +71,21 @@ function Marquee({ items, reverse = false, duration }: { items: string[]; revers
 
 
 /** Titre où le passage entre *astérisques* est mis en couleur (« Des modèles de CV *professionnels* »). */
-/** Les titres ne mettent plus un mot en couleur : on retire seulement les repères « *mot* » des textes. */
-function Accented({ text }: { text: string; accent?: string }) {
-  return <>{text.replaceAll('*', '')}</>;
+/** Titre avec les mots entre astérisques mis en couleur : « Votre CV *prêt* en quelques minutes ». */
+function Accented({ text, accent = 'text-brand-600' }: { text: string; accent?: string }) {
+  return (
+    <>
+      {text.split('*').map((part, i) =>
+        i % 2 ? (
+          <span key={i} className={accent}>
+            {part}
+          </span>
+        ) : (
+          part
+        ),
+      )}
+    </>
+  );
 }
 
 function SectionTitle({ title, subtitle, dark = false }: { title: string; subtitle?: string; dark?: boolean }) {
@@ -468,17 +480,18 @@ export function LandingPage({ onNavigate }: { onNavigate: (t: Tab) => void }) {
       <section className="bg-white px-4 py-12">
         <div className="mx-auto max-w-5xl">
           <SectionTitle title={t('Tout pour *décrocher le poste*')} subtitle={t('Du CV à l’entretien, au même endroit.')} />
-          <div className="-mx-4 flex snap-x snap-mandatory gap-4 overflow-x-auto px-4 pb-3 [scrollbar-width:none] sm:mx-0 sm:grid sm:grid-cols-2 sm:overflow-visible sm:px-0 lg:grid-cols-3 [&::-webkit-scrollbar]:hidden">
+          {/* Une liste, pas une grille de cartes : chaque atout est une ligne avec un filet au-dessus. */}
+          <dl className="grid gap-x-10 sm:grid-cols-2 lg:grid-cols-3">
             {FEATURES.map((f) => (
-              <div key={f.title} className="w-[78%] shrink-0 snap-center rounded-2xl border border-slate-100 bg-slate-50/60 p-5 sm:w-auto">
-                <span className="flex size-10 items-center justify-center rounded-xl bg-brand-50 text-brand-700">
-                  <f.icon className="size-5" />
-                </span>
-                <h3 className="mt-3 font-semibold text-slate-900">{f.title}</h3>
-                <p className="mt-1 text-sm leading-relaxed text-slate-600">{f.text}</p>
+              <div key={f.title} className="border-t border-slate-200 py-5">
+                <dt className="flex items-center gap-2.5 font-semibold text-ink">
+                  <f.icon className="size-5 shrink-0 text-brand-600" aria-hidden="true" />
+                  {f.title}
+                </dt>
+                <dd className="mt-1.5 text-sm leading-relaxed text-slate-600">{f.text}</dd>
               </div>
             ))}
-          </div>
+          </dl>
           <p className="mt-5 text-center text-sm text-slate-600">
             <span className="mr-1.5 rounded-full bg-sun-100 px-2 py-0.5 text-xs font-semibold text-sun-900">{t('Bientôt')}</span>
             {t('L’entraînement à l’entretien à l’oral, et le paiement par carte bancaire.')}</p>
@@ -505,7 +518,7 @@ export function LandingPage({ onNavigate }: { onNavigate: (t: Tab) => void }) {
               <p className="mt-1 text-2xl font-bold text-slate-900">{fcfa(p.price)}</p>
               <p className="mt-1 text-sm text-slate-600">
                 {p.baseCredits ? <s className="mr-1 text-slate-400">{p.baseCredits}</s> : null}
-                {t('{0} crédits · {1} l’action', [p.credits, fcfa(Math.round(p.price / p.credits))])}</p>
+                {t('{0} crédits, soit {1} l’action', [p.credits, fcfa(Math.round(p.price / p.credits))])}</p>
               {p.baseCredits && launchUntil ? (
                 <p className="mt-2 inline-block rounded-full bg-emerald-100 px-2.5 py-0.5 text-xs font-semibold text-emerald-900">
                   {t('Offre de lancement, jusqu’au {0}', [new Date(launchUntil).toLocaleDateString(LOCALE, { day: 'numeric', month: 'long' })])}</p>
@@ -514,7 +527,7 @@ export function LandingPage({ onNavigate }: { onNavigate: (t: Tab) => void }) {
             </div>
           ))}
         </div>
-        <p className="mt-4 text-center text-sm text-slate-500">{t('Sans abonnement · Mobile Money ou crypto (USDT, USDC) · Crédit rendu en cas d’échec')}</p>
+        <p className="mt-4 text-center text-sm text-slate-500">{t('Sans abonnement. Paiement par Mobile Money ou en crypto (USDT, USDC). Votre crédit vous est rendu si une action échoue.')}</p>
       </section>
 
       {/* Les guides sont écrits en français : on ne les met pas en avant dans la version anglaise. */}
