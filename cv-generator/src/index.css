@@ -1,11 +1,12 @@
 @import 'tailwindcss';
 
 /* Polices servies par le site (licence OFL), rien n'est chargé ailleurs.
-   Titres : Funnel Display, large et contemporaine. Texte : Libre Franklin, très lisible sur petit écran. */
+   Titres : Besley, une Clarendon comme sur les diplômes et les papiers officiels (le sujet du site : le CV, le dossier).
+   Texte : Libre Franklin, la grotesque des journaux et des formulaires, très lisible sur petit écran. */
 @font-face {
-  font-family: 'Funnel Display';
-  src: url('/fonts/funnel.woff2') format('woff2');
-  font-weight: 300 800;
+  font-family: 'Besley';
+  src: url('/fonts/besley.woff2') format('woff2');
+  font-weight: 400 900;
   font-display: swap;
 }
 @font-face {
@@ -17,7 +18,7 @@
 
 @theme {
   --font-sans: 'Libre Franklin', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
-  --font-display: 'Funnel Display', 'Libre Franklin', ui-sans-serif, system-ui, sans-serif;
+  --font-display: 'Besley', Georgia, 'Times New Roman', serif;
   /* Encre des titres (bleu nuit du logo) et jaune du toit du logo, pour ce qui est fait ou offert. */
   --color-ink: #101a4a;
   --color-sun-100: #fff3c4;
@@ -46,7 +47,7 @@ body {
 h1,
 h2 {
   font-family: var(--font-display);
-  letter-spacing: -0.02em;
+  letter-spacing: -0.01em;
 }
 
 /* Contour visible pour la navigation au clavier (jamais au toucher ni à la souris). */
