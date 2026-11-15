@@ -156,6 +156,34 @@ function TemplatesShowcase({ onNavigate }: { onNavigate: (t: Tab) => void }) {
   );
 }
 
+/**
+ * Trois photos d'ambiance qui racontent le parcours : sur le téléphone, sur un ordinateur, puis le jour de l'entretien.
+ * Aucun visage : ce sont des images d'illustration, jamais présentées comme des clients.
+ */
+const PHOTOS = [
+  { file: 'telephone', alt: t('Une personne assise sur un banc écrit sur son téléphone, un dossier sur les genoux.'), title: t('Sur votre téléphone'), text: t('Commencez votre CV où vous êtes, en quelques minutes.') },
+  { file: 'ordinateur', alt: t('Une personne vue de dos travaille sur un ordinateur portable, dans un cyber.'), title: t('Ou sur un ordinateur'), text: t('Le site marche partout, sans rien installer.') },
+  { file: 'entretien', alt: t('Un candidat tend son CV imprimé à un recruteur, par-dessus un bureau.'), title: t('Le jour de l’entretien'), text: t('Vous arrivez avec un CV clair, adapté au poste.') },
+];
+
+function PhotoStory() {
+  return (
+    <section className="bg-white pb-12" aria-label={t('CVCasa au quotidien')}>
+      <div className="mx-auto max-w-6xl">
+        <ul className="flex snap-x snap-mandatory gap-4 overflow-x-auto px-4 pb-2 [scrollbar-width:none] sm:grid sm:grid-cols-3 sm:gap-6 sm:overflow-visible [&::-webkit-scrollbar]:hidden">
+          {PHOTOS.map((p) => (
+            <li key={p.file} className="w-[80%] shrink-0 snap-center sm:w-auto">
+              <img src={`${import.meta.env.BASE_URL}photos/${p.file}.webp`} alt={p.alt} loading="lazy" width={960} height={640} className="aspect-[3/2] w-full rounded-2xl bg-slate-100 object-cover" />
+              <p className="mt-3 font-display text-lg font-semibold text-ink">{p.title}</p>
+              <p className="text-sm text-slate-600">{p.text}</p>
+            </li>
+          ))}
+        </ul>
+      </div>
+    </section>
+  );
+}
+
 /** Témoignages réels (validés à la main) : la section n'apparaît que s'il y en a. */
 function Testimonials() {
   const [items, setItems] = useState<PublicTestimonial[]>([]);
@@ -434,6 +462,8 @@ export function LandingPage({ onNavigate }: { onNavigate: (t: Tab) => void }) {
           </div>
         </div>
       </section>
+
+      <PhotoStory />
 
       <BeyondCv onNavigate={onNavigate} />
 
