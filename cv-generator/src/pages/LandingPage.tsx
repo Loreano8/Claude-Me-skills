@@ -166,19 +166,54 @@ const PHOTOS = [
   { file: 'entretien', alt: t('Un candidat tend son CV imprimé à un recruteur, par-dessus un bureau.'), title: t('Le jour de l’entretien'), text: t('Vous arrivez avec un CV clair, adapté au poste.') },
 ];
 
+const PHOTO_MS = 4500;
+
 function PhotoStory() {
+  const [ref, tick] = useLiveTick(PHOTO_MS);
+  // Décalage posé par un clic : le défilement automatique repart de la photo choisie.
+  const [base, setBase] = useState(0);
+  const n = PHOTOS.length;
+  const active = (((tick ?? 0) + base) % n + n) % n;
   return (
-    <section className="bg-white pb-12" aria-label={t('CVCasa au quotidien')}>
-      <div className="mx-auto max-w-6xl">
-        <ul className="flex snap-x snap-mandatory gap-4 overflow-x-auto px-4 pb-2 [scrollbar-width:none] sm:grid sm:grid-cols-3 sm:gap-6 sm:overflow-visible [&::-webkit-scrollbar]:hidden">
-          {PHOTOS.map((p) => (
-            <li key={p.file} className="w-[80%] shrink-0 snap-center sm:w-auto">
-              <img src={`${import.meta.env.BASE_URL}photos/${p.file}.webp`} alt={p.alt} loading="lazy" width={960} height={640} className="aspect-[3/2] w-full rounded-2xl bg-slate-100 object-cover" />
-              <p className="mt-3 font-display text-lg font-semibold text-ink">{p.title}</p>
-              <p className="text-sm text-slate-600">{p.text}</p>
-            </li>
+    <section className="bg-white px-4 pb-14" aria-labelledby="photos-titre">
+      <div ref={ref} className="mx-auto grid max-w-6xl items-center gap-6 lg:grid-cols-[1.3fr_1fr] lg:gap-12">
+        <div className="relative aspect-[3/2] overflow-hidden rounded-3xl bg-slate-100 shadow-[0_24px_50px_-24px_rgba(16,26,74,0.45)]">
+          {PHOTOS.map((p, i) => (
+            <img
+              key={p.file}
+              src={`${import.meta.env.BASE_URL}photos/${p.file}.webp`}
+              alt={i === active ? p.alt : ''}
+              aria-hidden={i !== active}
+              loading="lazy"
+              width={960}
+              height={640}
+              className={cx('absolute inset-0 size-full object-cover transition-opacity duration-1000', i === active ? 'photo-zoom opacity-100' : 'opacity-0')}
+            />
           ))}
-        </ul>
+        </div>
+        <div>
+          <h2 id="photos-titre" className="font-display text-2xl font-semibold text-ink sm:text-3xl">
+            <Accented text={t('De votre téléphone à *l’entretien*')} />
+          </h2>
+          <ol className="mt-5">
+            {PHOTOS.map((p, i) => (
+              <li key={p.file}>
+                <button
+                  type="button"
+                  aria-current={i === active ? 'step' : undefined}
+                  onClick={() => setBase(i - (tick ?? 0))}
+                  className="relative flex min-h-14 w-full flex-col justify-center py-3 pl-5 text-left"
+                >
+                  <span className="absolute inset-y-0 left-0 w-[3px] rounded-full bg-slate-200" aria-hidden="true">
+                    {i === active && <span key={`${tick}-${base}`} className={cx('block size-full rounded-full bg-brand-600', tick !== null && 'photo-fill')} />}
+                  </span>
+                  <span className={cx('font-display text-lg font-semibold transition-colors', i === active ? 'text-ink' : 'text-slate-500')}>{p.title}</span>
+                  <span className={cx('text-sm transition-colors', i === active ? 'text-slate-600' : 'text-slate-500')}>{p.text}</span>
+                </button>
+              </li>
+            ))}
+          </ol>
+        </div>
       </div>
     </section>
   );

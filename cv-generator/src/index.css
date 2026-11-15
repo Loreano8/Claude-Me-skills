@@ -117,9 +117,35 @@ h2 {
 .caret {
   animation: caret 1s steps(1) infinite;
 }
+/* Accueil, photos : la photo affichée avance très lentement, et le trait de l'étape en cours se remplit. */
+@keyframes photo-zoom {
+  from {
+    transform: scale(1);
+  }
+  to {
+    transform: scale(1.07);
+  }
+}
+.photo-zoom {
+  animation: photo-zoom 6s ease-out both;
+}
+@keyframes photo-fill {
+  from {
+    transform: scaleY(0);
+  }
+  to {
+    transform: scaleY(1);
+  }
+}
+.photo-fill {
+  transform-origin: top;
+  animation: photo-fill 4.5s linear both;
+}
 @media (prefers-reduced-motion: reduce) {
   .arrive,
-  .caret {
+  .caret,
+  .photo-zoom,
+  .photo-fill {
     animation: none;
   }
 }
