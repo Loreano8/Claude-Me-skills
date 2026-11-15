@@ -161,35 +161,74 @@ function TemplatesShowcase({ onNavigate }: { onNavigate: (t: Tab) => void }) {
  * Aucun visage : ce sont des images d'illustration, jamais présentées comme des clients.
  */
 const PHOTOS = [
-  { file: 'telephone', alt: t('Une personne assise sur un banc écrit sur son téléphone, un dossier sur les genoux.'), title: t('Sur votre téléphone'), text: t('Commencez votre CV où vous êtes, en quelques minutes.') },
-  { file: 'ordinateur', alt: t('Une personne vue de dos travaille sur un ordinateur portable, dans un cyber.'), title: t('Ou sur un ordinateur'), text: t('Le site marche partout, sans rien installer.') },
-  { file: 'entretien', alt: t('Un candidat tend son CV imprimé à un recruteur, par-dessus un bureau.'), title: t('Le jour de l’entretien'), text: t('Vous arrivez avec un CV clair, adapté au poste.') },
+  {
+    title: t('Sur votre téléphone'),
+    text: t('Commencez votre CV où vous êtes, en quelques minutes.'),
+    shots: [
+      { file: 'telephone', alt: t('Une personne assise sur un banc écrit sur son téléphone, un dossier sur les genoux.') },
+      { file: 'telephone-2', alt: t('Une personne en tenue colorée écrit sur son téléphone, un dossier sur les genoux.') },
+    ],
+  },
+  {
+    title: t('Ou sur un ordinateur'),
+    text: t('Le site marche partout, sans rien installer.'),
+    shots: [
+      { file: 'ordinateur', alt: t('Une personne vue de dos travaille sur un ordinateur portable, dans un cyber.') },
+      { file: 'ordinateur-2', alt: t('Une personne vue de dos travaille sur un ordinateur portable, près d’une fenêtre.') },
+    ],
+  },
+  {
+    title: t('Le jour de l’entretien'),
+    text: t('Vous arrivez avec un CV clair, adapté au poste.'),
+    shots: [
+      { file: 'entretien', alt: t('Un candidat tend son CV imprimé à un recruteur, par-dessus un bureau.') },
+      { file: 'entretien-2', alt: t('Un candidat tend son CV imprimé à une recruteuse, dans un bureau moderne.') },
+    ],
+  },
 ];
 
-const PHOTO_MS = 4500;
+const PHOTO_MS = 3000;
 
 function PhotoStory() {
   const [ref, tick] = useLiveTick(PHOTO_MS);
-  // Décalage posé par un clic : le défilement automatique repart de la photo choisie.
+  // Décalage posé par un clic : le défilement automatique repart de l'étape choisie.
   const [base, setBase] = useState(0);
   const n = PHOTOS.length;
-  const active = (((tick ?? 0) + base) % n + n) % n;
+  const t0 = Math.max(0, (tick ?? 0) + base);
+  const active = t0 % n;
+  // À chaque tour complet, l'étape montre une autre photo : le visuel change d'un passage à l'autre.
+  const shotAt = (pos: number) => {
+    const step = PHOTOS[pos % n];
+    return step.shots[Math.floor(pos / n) % step.shots.length];
+  };
+  const current = shotAt(t0);
+  // On ne charge que la photo affichée et la suivante (connexions lentes), et on garde celles déjà vues pour le fondu.
+  const [seen, setSeen] = useState<string[]>([]);
+  const next = shotAt(t0 + 1).file;
+  useEffect(() => {
+    setSeen((s) => {
+      const add = [current.file, next].filter((f) => !s.includes(f));
+      return add.length ? [...s, ...add] : s;
+    });
+  }, [current.file, next]);
+  const all = PHOTOS.flatMap((p) => p.shots);
   return (
     <section className="bg-white px-4 pb-14" aria-labelledby="photos-titre">
       <div ref={ref} className="mx-auto grid max-w-6xl items-center gap-6 lg:grid-cols-[1.3fr_1fr] lg:gap-12">
         <div className="relative aspect-[3/2] overflow-hidden rounded-3xl bg-slate-100 shadow-[0_24px_50px_-24px_rgba(16,26,74,0.45)]">
-          {PHOTOS.map((p, i) => (
-            <img
-              key={p.file}
-              src={`${import.meta.env.BASE_URL}photos/${p.file}.webp`}
-              alt={i === active ? p.alt : ''}
-              aria-hidden={i !== active}
-              loading="lazy"
-              width={960}
-              height={640}
-              className={cx('absolute inset-0 size-full object-cover transition-opacity duration-1000', i === active ? 'photo-zoom opacity-100' : 'opacity-0')}
-            />
-          ))}
+          {all
+            .filter((p) => seen.includes(p.file) || p.file === current.file)
+            .map((p) => (
+              <img
+                key={p.file}
+                src={`${import.meta.env.BASE_URL}photos/${p.file}.webp`}
+                alt={p.file === current.file ? p.alt : ''}
+                aria-hidden={p.file !== current.file}
+                width={960}
+                height={640}
+                className={cx('absolute inset-0 size-full object-cover transition-opacity duration-700', p.file === current.file ? 'photo-zoom opacity-100' : 'opacity-0')}
+              />
+            ))}
         </div>
         <div>
           <h2 id="photos-titre" className="font-display text-2xl font-semibold text-ink sm:text-3xl">
@@ -197,11 +236,11 @@ function PhotoStory() {
           </h2>
           <ol className="mt-5">
             {PHOTOS.map((p, i) => (
-              <li key={p.file}>
+              <li key={p.title}>
                 <button
                   type="button"
                   aria-current={i === active ? 'step' : undefined}
-                  onClick={() => setBase(i - (tick ?? 0))}
+                  onClick={() => setBase((b) => b + ((i - active + n) % n))}
                   className="relative flex min-h-14 w-full flex-col justify-center py-3 pl-5 text-left"
                 >
                   <span className="absolute inset-y-0 left-0 w-[3px] rounded-full bg-slate-200" aria-hidden="true">

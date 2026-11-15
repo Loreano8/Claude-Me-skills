@@ -127,7 +127,7 @@ h2 {
   }
 }
 .photo-zoom {
-  animation: photo-zoom 6s ease-out both;
+  animation: photo-zoom 4s ease-out both;
 }
 @keyframes photo-fill {
   from {
@@ -139,7 +139,7 @@ h2 {
 }
 .photo-fill {
   transform-origin: top;
-  animation: photo-fill 4.5s linear both;
+  animation: photo-fill 3s linear both;
 }
 @media (prefers-reduced-motion: reduce) {
   .arrive,

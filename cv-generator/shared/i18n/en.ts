@@ -1424,6 +1424,9 @@ export const EN: Record<string, string> = {
   "Le jour de l’entretien": "On interview day",
   "Vous arrivez avec un CV clair, adapté au poste.": "You arrive with a clear CV, tailored to the job.",
   "De votre téléphone à *l’entretien*": "From your phone to *the interview*",
+  "Une personne en tenue colorée écrit sur son téléphone, un dossier sur les genoux.": "A person in colourful clothes types on their phone, a folder on their lap.",
+  "Une personne vue de dos travaille sur un ordinateur portable, près d’une fenêtre.": "A person seen from behind works on a laptop near a window.",
+  "Un candidat tend son CV imprimé à une recruteuse, dans un bureau moderne.": "A candidate hands their printed CV to a recruiter in a modern office.",
   // Messages du serveur (erreurs, veille) : traduits à l’envoi quand l’interface est en anglais.
   "Fichier trop volumineux (15 Mo maximum).": "File too large (15 MB maximum).",
   "Erreur interne du serveur.": "Internal server error.",
