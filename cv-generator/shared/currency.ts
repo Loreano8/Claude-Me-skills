@@ -54,6 +54,31 @@ export function currencyForTimeZone(tz: string): Currency {
   return region === 'europe' ? 'EUR' : 'USD';
 }
 
+// ---- Par pays (code à deux lettres donné par le réseau devant le site), plus précis que le fuseau horaire.
+
+const AFRICA = 'DZ AO BJ BW BF BI CV CM CF TD KM CG CD CI DJ EG GQ ER SZ ET GA GM GH GN GW KE LS LR LY MG MW ML MR MU YT MA MZ NA NE NG RE RW ST SN SC SL SO ZA SS SD TZ TG TN UG EH ZM ZW'.split(' ');
+const EUROPE = 'AL AD AT BY BE BA BG HR CY CZ DK EE FO FI FR DE GI GR GG HU IS IE IM IT JE XK LV LI LT LU MT MD MC ME NL MK NO PL PT RO RU SM RS SK SI ES SE CH UA GB VA'.split(' ');
+const AMERICAS = 'US CA MX AG AR BS BB BZ BM BO BR KY CL CO CR CU DM DO EC SV GF GD GP GT GY HT HN JM MQ NI PA PY PE PR KN LC VC SR TT UY VE VI'.split(' ');
+const COUNTRY_CURRENCY: Record<string, Currency> = {
+  BJ: 'XOF', TG: 'XOF', CI: 'XOF', SN: 'XOF', NE: 'XOF', BF: 'XOF', ML: 'XOF', GW: 'XOF',
+  CM: 'XAF', GA: 'XAF', CG: 'XAF', TD: 'XAF', CF: 'XAF', GQ: 'XAF',
+  NG: 'NGN', GH: 'GHS', KE: 'KES', MA: 'MAD', ZA: 'ZAR',
+  GB: 'GBP', GG: 'GBP', JE: 'GBP', IM: 'GBP', CH: 'CHF', LI: 'CHF', CA: 'CAD', US: 'USD',
+};
+
+export const isCountry = (x: unknown): x is string => typeof x === 'string' && /^[A-Z]{2}$/.test(x) && x !== 'XX' && x !== 'T1';
+
+export function regionForCountry(country: string): Region {
+  if (AFRICA.includes(country)) return 'afrique';
+  if (EUROPE.includes(country)) return 'europe';
+  if (AMERICAS.includes(country)) return 'amerique';
+  return 'monde';
+}
+
+export function currencyForCountry(country: string): Currency {
+  return COUNTRY_CURRENCY[country] ?? (regionForCountry(country) === 'europe' ? 'EUR' : 'USD');
+}
+
 /** Montant arrondi comme on l'afficherait sur une étiquette : pas de centimes au-delà de 100, dizaines au-delà de 1 000. */
 export function roundAmount(value: number): number {
   if (value >= 1000) return Math.round(value / 10) * 10;

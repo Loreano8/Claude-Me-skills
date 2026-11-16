@@ -66,3 +66,13 @@ describe('cours des devises', () => {
     expect(await empty.get()).toEqual({ rates: SEED_RATES, at: null });
   });
 });
+
+describe('devise et région par pays', () => {
+  it('donne la devise et la région du pays du visiteur', async () => {
+    const { currencyForCountry, regionForCountry, isCountry } = await import('../shared/currency.ts');
+    expect(['BJ', 'TG', 'SN', 'CI', 'NE'].map(currencyForCountry)).toEqual(['XOF', 'XOF', 'XOF', 'XOF', 'XOF']);
+    expect(['NG', 'GH', 'CM', 'FR', 'BE', 'GB', 'US', 'CA', 'JP', 'CD'].map(currencyForCountry)).toEqual(['NGN', 'GHS', 'XAF', 'EUR', 'EUR', 'GBP', 'USD', 'CAD', 'USD', 'USD']);
+    expect(['BJ', 'NG', 'FR', 'GB', 'US', 'BR', 'JP'].map(regionForCountry)).toEqual(['afrique', 'afrique', 'europe', 'europe', 'amerique', 'amerique', 'monde']);
+    expect([isCountry('BJ'), isCountry('XX'), isCountry('T1'), isCountry('bj'), isCountry(undefined)]).toEqual([true, false, false, false, false]);
+  });
+});

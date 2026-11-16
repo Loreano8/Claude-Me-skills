@@ -1,5 +1,5 @@
 import { useSyncExternalStore } from 'react';
-import { CURRENCIES, SEED_RATES, currencyForTimeZone, formatMoney, isCurrency, packAmount, regionForTimeZone, type Currency, type Rates, type Region } from '../../shared/currency.ts';
+import { CURRENCIES, SEED_RATES, currencyForCountry, currencyForTimeZone, formatMoney, isCountry, isCurrency, packAmount, regionForCountry, regionForTimeZone, type Currency, type Rates, type Region } from '../../shared/currency.ts';
 import { LOCALE } from '../i18n.ts';
 import { api } from './api.ts';
 
@@ -27,14 +27,44 @@ function read<T>(key: string): T | null {
   }
 }
 
-/** Région du visiteur (exemples affichés : villes, photos). */
-export const REGION: Region = regionForTimeZone(timeZone());
+// Pays du visiteur : donné par le réseau devant le site (Cloudflare), retenu une semaine sur l'appareil.
+// Tant qu'on ne le connaît pas (toute première visite, hors ligne), on se rabat sur le fuseau horaire.
+const COUNTRY_KEY = 'cvcasa-pays';
+const TRACE_URL = 'https://cvcasa.com/cdn-cgi/trace';
+const WEEK = 7 * 86_400_000;
+const known = read<{ country: string; at: number }>(COUNTRY_KEY);
+const country = known && isCountry(known.country) ? known.country : null;
+
+/** Région du visiteur (exemples affichés : villes, photos). Fixée au chargement de la page. */
+export const REGION: Region = country ? regionForCountry(country) : regionForTimeZone(timeZone());
 
 const saved = read<string>(KEY);
+const chosen = isCurrency(saved);
 let state: { currency: Currency; rates: Rates } = {
-  currency: isCurrency(saved) ? saved : currencyForTimeZone(timeZone()),
+  currency: chosen ? (saved as Currency) : country ? currencyForCountry(country) : currencyForTimeZone(timeZone()),
   rates: SEED_RATES,
 };
+
+/** Demande le pays au réseau (rien d'autre n'est lu ni gardé) et ajuste la devise si le visiteur n'a rien choisi. */
+function loadCountry() {
+  if (known && isCountry(known.country) && Date.now() - known.at < WEEK) return;
+  fetch(TRACE_URL)
+    .then((r) => (r.ok ? r.text() : ''))
+    .then((text) => {
+      const loc = /^loc=([A-Z]{2})$/m.exec(text)?.[1];
+      if (!isCountry(loc)) return;
+      try {
+        localStorage.setItem(COUNTRY_KEY, JSON.stringify({ country: loc, at: Date.now() }));
+      } catch {
+        /* stockage indisponible */
+      }
+      if (!read<string>(KEY) && state.currency !== currencyForCountry(loc)) {
+        state = { ...state, currency: currencyForCountry(loc) };
+        emit();
+      }
+    })
+    .catch(() => {});
+}
 const listeners = new Set<() => void>();
 const emit = () => listeners.forEach((l) => l());
 
@@ -45,6 +75,7 @@ let asked = false;
 function loadRates() {
   if (asked) return;
   asked = true;
+  loadCountry();
   if (cached && Date.now() - cached.at < DAY) return;
   api.rates().then(
     (r) => {
