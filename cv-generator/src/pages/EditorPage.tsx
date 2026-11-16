@@ -1,5 +1,6 @@
 import { useRef, useState } from 'react';
 import { useQuickDraft } from '../lib/quickDraft.ts';
+import { useEffect } from '../lib/safeEffects.ts';
 import { StepGuide } from '../components/StepGuide.tsx';
 import { AlignLeft, ArrowDown, ArrowUp, Award, Briefcase, Camera, FileText, GraduationCap, Heart, Languages, ListChecks, Loader2, Paperclip, PenLine, Plus, Trash2, Undo2, User, Wrench, X } from 'lucide-react';
 import type { Attachment } from '../../shared/schema.ts';
@@ -35,7 +36,7 @@ function QuickFill({ compact = false }: { compact?: boolean }) {
   const fileInput = useRef<HTMLInputElement>(null);
   const cameraInput = useRef<HTMLInputElement>(null);
   const draft = useQuickDraft();
-  const { text, files, undo } = draft;
+  const { text, files, undo, done } = draft;
   const setText = (v: string | ((cur: string) => string)) => draft.set({ text: typeof v === 'function' ? v(useQuickDraft.getState().text) : v });
   const setFiles = (f: Attachment[] | ((cur: Attachment[]) => Attachment[])) => draft.set({ files: typeof f === 'function' ? f(useQuickDraft.getState().files) : f });
   const [merge, setMerge] = useState(true);
@@ -105,6 +106,7 @@ function QuickFill({ compact = false }: { compact?: boolean }) {
         const { size: _size, ...att } = await fileToAttachment(f);
         added.push(att);
       }
+      requestAnimationFrame(() => document.querySelector('[data-tour="generate"]')?.scrollIntoView({ block: 'center', behavior: 'smooth' }));
       setFiles((cur) => {
         const next = [...cur, ...added];
         if (next.length > MAX_QUICK_FILES) {
@@ -124,6 +126,14 @@ function QuickFill({ compact = false }: { compact?: boolean }) {
     }
   }
 
+  // « Rédiger mon CV maintenant » (depuis Offre ou Lettre) : la rédaction démarre dès l'arrivée ici.
+  const wantRun = useQuickDraft((s) => s.run);
+  useEffect(() => {
+    // On relit l'état du moment : l'effet peut s'exécuter deux fois d'affilée, la rédaction (1 crédit) ne doit partir qu'une fois.
+    if (!wantRun || busy || !useQuickDraft.getState().run) return;
+    draft.set({ run: false });
+    if (text.trim() || files.length) void run('fill');
+  }, [wantRun]); // eslint-disable-line react-hooks/exhaustive-deps
   const [expanded, setExpanded] = useState(false);
   // CV déjà rempli : la saisie rapide se replie en une ligne (elle reste ouverte si un import est en cours).
   if (compact && !expanded && !text.trim() && !files.length && !busy && !error && !importError) {
@@ -235,6 +245,11 @@ function QuickFill({ compact = false }: { compact?: boolean }) {
         </div>
       )}
 
+      {!hasContent && (text.trim() || files.length > 0) && !busy && !done && (
+        <div className="mt-3">
+          <Notice tone="info">{t('Dernière étape : touchez « Générer mon CV » pour que votre document soit lu et votre CV rédigé.')}</Notice>
+        </div>
+      )}
       <div className="mt-3 flex flex-wrap gap-2">
         <Button variant="ai" data-tour="generate" icon={<FileText className="size-4" />} loading={busy === 'fill'} disabled={busy !== null || (!text.trim() && !files.length)} onClick={() => run('fill')}>
           {t('Générer mon CV')}{' '}<Cost />

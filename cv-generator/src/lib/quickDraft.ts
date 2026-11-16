@@ -14,12 +14,14 @@ type Draft = {
   undo: CvDocument | null;
   /** Dernier CV rédigé par la saisie rapide : sert à indiquer où le télécharger. */
   done: boolean;
+  /** Demande de rédiger le CV dès l'arrivée sur « Mon CV » (bouton « Rédiger mon CV maintenant » des pages Offre et Lettre). */
+  run: boolean;
   set: (patch: Partial<Omit<Draft, 'set'>>) => void;
 };
 
 export const useQuickDraft = create<Draft>()(
   persist(
-    (set) => ({ text: '', files: [], suggestions: [], undo: null, done: false, set: (patch) => set(patch) }),
+    (set) => ({ text: '', files: [], suggestions: [], undo: null, done: false, run: false, set: (patch) => set(patch) }),
     { name: 'cvcasa-saisie', partialize: (s) => ({ text: s.text }) },
   ),
 );

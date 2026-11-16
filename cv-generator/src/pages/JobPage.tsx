@@ -1,6 +1,7 @@
 import { useRef, useState } from 'react';
 import { useEffect } from '../lib/safeEffects.ts';
 import { ArrowRight, BellRing, CheckCircle2, PenLine, ClipboardList, Eye, HelpCircle, Mail, MessagesSquare, PencilLine, Target } from 'lucide-react';
+import { NeedCv } from '../components/NeedCv.tsx';
 import { StepGuide } from '../components/StepGuide.tsx';
 import { DownloadHint } from '../components/DownloadHint.tsx';
 import { NextSteps } from '../components/NextSteps.tsx';
@@ -317,6 +318,7 @@ export function JobPage({ onNavigate }: { onNavigate: (t: Tab) => void }) {
 
   return (
     <div className="mx-auto max-w-3xl space-y-4">
+      {empty && <NeedCv what="offre" />}
       {!hasJob && !empty && (
         <StepGuide
           id="offre"
@@ -350,7 +352,6 @@ export function JobPage({ onNavigate }: { onNavigate: (t: Tab) => void }) {
         }
         subtitle={<>{t('À partir du CV :')}{' '}<strong>{cvLabel(cv.label)}</strong></>}
       >
-        {empty && <Notice tone="warn">{t('Remplissez d’abord votre CV dans « Mes infos » (la saisie rapide suffit).')}</Notice>}
         {thin && (
           <div className="space-y-2">
             <Notice tone="warn">{t('Ce CV n’a ni expérience ni formation : l’adaptation sera très limitée. Importez votre ancien CV ou complétez-le d’abord, pour ne pas dépenser un crédit pour peu.')}</Notice>

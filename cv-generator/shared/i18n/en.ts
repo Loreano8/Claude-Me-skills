@@ -1505,6 +1505,13 @@ export const EN: Record<string, string> = {
   'Mon CV contient-il les mots de l’offre ? (gratuit)': 'Does my CV contain the job’s keywords? (free)',
   'Pour voir ce qui manque avant d’adapter': 'See what is missing before tailoring',
   'Ce qui arrive dans les prochaines versions': 'What is coming in the next versions',
+  'Commencez par votre CV': 'Start with your CV',
+  'Vous avez ajouté un document, mais votre CV n’est pas encore rédigé : CVCasa n’a rien à utiliser pour l’instant.': 'You added a document, but your CV is not written yet: CVCasa has nothing to work with for now.',
+  'Pour adapter votre CV à une offre, il faut d’abord un CV : importez l’ancien ou écrivez votre parcours.': 'To tailor your CV to a job, you first need a CV: import your old one or write your background.',
+  'La lettre s’appuie sur votre CV : importez l’ancien ou écrivez votre parcours d’abord.': 'The letter builds on your CV: import your old one or write your background first.',
+  'Rédiger mon CV maintenant': 'Write my CV now',
+  'Aller à « Mon CV »': 'Go to “My CV”',
+  'Dernière étape : touchez « Générer mon CV » pour que votre document soit lu et votre CV rédigé.': 'Last step: tap “Generate my CV” so your document is read and your CV is written.',
 // Messages du serveur (erreurs, veille) : traduits à l’envoi quand l’interface est en anglais.
   "Fichier trop volumineux (15 Mo maximum).": "File too large (15 MB maximum).",
   "Erreur interne du serveur.": "Internal server error.",

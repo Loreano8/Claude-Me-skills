@@ -16,6 +16,7 @@ import { ProOffer } from '../components/ProUnlock.tsx';
 import { Button, Card, Cost, Disclosure, Field, Notice, Select, TextArea, Toggle } from '../components/ui.tsx';
 import { SendApplication } from '../components/SendApplication.tsx';
 import { TranslateLetter } from '../components/TranslateLetter.tsx';
+import { NeedCv } from '../components/NeedCv.tsx';
 import { DownloadHint } from '../components/DownloadHint.tsx';
 import type { Tab } from '../App.tsx';
 
@@ -144,11 +145,6 @@ function GenerateCard({ onNavigate }: { onNavigate: (t: Tab) => void }) {
           placeholder={hasJob ? t('Ex. Je connais bien leurs produits, je suis disponible immédiatement…') : t('Ex. Entreprise visée, poste souhaité, pourquoi elle vous intéresse…')}
         />
       </div>
-      {isCvEmpty(cv) && (
-        <div className="mt-3">
-          <Notice tone="warn">{t('Remplissez d’abord votre CV : la lettre s’appuie sur vos expériences.')}</Notice>
-        </div>
-      )}
       {questions ? (
         <div className="mt-4 space-y-3 rounded-xl bg-white p-3.5 ring-1 ring-brand-100">
           <p className="flex items-center gap-2 text-sm font-semibold text-slate-800">
@@ -243,6 +239,7 @@ export function LetterPage({ onNavigate }: { onNavigate: (t: Tab) => void }) {
             onClick={() => document.querySelector('[data-tour="letter-export"]')?.scrollIntoView({ behavior: 'smooth', block: 'center' })}
           />
         )}
+        {isCvEmpty(cv) && <NeedCv what="lettre" />}
         {letter.body.trim() ? (
           <Disclosure title={t('Réécrire la lettre ou changer de ton')} hint={t('Pour une autre offre, ou un style différent')}>
             <WriteLikeMe compact />
