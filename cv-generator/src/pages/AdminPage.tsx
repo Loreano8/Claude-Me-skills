@@ -358,6 +358,7 @@ interface SourceRow {
   source: string;
   visits: number;
   signups: number;
+  active: number;
   buyers: number;
   revenue: number;
 }
@@ -432,6 +433,7 @@ function Sources({ token }: { token: string }) {
       {error && <Notice tone="error">{error}</Notice>}
       {!rows && !error && <div className="h-24 animate-pulse rounded-xl bg-slate-100" />}
       {rows?.length === 0 && <p className="text-sm text-slate-500">Aucune visite sur cette période.</p>}
+      {rows && rows.length > 0 && <p className="text-xs text-slate-500">Inscrits, acheteurs et chiffre d’affaires sans les comptes de l’équipe et des testeurs (réglage STATS_EXCLUDE). Les visites, elles, comptent tout le monde.</p>}
       <ul className="space-y-2">
         {rows?.map((r) => (
           <li key={r.source} className="rounded-xl border border-slate-200 p-3">
@@ -439,12 +441,15 @@ function Sources({ token }: { token: string }) {
               <p className="font-semibold text-slate-900">{r.source === 'direct' ? 'Direct (sans lien de pub)' : r.source}</p>
               <p className="font-bold text-emerald-700">{fcfa(r.revenue)}</p>
             </div>
-            <div className="mt-2 grid grid-cols-3 gap-2 text-center text-xs text-slate-500">
+            <div className="mt-2 grid grid-cols-4 gap-2 text-center text-xs text-slate-500">
               <div>
                 <p className="text-lg font-bold text-slate-900">{r.visits}</p>visites
               </div>
               <div>
                 <p className="text-lg font-bold text-slate-900">{r.signups}</p>inscrits · {pct(r.signups, r.visits)}
+              </div>
+              <div>
+                <p className="text-lg font-bold text-slate-900">{r.active}</p>ont utilisé l’IA · {pct(r.active, r.signups)}
               </div>
               <div>
                 <p className="text-lg font-bold text-slate-900">{r.buyers}</p>acheteurs · {pct(r.buyers, r.signups)}

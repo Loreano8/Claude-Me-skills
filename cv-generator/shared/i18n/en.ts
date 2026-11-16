@@ -1521,6 +1521,13 @@ export const EN: Record<string, string> = {
   'Oui, annuler': 'Yes, cancel',
   'Non, je garde ma commande': 'No, keep my order',
   'Je ne veux plus payer : annuler ce paiement': 'I no longer want to pay: cancel this payment',
+  'Collez l’offre. Recevez votre CV *adapté*.': 'Paste the job ad. Get your CV *tailored*.',
+  'CVCasa reprend les mots-clés de l’annonce et vous montre le score avant → après. Vous partez de votre ancien CV (PDF, Word ou photo) ou de quelques lignes.': 'CVCasa picks up the ad’s keywords and shows you the before → after score. Start from your old CV (PDF, Word or photo) or a few lines.',
+  'Score de correspondance :': 'Match score:',
+  '(exemple, estimé par l’IA)': '(example, estimated by the AI)',
+  'Adapter mon CV à une offre': 'Tailor my CV to a job',
+  'CV gratuit': 'Free CV',
+  'Sans abonnement': 'No subscription',
 // Messages du serveur (erreurs, veille) : traduits à l’envoi quand l’interface est en anglais.
   "Fichier trop volumineux (15 Mo maximum).": "File too large (15 MB maximum).",
   "Erreur interne du serveur.": "Internal server error.",

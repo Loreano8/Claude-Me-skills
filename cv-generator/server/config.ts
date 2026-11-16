@@ -63,7 +63,7 @@ export async function createServer(env: Settings, opts: { db?: Db; migrate?: boo
     });
     vault = createVault(db, accounts, resendMailer(env));
     recovery = createRecovery(db, accounts, support);
-    sources = createSources(db);
+    sources = createSources(db, env.STATS_EXCLUDE ?? '');
     ambassadors = createAmbassadors(db);
     rates = createRates(db);
     authLimiter = dbRateLimiter(db, 'auth', 20);

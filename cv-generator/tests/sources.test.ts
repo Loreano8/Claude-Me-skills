@@ -46,7 +46,10 @@ describe('provenance des visiteurs (liens de pub)', () => {
     expect((await app.request('/api/admin/sources')).status).toBe(403);
     const res = await app.request('/api/admin/sources?days=7', { headers: { authorization: 'Bearer adm' } });
     const { sources: rows } = (await res.json()) as { sources: { source: string; visits: number; signups: number; buyers: number; revenue: number }[] };
-    expect(rows[0]).toEqual({ source: 'facebook-video-1', visits: 2, signups: 1, buyers: 1, revenue: 500 });
+    expect(rows[0]).toEqual({ source: 'facebook-video-1', visits: 2, signups: 1, active: 0, buyers: 1, revenue: 500 });
+    // Les comptes de l'équipe et des testeurs ne comptent pas comme clients.
+    const team = createSources(db, ' S@B.co , autre@x.y');
+    expect((await team.stats(7)).find((r) => r.source === 'facebook-video-1')).toMatchObject({ visits: 2, signups: 0, buyers: 0, revenue: 0 });
     expect(rows.find((r) => r.source === 'direct')).toMatchObject({ visits: 1, signups: 0 });
   });
 });
