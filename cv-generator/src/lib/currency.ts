@@ -1,4 +1,5 @@
 import { useSyncExternalStore } from 'react';
+import { Capacitor } from '@capacitor/core';
 import { CURRENCIES, SEED_RATES, currencyForCountry, currencyForTimeZone, formatMoney, isCountry, isCurrency, packAmount, regionForCountry, regionForTimeZone, type Currency, type Rates, type Region } from '../../shared/currency.ts';
 import { LOCALE } from '../i18n.ts';
 import { api } from './api.ts';
@@ -36,10 +37,18 @@ const WEEK = 7 * 86_400_000;
 const known = read<{ country: string; at: number }>(COUNTRY_KEY);
 const country = known && isCountry(known.country) ? known.country : null;
 
-/** Choix de devise de la visite en cours (oublié à la fermeture de la page). */
+// Sur le site, le choix de devise vaut pour la visite en cours (oublié à la fermeture de la page).
+// Dans l'application, Android ferme souvent l'appli en arrière-plan : le choix y est gardé 30 jours,
+// et oublié plus tôt si la personne change de pays.
+const NATIVE = Capacitor.isNativePlatform();
+const KEEP_MS = 30 * 86_400_000;
+
 function readSession(key: string): string | null {
   try {
-    return sessionStorage.getItem(key);
+    if (!NATIVE) return sessionStorage.getItem(key);
+    const kept = read<{ currency: string; at: number; country: string | null }>(key);
+    if (!kept || Date.now() - kept.at > KEEP_MS) return null;
+    return kept.country && country && kept.country !== country ? null : kept.currency;
   } catch {
     return null;
   }
@@ -68,7 +77,9 @@ function loadCountry() {
       } catch {
         /* stockage indisponible */
       }
-      if (!readSession(KEY) && state.currency !== currencyForCountry(loc)) {
+      const kept = NATIVE ? read<{ country: string | null }>(KEY) : null;
+      const moved = !!kept?.country && kept.country !== loc;
+      if ((moved || !readSession(KEY)) && state.currency !== currencyForCountry(loc)) {
         state = { ...state, currency: currencyForCountry(loc) };
         emit();
       }
@@ -106,7 +117,8 @@ function loadRates() {
 export function setCurrency(currency: Currency) {
   state = { ...state, currency };
   try {
-    sessionStorage.setItem(KEY, currency);
+    if (NATIVE) localStorage.setItem(KEY, JSON.stringify({ currency, at: Date.now(), country: read<{ country: string }>(COUNTRY_KEY)?.country ?? country }));
+    else sessionStorage.setItem(KEY, currency);
   } catch {
     /* stockage indisponible */
   }
