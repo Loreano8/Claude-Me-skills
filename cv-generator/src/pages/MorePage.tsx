@@ -1,3 +1,4 @@
+import { Disclosure } from '../components/ui.tsx';
 import { BellRing, BookOpen, Settings, ChevronRight, ClipboardList, CreditCard, FileStack, FolderOpen, Link2, Mail, MessageCircle, Mic, PlayCircle, ScanLine, HandCoins } from 'lucide-react';
 import { Capacitor } from '@capacitor/core';
 import type { Tab } from '../App.tsx';
@@ -15,28 +16,28 @@ const GROUPS: { title: string; entries: Entry[] }[] = [
   {
     title: t('Vos papiers'),
     entries: [
-      { icon: ScanLine, title: t('Scanner un document'), text: t('Une photo devient un PDF propre. Gratuit jusqu’à 2 pages.'), tab: 'scanner' },
-      { icon: FileStack, title: t('Dossier en un seul PDF'), text: t('CV, lettre, diplômes et pièces réunis dans un fichier.'), tab: 'dossier' },
-      { icon: FolderOpen, title: t('Mes documents'), text: t('Tous vos CV et lettres, et le coffre-fort de vos papiers.'), tab: 'documents' },
+      { icon: ScanLine, title: t('Scanner un document'), text: t('Une photo devient un PDF propre.'), tab: 'scanner' },
+      { icon: FileStack, title: t('Dossier en un seul PDF'), text: t('CV, lettre et pièces en un seul fichier.'), tab: 'dossier' },
+      { icon: FolderOpen, title: t('Mes documents'), text: t('Vos CV, lettres et papiers.'), tab: 'documents' },
     ],
   },
   {
     title: t('Votre recherche'),
     entries: [
-      { icon: BellRing, title: t('Veille emploi'), text: t('Les offres qui vous correspondent, envoyées chaque matin. La première recherche est offerte.'), tab: 'veille' },
-      { icon: ClipboardList, title: t('Suivi et relances'), text: t('Où vous avez postulé, et un message prêt pour relancer au bout d’une semaine.'), tab: 'suivi' },
-      { icon: Link2, title: t('Partager mon CV'), text: t('Un lien et un QR code à donner à un recruteur.'), tab: 'apercu' },
-      { icon: Mail, title: t('E-mail de candidature'), text: t('Le message à envoyer avec votre CV et votre lettre, prêt à copier.'), tab: 'lettre' },
-      { icon: HandCoins, title: t('Devenir ambassadeur'), text: t('Recommandez CVCasa et gagnez de l’argent, versé par Mobile Money.'), tab: 'ambassadeur' },
+      { icon: BellRing, title: t('Veille emploi'), text: t('Les offres qui vous correspondent, chaque matin.'), tab: 'veille' },
+      { icon: ClipboardList, title: t('Suivi et relances'), text: t('Où vous avez postulé, et quand relancer.'), tab: 'suivi' },
+      { icon: Link2, title: t('Partager mon CV'), text: t('Un lien et un QR code pour un recruteur.'), tab: 'apercu' },
+      { icon: Mail, title: t('E-mail de candidature'), text: t('Le message à joindre à votre CV.'), tab: 'lettre' },
+      { icon: HandCoins, title: t('Devenir ambassadeur'), text: t('Gagnez de l’argent en recommandant CVCasa.'), tab: 'ambassadeur' },
     ],
   },
   {
     title: t('Aide'),
     entries: [
       { icon: PlayCircle, title: t('Tutoriel en vidéo'), text: t('Tout CVCasa expliqué en 2 minutes.'), href: `${SITE}/tutoriel/tutoriel.mp4` },
-      { icon: BookOpen, title: t('Guides et exemples'), text: LANG === 'en' ? 'CV tips by job, by country, and for the letter (in French).' : 'Conseils de CV par métier, par pays, et pour la lettre.', href: `${SITE}/guides/` },
-      { icon: MessageCircle, title: t('Nous contacter'), text: t('Une question, un souci : nous répondons ici.'), tab: 'contact' },
-      { icon: Settings, title: t('Réglages'), text: t('Compte, mot de passe, langue, confidentialité.'), tab: 'reglages' },
+      { icon: BookOpen, title: t('Guides et exemples'), text: LANG === 'en' ? 'CV tips by job, by country, and for the letter (in French).' : 'Conseils de CV par métier et par pays.', href: `${SITE}/guides/` },
+      { icon: MessageCircle, title: t('Nous contacter'), text: t('Une question ? Nous répondons ici.'), tab: 'contact' },
+      { icon: Settings, title: t('Réglages'), text: t('Compte, langue, confidentialité.'), tab: 'reglages' },
     ],
   },
 ];
@@ -94,8 +95,7 @@ export function MorePage({ onNavigate }: { onNavigate: (t: Tab) => void }) {
           </ul>
         </section>
       ))}
-      <section>
-        <h2 className="mb-2 px-1 font-display text-lg font-semibold text-ink">{t('Bientôt')}</h2>
+      <Disclosure title={t('Bientôt')} hint={t('Ce qui arrive dans les prochaines versions')}>
         <ul className="divide-y divide-slate-100 overflow-hidden rounded-2xl border border-dashed border-slate-300 bg-white/60">
           {SOON.map((e) => (
             <li key={e.title} className="flex min-h-16 items-center gap-3 px-4 py-3">
@@ -112,7 +112,7 @@ export function MorePage({ onNavigate }: { onNavigate: (t: Tab) => void }) {
             </li>
           ))}
         </ul>
-      </section>
+      </Disclosure>
     </div>
   );
 }

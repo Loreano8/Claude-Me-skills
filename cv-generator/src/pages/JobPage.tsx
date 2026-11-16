@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { ArrowRight, BellRing, CheckCircle2, PenLine, ClipboardList, Eye, HelpCircle, Mail, MessagesSquare, PencilLine, Target } from 'lucide-react';
+import { StepGuide } from '../components/StepGuide.tsx';
 import { DownloadHint } from '../components/DownloadHint.tsx';
 import { NextSteps } from '../components/NextSteps.tsx';
 import type { AdaptResult, ClarifyResult, InterviewResult } from '../../shared/schema.ts';
@@ -13,7 +14,7 @@ import { ChangeReview } from '../components/ChangeReview.tsx';
 import type { CvDocument } from '../types.ts';
 import { JobInputCard } from '../components/JobInputCard.tsx';
 import { InterviewSheet } from '../components/InterviewSheet.tsx';
-import { Button, Card, Cost, Chip, Notice } from '../components/ui.tsx';
+import { Button, Card, Cost, Chip, Disclosure, Notice } from '../components/ui.tsx';
 import type { Tab } from '../App.tsx';
 
 import { t } from '../i18n.ts';
@@ -315,8 +316,30 @@ export function JobPage({ onNavigate }: { onNavigate: (t: Tab) => void }) {
 
   return (
     <div className="mx-auto max-w-3xl space-y-4">
+      {!hasJob && !empty && (
+        <StepGuide
+          id="offre"
+          title={t('Adapter votre CV à une annonce')}
+          steps={[t('Collez l’annonce ci-dessous (lien, texte, PDF ou capture d’écran).'), t('Touchez « Adapter mon CV à l’offre » : CVCasa reprend les mots-clés de l’annonce.')]}
+          action={t('Coller l’annonce')}
+          onAction={() => document.querySelector<HTMLTextAreaElement>('textarea')?.focus()}
+        />
+      )}
       <JobInputCard />
-      {hasJob && !empty && <KeywordCheck cv={cv} />}
+      {hasJob && !empty && !result && (
+        <StepGuide
+          id="offre-suite"
+          title={t('Votre annonce est enregistrée.')}
+          steps={[t('Touchez « Adapter mon CV à l’offre » plus bas : vous recevrez une version adaptée, sans toucher à votre CV de départ.')]}
+          action={t('Aller à « Adapter mon CV »')}
+          onAction={() => document.querySelector('[data-tour="apply"]')?.scrollIntoView({ behavior: 'smooth', block: 'start' })}
+        />
+      )}
+      {hasJob && !empty && (
+        <Disclosure title={t('Mon CV contient-il les mots de l’offre ? (gratuit)')} hint={t('Pour voir ce qui manque avant d’adapter')}>
+          <KeywordCheck cv={cv} />
+        </Disclosure>
+      )}
 
       <Card
         tour="apply"
