@@ -1512,6 +1512,11 @@ export const EN: Record<string, string> = {
   'Rédiger mon CV maintenant': 'Write my CV now',
   'Aller à « Mon CV »': 'Go to “My CV”',
   'Dernière étape : touchez « Générer mon CV » pour que votre document soit lu et votre CV rédigé.': 'Last step: tap “Generate my CV” so your document is read and your CV is written.',
+  'Apparence': 'Appearance',
+  'Automatique': 'Automatic',
+  'Clair': 'Light',
+  'Sombre': 'Dark',
+  'Automatique : l’appli suit le réglage de votre téléphone (clair le jour, sombre le soir, si vous l’avez réglé ainsi).': 'Automatic: the app follows your phone’s setting (light by day, dark at night, if you set it up that way).',
 // Messages du serveur (erreurs, veille) : traduits à l’envoi quand l’interface est en anglais.
   "Fichier trop volumineux (15 Mo maximum).": "File too large (15 MB maximum).",
   "Erreur interne du serveur.": "Internal server error.",

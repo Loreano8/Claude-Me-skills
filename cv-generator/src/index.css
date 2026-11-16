@@ -149,3 +149,61 @@ h2 {
     animation: none;
   }
 }
+
+/* ------------------------------------------------------------------ */
+/* Mode sombre (choisi dans Réglages, ou celui du téléphone).          */
+/* Les gris s'inversent ; les couleurs de marque gardent leurs fonds    */
+/* pleins (boutons) et passent en teintes sombres / textes clairs.      */
+/* ------------------------------------------------------------------ */
+:root[data-theme='dark'] {
+  color-scheme: dark;
+  --color-slate-50: #0b1220;
+  --color-slate-100: #131c2f;
+  --color-slate-200: #25314a;
+  --color-slate-300: #3a4965;
+  --color-slate-400: #7d8ba6;
+  --color-slate-500: #9aa8c0;
+  --color-slate-600: #b0bcd0;
+  --color-slate-700: #c8d1e0;
+  --color-slate-800: #dde4ee;
+  --color-slate-900: #f1f5f9;
+  --color-ink: #e9eeff;
+  --color-brand-50: #131d44;
+  --color-brand-100: #1a2860;
+  --color-brand-200: #2a3d8c;
+  --color-sun-100: #4a3a0c;
+  --color-sun-900: #ffe08a;
+  --color-emerald-50: #0d2a22;
+  --color-emerald-100: #123a2e;
+  --color-emerald-200: #1f6049;
+  --color-amber-50: #33260a;
+  --color-amber-100: #4a3510;
+  --color-amber-200: #6b4c14;
+  --color-red-50: #36161a;
+  --color-red-100: #4a1c22;
+  --color-red-200: #6e2c33;
+  --color-rose-100: #4a1c28;
+  --color-sky-50: #0c2538;
+  --color-sky-100: #103552;
+  --color-sky-200: #1f567f;
+  --color-violet-100: #2b1f55;
+}
+:root[data-theme='dark'] .bg-white { background-color: #111a2e; }
+:root[data-theme='dark'] :is(.bg-white\/95, .bg-white\/90, .bg-white\/80) { background-color: rgb(17 26 46 / 0.92); }
+:root[data-theme='dark'] :is(.bg-white\/70, .bg-white\/60) { background-color: rgb(17 26 46 / 0.65); }
+:root[data-theme='dark'] .hover\:bg-white:hover { background-color: #172238; }
+/* Fonds sombres voulus (cartes d'accueil, pastilles) : ils restent sombres. */
+:root[data-theme='dark'] .bg-ink { background-color: #101a4a; }
+:root[data-theme='dark'] .bg-slate-900 { background-color: #273349; }
+:root[data-theme='dark'] .bg-slate-800 { background-color: #202b40; }
+:root[data-theme='dark'] .bg-slate-700 { background-color: #34425d; }
+:root[data-theme='dark'] .text-slate-300 { color: #cbd5e1; }
+/* Textes de couleur : versions claires, lisibles sur fond sombre. */
+:root[data-theme='dark'] :is([class*='text-brand-6'], [class*='text-brand-7'], [class*='text-brand-8'], [class*='text-brand-9']) { color: #a5bdff; }
+:root[data-theme='dark'] .text-brand-100 { color: #dbe6fe; }
+:root[data-theme='dark'] :is([class*='text-emerald-6'], [class*='text-emerald-7'], [class*='text-emerald-8'], [class*='text-emerald-9']) { color: #6ee7b7; }
+:root[data-theme='dark'] :is([class*='text-amber-5'], [class*='text-amber-6'], [class*='text-amber-7'], [class*='text-amber-8'], [class*='text-amber-9']) { color: #fcd34d; }
+:root[data-theme='dark'] :is([class*='text-red-6'], [class*='text-red-7'], [class*='text-red-8']) { color: #fca5a5; }
+:root[data-theme='dark'] :is([class*='text-rose-5'], [class*='text-rose-7'], [class*='text-rose-8']) { color: #fda4af; }
+:root[data-theme='dark'] :is([class*='text-sky-6'], [class*='text-sky-8'], [class*='text-sky-9']) { color: #7dd3fc; }
+:root[data-theme='dark'] .text-violet-800 { color: #c4b5fd; }
