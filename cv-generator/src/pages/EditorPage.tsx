@@ -1,5 +1,5 @@
 import { useRef, useState } from 'react';
-import { AlignLeft, ArrowDown, BellRing, Eye, Target, ArrowUp, Award, Briefcase, Camera, FileText, GraduationCap, Heart, Languages, ListChecks, Paperclip, PenLine, Plus, Trash2, Undo2, User, Wrench, X } from 'lucide-react';
+import { AlignLeft, ArrowDown, BellRing, Eye, Target, ArrowUp, Award, Briefcase, Camera, FileText, GraduationCap, Heart, Languages, ListChecks, Loader2, Paperclip, PenLine, Plus, Trash2, Undo2, User, Wrench, X } from 'lucide-react';
 import type { Attachment } from '../../shared/schema.ts';
 import { settingsForLang, useActiveCv, useStore } from '../store.ts';
 import type { Certification, CvDocument, Education, Experience, LanguageSkill } from '../types.ts';
@@ -38,6 +38,9 @@ function QuickFill() {
   const [merge, setMerge] = useState(true);
   const [busy, setBusy] = useState<'fill' | 'improve' | null>(null);
   const [error, setError] = useState<string | null>(null);
+  // Erreur de lecture d'un fichier : affichée juste sous les boutons d'import, là où la personne regarde.
+  const [importError, setImportError] = useState<string | null>(null);
+  const [reading, setReading] = useState(false);
   const [suggestions, setSuggestions] = useState<string[]>([]);
   const [undo, setUndo] = useState<CvDocument | null>(null);
   /** Ancien CV importé : proposé ensuite pour « Écrire comme moi », si aucun style n'est encore retenu. */
@@ -93,7 +96,8 @@ function QuickFill() {
 
   async function onFiles(list: FileList | null) {
     if (!list?.length) return;
-    setError(null);
+    setImportError(null);
+    setReading(true);
     try {
       const added: Attachment[] = [];
       for (const f of Array.from(list)) {
@@ -103,17 +107,19 @@ function QuickFill() {
       setFiles((cur) => {
         const next = [...cur, ...added];
         if (next.length > MAX_QUICK_FILES) {
-          setError(t('{0} documents maximum à la fois.', [MAX_QUICK_FILES]));
+          setImportError(t('{0} documents maximum à la fois.', [MAX_QUICK_FILES]));
           return cur;
         }
         if (next.reduce((n, a) => n + a.data.length, 0) > MAX_QUICK_BYTES) {
-          setError(t('Ces documents sont trop lourds ensemble. Envoyez-en moins à la fois.'));
+          setImportError(t('Ces documents sont trop lourds ensemble. Envoyez-en moins à la fois.'));
           return cur;
         }
         return next;
       });
     } catch (e) {
-      setError((e as Error).message);
+      setImportError((e as Error).message);
+    } finally {
+      setReading(false);
     }
   }
 
@@ -130,7 +136,7 @@ function QuickFill() {
       {/* Ordre voulu : l'ancien CV d'abord, puis l'écrit ; la dictée n'est qu'une aide pour écrire, pas le point de départ. */}
       <div className="rounded-xl bg-white p-3 ring-1 ring-slate-200">
         <p className="text-sm font-semibold text-slate-900">{t('Vous avez déjà un CV ?')}</p>
-        <p className="mt-0.5 text-xs text-slate-500">{t('En PDF, en image, ou sur papier : prenez chaque page en photo, bien à plat et avec un bon éclairage ({0} documents maximum).', [MAX_QUICK_FILES])}</p>
+        <p className="mt-0.5 text-xs text-slate-500">{t('En PDF, en Word, en image, ou sur papier : prenez chaque page en photo, bien à plat et avec un bon éclairage ({0} documents maximum).', [MAX_QUICK_FILES])}</p>
         <input
           ref={fileInput}
           type="file"
@@ -176,6 +182,16 @@ function QuickFill() {
             </>
           )}
         </div>
+        {reading && (
+          <p className="mt-2.5 flex items-center gap-2 text-sm text-brand-700" role="status">
+            <Loader2 className="size-4 animate-spin" aria-hidden="true" /> {t('Lecture du fichier…')}
+          </p>
+        )}
+        {importError && (
+          <div className="mt-2.5" role="alert">
+            <Notice tone="error">{importError}</Notice>
+          </div>
+        )}
       </div>
 
       <div className="mt-3 rounded-xl bg-white p-3 ring-1 ring-slate-200">

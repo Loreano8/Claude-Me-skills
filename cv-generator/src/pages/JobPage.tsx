@@ -224,6 +224,8 @@ export function JobPage({ onNavigate }: { onNavigate: (t: Tab) => void }) {
 
   const hasJob = !!job.text.trim() || !!job.file;
   const empty = isCvEmpty(cv);
+  // CV sans expérience ni formation : l'adaptation n'aurait presque rien à adapter.
+  const thin = !empty && cv.experiences.length === 0 && cv.education.length === 0;
   const jobBody = { text: job.text, file: job.file ? { name: job.file.name, mediaType: job.file.mediaType, data: job.file.data } : null, answers };
 
   async function runAdapt(withAnswers: string) {
@@ -324,6 +326,13 @@ export function JobPage({ onNavigate }: { onNavigate: (t: Tab) => void }) {
         subtitle={<>{t('À partir du CV :')}{' '}<strong>{cvLabel(cv.label)}</strong></>}
       >
         {empty && <Notice tone="warn">{t('Remplissez d’abord votre CV dans « Mes infos » (la saisie rapide suffit).')}</Notice>}
+        {thin && (
+          <div className="space-y-2">
+            <Notice tone="warn">{t('Ce CV n’a ni expérience ni formation : l’adaptation sera très limitée. Importez votre ancien CV ou complétez-le d’abord, pour ne pas dépenser un crédit pour peu.')}</Notice>
+            <Button size="sm" variant="secondary" onClick={() => onNavigate('infos')}>
+              {t('Compléter mon CV')}</Button>
+          </div>
+        )}
         <div className="mt-3 flex flex-wrap gap-2">
           <Button variant="ai" size="lg" icon={<Target className="size-5" />} loading={busy === 'adapt'} disabled={!hasJob || empty || busy !== null} onClick={adapt}>
             {t('Adapter mon CV à l’offre')}{' '}<Cost />
