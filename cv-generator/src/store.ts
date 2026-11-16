@@ -207,7 +207,8 @@ export const useStore = create<State>()(
           const letter: CoverLetter = {
             ...s.letter,
             lang: result.language,
-            date: result.language === (s.letter.lang ?? 'fr') ? s.letter.date : letterDate(result.language),
+            // Une lettre qu'on vient d'écrire porte la date d'aujourd'hui (et non celle du jour où l'appli a été ouverte la 1re fois).
+            date: letterDate(result.language),
             recipientName: result.recipientName,
             recipientCompany: result.recipientCompany,
             recipientAddress: result.recipientAddress,

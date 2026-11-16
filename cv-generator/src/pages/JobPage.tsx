@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { ArrowRight, BellRing, CheckCircle2, PenLine, ClipboardList, Eye, HelpCircle, Mail, MessagesSquare, PencilLine, Target } from 'lucide-react';
+import { DownloadHint } from '../components/DownloadHint.tsx';
 import { NextSteps } from '../components/NextSteps.tsx';
 import type { AdaptResult, ClarifyResult, InterviewResult } from '../../shared/schema.ts';
 import { useActiveCv, useStore } from '../store.ts';
@@ -360,6 +361,9 @@ export function JobPage({ onNavigate }: { onNavigate: (t: Tab) => void }) {
         <ClarifyCard key={jobKey} questions={questions} busy={busy === 'adapt'} onDone={(a) => void runAdapt(a)} onSkip={() => void runAdapt('')} />
       )}
 
+      {result && (
+        <DownloadHint title={t('Votre CV adapté est prêt.')} text={t('Il est enregistré à part : votre CV de départ reste intact. Pour l’enregistrer en PDF, ouvrez l’aperçu.')} action={t('Voir et télécharger')} onClick={() => onNavigate('apercu')} />
+      )}
       {review && <ChangeReview base={review.base} adapted={review.adapted} keywords={savedKeywords?.key === jobKey ? savedKeywords.result.keywords : null} />}
       {shown && <AnalysisCard result={shown} onNavigate={onNavigate} />}
 

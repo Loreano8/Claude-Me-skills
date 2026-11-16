@@ -1460,7 +1460,15 @@ export const EN: Record<string, string> = {
   "Lecture du fichier…": "Reading the file…",
   "Ce CV n’a ni expérience ni formation : l’adaptation sera très limitée. Importez votre ancien CV ou complétez-le d’abord, pour ne pas dépenser un crédit pour peu.": "This CV has no experience or education: the tailoring will be very limited. Import your old CV or complete it first, so you don’t spend a credit for little.",
   "Compléter mon CV": "Complete my CV",
-  // Messages du serveur (erreurs, veille) : traduits à l’envoi quand l’interface est en anglais.
+    'Votre CV est prêt.': 'Your CV is ready.',
+  'Pour l’enregistrer en PDF : onglet « Modèle et téléchargement », en haut de cette page.': 'To save it as a PDF: use the “Template and download” tab at the top of this page.',
+  'Voir et télécharger mon CV': 'View and download my CV',
+  'Votre CV adapté est prêt.': 'Your tailored CV is ready.',
+  'Il est enregistré à part : votre CV de départ reste intact. Pour l’enregistrer en PDF, ouvrez l’aperçu.': 'It is saved separately: your original CV is untouched. To save it as a PDF, open the preview.',
+  'Votre lettre est prête.': 'Your letter is ready.',
+  'Pour l’enregistrer : boutons « PDF » et « Word » (en haut à droite sur ordinateur, tout en bas sur téléphone).': 'To save it: use the “PDF” and “Word” buttons (top right on a computer, at the very bottom on a phone).',
+  'Aller aux boutons de téléchargement': 'Go to the download buttons',
+// Messages du serveur (erreurs, veille) : traduits à l’envoi quand l’interface est en anglais.
   "Fichier trop volumineux (15 Mo maximum).": "File too large (15 MB maximum).",
   "Erreur interne du serveur.": "Internal server error.",
   "Les comptes ne sont pas activés sur ce serveur.": "Accounts aren’t enabled on this server.",

@@ -1,4 +1,6 @@
 import { useRef, useState } from 'react';
+import { useQuickDraft } from '../lib/quickDraft.ts';
+import { DownloadHint } from '../components/DownloadHint.tsx';
 import { AlignLeft, ArrowDown, BellRing, Eye, Target, ArrowUp, Award, Briefcase, Camera, FileText, GraduationCap, Heart, Languages, ListChecks, Loader2, Paperclip, PenLine, Plus, Trash2, Undo2, User, Wrench, X } from 'lucide-react';
 import type { Attachment } from '../../shared/schema.ts';
 import { settingsForLang, useActiveCv, useStore } from '../store.ts';
@@ -33,16 +35,16 @@ function QuickFill() {
   const updateCv = useStore((s) => s.updateCv);
   const fileInput = useRef<HTMLInputElement>(null);
   const cameraInput = useRef<HTMLInputElement>(null);
-  const [text, setText] = useState('');
-  const [files, setFiles] = useState<Attachment[]>([]);
+  const draft = useQuickDraft();
+  const { text, files, suggestions, undo, done } = draft;
+  const setText = (v: string | ((cur: string) => string)) => draft.set({ text: typeof v === 'function' ? v(useQuickDraft.getState().text) : v });
+  const setFiles = (f: Attachment[] | ((cur: Attachment[]) => Attachment[])) => draft.set({ files: typeof f === 'function' ? f(useQuickDraft.getState().files) : f });
   const [merge, setMerge] = useState(true);
   const [busy, setBusy] = useState<'fill' | 'improve' | null>(null);
   const [error, setError] = useState<string | null>(null);
   // Erreur de lecture d'un fichier : affichée juste sous les boutons d'import, là où la personne regarde.
   const [importError, setImportError] = useState<string | null>(null);
   const [reading, setReading] = useState(false);
-  const [suggestions, setSuggestions] = useState<string[]>([]);
-  const [undo, setUndo] = useState<CvDocument | null>(null);
   /** Ancien CV importé : proposé ensuite pour « Écrire comme moi », si aucun style n'est encore retenu. */
   const [styleOffer, setStyleOffer] = useState<Attachment[] | null>(null);
   const [styleBusy, setStyleBusy] = useState(false);
@@ -64,6 +66,7 @@ function QuickFill() {
   }
 
   async function run(mode: 'fill' | 'improve') {
+    draft.set({ done: false });
     setBusy(mode);
     setError(null);
     try {
@@ -80,8 +83,7 @@ function QuickFill() {
         const next = applyAiContent(c, res.cv);
         return res.language && res.language !== c.settings.headingLang ? { ...next, settings: { ...next.settings, ...settingsForLang(res.language) } } : next;
       });
-      setUndo(before);
-      setSuggestions(res.suggestions);
+      draft.set({ undo: before, suggestions: res.suggestions, done: true });
       if (mode === 'fill') {
         if (files.length && !hasStyle) setStyleOffer(files);
         setText('');
@@ -199,7 +201,7 @@ function QuickFill() {
           {files.length ? t('Quelque chose à ajouter ? (facultatif)') : t('Pas de CV ? Écrivez votre parcours en quelques lignes')}
         </label>
         <p className="mt-0.5 mb-2 text-xs text-slate-500">{t('Dans le désordre, sans phrases parfaites : vos études, vos emplois, ce que vous savez faire.')}</p>
-        <TextArea id="quick-text" value={text} onChange={setText} rows={6} placeholder={QUICK_PLACEHOLDER} />
+        <TextArea id="quick-text" value={text} onChange={(v) => setText(v)} rows={6} placeholder={QUICK_PLACEHOLDER} />
         <div className="mt-2" data-tour="mic">
           <MicButton
             onText={(t) => setText((cur) => appendSpoken(cur, t))}
@@ -236,8 +238,7 @@ function QuickFill() {
             icon={<Undo2 className="size-4" />}
             onClick={() => {
               updateCv(() => undo);
-              setUndo(null);
-              setSuggestions([]);
+              draft.set({ undo: null, suggestions: [], done: false });
             }}
           >
             {t('Annuler')}</Button>
@@ -248,6 +249,11 @@ function QuickFill() {
       {error && (
         <div className="mt-3">
           <Notice tone="error">{error}</Notice>
+        </div>
+      )}
+      {done && !busy && (
+        <div className="mt-3">
+          <DownloadHint title={t('Votre CV est prêt.')} text={t('Pour l’enregistrer en PDF : onglet « Modèle et téléchargement », en haut de cette page.')} action={t('Voir et télécharger mon CV')} onClick={() => { window.location.hash = 'apercu'; }} />
         </div>
       )}
       {suggestions.length > 0 && (

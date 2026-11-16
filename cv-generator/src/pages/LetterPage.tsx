@@ -15,6 +15,7 @@ import { ProOffer } from '../components/ProUnlock.tsx';
 import { Button, Card, Cost, Field, Notice, Select, TextArea, Toggle } from '../components/ui.tsx';
 import { SendApplication } from '../components/SendApplication.tsx';
 import { TranslateLetter } from '../components/TranslateLetter.tsx';
+import { DownloadHint } from '../components/DownloadHint.tsx';
 import { NextSteps } from '../components/NextSteps.tsx';
 import type { Tab } from '../App.tsx';
 
@@ -234,6 +235,14 @@ export function LetterPage({ onNavigate }: { onNavigate: (t: Tab) => void }) {
   return (
     <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
       <div className="space-y-4">
+        {letter.body.trim() && (
+          <DownloadHint
+            title={t('Votre lettre est prête.')}
+            text={t('Pour l’enregistrer : boutons « PDF » et « Word » (en haut à droite sur ordinateur, tout en bas sur téléphone).')}
+            action={t('Aller aux boutons de téléchargement')}
+            onClick={() => document.querySelector('[data-tour="letter-export"]')?.scrollIntoView({ behavior: 'smooth', block: 'center' })}
+          />
+        )}
         <WriteLikeMe compact />
         <GenerateCard onNavigate={onNavigate} />
 
