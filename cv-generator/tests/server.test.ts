@@ -74,6 +74,11 @@ describe('API', () => {
     expect((await post(app, '/api/ai/structure', { text: '  ' })).status).toBe(400);
     expect((await post(app, '/api/ai/adapt', { cv: toAiContent(sampleCv()), job: { text: '' } })).status).toBe(400);
     expect((await post(app, '/api/ai/adapt', { cv: { nope: true }, job: { text: 'offre' } })).status).toBe(400);
+    // CV sans expérience ni formation : rien à adapter, refusé avant tout crédit.
+    const thin = toAiContent(sampleCv());
+    const refused = await post(app, '/api/ai/adapt', { cv: { ...thin, experiences: [], education: [] }, job: { text: 'offre' } });
+    expect(refused.status).toBe(400);
+    expect(JSON.stringify(await refused.json())).toContain('rien à adapter');
     expect((await post(app, '/api/ai/structure', { text: 'x', file: { name: 'a.exe', mediaType: 'application/x-msdownload', data: 'AA==' } })).status).toBe(400);
   });
 

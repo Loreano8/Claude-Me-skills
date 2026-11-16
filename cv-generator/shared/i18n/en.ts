@@ -1663,4 +1663,5 @@ export const EN: Record<string, string> = {
   "Ce paiement n’est plus en attente.": "This payment is no longer pending.",
   "Le paiement en crypto n’est pas activé.": "Crypto payment is not enabled.",
   "Montant reçu trop faible : il ne vaut pas un crédit.": "Amount received too low: it is not worth one credit.",
+  'Votre CV n’a ni expérience ni formation : il n’y a rien à adapter. Importez votre ancien CV ou complétez-le dans « Mon CV » d’abord. Aucun crédit n’a été pris.': 'Your CV has no experience or education, so there is nothing to tailor. Import your old CV or complete it under “My CV” first. No credit was taken.',
 };

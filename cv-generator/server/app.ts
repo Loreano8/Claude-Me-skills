@@ -1136,7 +1136,12 @@ export function createApp({ fetchPage = fetchJobPage, ai, aiEn = null, allowedOr
   app.post(
     '/api/ai/adapt',
     aiRoute('adapt', AdaptRequest, (ai, body) => ai.adapt(body), (body) =>
-      !body.job.text.trim() && !body.job.file ? 'Collez le texte de l’offre ou joignez le fichier de l’annonce.' : null,
+      !body.job.text.trim() && !body.job.file
+        ? 'Collez le texte de l’offre ou joignez le fichier de l’annonce.'
+        : // Sans expérience ni formation, il n'y a rien à adapter : on ne prend pas de crédit pour presque rien.
+          body.cv.experiences.length === 0 && body.cv.education.length === 0
+          ? 'Votre CV n’a ni expérience ni formation : il n’y a rien à adapter. Importez votre ancien CV ou complétez-le dans « Mon CV » d’abord. Aucun crédit n’a été pris.'
+          : null,
     ),
   );
 
