@@ -3,7 +3,8 @@ import { CURRENCIES, SEED_RATES, currencyForCountry, currencyForTimeZone, format
 import { LOCALE } from '../i18n.ts';
 import { api } from './api.ts';
 
-// Devise d'affichage du visiteur : devinée d'après le fuseau horaire de son appareil, puis celle qu'il choisit.
+// Devise d'affichage du visiteur : celle de son pays, ou celle qu'il choisit pour la visite en cours.
+// Son choix n'est gardé que jusqu'à la fermeture de la page : à la visite suivante, on repart de la devise du pays.
 // Les cours du jour viennent du serveur (une fois par jour) ; en attendant, des cours de secours.
 
 const KEY = 'cvcasa-devise';
@@ -35,10 +36,19 @@ const WEEK = 7 * 86_400_000;
 const known = read<{ country: string; at: number }>(COUNTRY_KEY);
 const country = known && isCountry(known.country) ? known.country : null;
 
+/** Choix de devise de la visite en cours (oublié à la fermeture de la page). */
+function readSession(key: string): string | null {
+  try {
+    return sessionStorage.getItem(key);
+  } catch {
+    return null;
+  }
+}
+
 /** Région du visiteur (exemples affichés : villes, photos). Fixée au chargement de la page. */
 export const REGION: Region = country ? regionForCountry(country) : regionForTimeZone(timeZone());
 
-const saved = read<string>(KEY);
+const saved = readSession(KEY);
 const chosen = isCurrency(saved);
 let state: { currency: Currency; rates: Rates } = {
   currency: chosen ? (saved as Currency) : country ? currencyForCountry(country) : currencyForTimeZone(timeZone()),
@@ -58,7 +68,7 @@ function loadCountry() {
       } catch {
         /* stockage indisponible */
       }
-      if (!read<string>(KEY) && state.currency !== currencyForCountry(loc)) {
+      if (!readSession(KEY) && state.currency !== currencyForCountry(loc)) {
         state = { ...state, currency: currencyForCountry(loc) };
         emit();
       }
@@ -96,7 +106,7 @@ function loadRates() {
 export function setCurrency(currency: Currency) {
   state = { ...state, currency };
   try {
-    localStorage.setItem(KEY, JSON.stringify(currency));
+    sessionStorage.setItem(KEY, currency);
   } catch {
     /* stockage indisponible */
   }
