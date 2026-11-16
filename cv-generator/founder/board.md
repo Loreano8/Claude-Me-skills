@@ -1,62 +1,55 @@
-# Conseil founder — CV Studio (second examen, 27 octobre 2026)
+# Conseil founder — CVCasa (troisième examen, 16 novembre 2026)
 
-**Vote : 3 FUND IF (financer sous conditions) — note moyenne 4,7/10**
-(Offers 5/10 · Monopoly 4/10 · Product 5/10)
+**Vote : 3 FUND IF (financer sous conditions) — note moyenne 4,0/10**
+(Offres 4/10 · Monopole 3/10 · Produit 5/10)
 
-**Rappel du premier examen (25 octobre)** : 3 FUND IF, 4,7/10, avec exactement les mêmes notes. Le conseil reconnaît des progrès réels, mais pas sur les deux points qu'il jugeait décisifs : la preuve et la concentration. Les détails sont dans `founder/board/` ; l'ancien examen est archivé dans `founder/historique/2026-10-25/`.
+**Comparaison** : les deux premiers examens (25 et 27 octobre) donnaient 4,7/10. **La note baisse.** Le conseil ne juge pas le travail fourni, il juge les preuves : en trois semaines, le produit a beaucoup avancé, mais il n'y a toujours aucun client payant en dehors du fondateur. La lentille Monopole prévient : si ses conditions ne sont pas tenues au prochain examen, son vote passe à **PASS**. Les avis complets sont dans `founder/board/` ; l'examen précédent est archivé dans `founder/historique/2026-10-27/`.
 
 ## Ce qui a progressé (reconnu par les trois membres)
 
-- ✅ **La marge est prouvée.** L'IA coûte 7 à 18 FCFA par action, et un crédit se vend 120 à 167 FCFA. C'était la condition n° 1 du premier examen.
-- ✅ **Le cœur du produit est meilleur.** Partager une offre, répondre à 1 ou 2 questions, obtenir le CV adapté avec le score : Product parle d'« une expérience décrivable en une phrase ».
-- ✅ **Le chemin jusqu'au dépôt de la candidature est complet.** Scanner, dossier PDF unique, coffre-fort : Offers y voit exactement la bonne méthode, qui consiste à lever chaque obstacle du parcours.
-- ✅ **Les coutures de confiance commencent à exister** : support intégré, récupération de compte sans e-mail, témoignages vérifiés.
-- ✅ **L'appli est honnête sur ses limites.** Elle dit clairement quand une publication LinkedIn ou un lien WhatsApp ne peut pas être lu.
+- ✅ **La confiance de base est réglée** : nom CVCasa, domaine cvcasa.com, e-mail, prix en monnaie locale. C'était une condition de l'examen précédent.
+- ✅ **La marge reste très bonne**, même avec l'offre de lancement (7 à 18 FCFA de coût IA pour 86 à 167 FCFA de crédit).
+- ✅ **La bonne méthode a commencé** : deux testeurs ont trouvé trois vrais problèmes, corrigés le jour même ; les pages ont été allégées, un guide « Et maintenant ? » ajouté, un CV vide ne peut plus être facturé.
 
 ## Les risques soulevés par plusieurs membres (les plus graves d'abord)
 
-1. **Aucune preuve et aucun canal** (les trois membres). Il y a 1 acheteur, le fondateur, et 0 témoignage. Les vidéos ne sont pas diffusées et le coût d'acquisition n'est pas mesuré. Le seul vrai utilisateur a 15 crédits offerts : il ne voit jamais le moment de payer. Pour Monopoly, sans canal répétable, « il n'y a pas d'entreprise, seulement un bon produit ».
-2. **La dispersion s'est aggravée** (les trois membres). Le premier examen demandait une promesse unique. Depuis, on a ajouté cinq fonctions au lieu d'en choisir une. Pour Product, si la phrase qui décrit CV Studio contient « et », il faut retirer quelque chose.
-3. **La grille de prix est devenue compliquée** (Offers, Product). Il y a des crédits à 1, à 2, au-delà de 3 pages, au-delà de 2 pièces, par page manuscrite… On ne la comprend pas en dix secondes sur un petit téléphone. Et on vend des « crédits » (une action) au lieu d'un résultat (« un dossier prêt à déposer »).
-4. **Des failles de confiance** (les trois membres) :
-   - le site est en `onrender.com`, sans nom de domaine ni e-mail : il « ressemble à un test » au moment de payer ;
-   - la phrase du coffre-fort doit être **exacte** : les documents restent sur le téléphone, mais une copie de la clé est sur le serveur ;
-   - la récupération de compte, validée à la main, deviendra un goulot vers 100 utilisateurs.
-5. **Rien n'empêche la copie** (Monopoly, Offers). Le seul avantage durable possible reste le savoir local (règles des concours, normes par pays) et une marque bâtie sur des témoignages, et les deux sont encore à construire.
+1. **Toujours aucune preuve que des gens paient** (les trois membres). 6 comptes, 0 client payant hors fondateur, 0 témoignage. Les testeurs avaient des crédits offerts : ils n'ont jamais vu le moment de payer. Une personne a lancé un paiement Mobile Money puis l'a laissé expirer, et personne ne sait pourquoi. Les trois membres posent la même question : *l'avez-vous appelée ?*
+2. **La dispersion continue** (les trois membres). L'examen précédent demandait de choisir une promesse et de couper. Depuis, une dizaine de fonctions ont été ajoutées (alertes emploi, e-mail de candidature, relances, photo, « écrire comme moi », QR code…). Les alertes emploi n'ont aucun utilisateur. Pour la lentille Produit, replier les outils dans des menus « cache le problème, il ne le règle pas ».
+3. **On vend des crédits, pas un résultat, et la grille s'est encore compliquée** (Offres, Produit). Trois packs, offre de lancement, offre de retour sur 72 h, Pro à 2 crédits, seuils gratuits différents. Ce n'est pas lisible en dix secondes sur un petit téléphone.
+4. **Aucun canal mesuré** (Offres, Monopole). 172 visites en 30 jours, presque toutes sans source connue. Aucun coût par client.
+5. **Rien n'empêche la copie** (Monopole). Le cœur est une IA que tout le monde peut louer. Le seul avantage possible, le savoir local (règles des concours, normes par pays), n'a pas été commencé.
+
+## Les désaccords (gardés volontairement)
+
+- **Le prix** : la lentille Offres veut des offres nommées **nettement au-dessus de 3 000 FCFA** (« Mon dossier concours prêt », 5 000 à 10 000 FCFA à tester) avec une garantie. La lentille Produit veut surtout une règle **compréhensible en dix secondes**, sans fixer de niveau de prix. Les deux sont compatibles : une offre nommée simple, mais le niveau de prix reste à tester (`/founder-pricing`).
+- **Les nouvelles fonctions** : la lentille Monopole exige un **gel complet** jusqu'au 31 décembre (corrections de bugs seulement). La lentille Produit demande seulement de **retirer du parcours principal** ce qui ne sert pas la promesse, jusqu'aux 30 premiers acheteurs.
+- **La sévérité** : la lentille Produit (5/10) reconnaît la qualité du travail invisible ; la lentille Monopole (3/10) estime que, sans canal, « la moitié de l'entreprise est à zéro ».
 
 ## Les conditions, en liste à cocher
 
-**Preuve et canal, avant toute dépense publicitaire importante :**
-- [ ] **Regarder 10 vraies personnes sans crédits offerts** faire tout le parcours, d'une vidéo jusqu'au reçu MoMo. Noter et corriger chaque hésitation. *(les trois membres)*
-- [ ] **20 à 30 acheteurs hors entourage**, puis 100 via un canal répétable (statuts WhatsApp, vidéos, écoles, cybercafés), avec le coût par client mesuré. *(les trois)*
-- [ ] **5 témoignages vérifiés** « j'ai eu un entretien / le poste ». Commencer par le testeur de confiance. *(les trois)*
+**Preuve, avant le 31 décembre (fin de l'offre de lancement) :**
+- [ ] **Appeler la personne qui a laissé expirer son paiement** et noter pourquoi. *(les trois membres)*
+- [ ] **10 acheteurs réels hors entourage, sans crédits offerts**, avec la source de chacun notée. *(Offres, Monopole ; Produit en demande 3 d'abord)*
+- [ ] **3 témoignages vérifiés** (nom, ville ou photo/voix, accord écrit). *(les trois membres)*
+- [ ] **Regarder 10 inconnus** aller d'une vidéo jusqu'au reçu Mobile Money, sans crédits offerts ; noter et corriger chaque arrêt, surtout au paiement. *(Produit)*
 
-**Concentration :**
-- [ ] **Une seule promesse** sur l'accueil, les vidéos et le premier écran. Proposée par Product : *« Partagez une offre, recevez votre CV adapté avec le score avant→après »*. *(les trois)*
-- [ ] **Mettre au second plan** jusqu'aux 30 premiers acheteurs ce qui ne sert pas cette promesse : texte manuscrit, coffre-fort, analyse de modèle. Les fonctions restent, mais ne sont plus mises en avant. *(Product, Monopoly)*
-- [ ] **Arrêter d'ajouter des fonctions** tant que la preuve et le canal ne sont pas obtenus. *(Monopoly)*
+**Focus :**
+- [ ] **Une seule promesse**, en une phrase sans « et », seule sur l'accueil, les vidéos et le premier écran. Proposée : *« Collez une offre, recevez votre CV adapté avec son score avant→après. »* *(les trois membres)*
+- [ ] **Plus de nouvelles fonctions** jusqu'au 31 décembre, ou au minimum les retirer du parcours principal jusqu'aux 30 premiers acheteurs. *(Monopole : gel ; Produit : retrait)*
 
-**L'offre :**
-- [ ] **Simplifier la grille** : une règle gratuite claire, des offres par objectif, des crédits seulement en complément. *(Offers, Product)*
-- [ ] **Lancer 2 offres nommées** (« Dossier Canada », « Pack Concours ») nettement au-dessus de 3 000 FCFA, qui réunissent CV adapté, lettre, préparation à l'entretien, scanner et dossier PDF, avec une **garantie écrite**. Par exemple : « score amélioré ou crédit rendu ». *(Offers)*
+**Prix et offre :**
+- [ ] **Une grille simple** : le gratuit, une ou deux offres nommées vendues comme un résultat, les crédits seulement en complément. *(Offres, Produit)*
+- [ ] **Une offre nommée par segment** (concours, départ à l'étranger…) avec une garantie que le CFO peut tenir, prix à tester au-dessus de 3 000 FCFA. *(Offres → `/founder-offer`, `/founder-pricing`)*
+- [ ] **Tenir la date du 31 décembre** de l'offre de lancement, sans prolongation silencieuse. *(Offres)*
 
-**Confiance et coutures :**
-- [ ] **Acheter le nom de domaine avant la pub.** *(Monopoly, Product)*
-- [ ] **Une phrase exacte sur le coffre-fort** : « vos documents restent sur ce téléphone ; une copie de la clé est gardée sur votre compte pour réinitialiser un code oublié ». *(Monopoly, Product)*
-- [ ] Alerte avant que le solde IA ne soit vide, et un message clair si un paiement reste en attente. *(Product, déjà demandé au premier examen)*
-- [ ] Retrouver ses CV et lettres sur un autre téléphone. *(Product, déjà demandé au premier examen)*
-- [ ] **Commencer l'avantage durable** : une base écrite et tenue à jour des pièces demandées par concours et des normes par pays. *(Monopoly)*
-
-## Les désaccords
-
-- **Offers** est le plus positif sur les nouveautés. Le scanner, le dossier et le coffre ont de la valeur, à condition d'être des **bonus dans une offre nommée** et non des lignes de prix séparées.
-- **Monopoly** reste le plus sévère (4/10). Les nouvelles fonctions élargissent la surface au lieu de creuser un fossé. Il voit pourtant dans le coffre-fort et le dossier le **premier vrai motif de retour**, et propose de mesurer combien d'utilisateurs réutilisent leurs documents : ce serait le premier signe de fidélité.
-- **Product** juge le cœur meilleur qu'avant, mais veut **cacher** ce qui disperse plutôt que l'expliquer.
+**Canal et défense :**
+- [ ] **Mesurer un seul canal** (vidéos courtes, ambassadeur ou groupes WhatsApp) et son coût par client en FCFA, temps compris, avant toute publicité payante. *(Offres, Monopole → `/founder-marketing`, `/founder-cfo`)*
+- [ ] **Commencer le savoir local** : une première fiche des pièces et règles pour 3 concours béninois, tenue à jour. *(Monopole)*
 
 ## La version la plus forte que le conseil voit
 
-C'est la même direction qu'au premier examen, plus nette. **CV Studio, c'est : « Partagez une offre, recevez votre CV adapté, avec le score avant→après. »** C'est la seule chose dite sur l'accueil et dans les vidéos, pour les jeunes diplômés et chercheurs d'emploi d'Afrique francophone, sur mobile, payée en MoMo.
+Ce n'est pas tout à fait ce qui est construit aujourd'hui. Le conseil voit un service plus étroit : **« Collez une offre, recevez votre CV adapté avec son score avant→après »**, vendu aux candidats d'Afrique de l'Ouest francophone qui ont une échéance précise (un concours, une candidature à l'étranger), sous forme d'**un dossier prêt à déposer** à un prix clair, payé en Mobile Money, avec une garantie simple. Tout le reste (scanner, alertes, relances, photo…) devient un bonus du dossier, pas une fonction de plus à expliquer. La défense ne viendra pas de l'IA, que tout le monde peut louer, mais du **savoir local** (pièces et règles de chaque concours, normes de chaque pays) et d'une **marque bâtie sur des témoignages vérifiés**. Le produit est prêt pour ce test ; ce qui manque, ce sont les dix premiers acheteurs.
 
-Ce qui a été construit depuis ne se jette pas : ça devient **le contenu des offres par objectif**. Le « Dossier Canada » et le « Pack Concours » comprennent le CV adapté, la lettre, l'entretien, le scanner des pièces et le dossier PDF prêt à déposer, avec une garantie. Les documents du coffre font revenir la personne à chaque nouvelle candidature.
+## Prochaine étape suggérée
 
-Le conseil est clair : **le produit est assez bon pour être vendu. Ce qui manque maintenant, c'est la preuve, pas une fonction de plus.** Le prochain chantier n'est pas technique : il s'agit de vendre à 20 inconnus et de les regarder faire.
+`/founder-pricing` puis `/founder-offer` pour construire l'offre nommée « dossier prêt » et son prix ; ou `/founder-launch` pour organiser le test réel des 10 premiers acheteurs avant le 31 décembre.

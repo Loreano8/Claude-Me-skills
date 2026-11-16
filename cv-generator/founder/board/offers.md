@@ -1,47 +1,32 @@
-# Lentille Offers
-Note : 5/10 | Vote : FUND IF
-
-## Ce qui a changé depuis le premier examen
-
-**Résolu : la marge.** Le coût réel par action est mesuré (7 à 18 FCFA avec Sonnet), alors qu'un crédit se vend entre 120 et 167 FCFA. Chaque action vendue rapporte nettement plus qu'elle ne coûte. Ce risque n'est plus bloquant.
-
-**Partiellement résolu : la sécurité du parcours.** Récupération de compte sans e-mail, chat de support, « Mes documents ». Il reste à confirmer l'alerte de solde IA, le message en cas de paiement en attente et la récupération du CV sur un autre téléphone : le brief n'en parle pas.
-
-**Non résolu :**
-- Aucune preuve : 1 acheteur (le fondateur), 0 témoignage vérifié, 0 utilisateur observé.
-- Aucun pack nommé par objectif (« Dossier Canada », « Pack Concours ») ni garantie. Le pack le plus cher reste à 3 000 FCFA.
-- Pas de promesse unique : on a ajouté des fonctions au lieu d'en choisir une.
-
-**Nouveaux risques créés par les nouveautés :** la grille de prix est maintenant plus compliquée (Pro à 2 crédits, scanner gratuit jusqu'à 3 pages, dossier gratuit jusqu'à 2 pièces, 1 crédit par page manuscrite…). Chaque règle de plus, c'est un effort de plus pour l'acheteur. Le coffre-fort ajoute aussi une promesse de confiance (documents d'identité, code PIN, clé sur le serveur) qu'un seul incident pourrait détruire.
+# Lentille Offres
+Note : 4/10 | Vote : FUND IF
 
 ## Ce qui est solide
 
-- **Le marché tient sur la douleur.** Chercher un emploi, préparer un concours ou un dossier pour l'étranger, c'est un vrai enjeu pour l'acheteur, et il l'utilise sur son téléphone, là où il est déjà.
-- **L'empilement s'est beaucoup amélioré.** Le scanner, le PDF de dossier unique et le coffre-fort répondent aux vrais obstacles entre « j'ai un CV » et « j'ai déposé ma candidature ». C'est exactement ce que demande la lentille : repérer chaque problème du parcours et le résoudre à faible coût. Ces briques coûtent peu à fournir et ont de la valeur pour l'acheteur.
-- **L'effort demandé baisse.** Dicter son CV, photographier un ancien CV papier, partager une offre en un geste, profiter des questions gratuites avant l'adaptation : tout cela diminue l'effort, l'un des quatre leviers de valeur.
-- **Le score avant→après** donne un résultat visible tout de suite. C'est le meilleur élément de crédibilité du produit.
+- **La marge reste très bonne.** Une action coûte 7 à 18 FCFA en IA. Un crédit se vend 86 à 167 FCFA. Même avec l'offre de lancement, chaque vente rapporte bien plus qu'elle ne coûte.
+- **L'effort demandé à l'acheteur a baissé.** Guide « Et maintenant ? » après chaque étape, pages allégées, bannières « où télécharger », blocage d'un CV vide sans le facturer. C'est un des quatre leviers de valeur : moins d'effort, plus de valeur perçue.
+- **La confiance de base est réglée.** Un vrai domaine (cvcasa.com) et un e-mail. C'était une condition du dernier examen. Elle est remplie.
+- **Une urgence réelle.** L'offre de lancement a une vraie date de fin (31 décembre). C'est acceptable tant que la date est tenue. Une fausse urgence, prolongée en silence, détruirait la confiance.
 
-## Ce qui pourrait tuer le projet (les 3 plus dangereux d'abord)
+## Ce qui pourrait tuer le projet (les 3 principaux, le plus dangereux d'abord)
 
-1. **La probabilité perçue est toujours à zéro.** Sans témoignage, sans chiffre d'entretiens obtenus, sans visage connu, l'acheteur n'a aucune raison de croire que ça marche mieux qu'un assistant IA gratuit ou que l'opérateur du cybercafé. C'est le levier sur lequel la plupart des offres échouent, et rien n'a bougé ici.
-2. **Une offre vendue comme une marchandise.** Des crédits à l'unité, c'est un prix qui se compare. On vend des actions (« 1 crédit ») et pas un résultat (« un dossier prêt à déposer pour le Canada »). Ça pousse à la comparaison de prix, exactement ce que le premier examen demandait d'éviter.
-3. **La dispersion.** CV, lettre, entretien, traduction, scanner, manuscrit, coffre-fort : l'acheteur ne sait pas quel est LE résultat qu'on lui promet. Les nouveautés devraient être des bonus dans une offre nommée, pas des lignes de plus dans une grille de prix.
-
-**Question ouverte sur le marché :** le pouvoir d'achat de la cible, et sa facilité à être atteinte à un coût acceptable, ne sont toujours pas mesurés.
+1. **Personne n'a encore payé.** 6 comptes, 0 client payant hors fondateur, 0 témoignage. Une personne a commencé un paiement et l'a abandonné. La « probabilité perçue » (est-ce que l'acheteur croit que ça va marcher pour lui ?) reste à zéro. C'est le levier où la plupart des offres échouent. En trois semaines, rien n'a bougé ici. Les testeurs avaient des crédits gratuits : leur usage prouve que le produit sert, pas que les gens paient.
+2. **On vend toujours des crédits, pas un résultat.** Le dernier examen demandait des packs nommés par objectif (« Dossier concours », « Candidature à l'étranger ») avec une garantie. Ils n'existent pas. À la place, de nouvelles règles se sont ajoutées : offre de lancement, offre de retour, parrainage, ambassadeurs, veille payante après la première. Chaque règle de plus, c'est un effort de plus pour comprendre ce qu'on achète. Et un crédit, ça se compare au prix : c'est le chemin de la marchandise.
+3. **Le marché n'est toujours pas mesuré.** La douleur est forte. Mais personne ne sait encore si la cible peut et veut payer, ni combien coûte pour l'atteindre. 172 visites en 30 jours, presque toutes sans source connue. Sans canal mesuré, une bonne offre ne trouve pas ses acheteurs.
 
 ## Les questions que je poserais au fondateur
 
-- Quel segment paie le plus pour être sûr du résultat : les candidats au Canada, aux concours ou les jeunes diplômés ? Avez-vous parlé à 10 d'entre eux ?
-- Un candidat au Canada paierait-il 3 fois le prix du plus gros pack pour un dossier complet avec relecture et garantie ? Pourquoi ne pas tester ?
-- Quelle garantie pouvez-vous tenir ? Par exemple : « score de correspondance amélioré ou crédit rendu ».
-- Le testeur de confiance a-t-il obtenu un entretien ? Pouvez-vous en faire un témoignage vérifié ?
-- Pourriez-vous doubler vos prix et rester le choix évident ? Sinon, que manque-t-il ?
-- Combien de personnes comprennent la grille de prix sans aide ?
+- La personne qui a laissé expirer son paiement : lui avez-vous parlé ? Pourquoi s'est-elle arrêtée ?
+- Quel segment a le plus de raisons de payer cher pour être sûr du résultat : concours, départ à l'étranger, jeunes diplômés ? Avez-vous parlé à 10 d'entre eux ?
+- Quelle garantie pouvez-vous tenir sans perdre d'argent ? Par exemple : « score de correspondance amélioré, sinon crédit rendu ».
+- Un candidat paierait-il 5 000 à 10 000 FCFA pour un dossier complet prêt à déposer ? Il faut le tester (/founder-pricing, /founder-offer).
+- Combien coûte un client avec un seul canal ? Personne n'a ce chiffre (/founder-cfo, /founder-consumer).
+- Un visiteur comprend-il la grille de prix sans aide, en moins d'une minute ?
 
 ## Si FUND IF : les conditions
 
-1. **Lancer 2 offres nommées par objectif** (« Dossier Canada », « Pack Concours »), à un prix nettement au-dessus de 3 000 FCFA. Chacune empile CV adapté, lettre, préparation à l'entretien, scanner et dossier PDF, avec une garantie claire et écrite.
-2. **Simplifier la grille** pour l'acheteur : une offre gratuite, une offre par objectif, des crédits seulement en complément.
-3. **Obtenir 20 à 30 vrais acheteurs** et **5 témoignages vérifiés** avant toute dépense publicitaire importante.
-4. **Observer 10 utilisateurs** faire tout le parcours, de l'offre d'emploi au dossier envoyé, et corriger chaque hésitation.
-5. **Une seule promesse** en tête de chaque publicité et de la page d'accueil : le CV qui correspond à l'offre, avec le score avant→après. Le reste sert de bonus.
+1. **10 vrais acheteurs payants**, sans crédits offerts, avant le 31 décembre. Et 3 témoignages vérifiés (nom, photo ou voix, accord écrit).
+2. **Une offre nommée par segment**, vendue comme un résultat (« Mon dossier concours prêt »), à un prix nettement au-dessus de 3 000 FCFA. Elle regroupe CV adapté, lettre, fiche d'entretien et dossier PDF, avec une garantie écrite.
+3. **Une grille simple** : le gratuit, une ou deux offres nommées, des crédits seulement en complément. Retirer ou cacher les règles que l'acheteur n'a pas besoin de voir.
+4. **Tenir la date du 31 décembre** pour l'offre de lancement. Pas de prolongation silencieuse.
+5. **Mesurer un seul canal** (vidéos courtes, ambassadeur, ou groupes WhatsApp) et son coût par client avant toute dépense publicitaire.
