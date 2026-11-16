@@ -1517,6 +1517,10 @@ export const EN: Record<string, string> = {
   'Clair': 'Light',
   'Sombre': 'Dark',
   'Automatique : l’appli suit le réglage de votre téléphone (clair le jour, sombre le soir, si vous l’avez réglé ainsi).': 'Automatic: the app follows your phone’s setting (light by day, dark at night, if you set it up that way).',
+  'Annuler ce paiement ? Si vous avez déjà envoyé le montant, n’annulez pas : confirmez-le ci-dessus pour recevoir vos crédits.': 'Cancel this payment? If you already sent the amount, do not cancel: confirm it above to receive your credits.',
+  'Oui, annuler': 'Yes, cancel',
+  'Non, je garde ma commande': 'No, keep my order',
+  'Je ne veux plus payer : annuler ce paiement': 'I no longer want to pay: cancel this payment',
 // Messages du serveur (erreurs, veille) : traduits à l’envoi quand l’interface est en anglais.
   "Fichier trop volumineux (15 Mo maximum).": "File too large (15 MB maximum).",
   "Erreur interne du serveur.": "Internal server error.",
@@ -1676,4 +1680,5 @@ export const EN: Record<string, string> = {
   "Le paiement en crypto n’est pas activé.": "Crypto payment is not enabled.",
   "Montant reçu trop faible : il ne vaut pas un crédit.": "Amount received too low: it is not worth one credit.",
   'Votre CV n’a ni expérience ni formation : il n’y a rien à adapter. Importez votre ancien CV ou complétez-le dans « Mon CV » d’abord. Aucun crédit n’a été pris.': 'Your CV has no experience or education, so there is nothing to tailor. Import your old CV or complete it under “My CV” first. No credit was taken.',
+  'Cette commande n’est plus ouverte.': 'This order is no longer open.',
 };

@@ -164,6 +164,7 @@ export const api = {
   crypto: () => request<CryptoInfo>('GET', '/api/crypto'),
   rates: () => request<{ rates: Record<string, number>; at: string | null }>('GET', '/api/rates'),
   cryptoOrder: (packId: string, token?: string) => post<{ order: CryptoOrder }>('/api/crypto/order', { packId, token }),
+  cryptoCancel: (orderId: number) => post<{ ok: true }>('/api/crypto/cancel', { orderId }),
   cryptoSubmit: (orderId: number, hash: string, proof: string) => post<{ status: 'paid' | 'review'; credits?: number; order: CryptoOrder | null }>('/api/crypto/submit', { orderId, hash, proof }),
 
   support: () => request<{ messages: SupportMessage[] }>('GET', '/api/support', undefined, supportHeaders()),

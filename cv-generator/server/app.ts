@@ -248,6 +248,18 @@ export function createApp({ fetchPage = fetchJobPage, ai, aiEn = null, allowedOr
     }
   });
 
+  app.post('/api/crypto/cancel', async (c) => {
+    const user = await currentUser(c);
+    if (!user || !cryptoPay) return c.json({ error: user ? 'Le paiement en crypto n’est pas activé.' : 'Connectez-vous pour acheter des crédits.' }, user ? 503 : 401);
+    const body = (await c.req.json().catch(() => null)) as { orderId?: number } | null;
+    try {
+      await cryptoPay.cancel(user.id, Number(body?.orderId));
+      return c.json({ ok: true });
+    } catch (error) {
+      return accountError(c, error);
+    }
+  });
+
   app.post('/api/crypto/submit', async (c) => {
     const user = await currentUser(c);
     if (!user || !cryptoPay) return c.json({ error: user ? 'Le paiement en crypto n’est pas activé.' : 'Connectez-vous pour acheter des crédits.' }, user ? 503 : 401);

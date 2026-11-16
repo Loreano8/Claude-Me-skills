@@ -238,6 +238,15 @@ export function createCrypto(db: Db, payments: Payments, chain: Chain, cfg: Cryp
       return view(o);
     },
 
+    /** Le client renonce à sa commande ouverte : plus de rappel. Une commande déjà déclarée (en vérification) ne s'annule pas. */
+    async cancel(userId: number, orderId: number): Promise<void> {
+      const rows = await db.query(
+        `update crypto_orders set status = 'refused', reason = 'abandonnée', decided_at = $3 where id = $1 and user_id = $2 and status = 'open' returning id`,
+        [orderId, userId, now().toISOString()],
+      );
+      if (!rows.length) throw new CryptoError('Cette commande n’est plus ouverte.', 410);
+    },
+
     /**
      * Le client déclare son paiement : identifiant de transaction + capture de l'envoi.
      * Renvoie « paid » (crédits ajoutés) ou « review » (vérification manuelle) ; une erreur si le client peut corriger.

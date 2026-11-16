@@ -30,6 +30,21 @@ async function setup(auto = true) {
 }
 
 describe('paiement crypto (USDT BEP20)', () => {
+  it('le client peut annuler sa commande ouverte : plus de rappel, et rien à annuler ensuite', async () => {
+    const { crypto, person } = await setup();
+    const u = await person();
+    const v = await person();
+    const order = await crypto.open(u, 'essentiel');
+    // Personne d'autre ne peut l'annuler.
+    await expect(crypto.cancel(v.id, order.id)).rejects.toMatchObject({ status: 410 });
+    await crypto.cancel(u.id, order.id);
+    expect(await crypto.current(u.id)).toBeNull();
+    await expect(crypto.cancel(u.id, order.id)).rejects.toMatchObject({ status: 410 });
+    await expect(crypto.submit(u.id, order.id, '0x' + 'a'.repeat(64), PROOF)).rejects.toMatchObject({ status: 410 });
+    // Il peut repartir sur une nouvelle commande.
+    expect(await crypto.open(u, 'essentiel')).toMatchObject({ status: 'open' });
+  });
+
   it('cas clair : crédits ajoutés automatiquement, une seule fois', async () => {
     const { crypto, person, send, credits, clock } = await setup();
     const u = await person();

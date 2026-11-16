@@ -42,6 +42,7 @@ export function CryptoPay({ packs, request }: { packs: Pack[]; /** Pack choisi d
   const [done, setDone] = useState<number | null>(null);
   const [copied, setCopied] = useState(false);
   const [help, setHelp] = useState(false);
+  const [confirmCancel, setConfirmCancel] = useState(false);
   const file = useRef<HTMLInputElement>(null);
   const section = useRef<HTMLElement>(null);
   const [qr, setQr] = useState<string | null>(null);
@@ -120,6 +121,15 @@ export function CryptoPay({ packs, request }: { packs: Pack[]; /** Pack choisi d
       setHash('');
       setProof('');
       setDone(null);
+    });
+
+  const cancel = () =>
+    run('cancel', async () => {
+      await api.cryptoCancel(order!.id);
+      setOrder(null);
+      setConfirmCancel(false);
+      setHash('');
+      setProof('');
     });
 
   const submit = () =>
@@ -271,6 +281,25 @@ export function CryptoPay({ packs, request }: { packs: Pack[]; /** Pack choisi d
                 {t('Vérifier mon paiement')}
               </Button>
               <p className="text-xs text-slate-500">{t('Le paiement est vérifié directement sur la blockchain. Il faut parfois attendre une minute après l’envoi.')}</p>
+              <div className="border-t border-slate-100 pt-2">
+                {confirmCancel ? (
+                  <div className="space-y-2">
+                    <p className="text-sm text-slate-700">{t('Annuler ce paiement ? Si vous avez déjà envoyé le montant, n’annulez pas : confirmez-le ci-dessus pour recevoir vos crédits.')}</p>
+                    <div className="flex flex-wrap gap-2">
+                      <Button variant="secondary" size="sm" loading={busy === 'cancel'} disabled={busy !== null} onClick={cancel}>
+                        {t('Oui, annuler')}
+                      </Button>
+                      <Button variant="ghost" size="sm" disabled={busy !== null} onClick={() => setConfirmCancel(false)}>
+                        {t('Non, je garde ma commande')}
+                      </Button>
+                    </div>
+                  </div>
+                ) : (
+                  <button type="button" onClick={() => setConfirmCancel(true)} className="flex min-h-11 items-center text-sm font-semibold text-slate-600 hover:text-red-700">
+                    {t('Je ne veux plus payer : annuler ce paiement')}
+                  </button>
+                )}
+              </div>
             </>
           )}
 
