@@ -207,3 +207,5 @@ h2 {
 :root[data-theme='dark'] :is([class*='text-rose-5'], [class*='text-rose-7'], [class*='text-rose-8']) { color: #fda4af; }
 :root[data-theme='dark'] :is([class*='text-sky-6'], [class*='text-sky-8'], [class*='text-sky-9']) { color: #7dd3fc; }
 :root[data-theme='dark'] .text-violet-800 { color: #c4b5fd; }
+/* Sur le jaune du logo (boutons et pastilles), le texte reste bleu nuit : clair sur jaune serait illisible. */
+:root[data-theme='dark'] :is([class*='bg-sun-4'].text-ink, [class*='bg-sun-4'] .text-ink, [class*='bg-sun-4'].text-slate-900, [class*='bg-sun-4'] .text-slate-900) { color: #101a4a; }
