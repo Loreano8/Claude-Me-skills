@@ -30,7 +30,7 @@ async function shrink(file: File): Promise<string> {
  * Paiement en crypto, dans « Mes crédits » : choisir un pack, envoyer le montant à l'adresse affichée,
  * puis donner l'identifiant de la transaction et la capture de l'envoi. Rien ne s'affiche si le paiement crypto est désactivé.
  */
-export function CryptoPay({ packs }: { packs: Pack[] }) {
+export function CryptoPay({ packs, request }: { packs: Pack[]; /** Pack choisi dans la liste au-dessus : ouvre le paiement crypto pour ce pack. */ request?: { pack: Pack; n: number } | null }) {
   const [info, setInfo] = useState<CryptoInfo | null>(null);
   const [open, setOpen] = useState(false);
   const [order, setOrder] = useState<CryptoOrder | null>(null);
@@ -42,6 +42,7 @@ export function CryptoPay({ packs }: { packs: Pack[] }) {
   const [copied, setCopied] = useState(false);
   const [help, setHelp] = useState(false);
   const file = useRef<HTMLInputElement>(null);
+  const section = useRef<HTMLElement>(null);
   const [qr, setQr] = useState<string | null>(null);
   const [choice, setChoice] = useState('');
   const address = order?.status === 'open' ? order.address : null;
@@ -79,10 +80,6 @@ export function CryptoPay({ packs }: { packs: Pack[] }) {
     );
   }, []);
 
-  if (!info?.enabled) return null;
-  const token = info.tokens.includes(choice) ? choice : info.tokens[0];
-  const payable = packs.filter((p) => info.prices[p.id]);
-
   async function run(key: string, fn: () => Promise<void>) {
     setBusy(key);
     setError(null);
@@ -94,6 +91,27 @@ export function CryptoPay({ packs }: { packs: Pack[] }) {
       setBusy(null);
     }
   }
+
+  // Demande venue de la liste des packs (devise autre que le FCFA) : on ouvre et on lance la commande.
+  const enabled = info?.enabled === true;
+  const asked = request?.n;
+  useEffect(() => {
+    if (!enabled || !request) return;
+    setOpen(true);
+    if (order?.status === 'review') return;
+    void run(request.pack.id, async () => {
+      setOrder((await api.cryptoOrder(request.pack.id, choice || undefined)).order);
+      setHash('');
+      setProof('');
+      setDone(null);
+    });
+    section.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [asked, enabled]);
+
+  if (!info?.enabled) return null;
+  const token = info.tokens.includes(choice) ? choice : info.tokens[0];
+  const payable = packs.filter((p) => info.prices[p.id]);
 
   const start = (pack: Pack) =>
     run(pack.id, async () => {
@@ -114,7 +132,7 @@ export function CryptoPay({ packs }: { packs: Pack[] }) {
     });
 
   return (
-    <section className="mt-3 rounded-2xl border border-slate-200">
+    <section ref={section} className="mt-3 scroll-mt-4 rounded-2xl border border-slate-200">
       <button type="button" onClick={() => setOpen(!open)} aria-expanded={open} className="flex min-h-12 w-full items-center gap-2 px-3 text-left text-sm font-semibold text-slate-800">
         <Coins className="size-4 text-brand-600" aria-hidden="true" />
         <span className="flex-1">{t('Payer en crypto ({0}, réseau {1})', [info.tokens.join(' / '), info.network])}</span>

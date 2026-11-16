@@ -8,6 +8,8 @@ import { Button, cx, Field, Notice } from './ui.tsx';
 import { Captcha } from './Captcha.tsx';
 import { CryptoPay } from './CryptoPay.tsx';
 import { CreditHistory } from './CreditHistory.tsx';
+import { CurrencyPicker } from './CurrencyPicker.tsx';
+import { REGION, useMoney } from '../lib/currency.ts';
 
 import { LOCALE, t } from '../i18n.ts';
 export function Modal({ title, onClose, children }: { title: string; onClose: () => void; children: ReactNode }) {
@@ -484,7 +486,6 @@ function AccountDialog() {
   );
 }
 
-const fcfa = (n: number) => `${n.toLocaleString(LOCALE)} FCFA`;
 
 /** « Invite tes amis » : lien personnel, partage WhatsApp, et résultats. */
 function ReferralCard() {
@@ -553,6 +554,10 @@ function CreditsDialog() {
   const [packs, setPacks] = useState<Pack[] | null>(null);
   const [paymentsOn, setPaymentsOn] = useState(true);
   const [launchUntil, setLaunchUntil] = useState<string | null>(null);
+  const money = useMoney();
+  // Hors FCFA, le pack se paie en crypto : le bouton ouvre ce paiement au lieu du Mobile Money.
+  const [cryptoAsk, setCryptoAsk] = useState<{ pack: Pack; n: number } | null>(null);
+  const pay = (pack: Pack) => (money.mobileMoney ? void buy(pack) : setCryptoAsk((c) => ({ pack, n: (c?.n ?? 0) + 1 })));
   const [busy, setBusy] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
@@ -635,14 +640,14 @@ function CreditsDialog() {
               </p>
               <p className="text-sm text-slate-600">{t('Encore plus de crédits pour le même prix, jusqu’au {0}. Une seule fois.', [offerEnd(offerOpen.expiresAt)])}</p>
             </div>
-            <Button size="sm" loading={busy === offerOpen.pack.id} disabled={!paymentsOn || busy !== null} onClick={() => buy(offerOpen.pack)}>
-              {fcfa(offerOpen.pack.price)}
+            <Button size="sm" loading={busy === offerOpen.pack.id} disabled={(money.mobileMoney && !paymentsOn) || busy !== null} onClick={() => pay(offerOpen.pack)}>
+              {money.price(offerOpen.pack)}
             </Button>
           </div>
         )}
         {launchUntil && (
           <p className="rounded-xl bg-emerald-50 px-3 py-2 text-sm font-medium text-emerald-900 ring-1 ring-emerald-200">
-            {t('Offre de lancement : plus de crédits pour le même prix, jusqu’au {0}.', [new Date(launchUntil).toLocaleDateString(LOCALE, { day: 'numeric', month: 'long' })])}</p>
+            {t('Offre de lancement : plus de crédits pour le même prix, jusqu’au {0}.', [new Date(new Date(launchUntil).getTime() - 60_000).toLocaleDateString(LOCALE, { day: 'numeric', month: 'long' })])}</p>
         )}
         {packs?.map((p) => (
           <div key={p.id} className={cx('flex items-center gap-3 rounded-2xl border-2 p-3', p.id === best ? 'border-brand-500' : 'border-slate-200')}>
@@ -653,18 +658,22 @@ function CreditsDialog() {
                 {p.id === best && <span className="ml-1 rounded-full bg-brand-100 px-2 py-0.5 text-xs font-semibold text-brand-800">{t('Le plus choisi')}</span>}
               </p>
               <p className="text-sm text-slate-500">
-                {t('{0} · {1} le crédit', [p.name, fcfa(Math.round(p.price / p.credits))])}</p>
+                {t('{0} · {1} le crédit', [p.name, money.perCredit(p)])}</p>
             </div>
-            <Button size="sm" loading={busy === p.id} disabled={!paymentsOn || busy !== null} onClick={() => buy(p)}>
-              {fcfa(p.price)}
+            <Button size="sm" loading={busy === p.id} disabled={(money.mobileMoney && !paymentsOn) || busy !== null} onClick={() => pay(p)}>
+              {money.price(p)}
             </Button>
           </div>
         ))}
         {!packs && !error && <div className="h-40 animate-pulse rounded-2xl bg-slate-100" />}
       </div>
       <p className="mt-3 flex items-center gap-1.5 text-xs text-slate-500">
-        <Check className="size-3.5" /> {' '}{t('Paiement sécurisé par FedaPay : MTN MoMo ou Moov Money.')}</p>
-      {user && packs && <CryptoPay packs={offerOpen ? [offerOpen.pack, ...packs] : packs} />}
+        <Check className="size-3.5 shrink-0" /> {' '}
+        {money.mobileMoney
+          ? t('Paiement sécurisé par FedaPay : MTN MoMo ou Moov Money.')
+          : t('Dans cette devise, le paiement se fait en crypto (USDT ou USDC). Le prix affiché est indicatif. Carte bancaire : bientôt.')}</p>
+      <CurrencyPicker className="mt-1" />
+      {user && packs && <CryptoPay packs={offerOpen ? [offerOpen.pack, ...packs] : packs} request={cryptoAsk} />}
       {!paymentsOn && (
         <div className="mt-3">
           <Notice tone="info">{t('Le paiement en ligne sera ouvert très bientôt.')}</Notice>
@@ -690,7 +699,8 @@ function CreditsDialog() {
           >
             <Settings className="size-4" aria-hidden="true" /> {t('Mon compte et sécurité')}
           </button>
-          <button
+{REGION === 'afrique' && (
+                    <button
             type="button"
             onClick={() => {
               close();
@@ -700,6 +710,7 @@ function CreditsDialog() {
           >
             <HandCoins className="size-4" aria-hidden="true" /> {t('Gagner de l’argent')}
           </button>
+          )}
           {/* Se déconnecter : les CV restent sur l'appareil, seuls les crédits sont liés au compte. */}
           <button
             type="button"

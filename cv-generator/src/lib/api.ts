@@ -162,6 +162,7 @@ export const api = {
   checkout: (packId: string) => post<{ url: string }>('/api/payments/checkout', { packId }),
   creditHistory: () => request<{ credits: number; items: CreditMove[] }>('GET', '/api/credits/history'),
   crypto: () => request<CryptoInfo>('GET', '/api/crypto'),
+  rates: () => request<{ rates: Record<string, number>; at: string | null }>('GET', '/api/rates'),
   cryptoOrder: (packId: string, token?: string) => post<{ order: CryptoOrder }>('/api/crypto/order', { packId, token }),
   cryptoSubmit: (orderId: number, hash: string, proof: string) => post<{ status: 'paid' | 'review'; credits?: number; order: CryptoOrder | null }>('/api/crypto/submit', { orderId, hash, proof }),
 

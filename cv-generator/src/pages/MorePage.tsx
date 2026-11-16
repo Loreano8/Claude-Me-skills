@@ -5,6 +5,7 @@ import { PUBLIC_SITE } from '../lib/referral.ts';
 import { useSupportBadge } from '../lib/supportBadge.ts';
 
 import { LANG, t } from '../i18n.ts';
+import { REGION } from '../lib/currency.ts';
 // Les guides sont des pages du site : depuis l'application Android, ils s'ouvrent sur cvcasa.com.
 const SITE = Capacitor.isNativePlatform() ? PUBLIC_SITE : '';
 
@@ -55,7 +56,7 @@ export function MorePage({ onNavigate }: { onNavigate: (t: Tab) => void }) {
         <section key={g.title} data-tour={['more-papers', 'more-search', 'more-help'][gi]}>
           <h2 className="mb-2 px-1 font-display text-lg font-semibold text-ink">{g.title}</h2>
           <ul className="divide-y divide-slate-100 overflow-hidden rounded-2xl border border-slate-200 bg-white">
-            {g.entries.map((e) => {
+            {g.entries.filter((e) => e.tab !== 'ambassadeur' || REGION === 'afrique').map((e) => {
               const body = (
                 <>
                   <span className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-brand-50 text-brand-700">

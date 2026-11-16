@@ -1,6 +1,7 @@
 import type { Db } from './db.ts';
 import type { User } from './accounts.ts';
 import { RETURN_PACK, PACKS, type Payments } from './payments.ts';
+import { USD_PRICES } from '../shared/currency.ts';
 
 // Paiement en crypto (USDT sur le réseau BEP20), sans prestataire : le client envoie le montant du pack à l'adresse
 // de CVCasa, puis donne l'identifiant de la transaction et une capture de l'envoi. Le serveur lit lui-même la
@@ -19,7 +20,7 @@ export const BEP20_TOKENS: Record<string, string> = {
 };
 
 /** Prix ronds en dollars, par pack. */
-export const CRYPTO_PRICES: Record<string, number> = { essentiel: 1, [RETURN_PACK.id]: 1, candidature: 3, pro: 5 };
+export const CRYPTO_PRICES: Record<string, number> = USD_PRICES;
 
 export const CRYPTO_ORDER_MINUTES = 30;
 const MIN_CONFIRMATIONS = 12;

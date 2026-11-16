@@ -8,6 +8,8 @@ import { AccountError, DOSSIER_COST, REFERRAL_BONUS, UNLOCK_COST, type Accounts,
 import { signToken, verifyTokenDetail } from './auth.ts';
 import { PACKS, PaymentError, type Payments } from './payments.ts';
 import { CryptoError, type Crypto } from './crypto.ts';
+import type { RatesService } from './rates.ts';
+import { SEED_RATES } from '../shared/currency.ts';
 import { TestimonialInput, type Testimonials } from './testimonials.ts';
 import { SupportError, SupportMessageInput, type Support } from './support.ts';
 import { fetchJobPage, JobPageError } from './jobPage.ts';
@@ -44,6 +46,8 @@ export interface AppOptions {
   payments?: Payments | null;
   /** Paiement en crypto (USDT BEP20), vérifié sur la blockchain. */
   cryptoPay?: Crypto | null;
+  /** Cours des devises du jour, pour les prix indicatifs. */
+  rates?: RatesService | null;
   /** Témoignages des utilisateurs embauchés (validés à la main avant publication). */
   testimonials?: Testimonials | null;
   /** Messagerie « Nous contacter ». */
@@ -94,7 +98,7 @@ const Credentials = z.object({
   source: z.string().max(60).optional(),
 });
 
-export function createApp({ fetchPage = fetchJobPage, ai, aiEn = null, allowedOrigins, rateLimitPerHour, accounts = null, payments = null, cryptoPay = null, testimonials = null, support = null, vault = null, recovery = null, sources = null, sessionSecret = '', publicUrl = '', apiPublicUrl = '', adminToken = '', adminEmail = '', adminMailer = null, ambassadors = null, authLimiter = null, shares = null, watches = null, cronSecret = '', turnstile = null }: AppOptions) {
+export function createApp({ fetchPage = fetchJobPage, ai, aiEn = null, allowedOrigins, rateLimitPerHour, accounts = null, payments = null, cryptoPay = null, rates = null, testimonials = null, support = null, vault = null, recovery = null, sources = null, sessionSecret = '', publicUrl = '', apiPublicUrl = '', adminToken = '', adminEmail = '', adminMailer = null, ambassadors = null, authLimiter = null, shares = null, watches = null, cronSecret = '', turnstile = null }: AppOptions) {
   const app = new Hono();
   const allow = memoryRateLimiter(rateLimitPerHour);
   const allowAuth = authLimiter ?? memoryRateLimiter(20);
@@ -192,6 +196,9 @@ export function createApp({ fetchPage = fetchJobPage, ai, aiEn = null, allowedOr
   // ---- Crédits et paiement ------------------------------------------------
 
   app.get('/api/packs', (c) => c.json({ ...(payments ? payments.currentPacks() : { packs: PACKS, launchUntil: null }), payments: payments !== null }));
+
+  // Cours des devises (prix indicatifs en euros, livres, nairas…). Sans base : cours de secours.
+  app.get('/api/rates', async (c) => c.json(rates ? await rates.get() : { rates: SEED_RATES, at: null }));
 
   // Historique des crédits : achats, crédits offerts et actions qui en ont dépensé.
   app.get('/api/credits/history', async (c) => {

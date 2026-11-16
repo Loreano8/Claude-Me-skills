@@ -7,6 +7,7 @@ import { createShares, type Shares } from './shares.ts';
 import { createPgDb, migrate, type Db } from './db.ts';
 import { createPayments, fedapay } from './payments.ts';
 import { bscChain, createCrypto, type Crypto } from './crypto.ts';
+import { createRates, type RatesService } from './rates.ts';
 import { createTestimonials } from './testimonials.ts';
 import { createSupport, notifier } from './support.ts';
 import { createVault, resendMailer } from './vault.ts';
@@ -48,6 +49,7 @@ export async function createServer(env: Settings, opts: { db?: Db; migrate?: boo
   let watches: Watches | null = null;
   let ambassadors: Ambassadors | null = null;
   let cryptoPay: Crypto | null = null;
+  let rates: RatesService | null = null;
   if (hasDb) {
     if (!env.SESSION_SECRET) throw new Error('SESSION_SECRET est obligatoire avec une base de données.');
     // DATABASE_SSL=true pour une base externe (Supabase…) ; inutile pour la base interne de Render.
@@ -63,6 +65,7 @@ export async function createServer(env: Settings, opts: { db?: Db; migrate?: boo
     recovery = createRecovery(db, accounts, support);
     sources = createSources(db);
     ambassadors = createAmbassadors(db);
+    rates = createRates(db);
     authLimiter = dbRateLimiter(db, 'auth', 20);
     shares = createShares(db);
     // Veille emploi : même modèle que le reste, sauf réglage WATCH_MODEL (ex. un modèle plus léger pour baisser le coût).
@@ -98,6 +101,7 @@ export async function createServer(env: Settings, opts: { db?: Db; migrate?: boo
     accounts,
     payments,
     cryptoPay,
+    rates,
     testimonials,
     support,
     vault,

@@ -4,6 +4,9 @@ import { PACKS, type Pack } from '../../server/payments.ts';
 import { HeroScene } from '../components/HeroScene.tsx';
 import type { Tab } from '../App.tsx';
 import { Button, cx } from '../components/ui.tsx';
+import { CurrencyPicker } from '../components/CurrencyPicker.tsx';
+import { REGION, useMoney } from '../lib/currency.ts';
+import { formatMoney } from '../../shared/currency.ts';
 import { useActiveCv, useStore } from '../store.ts';
 import { isCvEmpty } from '../lib/cv.ts';
 import { api, type PublicTestimonial } from '../lib/api.ts';
@@ -23,7 +26,6 @@ const GUIDE_GROUPS: { kind: GuideKind; icon: typeof Target }[] = [
   { kind: 'lettre', icon: Mail },
 ];
 
-const fcfa = (n: number) => `${n.toLocaleString('fr-FR')} FCFA`;
 
 const STEPS = [
   { icon: PenLine, title: t('Partez de ce que vous avez'), text: t('Importez votre ancien CV (PDF ou photo), ou écrivez votre parcours en vrac, au clavier ou au micro. CVCasa range tout et le met en forme proprement, avec vos vraies expériences.') },
@@ -50,10 +52,16 @@ const JOBS = [
   t('Logisticien·ne'), t('Juriste'), t('Chargé·e de communication'), t('Technicien·ne de maintenance'), t('Ingénieur·e BTP'), t('Caissier·e'),
   t('Community manager'), t('Pharmacien·ne'), t('Chauffeur-livreur'), t('Responsable RH'), t('Agent de saisie'),
 ];
-const PLACES = [
-  t('Cotonou'), t('Lomé'), t('Dakar'), t('Abidjan'), t('Douala'), t('Ouagadougou'), t('Bamako'), t('Niamey'), t('Libreville'), t('Kinshasa'),
-  t('Paris'), t('Bruxelles'), t('Londres'), t('New York'), t('Genève'),
-];
+// Villes de la bande défilante : celles de la région du visiteur d'abord, puis le reste du monde.
+const PLACES_AFRICA = [t('Cotonou'), t('Lomé'), t('Dakar'), t('Abidjan'), t('Douala'), t('Ouagadougou'), t('Bamako'), t('Niamey'), t('Libreville'), t('Kinshasa')];
+const PLACES_EUROPE = [t('Paris'), t('Lyon'), t('Marseille'), t('Bruxelles'), t('Londres'), t('Genève'), t('Lille'), t('Luxembourg')];
+const PLACES_AMERICA = [t('New York'), t('Montréal'), t('Chicago'), t('Toronto'), t('Houston'), t('Atlanta'), t('Washington')];
+const PLACES =
+  REGION === 'afrique'
+    ? [...PLACES_AFRICA, t('Paris'), t('Bruxelles'), t('Londres'), t('New York'), t('Genève')]
+    : REGION === 'europe'
+      ? [...PLACES_EUROPE, t('Montréal'), t('New York'), t('Dakar'), t('Abidjan'), t('Cotonou')]
+      : [...PLACES_AMERICA, t('Londres'), t('Paris'), t('Lagos'), t('Accra'), t('Dakar')];
 
 function Marquee({ items, reverse = false, duration }: { items: string[]; reverse?: boolean; duration: string }) {
   return (
@@ -188,6 +196,7 @@ const PHOTOS = [
 ];
 
 const PHOTO_MS = 3000;
+const NEUTRAL_SHOTS = ['telephone', 'ordinateur-2', 'entretien-2'];
 
 function PhotoStory() {
   const [ref, tick] = useLiveTick(PHOTO_MS);
@@ -199,7 +208,9 @@ function PhotoStory() {
   // À chaque tour complet, l'étape montre une autre photo : le visuel change d'un passage à l'autre.
   const shotAt = (pos: number) => {
     const step = PHOTOS[pos % n];
-    return step.shots[Math.floor(pos / n) % step.shots.length];
+    // Hors d'Afrique, le premier tour montre les décors neutres.
+    const shots = REGION === 'afrique' ? step.shots : [...step.shots].sort((a, b) => Number(NEUTRAL_SHOTS.includes(b.file)) - Number(NEUTRAL_SHOTS.includes(a.file)));
+    return shots[Math.floor(pos / n) % shots.length];
   };
   const current = shotAt(t0);
   // On ne charge que la photo affichée et la suivante (connexions lentes), et on garde celles déjà vues pour le fondu.
@@ -338,12 +349,15 @@ const LETTER_DEMO = () => t('Madame, Monsieur,\nComptable depuis 2021 dans le tr
  * La veille emploi est mise en avant (grande carte sombre) ; lettre et suivi à côté. Les petites
  * maquettes sont illustratives (entreprises génériques, aucun nom réel).
  */
+// Villes des offres d'exemple, selon la région du visiteur.
+const DEMO_CITIES = REGION === 'afrique' ? [t('Cotonou'), t('Cotonou'), t('Cotonou')] : REGION === 'europe' ? [t('Lyon'), t('Paris'), t('Lille')] : [t('Chicago'), t('New York'), t('Houston')];
+
 function BeyondCv({ onNavigate }: { onNavigate: (t: Tab) => void }) {
   const offers = [
-    { job: t('Comptable'), where: t('Société de transport · Cotonou'), when: t('il y a 2 h') },
-    { job: t('Assistant·e comptable'), where: t('Cabinet d’audit · Cotonou'), when: t('ce matin') },
+    { job: t('Comptable'), where: t('Société de transport · {0}', [DEMO_CITIES[0]]), when: t('il y a 2 h') },
+    { job: t('Assistant·e comptable'), where: t('Cabinet d’audit · {0}', [DEMO_CITIES[1]]), when: t('ce matin') },
     { job: t('Chargé·e de paie'), where: t('ONG internationale · télétravail'), when: t('hier') },
-    { job: t('Comptable fournisseurs'), where: t('Groupe de distribution · Cotonou'), when: t('à l’instant') },
+    { job: t('Comptable fournisseurs'), where: t('Groupe de distribution · {0}', [DEMO_CITIES[2]]), when: t('à l’instant') },
   ];
   const steps = [
     { label: t('Envoyée'), on: 'bg-slate-700 text-white' },
@@ -401,7 +415,7 @@ function BeyondCv({ onNavigate }: { onNavigate: (t: Tab) => void }) {
              </div>
               <div className="mt-6 grid gap-4 sm:grid-cols-[minmax(0,0.8fr)_minmax(0,1.2fr)] lg:mt-0 lg:grid-cols-1">
                 <ul className="space-y-2 rounded-2xl bg-white/[0.06] p-4 text-sm ring-1 ring-white/10" aria-label={t('Exemple de critères')}>
-                  {[t('Comptable'), t('CDI ou CDD'), t('Cotonou'), t('Chaque matin')].map((x, i) => (
+                  {[t('Comptable'), t('CDI ou CDD'), DEMO_CITIES[1], t('Chaque matin')].map((x, i) => (
                     <li key={x} className="flex items-center gap-2.5">
                       <span className={cx('flex size-5 items-center justify-center rounded-md transition-all duration-300', i < checked ? 'scale-100 bg-sun-400 text-ink' : 'scale-90 bg-white/15 text-transparent')}>
                         <Check className="size-3.5" aria-hidden="true" />
@@ -484,6 +498,7 @@ function BeyondCv({ onNavigate }: { onNavigate: (t: Tab) => void }) {
 
 export function LandingPage({ onNavigate }: { onNavigate: (t: Tab) => void }) {
   const start = () => onNavigate('infos');
+  const money = useMoney();
   // Packs en vente : ceux du serveur (offre de lancement comprise), avec les packs habituels en attendant.
   const [packs, setPacks] = useState<Pack[]>(PACKS);
   const [launchUntil, setLaunchUntil] = useState<string | null>(null);
@@ -607,9 +622,9 @@ export function LandingPage({ onNavigate }: { onNavigate: (t: Tab) => void }) {
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
           <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
             <h3 className="font-semibold text-slate-900">{t('Gratuit')}</h3>
-            <p className="mt-1 text-2xl font-bold text-slate-900">{t('0 FCFA')}</p>
+            <p className="mt-1 text-2xl font-bold text-slate-900">{formatMoney(0, money.currency, LOCALE)}</p>
             <ul className="mt-3 space-y-1.5 text-sm text-slate-600">
-              {[t('CV complet, 7 modèles'), t('Export PDF (avec mention CVCasa)'), t('Photo et signature'), '1re adaptation offerte'].map((x) => (
+              {[t('CV complet, 7 modèles'), t('Export PDF (avec mention CVCasa)'), t('Photo et signature'), t('Première adaptation offerte')].map((x) => (
                 <li key={x} className="flex gap-2">
                   <Check className="mt-0.5 size-4 shrink-0 text-emerald-600" /> {x}
                 </li>
@@ -619,19 +634,25 @@ export function LandingPage({ onNavigate }: { onNavigate: (t: Tab) => void }) {
           {packs.map((p, i) => (
             <div key={p.id} className={i === 1 ? 'rounded-2xl border-2 border-brand-500 bg-white p-5 shadow-md' : 'rounded-2xl border border-slate-200 bg-white p-5 shadow-sm'}>
               <h3 className="font-semibold text-slate-900">{p.name}</h3>
-              <p className="mt-1 text-2xl font-bold text-slate-900">{fcfa(p.price)}</p>
+              <p className="mt-1 text-2xl font-bold text-slate-900">{money.price(p)}</p>
               <p className="mt-1 text-sm text-slate-600">
                 {p.baseCredits ? <s className="mr-1 text-slate-400">{p.baseCredits}</s> : null}
-                {t('{0} crédits, soit {1} l’action', [p.credits, fcfa(Math.round(p.price / p.credits))])}</p>
+                {t('{0} crédits, soit {1} l’action', [p.credits, money.perCredit(p)])}</p>
               {p.baseCredits && launchUntil ? (
                 <p className="mt-2 inline-block rounded-full bg-emerald-100 px-2.5 py-0.5 text-xs font-semibold text-emerald-900">
-                  {t('Offre de lancement, jusqu’au {0}', [new Date(launchUntil).toLocaleDateString(LOCALE, { day: 'numeric', month: 'long' })])}</p>
+                  {t('Offre de lancement, jusqu’au {0}', [new Date(new Date(launchUntil).getTime() - 60_000).toLocaleDateString(LOCALE, { day: 'numeric', month: 'long' })])}</p>
               ) : null}
               <p className="mt-3 text-xs text-slate-500">{t('1 crédit = 1 CV adapté, 1 lettre, 1 fiche entretien, 1 traduction, 1 page manuscrite tapée, ou 1 PDF scanné de plus de 2 pages. 2 crédits = 1 CV en version Pro.')}</p>
             </div>
           ))}
         </div>
-        <p className="mt-4 text-center text-sm text-slate-500">{t('Sans abonnement. Paiement par Mobile Money ou en crypto (USDT, USDC). Votre crédit vous est rendu si une action échoue.')}</p>
+        <p className="mt-4 text-center text-sm text-slate-500">
+          {money.mobileMoney
+            ? t('Sans abonnement. Paiement par Mobile Money ou en crypto (USDT, USDC). Votre crédit vous est rendu si une action échoue.')
+            : t('Sans abonnement. Paiement en crypto (USDT, USDC), carte bancaire bientôt. Prix indicatifs dans cette devise. Votre crédit vous est rendu si une action échoue.')}</p>
+        <div className="mt-2 flex justify-center">
+          <CurrencyPicker />
+        </div>
       </section>
 
       {/* Les guides sont écrits en français : on ne les met pas en avant dans la version anglaise. */}
