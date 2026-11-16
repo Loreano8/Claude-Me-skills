@@ -288,3 +288,25 @@ export function Chip({ children, tone = 'slate', onRemove }: { children: ReactNo
     </span>
   );
 }
+
+/** Zone repliée par défaut : « facultatif », pour ne pas surcharger l'écran. Le contenu s'affiche en touchant le titre. */
+export function Disclosure({ title, hint, children, defaultOpen = false }: { title: string; hint?: string; children: ReactNode; defaultOpen?: boolean }) {
+  const [open, setOpen] = useState(defaultOpen);
+  return (
+    <div>
+      <button
+        type="button"
+        onClick={() => setOpen(!open)}
+        aria-expanded={open}
+        className="flex min-h-12 w-full items-center gap-3 rounded-2xl border border-dashed border-slate-300 px-4 py-2 text-left hover:bg-white"
+      >
+        <span className="min-w-0 flex-1">
+          <span className="block text-sm font-semibold text-slate-800">{title}</span>
+          {hint && <span className="block text-xs text-slate-500">{hint}</span>}
+        </span>
+        <ChevronDown className={cx('size-5 shrink-0 text-slate-400 transition-transform', open && 'rotate-180')} aria-hidden="true" />
+      </button>
+      {open && <div className="mt-3 space-y-3">{children}</div>}
+    </div>
+  );
+}

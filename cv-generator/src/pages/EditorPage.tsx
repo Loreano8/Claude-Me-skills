@@ -1,7 +1,7 @@
 import { useRef, useState } from 'react';
 import { useQuickDraft } from '../lib/quickDraft.ts';
-import { DownloadHint } from '../components/DownloadHint.tsx';
-import { AlignLeft, ArrowDown, BellRing, Eye, Target, ArrowUp, Award, Briefcase, Camera, FileText, GraduationCap, Heart, Languages, ListChecks, Loader2, Paperclip, PenLine, Plus, Trash2, Undo2, User, Wrench, X } from 'lucide-react';
+import { StepGuide } from '../components/StepGuide.tsx';
+import { AlignLeft, ArrowDown, ArrowUp, Award, Briefcase, Camera, FileText, GraduationCap, Heart, Languages, ListChecks, Loader2, Paperclip, PenLine, Plus, Trash2, Undo2, User, Wrench, X } from 'lucide-react';
 import type { Attachment } from '../../shared/schema.ts';
 import { settingsForLang, useActiveCv, useStore } from '../store.ts';
 import type { Certification, CvDocument, Education, Experience, LanguageSkill } from '../types.ts';
@@ -9,14 +9,13 @@ import { api } from '../lib/api.ts';
 import { applyAiContent, isCvEmpty, toAiContent, uid } from '../lib/cv.ts';
 import { ACCEPTED_DOCS, fileToAttachment } from '../lib/files.ts';
 import { PhotoInput } from '../components/PhotoInput.tsx';
-import { NextSteps } from '../components/NextSteps.tsx';
 import { appendSpoken, MicButton } from '../components/MicButton.tsx';
 import { ReviseCard } from '../components/ReviseCard.tsx';
 import { learnStyle, WriteLikeMe } from '../components/WriteLikeMe.tsx';
 import { useWritingStyle } from '../lib/writingStyle.ts';
 import { SignaturePad } from '../components/SignaturePad.tsx';
 import { TagInput } from '../components/TagInput.tsx';
-import { Button, Card, Cost, Field, Notice, Section, Select, TextArea, Toggle } from '../components/ui.tsx';
+import { Button, Card, Cost, Disclosure, Field, Notice, Section, Select, TextArea, Toggle } from '../components/ui.tsx';
 
 import { t } from '../i18n.ts';
 type Update = (recipe: (cv: CvDocument) => CvDocument) => void;
@@ -30,13 +29,13 @@ const MAX_QUICK_FILES = 8;
 /** Taille totale des documents (base64) : reste sous la limite d'envoi du serveur (15 Mo). */
 const MAX_QUICK_BYTES = 13 * 1024 * 1024;
 
-function QuickFill() {
+function QuickFill({ compact = false }: { compact?: boolean }) {
   const cv = useActiveCv();
   const updateCv = useStore((s) => s.updateCv);
   const fileInput = useRef<HTMLInputElement>(null);
   const cameraInput = useRef<HTMLInputElement>(null);
   const draft = useQuickDraft();
-  const { text, files, suggestions, undo, done } = draft;
+  const { text, files, undo } = draft;
   const setText = (v: string | ((cur: string) => string)) => draft.set({ text: typeof v === 'function' ? v(useQuickDraft.getState().text) : v });
   const setFiles = (f: Attachment[] | ((cur: Attachment[]) => Attachment[])) => draft.set({ files: typeof f === 'function' ? f(useQuickDraft.getState().files) : f });
   const [merge, setMerge] = useState(true);
@@ -125,6 +124,19 @@ function QuickFill() {
     }
   }
 
+  const [expanded, setExpanded] = useState(false);
+  // CV déjà rempli : la saisie rapide se replie en une ligne (elle reste ouverte si un import est en cours).
+  if (compact && !expanded && !text.trim() && !files.length && !busy && !error && !importError) {
+    return (
+      <button type="button" data-tour="quickfill" onClick={() => setExpanded(true)} className="flex min-h-12 w-full items-center gap-3 rounded-2xl border border-slate-200 bg-white px-4 text-left shadow-sm hover:bg-slate-50">
+        <Paperclip className="size-5 shrink-0 text-brand-600" aria-hidden="true" />
+        <span className="min-w-0 flex-1">
+          <span className="block text-sm font-semibold text-slate-900">{t('Importer un autre document ou ajouter du texte')}</span>
+          <span className="block text-xs text-slate-500">{t('Ancien CV, photo, quelques lignes : tout est ajouté à votre CV.')}</span>
+        </span>
+      </button>
+    );
+  }
   return (
     <Card
       className="border-brand-100"
@@ -251,50 +263,6 @@ function QuickFill() {
           <Notice tone="error">{error}</Notice>
         </div>
       )}
-      {done && !busy && (
-        <div className="mt-3">
-          <DownloadHint title={t('Votre CV est prêt.')} text={t('Pour l’enregistrer en PDF : onglet « Modèle et téléchargement », en haut de cette page.')} action={t('Voir et télécharger mon CV')} onClick={() => { window.location.hash = 'apercu'; }} />
-        </div>
-      )}
-      {suggestions.length > 0 && (
-        <div className="mt-4 rounded-xl bg-white p-3 ring-1 ring-brand-100">
-          <p className="mb-1.5 text-sm font-semibold text-slate-800">{t('C’est fait ! Vérifiez les informations ci-dessous. Nos conseils :')}</p>
-          <ul className="list-disc space-y-1 pl-5 text-sm text-slate-700">
-            {suggestions.map((s, i) => (
-              <li key={i}>{s}</li>
-            ))}
-          </ul>
-        </div>
-      )}
-      {suggestions.length > 0 && !cv.photo && (
-        <div className="mt-3 flex flex-wrap items-center gap-3 rounded-xl bg-white p-3 ring-1 ring-brand-100">
-          <Camera className="size-5 shrink-0 text-brand-600" aria-hidden="true" />
-          <p className="min-w-0 flex-1 text-sm text-slate-700">{t('Pas encore de photo sur votre CV (facultatif).')}</p>
-          <Button
-            size="sm"
-            variant="secondary"
-            onClick={() => {
-              const section = document.querySelector<HTMLElement>('[data-tour="photo"]');
-              const toggle = section?.querySelector<HTMLButtonElement>('button[aria-expanded]');
-              if (toggle?.getAttribute('aria-expanded') === 'false') toggle.click();
-              section?.scrollIntoView({ behavior: 'smooth', block: 'center' });
-            }}
-          >
-            {t('Ajouter ma photo')}</Button>
-        </div>
-      )}
-      {suggestions.length > 0 && (
-        <div className="mt-3">
-          <NextSteps
-            id="apres-cv"
-            steps={[
-              { icon: Eye, label: t('Voir et télécharger'), text: t('Votre CV en PDF, prêt à envoyer.'), tab: 'apercu' },
-              { icon: Target, label: t('L’adapter à une offre'), text: t('Collez une annonce : le CV reprend ses mots-clés.'), tab: 'offre' },
-              { icon: BellRing, label: t('Recevoir des offres'), text: t('La veille emploi vous envoie les annonces qui vous correspondent.'), tab: 'veille' },
-            ]}
-          />
-        </div>
-      )}
       {styleOffer && (
         <div className="mt-3 rounded-xl bg-white p-3 text-sm text-slate-700 ring-1 ring-brand-100">
           <p>{t('Cet ancien CV, c’est vous qui l’avez écrit ? CVCasa peut retenir votre façon d’écrire pour vos prochains CV et lettres (gratuit).')}</p>
@@ -373,7 +341,7 @@ function PersonalSection({ cv, update }: { cv: CvDocument; update: Update }) {
   const p = cv.personal;
   const set = (key: keyof typeof p) => (v: string) => update((c) => ({ ...c, personal: { ...c.personal, [key]: v } }));
   return (
-    <Section title={t('Informations personnelles')} icon={<User className="size-5" />} defaultOpen tour="sections">
+    <Section title={t('Informations personnelles')} icon={<User className="size-5" />} defaultOpen={!cv.personal.firstName.trim()} tour="sections">
       <div className="grid gap-3 sm:grid-cols-2">
         <Field label={t('Prénom')} value={p.firstName} onChange={set('firstName')} autoComplete="given-name" />
         <Field label={t('Nom')} value={p.lastName} onChange={set('lastName')} autoComplete="family-name" />
@@ -633,6 +601,57 @@ function SignatureSection({ cv, update }: { cv: CvDocument; update: Update }) {
   );
 }
 
+/** Juste après une rédaction ou un import : ce qu'il faut faire ensuite, et les conseils de CVCasa. */
+function CvNextStep({ cv }: { cv: CvDocument }) {
+  const { suggestions, done } = useQuickDraft();
+  const ready = !!cv.personal.firstName.trim() || cv.experiences.length > 0;
+  if (!ready) return null;
+  return (
+    <StepGuide
+      id="cv"
+      force={done}
+      title={done ? t('Votre CV est rédigé.') : t('Votre CV est prêt à être vérifié.')}
+      steps={[t('Relisez vos informations plus bas : touchez une rubrique pour la corriger.'), t('Puis choisissez un modèle et téléchargez-le en PDF (gratuit).')]}
+      action={t('Choisir un modèle et télécharger')}
+      onAction={() => {
+        useQuickDraft.getState().set({ done: false, suggestions: [] });
+        window.location.hash = 'apercu';
+      }}
+      extra={
+        suggestions.length > 0 ? (
+          <>
+          {!cv.photo && (
+            <div className="mt-3 flex flex-wrap items-center gap-3 rounded-xl bg-white p-3 ring-1 ring-brand-100">
+              <Camera className="size-5 shrink-0 text-brand-600" aria-hidden="true" />
+              <p className="min-w-0 flex-1 text-sm text-slate-700">{t('Pas encore de photo sur votre CV (facultatif).')}</p>
+              <Button
+                size="sm"
+                variant="secondary"
+                onClick={() => {
+                  const section = document.querySelector<HTMLElement>('[data-tour="photo"]');
+                  const toggle = section?.querySelector<HTMLButtonElement>('button[aria-expanded]');
+                  if (toggle?.getAttribute('aria-expanded') === 'false') toggle.click();
+                  section?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                }}
+              >
+                {t('Ajouter ma photo')}</Button>
+            </div>
+          )}
+          <div className="mt-3 rounded-xl bg-white p-3 ring-1 ring-brand-100">
+            <p className="mb-1.5 text-sm font-semibold text-slate-800">{t('Nos conseils pour l’améliorer :')}</p>
+            <ul className="list-disc space-y-1 pl-5 text-sm text-slate-700">
+              {suggestions.map((s, i) => (
+                <li key={i}>{s}</li>
+              ))}
+            </ul>
+          </div>
+          </>
+        ) : null
+      }
+    />
+  );
+}
+
 export function EditorPage() {
   const cv = useActiveCv();
   const update = useStore((s) => s.updateCv);
@@ -644,7 +663,8 @@ export function EditorPage() {
         <Notice tone="info">
           {t('Vous modifiez la version adaptée à l’offre')}{' '}<strong>{[cv.adaptation.job.title, cv.adaptation.job.company].filter(Boolean).join(' – ')}</strong>{t('. Votre CV d’origine n’est pas modifié.')}</Notice>
       )}
-      <QuickFill />
+      {!empty && <CvNextStep cv={cv} />}
+      <QuickFill compact={!empty} />
       {/* Tant que le CV est vide, une seule chose à faire : la saisie rapide. Le reste attend derrière un lien. */}
       {empty && !manual && (
         <button type="button" onClick={() => setManual(true)} className="flex min-h-11 w-full items-center justify-center gap-2 rounded-2xl border border-dashed border-slate-300 px-4 text-sm font-semibold text-slate-700 hover:bg-white">
@@ -658,8 +678,12 @@ export function EditorPage() {
 function EditorSections({ cv, update, empty }: { cv: CvDocument; update: ReturnType<typeof useStore.getState>['updateCv']; empty: boolean }) {
   return (
     <>
-      {!empty && <WriteLikeMe compact />}
-      {!empty && <ReviseCard />}
+      {!empty && (
+        <Disclosure title={t('Outils pour aller plus loin (facultatif)')} hint={t('Corriger en parlant, écrire avec vos mots à vous')}>
+          <WriteLikeMe compact />
+          <ReviseCard />
+        </Disclosure>
+      )}
       <PersonalSection cv={cv} update={update} />
       <PhotoSection cv={cv} update={update} />
       <SummarySection cv={cv} update={update} />

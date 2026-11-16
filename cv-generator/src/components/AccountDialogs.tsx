@@ -4,7 +4,7 @@ import { Check, Copy, Gift, HandCoins, LogOut, Settings, Share2, ShieldCheck, Us
 import { useAccount, type Pack } from '../lib/account.ts';
 import { api, refreshAccount } from '../lib/api.ts';
 import { clearReferral, pendingReferral, referralLink } from '../lib/referral.ts';
-import { Button, cx, Field, Notice } from './ui.tsx';
+import { Button, Disclosure, cx, Field, Notice } from './ui.tsx';
 import { Captcha } from './Captcha.tsx';
 import { CryptoPay } from './CryptoPay.tsx';
 import { CreditHistory } from './CreditHistory.tsx';
@@ -618,19 +618,6 @@ function CreditsDialog() {
           <Notice tone="warn">{dialogReason}</Notice>
         </div>
       )}
-      <table className="mb-3 w-full text-sm">
-        <caption className="sr-only">{t('Ce que coûte chaque action')}</caption>
-        <tbody className="divide-y divide-slate-100">
-          {PRICES.map(([what, price]) => (
-            <tr key={what}>
-              <th scope="row" className="py-1.5 pr-3 text-left font-normal text-slate-700">
-                {what}
-              </th>
-              <td className="py-1.5 text-right font-semibold whitespace-nowrap text-slate-900">{price}</td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
       <div className="space-y-2">
         {offerOpen && (
           <div className="flex items-center gap-3 rounded-2xl border-2 border-amber-400 bg-amber-50 p-3">
@@ -667,6 +654,23 @@ function CreditsDialog() {
         ))}
         {!packs && !error && <div className="h-40 animate-pulse rounded-2xl bg-slate-100" />}
       </div>
+      <div className="mt-3">
+        <Disclosure title={t('Ce que coûte chaque action')}>
+      <table className="w-full text-sm">
+        <caption className="sr-only">{t('Ce que coûte chaque action')}</caption>
+        <tbody className="divide-y divide-slate-100">
+          {PRICES.map(([what, price]) => (
+            <tr key={what}>
+              <th scope="row" className="py-1.5 pr-3 text-left font-normal text-slate-700">
+                {what}
+              </th>
+              <td className="py-1.5 text-right font-semibold whitespace-nowrap text-slate-900">{price}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+        </Disclosure>
+      </div>
       <p className="mt-3 flex items-center gap-1.5 text-xs text-slate-500">
         <Check className="size-3.5 shrink-0" /> {' '}
         {money.mobileMoney
@@ -684,8 +688,14 @@ function CreditsDialog() {
           <Notice tone="error">{error}</Notice>
         </div>
       )}
-      {user && <CreditHistory />}
-      {user && <ReferralCard />}
+      {user && (
+        <div className="mt-4">
+          <Disclosure title={t('Historique et parrainage')} hint={t('Vos achats, vos crédits utilisés, inviter un ami')}>
+            <CreditHistory />
+            <ReferralCard />
+          </Disclosure>
+        </div>
+      )}
       {/* Compte (prénom, mot de passe, phrase secrète, déconnexion) : dans Réglages. */}
       {user && (
         <div className="mt-5 flex flex-wrap items-center justify-between gap-x-4 gap-y-1 border-t border-slate-100 pt-3">

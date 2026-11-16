@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { BellRing, ClipboardList, FileDown, FileText, Link2, Lock, Mail, MessageCircleQuestion, PenLine } from 'lucide-react';
+import { FileDown, FileText, Lock, Mail, MessageCircleQuestion, PenLine } from 'lucide-react';
 import { DossierLink } from './DossierPage.tsx';
 import { useActiveCv, useStore } from '../store.ts';
 import type { CoverLetterRequest, LetterQuestionsResult } from '../../shared/schema.ts';
@@ -12,11 +12,10 @@ import { NaturalReview } from '../components/NaturalReview.tsx';
 import { letterCliches } from '../lib/naturalCheck.ts';
 import { appendSpoken, MicButton } from '../components/MicButton.tsx';
 import { ProOffer } from '../components/ProUnlock.tsx';
-import { Button, Card, Cost, Field, Notice, Select, TextArea, Toggle } from '../components/ui.tsx';
+import { Button, Card, Cost, Disclosure, Field, Notice, Select, TextArea, Toggle } from '../components/ui.tsx';
 import { SendApplication } from '../components/SendApplication.tsx';
 import { TranslateLetter } from '../components/TranslateLetter.tsx';
 import { DownloadHint } from '../components/DownloadHint.tsx';
-import { NextSteps } from '../components/NextSteps.tsx';
 import type { Tab } from '../App.tsx';
 
 import { LANG, t } from '../i18n.ts';
@@ -238,13 +237,22 @@ export function LetterPage({ onNavigate }: { onNavigate: (t: Tab) => void }) {
         {letter.body.trim() && (
           <DownloadHint
             title={t('Votre lettre est prête.')}
-            text={t('Pour l’enregistrer : boutons « PDF » et « Word » (en haut à droite sur ordinateur, tout en bas sur téléphone).')}
+            text={t('Pour l’enregistrer : boutons « PDF » et « Word », juste sous la lettre (à droite sur ordinateur).')}
             action={t('Aller aux boutons de téléchargement')}
             onClick={() => document.querySelector('[data-tour="letter-export"]')?.scrollIntoView({ behavior: 'smooth', block: 'center' })}
           />
         )}
-        <WriteLikeMe compact />
-        <GenerateCard onNavigate={onNavigate} />
+        {letter.body.trim() ? (
+          <Disclosure title={t('Réécrire la lettre ou changer de ton')} hint={t('Pour une autre offre, ou un style différent')}>
+            <WriteLikeMe compact />
+            <GenerateCard onNavigate={onNavigate} />
+          </Disclosure>
+        ) : (
+          <>
+            <WriteLikeMe compact />
+            <GenerateCard onNavigate={onNavigate} />
+          </>
+        )}
 
         <Card
           tour="letter-body"
@@ -281,19 +289,12 @@ export function LetterPage({ onNavigate }: { onNavigate: (t: Tab) => void }) {
             />
           </div>
         </Card>
-        {letter.body.trim() && <NaturalReview hits={letterCliches(letter)} edit={t('Corrigez directement dans « Corps de la lettre » ci-dessus.')} />}
-        {letter.body.trim() && <SendApplication />}
-        {letter.body.trim() && <TranslateLetter />}
         {letter.body.trim() && (
-          <NextSteps
-            id="apres-lettre"
-            onNavigate={onNavigate}
-            steps={[
-              { icon: ClipboardList, label: t('Suivre mes candidatures'), text: t('Où vous avez postulé, et quand relancer.'), tab: 'suivi' },
-              { icon: Link2, label: t('Partager mon CV'), text: t('Un lien et un QR code à donner au recruteur.'), tab: 'apercu' },
-              { icon: BellRing, label: t('Trouver d’autres offres'), text: t('La veille emploi cherche pour vous chaque matin.'), tab: 'veille' },
-            ]}
-          />
+          <Disclosure title={t('Aller plus loin (facultatif)')} hint={t('Corriger les tournures, traduire la lettre, l’envoyer par e-mail')}>
+            <NaturalReview hits={letterCliches(letter)} edit={t('Corrigez directement dans « Corps de la lettre » ci-dessus.')} />
+            <SendApplication />
+            <TranslateLetter />
+          </Disclosure>
         )}
       </div>
 
