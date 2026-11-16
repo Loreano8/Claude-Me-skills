@@ -133,6 +133,8 @@ export function createAi(client: Anthropic, model = DEFAULT_MODEL, uiLang: 'fr' 
       throw error;
     }
 
+    // Journal sans donnée personnelle : permet de voir plus tard si une réponse a été coupée ou est restée courte.
+    console.log('IA : appel', JSON.stringify({ model, stop: response.stop_reason, in: response.usage.input_tokens, out: response.usage.output_tokens }));
     if (response.stop_reason === 'refusal') {
       throw new AiError('Cette demande n’a pas pu être traitée. Reformulez-la ou réessayez.', 422, 'refusal');
     }
@@ -157,7 +159,10 @@ export function createAi(client: Anthropic, model = DEFAULT_MODEL, uiLang: 'fr' 
           ? `<informations_en_vrac>\n${req.text.trim()}\n</informations_en_vrac>\n\nOrganise ces informations en CV.`
           : 'Organise et améliore ce CV selon les normes actuelles.',
       });
-      return run(StructureResult, structureSystem(req.lang), content, 'medium');
+      return run(StructureResult, structureSystem(req.lang), content, 'medium').then((r) => {
+        console.log('IA : CV rédigé', JSON.stringify({ files: (req.files?.length ?? 0) + (req.file ? 1 : 0), textChars: req.text.length, experiences: r.cv.experiences.length, education: r.cv.education.length, skills: r.cv.skills.length }));
+        return r;
+      });
     },
 
     async adapt(req: AdaptRequest): Promise<AdaptResult> {
@@ -168,6 +173,7 @@ export function createAi(client: Anthropic, model = DEFAULT_MODEL, uiLang: 'fr' 
         { type: 'text', text: 'Adapte le CV à cette offre et analyse l’adéquation.' } as ContentBlock,
       ];
       const { cv: { title, ...rest }, ...out } = await run(AdaptAiOutput, adaptSystem(req.lang), content, 'medium');
+      console.log('IA : CV adapté', JSON.stringify({ avant: { experiences: req.cv.experiences.length, education: req.cv.education.length }, apres: { experiences: rest.experiences.length, education: rest.education.length } }));
       return { ...out, cv: { ...rest, personal: { ...req.cv.personal, title } } };
     },
 
