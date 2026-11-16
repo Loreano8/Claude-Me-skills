@@ -1,4 +1,5 @@
-import { useEffect, useRef, useState } from 'react';
+import { useRef, useState } from 'react';
+import { useEffect } from '../lib/safeEffects.ts';
 import { t } from '../i18n.ts';
 // Version « legacy » : inclut les compléments nécessaires aux WebView Android un peu anciennes.
 import * as pdfjs from 'pdfjs-dist/legacy/build/pdf.mjs';

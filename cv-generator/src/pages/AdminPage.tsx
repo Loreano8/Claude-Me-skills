@@ -1,4 +1,5 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useState } from 'react';
+import { useEffect } from '../lib/safeEffects.ts';
 import { ArrowLeft, BarChart3, HandCoins, Check, Coins, Copy, KeyRound, LogOut, MessageCircle, RefreshCw, Send, ShieldCheck, Star, X } from 'lucide-react';
 import { PUBLIC_SITE } from '../lib/referral.ts';
 import { ADMIN_SESSION_KEY, adminRequest, type SupportMessage } from '../lib/api.ts';

@@ -1,5 +1,6 @@
 import { createPortal } from 'react-dom';
-import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
+import { useCallback, useRef, useState } from 'react';
+import { useEffect, useLayoutEffect } from '../lib/safeEffects.ts';
 import { HelpCircle, X } from 'lucide-react';
 import type { Tab } from '../App.tsx';
 import { Button, cx } from './ui.tsx';

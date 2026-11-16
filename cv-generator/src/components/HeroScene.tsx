@@ -1,4 +1,5 @@
-import { Fragment, useEffect, useLayoutEffect, useRef, useState, type CSSProperties } from 'react';
+import { Fragment, useRef, useState, type CSSProperties } from 'react';
+import { useEffect, useLayoutEffect } from '../lib/safeEffects.ts';
 import { FileDown, FileText, Keyboard, Mic } from 'lucide-react';
 import { cx } from './ui.tsx';
 import { LANG } from '../i18n.ts';

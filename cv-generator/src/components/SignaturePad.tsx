@@ -1,4 +1,5 @@
-import { useEffect, useRef, useState } from 'react';
+import { useRef, useState } from 'react';
+import { useEffect } from '../lib/safeEffects.ts';
 import { Eraser, PenLine, Trash2, Upload } from 'lucide-react';
 import { prepareSignatureImage, trimCanvas } from '../lib/image.ts';
 import { Button, Notice } from './ui.tsx';

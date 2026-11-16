@@ -1,4 +1,5 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useMemo, useState } from 'react';
+import { useEffect } from '../lib/safeEffects.ts';
 import { BellRing, CalendarClock, ExternalLink, Plus, Search, Target, X } from 'lucide-react';
 import type { Tab } from '../App.tsx';
 import { useActiveCv, useStore } from '../store.ts';

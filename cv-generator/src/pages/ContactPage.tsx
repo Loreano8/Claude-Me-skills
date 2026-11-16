@@ -1,4 +1,5 @@
-import { useEffect, useRef, useState } from 'react';
+import { useRef, useState } from 'react';
+import { useEffect } from '../lib/safeEffects.ts';
 import { MessageCircle, Send } from 'lucide-react';
 import { api, saveSupportSecret, type SupportMessage } from '../lib/api.ts';
 import { useAccount } from '../lib/account.ts';

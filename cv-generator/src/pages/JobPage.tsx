@@ -1,4 +1,5 @@
-import { useEffect, useRef, useState } from 'react';
+import { useRef, useState } from 'react';
+import { useEffect } from '../lib/safeEffects.ts';
 import { ArrowRight, BellRing, CheckCircle2, PenLine, ClipboardList, Eye, HelpCircle, Mail, MessagesSquare, PencilLine, Target } from 'lucide-react';
 import { StepGuide } from '../components/StepGuide.tsx';
 import { DownloadHint } from '../components/DownloadHint.tsx';

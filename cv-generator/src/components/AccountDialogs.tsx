@@ -1,4 +1,5 @@
-import { useEffect, useState, type FormEvent, type ReactNode } from 'react';
+import { useState, type FormEvent, type ReactNode } from 'react';
+import { useEffect } from '../lib/safeEffects.ts';
 import { Capacitor } from '@capacitor/core';
 import { Check, Copy, Gift, HandCoins, LogOut, Settings, Share2, ShieldCheck, UserRound, X, Zap } from 'lucide-react';
 import { useAccount, type Pack } from '../lib/account.ts';

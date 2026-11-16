@@ -1,4 +1,5 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useState } from 'react';
+import { useEffect } from '../lib/safeEffects.ts';
 import { Check, Clock, Copy, FileSignature, FileUp, HandCoins, Share2, ShieldCheck, Wallet, X } from 'lucide-react';
 import { Capacitor } from '@capacitor/core';
 import { LANG, LOCALE, t } from '../i18n.ts';

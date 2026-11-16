@@ -1,4 +1,5 @@
-import { useEffect, useRef, useState } from 'react';
+import { useRef, useState } from 'react';
+import { useEffect } from './lib/safeEffects.ts';
 import { useSharedOffer } from './lib/shareInbox.ts';
 import { ArrowLeft, LayoutGrid } from 'lucide-react';
 import { useActiveCv, useStore } from './store.ts';

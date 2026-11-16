@@ -1,4 +1,5 @@
-import { useEffect, useRef, useState } from 'react';
+import { useRef, useState } from 'react';
+import { useEffect } from '../lib/safeEffects.ts';
 import { Check, ChevronDown, Coins, Copy, ImagePlus, ShieldCheck, Timer } from 'lucide-react';
 import type { Pack } from '../lib/account.ts';
 import { api, refreshAccount, type CryptoInfo, type CryptoOrder } from '../lib/api.ts';

@@ -1,4 +1,5 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useMemo, useRef, useState } from 'react';
+import { useEffect } from '../lib/safeEffects.ts';
 import { Camera, Eye, FileStack, FileText, FileUser, Image as ImageIcon, KeyRound, Lock, Mail, Paperclip, Pencil, Search, Send, ShieldCheck, Trash2 } from 'lucide-react';
 import { useStore } from '../store.ts';
 import { useAccount } from '../lib/account.ts';

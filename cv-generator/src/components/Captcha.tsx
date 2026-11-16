@@ -1,4 +1,5 @@
-import { useEffect, useRef } from 'react';
+import { useRef } from 'react';
+import { useEffect } from '../lib/safeEffects.ts';
 import { LANG } from '../i18n.ts';
 
 // Vérification anti-robot Cloudflare Turnstile : invisible pour une vraie personne (au pire une case à cocher).

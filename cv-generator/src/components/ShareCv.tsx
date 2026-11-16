@@ -1,4 +1,5 @@
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
+import { useEffect } from '../lib/safeEffects.ts';
 import { Check, Copy, Link2, QrCode, Share2 } from 'lucide-react';
 import { Capacitor } from '@capacitor/core';
 import { api, type SharedCv } from '../lib/api.ts';

@@ -1,4 +1,5 @@
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
+import { useEffect } from '../lib/safeEffects.ts';
 import { Coins } from 'lucide-react';
 import { useAccount } from '../lib/account.ts';
 import { api } from '../lib/api.ts';

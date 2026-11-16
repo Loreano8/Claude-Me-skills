@@ -1,4 +1,5 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useState } from 'react';
+import { useEffect } from '../lib/safeEffects.ts';
 import { Check, RefreshCw, X } from 'lucide-react';
 import { adminRequest } from '../lib/api.ts';
 import { Button, Notice } from '../components/ui.tsx';

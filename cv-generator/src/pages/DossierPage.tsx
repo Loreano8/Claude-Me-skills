@@ -1,4 +1,5 @@
-import { useEffect, useRef, useState } from 'react';
+import { useRef, useState } from 'react';
+import { useEffect } from '../lib/safeEffects.ts';
 import { create } from 'zustand';
 import { ArrowDown, ArrowUp, Camera, Crop, FileStack, FileText, FileUser, Mail, Paperclip, PenLine, RotateCw, ScanLine, Trash2 } from 'lucide-react';
 import type { TranscribeResult } from '../../shared/schema.ts';

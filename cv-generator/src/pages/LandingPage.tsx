@@ -1,4 +1,5 @@
-import { useEffect, useRef, useState } from 'react';
+import { useRef, useState } from 'react';
+import { useEffect } from '../lib/safeEffects.ts';
 import { ArrowRight, BadgeCheck, ChevronLeft, ChevronRight, FileUp, BellRing, Briefcase, Check, ClipboardList, FileDown, FileStack, Globe2, GraduationCap, Languages, Link2, Mail, MessagesSquare, PenLine, PlayCircle, Send, ShieldCheck, Target, UserRound } from 'lucide-react';
 import { PACKS, type Pack } from '../../server/payments.ts';
 import { HeroScene } from '../components/HeroScene.tsx';

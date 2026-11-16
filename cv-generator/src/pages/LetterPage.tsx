@@ -1,4 +1,5 @@
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
+import { useEffect } from '../lib/safeEffects.ts';
 import { FileDown, FileText, Lock, Mail, MessageCircleQuestion, PenLine } from 'lucide-react';
 import { DossierLink } from './DossierPage.tsx';
 import { useActiveCv, useStore } from '../store.ts';

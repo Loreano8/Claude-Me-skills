@@ -1,4 +1,5 @@
-import { useEffect, useRef, useState } from 'react';
+import { useRef, useState } from 'react';
+import { useEffect } from '../lib/safeEffects.ts';
 import { FileUp, Link2, Paperclip, X } from 'lucide-react';
 import { useStore } from '../store.ts';
 import { api } from '../lib/api.ts';

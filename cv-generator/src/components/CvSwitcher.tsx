@@ -1,5 +1,6 @@
 import { cvLabel } from '../lib/cv.ts';
-import { useEffect, useRef, useState } from 'react';
+import { useRef, useState } from 'react';
+import { useEffect } from '../lib/safeEffects.ts';
 import { ChevronDown, Copy, FilePlus2, PencilLine, Trash2 } from 'lucide-react';
 import { useStore } from '../store.ts';
 import { cx } from './ui.tsx';
