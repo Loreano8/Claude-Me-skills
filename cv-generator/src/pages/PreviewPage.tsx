@@ -20,6 +20,7 @@ import { ReviseCard } from '../components/ReviseCard.tsx';
 import { DossierLink } from './DossierPage.tsx';
 import { Button, Card, Cost, cx, Disclosure, Notice, Select, Toggle } from '../components/ui.tsx';
 import { useQuickDraft } from '../lib/quickDraft.ts';
+import { NotificationsNudge } from '../components/NotificationsCard.tsx';
 
 import { t } from '../i18n.ts';
 export function DesignPanel({ cv }: { cv: CvDocument }) {
@@ -261,6 +262,7 @@ export function PreviewPage() {
         <Card tour="export" title={t('Télécharger mon CV')}>
           <ExportButtons cv={cv} simple />
         </Card>
+        {justDone && !empty && <NotificationsNudge />}
       </div>
       <div data-tour="preview" className="lg:sticky lg:top-20 lg:col-start-2 lg:row-span-5 lg:row-start-1 lg:self-start">
         <div className="mx-auto max-w-[700px]">

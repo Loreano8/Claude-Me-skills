@@ -15,7 +15,6 @@ export const OFFER_TEXT = t('Des crédits en plus pour 500 F, pendant 3 jours. U
 
 const LAST_VISIT_KEY = 'cv-studio-last-visit';
 const SNOOZE_KEY = 'cv-studio-reminder-snooze';
-const ASKED_KEY = 'cv-studio-notif-asked';
 const HOUR = 3_600_000;
 const DAY = 24 * HOUR;
 /** Bannière : au retour après au moins 20 h d'absence, puis pas avant 5 jours si elle a été fermée. */
@@ -101,13 +100,10 @@ export async function scheduleReturnReminder(): Promise<void> {
     const { LocalNotifications } = await import('@capacitor/local-notifications');
     await LocalNotifications.cancel({ notifications: NOTIFY_IDS.map((id) => ({ id })) });
     if (!hasRealCv(useStore.getState().cvs)) return;
-    let { display } = await LocalNotifications.checkPermissions();
-    if (display !== 'granted') {
-      if (display === 'denied' || read(ASKED_KEY)) return;
-      write(ASKED_KEY, Date.now());
-      ({ display } = await LocalNotifications.requestPermissions());
-      if (display !== 'granted') return;
-    }
+    // L'autorisation se demande dans l'appli ouverte (src/lib/notifications.ts), jamais ici :
+    // cette fonction tourne aussi quand l'appli passe en arrière-plan, où la fenêtre ne peut pas s'afficher.
+    const { display } = await LocalNotifications.checkPermissions();
+    if (display !== 'granted') return;
     const { offer, token } = useAccount.getState();
     await LocalNotifications.schedule({
       notifications: reminderDates(Date.now()).map((at, i) => {

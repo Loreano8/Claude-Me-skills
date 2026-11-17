@@ -1554,6 +1554,13 @@ export const EN: Record<string, string> = {
   'Chaque matin par e-mail, à partir de votre profil. La première recherche est offerte.': 'Every morning by email, based on your profile. The first search is free.',
   'Activer ma veille emploi': 'Turn on my job alerts',
   'Une photo par page : feuille à plat, bonne lumière, toute la page visible.': 'One photo per page: sheet flat, good light, the whole page in view.',
+  'Un rappel le jour où une candidature mérite une relance, et quand de nouvelles offres peuvent vous intéresser.': 'A reminder on the day an application deserves a follow-up, and when new jobs may interest you.',
+  'Activées sur ce téléphone.': 'Turned on for this phone.',
+  'Activer les notifications': 'Turn on notifications',
+  'Elles sont bloquées. Pour les activer : Paramètres du téléphone, Applications, CVCasa, Notifications.': 'They are blocked. To turn them on: phone Settings, Apps, CVCasa, Notifications.',
+  'Recevoir un rappel pour relancer vos candidatures ?': 'Get a reminder to follow up on your applications?',
+  'Notifications': 'Notifications',
+  'Activer': 'Turn on',
 // Messages du serveur (erreurs, veille) : traduits à l’envoi quand l’interface est en anglais.
   "Fichier trop volumineux (15 Mo maximum).": "File too large (15 MB maximum).",
   "Erreur interne du serveur.": "Internal server error.",

@@ -40,6 +40,8 @@
     <uses-permission android:name="android.permission.INTERNET" />
     <!-- Dictée vocale (« Raconter mon parcours », « Corriger mon CV en parlant ») -->
     <uses-permission android:name="android.permission.RECORD_AUDIO" />
+    <!-- Notifications (Android 13+) : rappels de relance et « Une nouvelle offre ? ». Demandées dans l'appli ouverte. -->
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
     <!-- Android 11+ : permet de trouver le service de reconnaissance vocale du téléphone -->
     <!-- Android 11+ : sans cette déclaration, « Photographier » ne trouve pas l'appareil photo
          et l'appli se rabat sur un simple sélecteur de fichiers. -->

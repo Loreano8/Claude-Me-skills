@@ -6,6 +6,7 @@ import { useAccount } from '../lib/account.ts';
 import { api, ApiError } from '../lib/api.ts';
 import { LangPicker } from '../components/LangSwitch.tsx';
 import { ThemePicker } from '../components/ThemePicker.tsx';
+import { NotificationsCard } from '../components/NotificationsCard.tsx';
 import { AppUpdateCard } from '../components/AppUpdateCard.tsx';
 import { AccountSecurity } from '../components/AccountDialogs.tsx';
 import { Button, Field, Notice } from '../components/ui.tsx';
@@ -85,6 +86,7 @@ export function SettingsPage({ onNavigate }: { onNavigate: (t: Tab) => void }) {
         <LangPicker />
       </div>
       <ThemePicker />
+      <NotificationsCard />
       <button
         type="button"
         onClick={() => onNavigate('confidentialite')}
