@@ -1,0 +1,24 @@
+{
+  "name": "claude-me",
+  "description": "Loreano's Claude Code mods: agent dashboard, limit saver, session duo.",
+  "owner": {
+    "name": "Loreano"
+  },
+  "plugins": [
+    {
+      "name": "agent-dashboard",
+      "source": "./mods/agent-dashboard",
+      "description": "A pane beside the chat showing what the session's agents and tools are doing, plus turns, context and usage limits."
+    },
+    {
+      "name": "limit-saver",
+      "source": "./mods/limit-saver",
+      "description": "Sends simple requests (summaries, translations, rewording, short questions) to Haiku to spare your usage limits."
+    },
+    {
+      "name": "session-duo",
+      "source": "./mods/session-duo",
+      "description": "Two Claude Code sessions that talk: one plans, the other builds."
+    }
+  ]
+}

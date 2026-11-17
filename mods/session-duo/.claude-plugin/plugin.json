@@ -1,0 +1,8 @@
+{
+  "name": "session-duo",
+  "version": "0.1.0",
+  "description": "Two Claude Code sessions that talk: one plans, the other builds. /duo plan|build|status|auto|off and /handoff to pass work across.",
+  "author": {
+    "name": "Loreano"
+  }
+}

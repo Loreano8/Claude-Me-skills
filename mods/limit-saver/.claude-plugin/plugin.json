@@ -1,0 +1,8 @@
+{
+  "name": "limit-saver",
+  "version": "0.1.0",
+  "description": "Sends simple requests (summaries, translations, rewording, short questions) to Haiku so they stop eating your usage limits. /eco on|off|status.",
+  "author": {
+    "name": "Loreano"
+  }
+}

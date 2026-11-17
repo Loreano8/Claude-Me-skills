@@ -1,0 +1,9 @@
+{
+  "name": "agent-dashboard",
+  "version": "0.1.0",
+  "description": "A pane beside the chat showing what the session's agents and tools are doing, plus turns, context and usage limits.",
+  "types": "./types/index.d.ts",
+  "author": {
+    "name": "Loreano"
+  }
+}
