@@ -13,6 +13,7 @@ import { createSupport, notifier } from './support.ts';
 import { createVault, resendMailer } from './vault.ts';
 import { createRecovery } from './recovery.ts';
 import { createSources } from './sources.ts';
+import { createPush, type Push } from './push.ts';
 import { createTurnstile } from './turnstile.ts';
 import { claudeWatchSearch, createWatches, type Watches } from './watch.ts';
 import { createAmbassadors, type Ambassadors } from './ambassadors.ts';
@@ -50,6 +51,7 @@ export async function createServer(env: Settings, opts: { db?: Db; migrate?: boo
   let ambassadors: Ambassadors | null = null;
   let cryptoPay: Crypto | null = null;
   let rates: RatesService | null = null;
+  let push: Push | null = null;
   if (hasDb) {
     if (!env.SESSION_SECRET) throw new Error('SESSION_SECRET est obligatoire avec une base de données.');
     // DATABASE_SSL=true pour une base externe (Supabase…) ; inutile pour la base interne de Render.
@@ -69,7 +71,17 @@ export async function createServer(env: Settings, opts: { db?: Db; migrate?: boo
     authLimiter = dbRateLimiter(db, 'auth', 20);
     shares = createShares(db);
     // Veille emploi : même modèle que le reste, sauf réglage WATCH_MODEL (ex. un modèle plus léger pour baisser le coût).
-    watches = createWatches(db, accounts, client ? claudeWatchSearch(client, env.WATCH_MODEL || model) : null, resendMailer(env), env.PUBLIC_URL ?? '');
+    // Notifications sur le téléphone : clé du compte de service Firebase dans les réglages (FCM_SERVICE_ACCOUNT).
+    push = createPush(db, env.FCM_SERVICE_ACCOUNT ?? '');
+    const pushNow = push;
+    watches = createWatches(
+      db,
+      accounts,
+      client ? claudeWatchSearch(client, env.WATCH_MODEL || model) : null,
+      resendMailer(env),
+      env.PUBLIC_URL ?? '',
+      pushNow.enabled ? (userId, msg) => pushNow.send(userId, msg) : null,
+    );
     // Offre de lancement : plus de crédits par pack jusqu'à LAUNCH_OFFER_UNTIL (date ISO). Absente : pas d'offre.
     const launch = { launchUntil: env.LAUNCH_OFFER_UNTIL ? new Date(env.LAUNCH_OFFER_UNTIL) : null };
     if (env.FEDAPAY_SECRET_KEY) {
@@ -107,6 +119,7 @@ export async function createServer(env: Settings, opts: { db?: Db; migrate?: boo
     vault,
     recovery,
     sources,
+    push,
     sessionSecret: env.SESSION_SECRET ?? '',
     publicUrl: env.PUBLIC_URL ?? '',
     apiPublicUrl: env.API_PUBLIC_URL ?? '',

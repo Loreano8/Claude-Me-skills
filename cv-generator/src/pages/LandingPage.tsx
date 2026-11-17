@@ -502,6 +502,8 @@ export function LandingPage({ onNavigate }: { onNavigate: (t: Tab) => void }) {
   const cv = useActiveCv();
   // La promesse : coller une offre. Sans CV, on commence par lui (l'import), sinon on va droit à l'offre.
   const adapt = () => onNavigate(isCvEmpty(cv) ? 'infos' : 'offre');
+  // Hors d'Afrique, les outils de CV ne manquent pas : on met en avant la veille emploi (les offres viennent à la personne).
+  const abroad = REGION !== 'afrique';
   const money = useMoney();
   // Packs en vente : ceux du serveur (offre de lancement comprise), avec les packs habituels en attendant.
   const [packs, setPacks] = useState<Pack[]>(PACKS);
@@ -521,7 +523,7 @@ export function LandingPage({ onNavigate }: { onNavigate: (t: Tab) => void }) {
       <section className="bg-white px-4 pt-8 pb-12 sm:pt-14 lg:pb-16">
         {/* Téléphone : titre, texte et boutons, puis scène. Ordinateur : titre et texte à gauche, scène à droite. */}
         <div className="mx-auto grid max-w-6xl items-center gap-x-14 gap-y-6 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.05fr)] lg:grid-rows-[auto_auto]">
-          <h1 className="text-center text-[2.4rem] leading-[1.02] font-bold text-ink sm:text-6xl lg:self-end lg:text-left lg:text-[4.4rem]"><Accented text={t('Collez l’offre. Recevez votre CV *adapté*.')} /></h1>
+          <h1 className="text-center text-[2.4rem] leading-[1.02] font-bold text-ink sm:text-6xl lg:self-end lg:text-left lg:text-[4.4rem]"><Accented text={abroad ? t('Les offres d’emploi *viennent à vous*.') : t('Collez l’offre. Recevez votre CV *adapté*.')} /></h1>
           <div className="relative overflow-hidden rounded-[28px] bg-ink px-4 pt-6 pb-5 sm:px-8 sm:pt-9 order-3 lg:order-none lg:col-start-2 lg:row-span-2 lg:row-start-1">
             {/* Trame de points discrète : la scène se détache sans dégradé décoratif. */}
             <div className="pointer-events-none absolute inset-0 opacity-[0.12] [background-image:radial-gradient(#fff_1px,transparent_1px)] [background-size:18px_18px]" />
@@ -531,22 +533,29 @@ export function LandingPage({ onNavigate }: { onNavigate: (t: Tab) => void }) {
           </div>
           <div className="order-2 text-center lg:order-none lg:self-start lg:text-left">
             <p className="mx-auto max-w-xl text-base text-slate-600 sm:text-lg lg:mx-0">
-              {t('CVCasa reprend les mots-clés de l’annonce et vous montre le score avant → après. Vous partez de votre ancien CV (PDF, Word ou photo) ou de quelques lignes.')}</p>
-            <p className="mt-3 inline-flex flex-wrap items-center justify-center gap-x-2 gap-y-0.5 rounded-2xl bg-brand-50 px-3.5 py-1.5 text-sm text-slate-700 ring-1 ring-brand-100">
+              {abroad
+                ? t('Chaque jour, CVCasa cherche pour vous les offres qui correspondent à votre CV, en France, au Canada, aux États-Unis ou ailleurs, et vous les envoie. Puis il adapte votre CV à celle qui vous plaît.')
+                : t('CVCasa reprend les mots-clés de l’annonce et vous montre le score avant → après. Vous partez de votre ancien CV (PDF, Word ou photo) ou de quelques lignes.')}</p>
+            {!abroad && <p className="mt-3 inline-flex flex-wrap items-center justify-center gap-x-2 gap-y-0.5 rounded-2xl bg-brand-50 px-3.5 py-1.5 text-sm text-slate-700 ring-1 ring-brand-100">
               <span className="inline-flex items-center gap-2 whitespace-nowrap">
                 <Target className="size-4 shrink-0 text-brand-600" aria-hidden="true" />
                 {t('Score de correspondance :')}{' '}<span className="font-semibold text-slate-900">68 → 86</span>
               </span>
               <span className="text-xs whitespace-nowrap text-slate-500">{t('(exemple, estimé par l’IA)')}</span>
-            </p>
+            </p>}
             <div className="mt-7 flex flex-col items-stretch justify-center gap-3 sm:flex-row sm:flex-wrap sm:items-center lg:justify-start">
-              <Button size="lg" className="whitespace-nowrap" onClick={adapt} icon={<Target className="size-5" />}>
-                {t('Adapter mon CV à une offre')}</Button>
+              {abroad ? (
+                <Button size="lg" className="whitespace-nowrap" onClick={() => onNavigate('veille')} icon={<BellRing className="size-5" />}>
+                  {t('Recevoir des offres d’emploi')}</Button>
+              ) : (
+                <Button size="lg" className="whitespace-nowrap" onClick={adapt} icon={<Target className="size-5" />}>
+                  {t('Adapter mon CV à une offre')}</Button>
+              )}
               <Button size="lg" variant="secondary" className="whitespace-nowrap" onClick={start} icon={<FileUp className="size-5" />}>
                 {t('Importer mon ancien CV')}</Button>
             </div>
             <ul className="mt-4 flex flex-wrap justify-center gap-x-4 gap-y-1.5 text-sm font-medium text-slate-700 lg:justify-start">
-              {[t('CV gratuit'), t('Sans abonnement'), t('Lu par les logiciels des recruteurs')].map((x) => (
+              {(abroad ? [t('Première recherche offerte'), t('Sans abonnement'), t('CV gratuit')] : [t('CV gratuit'), t('Sans abonnement'), t('Lu par les logiciels des recruteurs')]).map((x) => (
                 <li key={x} className="flex items-center gap-1.5">
                   <Check className="size-4 text-emerald-600" aria-hidden="true" /> {x}
                 </li>

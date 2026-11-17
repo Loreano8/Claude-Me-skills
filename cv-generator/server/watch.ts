@@ -71,7 +71,7 @@ export function matchOffer(offer: RawOffer, profile: string): Pick<WatchOffer, '
 
 export function cacheKey(c: WatchCriteria): string {
   const sorted = (a: string[]) => [...a].map(norm).sort();
-  const key = { j: sorted(c.jobs), c: sorted(c.contracts), z: sorted(c.zones), l: c.level, s: c.minSalary, k: norm(c.keywords), lang: c.lang ?? 'fr' };
+  const key = { j: sorted(c.jobs), c: sorted(c.contracts), z: sorted(c.zones), p: norm(c.place ?? ''), co: c.country ?? '', l: c.level, s: c.minSalary, k: norm(c.keywords), lang: c.lang ?? 'fr' };
   return createHash('sha256').update(JSON.stringify(key)).digest('hex').slice(0, 32);
 }
 
@@ -114,8 +114,28 @@ const ZONE_LABEL: Record<string, string> = {
   benin: 'Bénin (Cotonou, Porto-Novo, Parakou…)',
   'afrique-ouest': 'Afrique de l’Ouest (Togo, Côte d’Ivoire, Sénégal, Burkina Faso, Niger, Nigeria, Ghana…)',
   afrique: 'reste de l’Afrique',
-  international: 'télétravail international ouvert aux candidats basés au Bénin',
+  international: 'télétravail international ouvert aux candidats basés dans le pays où vit la personne',
+  france: 'France',
+  europe: 'Europe (Belgique, Suisse, Luxembourg, Allemagne, Pays-Bas, Espagne, Italie…)',
+  'royaume-uni': 'Royaume-Uni',
+  canada: 'Canada (Québec compris)',
+  usa: 'États-Unis',
 };
+
+/** Nom du pays en clair (« FR » → « France »), dans la langue de la demande. */
+function countryName(code: string): string {
+  try {
+    return new Intl.DisplayNames(['fr'], { type: 'region' }).of(code) ?? code;
+  } catch {
+    return code;
+  }
+}
+
+/** Pays acceptés comme position approximative par l'outil de recherche (le Bénin ne l'est pas). */
+const SEARCH_COUNTRIES = new Set(['FR', 'BE', 'CH', 'LU', 'DE', 'NL', 'ES', 'IT', 'PT', 'GB', 'IE', 'CA', 'US', 'JP', 'AU', 'SN', 'CI', 'MA', 'TN', 'NG', 'GH', 'KE', 'ZA', 'CM']);
+export function searchLocation(country: string | undefined): { type: 'approximate'; country?: string; timezone?: string } {
+  return country && SEARCH_COUNTRIES.has(country) ? { type: 'approximate', country } : { type: 'approximate', timezone: 'Africa/Porto-Novo' };
+}
 const LEVEL_LABEL: Record<string, string> = {
   debutant: 'débutant ou junior (0 à 2 ans d’expérience)',
   confirme: 'confirmé (3 ans d’expérience ou plus)',
@@ -127,7 +147,9 @@ export function searchPrompt(c: WatchCriteria, exclude: string[], today: Date): 
     `Date du jour : ${today.toISOString().slice(0, 10)}.`,
     `Métiers ou domaines recherchés : ${c.jobs.join(' ; ')}.`,
     `Types d’opportunités : ${c.contracts.map((k) => CONTRACT_LABEL[k]).join(', ')}.`,
-    `Zones : ${c.zones.map((z) => ZONE_LABEL[z]).join(' ; ')}.`,
+    c.zones.length ? `Zones : ${c.zones.map((z) => ZONE_LABEL[z]).join(' ; ')}.` : '',
+    c.place?.trim() ? `Ville ou pays précis demandé : ${c.place.trim()}.` : '',
+    c.country ? `La personne vit actuellement : ${countryName(c.country)}.` : '',
     `Niveau : ${LEVEL_LABEL[c.level]}.`,
     c.minSalary ? `Rémunération minimale : ${c.minSalary.toLocaleString('fr-FR')} FCFA par mois (garder une offre sans salaire indiqué, l’écarter si le salaire affiché est plus bas).` : '',
     c.keywords.trim() ? `Mots-clés en plus : ${c.keywords.trim()}.` : '',
@@ -139,14 +161,14 @@ export function searchPrompt(c: WatchCriteria, exclude: string[], today: Date): 
   return lines.filter(Boolean).join('\n');
 }
 
-export const SEARCH_SYSTEM = `Tu fais une veille d’offres d’emploi pour une personne qui cherche du travail, le plus souvent au Bénin ou en Afrique de l’Ouest.
+export const SEARCH_SYSTEM = `Tu fais une veille d’offres d’emploi pour une personne qui cherche du travail : souvent au Bénin ou en Afrique de l’Ouest, parfois ailleurs (France, Europe, Amérique du Nord, Asie…). Les zones, la ville éventuelle et le pays où elle vit sont indiqués dans la demande.
 
 Méthode :
 - Fais de vraies recherches sur le web, 5 à 6 requêtes différentes avant de conclure (pas plus de 6) : sites d’emploi du pays et de la région, pages carrières d’entreprises, cabinets de recrutement, organisations internationales et ONG (ReliefWeb, sites des Nations unies…), programmes jeunes. Varie les requêtes : métier + pays ou ville, métier + « recrutement », métier + « avis de recrutement », métier + « offre d’emploi » + mois en cours, et les intitulés proches (ex. comptable, assistant comptable, aide-comptable, chargé de comptabilité).
 - Ne garde que des offres encore ouvertes : date limite non dépassée, ou publiées depuis moins de 30 jours s’il n’y a pas de date limite. Une offre dont la date limite n’est pas indiquée n’est pas à écarter pour autant.
 - N’invente jamais une offre, une entreprise, un salaire ou un lien. Le lien doit être celui de la page de l’offre (ou de la page carrière qui la publie) trouvé dans les résultats de recherche.
 - Écarte les annonces douteuses : frais demandés au candidat, promesses irréalistes, contact uniquement par messagerie privée, absence d’entreprise identifiable.
-- Pour une offre à l’étranger ou en télétravail, indique si une personne basée au Bénin peut postuler (oui, non, à vérifier).
+- Pour une offre à l’étranger ou en télétravail, indique si une personne basée dans le pays où elle vit (le Bénin si rien n’est indiqué) peut postuler (oui, non, à vérifier).
 - Écarte les liens déjà envoyés.
 - Champs inconnus : chaîne vide. Résumé : 1 à 2 phrases simples. Compétences : 3 à 8 compétences demandées, courtes.
 
@@ -225,8 +247,8 @@ export function claudeWatchSearch(client: Anthropic, model: string): WatchSearch
                 // Recherches faites une par une : en mode « filtrage par programme », le programme peut dépasser la limite
                 // de recherches et s'arrêter avant d'avoir lu le moindre résultat.
                 allowed_callers: ['direct'],
-                // Le Bénin n'est pas accepté comme pays par l'outil de recherche : seul le fuseau horaire est donné, les zones sont dans la demande.
-                user_location: { type: 'approximate', timezone: 'Africa/Porto-Novo' },
+                // Position approximative : le pays de la personne s'il est accepté par l'outil (le Bénin ne l'est pas : fuseau horaire seul).
+                user_location: searchLocation(criteria.country),
               },
               OFFERS_TOOL,
             ],
@@ -318,7 +340,27 @@ export function offersEmail(offers: WatchOffer[], note: string, appUrl: string, 
       };
 }
 
-export function createWatches(db: Db, accounts: Accounts, search: WatchSearch | null, mailer: Mailer | null, publicUrl: string) {
+/** Texte de la notification « nouvelles offres » sur le téléphone. */
+export function offersPush(offers: WatchOffer[], lang: 'fr' | 'en' | undefined): { title: string; body: string } {
+  const n = offers.length;
+  const first = offers
+    .slice(0, 2)
+    .map((o) => [o.title, o.company].filter(Boolean).join(' – '))
+    .join(' · ');
+  return lang === 'en'
+    ? { title: n > 1 ? `${n} new jobs for you` : 'A new job for you', body: first }
+    : { title: n > 1 ? `${n} nouvelles offres pour vous` : 'Une nouvelle offre pour vous', body: first };
+}
+
+export function createWatches(
+  db: Db,
+  accounts: Accounts,
+  search: WatchSearch | null,
+  mailer: Mailer | null,
+  publicUrl: string,
+  /** Notification sur le téléphone quand il y a de nouvelles offres (si la personne l'a laissée cochée). */
+  notify: ((userId: number, msg: { title: string; body: string; tab: string }) => Promise<unknown>) | null = null,
+) {
   // Le lien de l'e-mail rouvre l'application dans la langue de la personne.
   const appUrlFor = (lang: 'fr' | 'en' | undefined) => `${publicUrl.replace(/\/$/, '')}/${lang === 'en' ? '?lang=en' : ''}#veille`;
 
@@ -363,6 +405,10 @@ export function createWatches(db: Db, accounts: Accounts, search: WatchSearch | 
     if (sendMail && mailer && to) {
       const mail = offersEmail(offers, note, appUrlFor(w.criteria.lang), w.criteria.lang);
       await mailer(to, mail.subject, mail.text).catch((e) => console.error('Veille : e-mail', e));
+    }
+    // Seulement s'il y a de vraies nouvelles offres : jamais de notification « pour rien ».
+    if (sendMail && notify && offers.length && w.criteria.push !== false) {
+      await notify(user.id, { ...offersPush(offers, w.criteria.lang), tab: 'veille' }).catch((e) => console.error('Veille : notification', e));
     }
     return { id: saved.id, createdAt: new Date(saved.created_at).toISOString(), offers, note };
   }

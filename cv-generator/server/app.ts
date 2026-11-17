@@ -16,6 +16,7 @@ import { fetchJobPage, JobPageError } from './jobPage.ts';
 import type { Mailer, Vault } from './vault.ts';
 import { AmbassadorError, type Ambassadors } from './ambassadors.ts';
 import type { Sources } from './sources.ts';
+import type { Push } from './push.ts';
 import { RecoveryInput, type Recovery } from './recovery.ts';
 import { memoryRateLimiter, type RateLimiter } from './rateLimit.ts';
 import { ShareError, type Shares } from './shares.ts';
@@ -58,6 +59,7 @@ export interface AppOptions {
   recovery?: Recovery | null;
   /** Provenance des visiteurs (liens de pub). */
   sources?: Sources | null;
+  push?: Push | null;
   sessionSecret?: string;
   /** Adresse publique du site, pour revenir après un paiement. */
   publicUrl?: string;
@@ -98,7 +100,7 @@ const Credentials = z.object({
   source: z.string().max(60).optional(),
 });
 
-export function createApp({ fetchPage = fetchJobPage, ai, aiEn = null, allowedOrigins, rateLimitPerHour, accounts = null, payments = null, cryptoPay = null, rates = null, testimonials = null, support = null, vault = null, recovery = null, sources = null, sessionSecret = '', publicUrl = '', apiPublicUrl = '', adminToken = '', adminEmail = '', adminMailer = null, ambassadors = null, authLimiter = null, shares = null, watches = null, cronSecret = '', turnstile = null }: AppOptions) {
+export function createApp({ fetchPage = fetchJobPage, ai, aiEn = null, allowedOrigins, rateLimitPerHour, accounts = null, payments = null, cryptoPay = null, rates = null, testimonials = null, support = null, vault = null, recovery = null, sources = null, push = null, sessionSecret = '', publicUrl = '', apiPublicUrl = '', adminToken = '', adminEmail = '', adminMailer = null, ambassadors = null, authLimiter = null, shares = null, watches = null, cronSecret = '', turnstile = null }: AppOptions) {
   const app = new Hono();
   const allow = memoryRateLimiter(rateLimitPerHour);
   const allowAuth = authLimiter ?? memoryRateLimiter(20);
@@ -862,6 +864,15 @@ export function createApp({ fetchPage = fetchJobPage, ai, aiEn = null, allowedOr
     } catch (error) {
       return watchError(c, error);
     }
+  });
+
+  // L'appli Android donne l'adresse de notification de ce téléphone (jeton Firebase), pour être prévenue des nouvelles offres.
+  app.post('/api/push/register', async (c) => {
+    const user = await currentUser(c);
+    if (!user) return c.json({ error: 'Connectez-vous.' }, 401);
+    const body = (await c.req.json().catch(() => null)) as { token?: string; platform?: string } | null;
+    if (push && body?.token) await push.register(user.id, String(body.token), String(body.platform ?? 'android'));
+    return c.json({ ok: true, enabled: Boolean(push?.enabled) });
   });
 
   app.post('/api/watch/stop', async (c) => {

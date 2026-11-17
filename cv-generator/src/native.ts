@@ -19,6 +19,13 @@ export async function setupNative(): Promise<void> {
   // Relances : une notification le jour où une candidature envoyée mérite d'être relancée.
   const { watchFollowUps } = await import('./lib/followUpNotify.ts');
   watchFollowUps();
+  // Notifications des nouvelles offres : inscription du téléphone au démarrage et à chaque connexion au compte.
+  const { registerPush } = await import('./lib/push.ts');
+  void registerPush();
+  const { useAccount } = await import('./lib/account.ts');
+  useAccount.subscribe((s, prev) => {
+    if (s.token && s.token !== prev.token) void registerPush();
+  });
   // L'appli décide (page précédente, menu Plus) ; quand il n'y a plus rien derrière, on sort.
   await App.addListener('backButton', () => {
     window.dispatchEvent(new CustomEvent('cvcasa:back', { detail: { exit: () => void App.exitApp() } }));

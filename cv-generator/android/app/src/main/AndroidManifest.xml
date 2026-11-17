@@ -26,6 +26,11 @@
             </intent-filter>
         </activity>
 
+        <!-- Notifications des nouvelles offres (Firebase) : icône, couleur et canal par défaut. -->
+        <meta-data android:name="com.google.firebase.messaging.default_notification_icon" android:resource="@drawable/ic_stat_cvstudio" />
+        <meta-data android:name="com.google.firebase.messaging.default_notification_color" android:resource="@color/cvcasa_notification" />
+        <meta-data android:name="com.google.firebase.messaging.default_notification_channel_id" android:value="offres" />
+
         <provider
             android:name="androidx.core.content.FileProvider"
             android:authorities="${applicationId}.fileprovider"

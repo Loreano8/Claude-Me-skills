@@ -1,6 +1,7 @@
 import pg from 'pg';
 import { AMBASSADOR_SCHEMA } from './ambassadors.ts';
 import { CRYPTO_SCHEMA } from './crypto.ts';
+import { PUSH_SCHEMA } from './push.ts';
 
 /** Accès minimal à Postgres : une requête paramétrée ($1, $2…) qui renvoie des lignes. */
 export interface Db {
@@ -226,7 +227,7 @@ export function createPgDb(connectionString: string, ssl = false, options?: stri
 }
 
 export async function migrate(db: Db): Promise<void> {
-  for (const statement of (SCHEMA + ';' + AMBASSADOR_SCHEMA + ';' + CRYPTO_SCHEMA).split(';').map((s) => s.trim()).filter(Boolean)) {
+  for (const statement of (SCHEMA + ';' + AMBASSADOR_SCHEMA + ';' + CRYPTO_SCHEMA + ';' + PUSH_SCHEMA).split(';').map((s) => s.trim()).filter(Boolean)) {
     await db.query(statement);
   }
 }

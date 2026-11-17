@@ -422,14 +422,20 @@ export type LetterQuestionsResult = z.infer<typeof LetterQuestionsResult>;
 // ---- Veille emploi ----------------------------------------------------------
 
 export const WATCH_CONTRACTS = ['cdi', 'cdd', 'stage', 'freelance', 'teletravail', 'programme'] as const;
-export const WATCH_ZONES = ['benin', 'afrique-ouest', 'afrique', 'international'] as const;
+export const WATCH_ZONES = ['benin', 'afrique-ouest', 'afrique', 'international', 'france', 'europe', 'royaume-uni', 'canada', 'usa'] as const;
 export const WATCH_LEVELS = ['debutant', 'confirme', 'tous'] as const;
 
 /** Ce que la personne coche et remplit : aucune consigne à écrire. */
 export const WatchCriteria = z.object({
   jobs: z.array(z.string().trim().min(2).max(60)).min(1).max(5),
   contracts: z.array(z.enum(WATCH_CONTRACTS)).min(1).max(WATCH_CONTRACTS.length),
-  zones: z.array(z.enum(WATCH_ZONES)).min(1).max(WATCH_ZONES.length),
+  zones: z.array(z.enum(WATCH_ZONES)).max(WATCH_ZONES.length),
+  /** Ville ou pays précis, écrit par la personne (ex. « Tokyo », « Lyon »). Remplace ou complète les zones cochées. */
+  place: z.string().trim().max(80).optional(),
+  /** Pays où vit la personne (code à 2 lettres, deviné par le site) : dit à la recherche d'où elle postule. */
+  country: z.string().regex(/^[A-Z]{2}$/).optional(),
+  /** Prévenir aussi par une notification sur le téléphone (appli Android), en plus de l'e-mail. */
+  push: z.boolean().optional(),
   level: z.enum(WATCH_LEVELS),
   /** Salaire mensuel minimum en FCFA (0 = peu importe). */
   minSalary: z.number().int().min(0).max(100_000_000),
@@ -437,7 +443,7 @@ export const WatchCriteria = z.object({
   email: z.string().trim().max(120),
   /** Langue de la personne : résumés, notes et e-mails de la veille (les annonces gardent leur langue). */
   lang: Lang.optional(),
-});
+}).refine((c) => c.zones.length > 0 || Boolean(c.place?.trim()), { message: 'Cochez au moins une zone ou écrivez une ville ou un pays.', path: ['zones'] });
 export type WatchCriteria = z.infer<typeof WatchCriteria>;
 
 export const WatchFrequency = z.enum(['daily', 'weekly']);

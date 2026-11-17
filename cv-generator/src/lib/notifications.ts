@@ -25,6 +25,8 @@ export async function askNotifications(): Promise<NotifState> {
       const { syncFollowUpNotifications } = await import('./followUpNotify.ts');
       await scheduleReturnReminder();
       await syncFollowUpNotifications();
+      const { registerPush } = await import('./push.ts');
+      await registerPush();
     }
     return display === 'granted' ? 'granted' : display === 'denied' ? 'denied' : 'prompt';
   } catch {

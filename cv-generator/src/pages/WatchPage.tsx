@@ -10,6 +10,8 @@ import { WATCH_PRICE, type WatchCriteria, type WatchFrequency, type WatchOffer, 
 import { Button, Card, Cost, cx, Field, Notice } from '../components/ui.tsx';
 
 import { LANG, LOCALE, t } from '../i18n.ts';
+import { COUNTRY, REGION } from '../lib/currency.ts';
+import { Capacitor } from '@capacitor/core';
 // Veille emploi : on coche, on remplit deux ou trois cases, et les offres arrivent toutes seules.
 
 const CONTRACTS: { id: WatchCriteria['contracts'][number]; label: string }[] = [
@@ -20,12 +22,31 @@ const CONTRACTS: { id: WatchCriteria['contracts'][number]; label: string }[] = [
   { id: 'teletravail', label: t('Télétravail') },
   { id: 'programme', label: t('Programmes jeunes, bourses') },
 ];
-const ZONES: { id: WatchCriteria['zones'][number]; label: string }[] = [
+// En Afrique : les zones d'Afrique d'abord ; ailleurs : les pays où vivent la plupart des visiteurs hors d'Afrique.
+const AFRICA_ZONES: { id: WatchCriteria['zones'][number]; label: string }[] = [
   { id: 'benin', label: t('Bénin') },
   { id: 'afrique-ouest', label: t('Afrique de l’Ouest') },
   { id: 'afrique', label: t('Reste de l’Afrique') },
-  { id: 'international', label: t('Télétravail international') },
 ];
+const ABROAD_ZONES: { id: WatchCriteria['zones'][number]; label: string }[] = [
+  { id: 'france', label: t('France') },
+  { id: 'europe', label: t('Europe') },
+  { id: 'royaume-uni', label: t('Royaume-Uni') },
+  { id: 'canada', label: t('Canada') },
+  { id: 'usa', label: t('États-Unis') },
+];
+const REMOTE_ZONE = { id: 'international' as const, label: t('Télétravail international') };
+const ZONES = REGION === 'afrique' ? [...AFRICA_ZONES, ...ABROAD_ZONES, REMOTE_ZONE] : [...ABROAD_ZONES, ...AFRICA_ZONES, REMOTE_ZONE];
+
+/** Zone cochée au départ, selon le pays du visiteur. */
+function defaultZones(): WatchCriteria['zones'] {
+  if (REGION === 'afrique') return ['benin'];
+  const byCountry: Record<string, WatchCriteria['zones'][number]> = { FR: 'france', GB: 'royaume-uni', CA: 'canada', US: 'usa' };
+  if (COUNTRY && byCountry[COUNTRY]) return [byCountry[COUNTRY]];
+  return REGION === 'europe' ? ['europe'] : [];
+}
+const NATIVE = Capacitor.isNativePlatform();
+
 const LEVELS: { id: WatchCriteria['level']; label: string }[] = [
   { id: 'debutant', label: t('Débutant') },
   { id: 'confirme', label: t('Confirmé') },
@@ -52,7 +73,7 @@ export function cvProfile(cv: CvDocument): string {
 
 function defaultCriteria(cv: CvDocument, email: string): WatchCriteria {
   const jobs = [...new Set([cv.personal.title, ...cv.experiences.map((e) => e.position)].map((s) => s.trim()).filter((s) => s.length >= 2))].slice(0, 3);
-  return { jobs, contracts: ['cdi', 'cdd'], zones: ['benin'], level: 'tous', minSalary: 0, keywords: '', email };
+  return { jobs, contracts: ['cdi', 'cdd'], zones: defaultZones(), place: '', level: 'tous', minSalary: 0, keywords: '', email, push: true };
 }
 
 function Chip({ on, onClick, children }: { on: boolean; onClick: () => void; children: React.ReactNode }) {
@@ -183,7 +204,7 @@ export function WatchPage({ onNavigate }: { onNavigate: (t: Tab) => void }) {
   }, [user]);
 
   const set = <K extends keyof WatchCriteria>(k: K, v: WatchCriteria[K]) => setCriteria((c) => ({ ...c, [k]: v }));
-  const missing = !criteria.jobs.length ? t('Ajoutez au moins un métier.') : !criteria.contracts.length ? t('Cochez au moins un type de contrat.') : !criteria.zones.length ? t('Cochez au moins une zone.') : null;
+  const missing = !criteria.jobs.length ? t('Ajoutez au moins un métier.') : !criteria.contracts.length ? t('Cochez au moins un type de contrat.') : !criteria.zones.length && !criteria.place?.trim() ? t('Cochez au moins une zone, ou écrivez une ville ou un pays.') : null;
   const freeRun = !watch?.freeRunUsed;
   const latest = runs[0] ?? null;
   const older = useMemo(() => runs.slice(1, 6), [runs]);
@@ -196,7 +217,7 @@ export function WatchPage({ onNavigate }: { onNavigate: (t: Tab) => void }) {
   }
 
   async function save() {
-    const { watch: saved } = await api.watchSave({ criteria: { ...criteria, email: criteria.email.trim(), lang: LANG }, profile: cvProfile(cv), frequency });
+    const { watch: saved } = await api.watchSave({ criteria: { ...criteria, email: criteria.email.trim(), place: criteria.place?.trim() ?? '', lang: LANG, ...(COUNTRY ? { country: COUNTRY } : {}) }, profile: cvProfile(cv), frequency });
     setWatch(saved);
     return saved;
   }
@@ -313,6 +334,12 @@ export function WatchPage({ onNavigate }: { onNavigate: (t: Tab) => void }) {
               </Chip>
             ))}
           </Group>
+          <Field
+            label={t('Une ville ou un pays précis (facultatif)')}
+            value={criteria.place ?? ''}
+            onChange={(v) => set('place', v.slice(0, 80))}
+            placeholder={t('Ex. Lyon, Montréal, Tokyo, Dakar')}
+          />
 
           <Group title={t('Votre niveau')}>
             {LEVELS.map((l) => (
@@ -323,7 +350,8 @@ export function WatchPage({ onNavigate }: { onNavigate: (t: Tab) => void }) {
           </Group>
 
           <div className="grid gap-4 sm:grid-cols-2">
-            <div>
+            {/* Salaires en FCFA : seulement en Afrique de l'Ouest. Ailleurs, les mots-clés suffisent. */}
+            {REGION === 'afrique' && <div>
               <label htmlFor="watch-salary" className="mb-1 block text-sm font-semibold text-slate-900">
                 {t('Salaire minimum par mois')}</label>
               <select
@@ -338,7 +366,7 @@ export function WatchPage({ onNavigate }: { onNavigate: (t: Tab) => void }) {
                   </option>
                 ))}
               </select>
-            </div>
+            </div>}
             <Field label={t('Mots-clés en plus (facultatif)')} value={criteria.keywords} onChange={(v) => set('keywords', v.slice(0, 200))} placeholder={t('Ex. ONG, banque, Excel')} />
           </div>
           <Field
@@ -349,6 +377,15 @@ export function WatchPage({ onNavigate }: { onNavigate: (t: Tab) => void }) {
             placeholder="prenom.nom@email.com"
             hint={t('Facultatif si vous regardez les offres ici. Rien d’autre ne sera envoyé à cette adresse.')}
           />
+          {NATIVE && (
+            <label className="flex min-h-11 items-start gap-3 rounded-xl bg-brand-50 p-3 ring-1 ring-brand-100">
+              <input type="checkbox" className="mt-1 size-4 accent-brand-600" checked={criteria.push !== false} onChange={(e) => set('push', e.target.checked)} />
+              <span>
+                <span className="block text-sm font-semibold text-slate-900">{t('Me prévenir aussi sur mon téléphone')}</span>
+                <span className="block text-xs text-slate-600">{t('Une notification dès que de nouvelles offres sont trouvées. Jamais pour rien.')}</span>
+              </span>
+            </label>
+          )}
         </div>
       </Card>
 
@@ -383,14 +420,14 @@ export function WatchPage({ onNavigate }: { onNavigate: (t: Tab) => void }) {
             >
               <CalendarClock className={cx('mt-0.5 size-5 shrink-0', frequency === f ? 'text-brand-700' : 'text-slate-500')} aria-hidden="true" />
               <span>
-                <span className="block font-semibold text-slate-900">{f === 'daily' ? t('Chaque matin, vers 7 h 30') : t('Une fois par semaine')}</span>
+                <span className="block font-semibold text-slate-900">{f === 'daily' ? (REGION === 'afrique' ? t('Chaque matin, vers 7 h 30') : t('Chaque jour')) : t('Une fois par semaine')}</span>
                 <span className="block text-sm text-slate-600">
                   {t('{0} crédit{1} pour 7 jours', [WATCH_PRICE[f], WATCH_PRICE[f] > 1 ? 's' : ''])}</span>
               </span>
             </button>
           ))}
         </div>
-        <p className="mt-2 text-xs text-slate-500">{t('Les offres arrivent ici et par e-mail. Seules les nouvelles offres sont envoyées. Arrêt possible à tout moment.')}</p>
+        <p className="mt-2 text-xs text-slate-500">{NATIVE ? t('Les offres arrivent ici, par e-mail et en notification. Seules les nouvelles offres sont envoyées. Arrêt possible à tout moment.') : t('Les offres arrivent ici et par e-mail. Seules les nouvelles offres sont envoyées. Arrêt possible à tout moment.')}</p>
         <div className="mt-3">
           <Button
             icon={<BellRing className="size-4" />}

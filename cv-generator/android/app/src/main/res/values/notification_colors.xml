@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Bleu CVCasa des notifications (offres de la veille emploi). -->
+    <color name="cvcasa_notification">#2549EB</color>
+</resources>

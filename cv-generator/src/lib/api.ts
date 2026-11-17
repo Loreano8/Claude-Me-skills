@@ -100,6 +100,8 @@ type Styled<T> = Omit<T, 'style'>;
 const styled = <T extends object>(req: T) => ({ ...req, style: styleForAi() });
 
 export const api = {
+  /** Appli Android : adresse de notification de ce téléphone (offres de la veille emploi). */
+  pushRegister: (token: string) => post<{ ok: true; enabled: boolean }>('/api/push/register', { token, platform: 'android' }),
   structure: (req: Styled<StructureRequest>) => post<StructureResult>('/api/ai/structure', styled(req)),
   adapt: (req: Styled<AdaptRequest>) => post<AdaptResult>('/api/ai/adapt', styled(req)),
   coverLetter: (req: Styled<CoverLetterRequest>) => post<CoverLetterResult>('/api/ai/cover-letter', styled(req)),

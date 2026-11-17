@@ -54,6 +54,9 @@ function readSession(key: string): string | null {
   }
 }
 
+/** Pays du visiteur (code à 2 lettres) quand le réseau l'a donné, sinon null. */
+export const COUNTRY: string | null = country;
+
 /** Région du visiteur (exemples affichés : villes, photos). Fixée au chargement de la page. */
 export const REGION: Region = country ? regionForCountry(country) : regionForTimeZone(timeZone());
 
