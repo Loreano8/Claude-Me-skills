@@ -204,6 +204,7 @@ function QuickFill({ compact = false }: { compact?: boolean }) {
               <Button size="lg" variant="secondary" className="w-full" icon={<Camera className="size-5" />} onClick={() => cameraInput.current?.click()}>
                 {t('Photographier mon CV papier')}
               </Button>
+              <p className="text-center text-xs text-slate-500">{t('Une photo par page : feuille à plat, bonne lumière, toute la page visible.')}</p>
             </>
           )}
           {photos && (
@@ -223,9 +224,12 @@ function QuickFill({ compact = false }: { compact?: boolean }) {
                 {onlyPhotos ? t('C’est tout : créer mon CV') : t('Créer mon CV')}
               </Button>
               {files.length < MAX_QUICK_FILES && onlyPhotos && (
-                <Button variant="secondary" className="w-full" icon={<Camera className="size-4" />} onClick={() => cameraInput.current?.click()}>
-                  {t('Photographier une autre page')}
-                </Button>
+                <>
+                  <Button variant="secondary" className="w-full" icon={<Camera className="size-4" />} onClick={() => cameraInput.current?.click()}>
+                    {t('Photographier une autre page')}
+                  </Button>
+                  <p className="text-center text-xs text-slate-500">{t('Une photo par page : feuille à plat, bonne lumière, toute la page visible.')}</p>
+                </>
               )}
             </>
           )}

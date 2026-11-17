@@ -41,9 +41,14 @@
     <!-- Dictée vocale (« Raconter mon parcours », « Corriger mon CV en parlant ») -->
     <uses-permission android:name="android.permission.RECORD_AUDIO" />
     <!-- Android 11+ : permet de trouver le service de reconnaissance vocale du téléphone -->
+    <!-- Android 11+ : sans cette déclaration, « Photographier » ne trouve pas l'appareil photo
+         et l'appli se rabat sur un simple sélecteur de fichiers. -->
     <queries>
         <intent>
             <action android:name="android.speech.RecognitionService" />
+        </intent>
+        <intent>
+            <action android:name="android.media.action.IMAGE_CAPTURE" />
         </intent>
     </queries>
 </manifest>

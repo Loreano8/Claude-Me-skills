@@ -1553,6 +1553,7 @@ export const EN: Record<string, string> = {
   'Recevez les offres qui vous correspondent': 'Get the jobs that match you',
   'Chaque matin par e-mail, à partir de votre profil. La première recherche est offerte.': 'Every morning by email, based on your profile. The first search is free.',
   'Activer ma veille emploi': 'Turn on my job alerts',
+  'Une photo par page : feuille à plat, bonne lumière, toute la page visible.': 'One photo per page: sheet flat, good light, the whole page in view.',
 // Messages du serveur (erreurs, veille) : traduits à l’envoi quand l’interface est en anglais.
   "Fichier trop volumineux (15 Mo maximum).": "File too large (15 MB maximum).",
   "Erreur interne du serveur.": "Internal server error.",
