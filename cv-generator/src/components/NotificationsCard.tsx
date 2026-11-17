@@ -17,7 +17,7 @@ export function NotificationsCard() {
       <h2 id="notif-title" className="flex items-center gap-2 font-semibold text-slate-900">
         <Bell className="size-5 text-brand-600" aria-hidden="true" /> {t('Notifications')}
       </h2>
-      <p className="mt-1 text-sm text-slate-600">{t('Un rappel le jour où une candidature mérite une relance, et quand de nouvelles offres peuvent vous intéresser.')}</p>
+      <p className="mt-1 text-sm text-slate-600">{t('Pour ne rater aucune occasion : un rappel pour adapter votre CV aux nouvelles offres, et le jour où une candidature mérite une relance.')}</p>
       {state === 'granted' && (
         <p className="mt-3 flex items-center gap-1.5 text-sm font-semibold text-emerald-800">
           <CheckCircle2 className="size-4" aria-hidden="true" /> {t('Activées sur ce téléphone.')}
@@ -48,7 +48,7 @@ export function NotificationsNudge() {
   return (
     <div className="flex items-center gap-3 rounded-2xl border border-slate-200 bg-white px-3.5 py-2.5">
       <Bell className="size-5 shrink-0 text-brand-600" aria-hidden="true" />
-      <p className="min-w-0 flex-1 text-sm text-slate-700">{t('Recevoir un rappel pour relancer vos candidatures ?')}</p>
+      <p className="min-w-0 flex-1 text-sm text-slate-700">{t('Ne ratez aucune offre : activez les rappels pour adapter votre CV et relancer vos candidatures.')}</p>
       <Button size="sm" variant="secondary" onClick={() => void askNotifications().then(setState)}>
         {t('Activer')}
       </Button>
