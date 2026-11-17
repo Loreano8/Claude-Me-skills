@@ -18,7 +18,8 @@ import { ProOffer } from '../components/ProUnlock.tsx';
 import { isProTemplate } from '../pdf/catalog.ts';
 import { ReviseCard } from '../components/ReviseCard.tsx';
 import { DossierLink } from './DossierPage.tsx';
-import { Button, Card, Cost, cx, Notice, Select, Toggle } from '../components/ui.tsx';
+import { Button, Card, Cost, cx, Disclosure, Notice, Select, Toggle } from '../components/ui.tsx';
+import { useQuickDraft } from '../lib/quickDraft.ts';
 
 import { t } from '../i18n.ts';
 export function DesignPanel({ cv }: { cv: CvDocument }) {
@@ -89,7 +90,7 @@ export function DesignPanel({ cv }: { cv: CvDocument }) {
   );
 }
 
-export function ExportButtons({ cv }: { cv: CvDocument }) {
+export function ExportButtons({ cv, simple = false }: { cv: CvDocument; /** Page de téléchargement : offre Pro en une ligne, dossier PDF rangé plus bas. */ simple?: boolean }) {
   const [busy, setBusy] = useState<'pdf' | 'docx' | null>(null);
   const [error, setError] = useState<string | null>(null);
   // Ce qu'il fallait débloquer quand la personne a cliqué (Word, ou PDF d'un modèle Pro).
@@ -129,9 +130,9 @@ export function ExportButtons({ cv }: { cv: CvDocument }) {
           ? t('Le PDF garde exactement la mise en page. Le fichier Word se modifie facilement.')
           : t('Le PDF gratuit porte une petite mention « Créé avec CVCasa » en bas de page.')}
       </p>
-      <ProOffer cv={cv} reason={needPro?.reason} onUnlocked={() => needPro && void run(needPro.kind, true)} />
+      <ProOffer cv={cv} compact={simple} reason={needPro?.reason} onUnlocked={() => needPro && void run(needPro.kind, true)} />
       {error && <Notice tone="error">{error}</Notice>}
-      <DossierLink />
+      {!simple && <DossierLink />}
     </div>
   );
 }
@@ -237,45 +238,60 @@ function ChecksCard({ cv }: { cv: CvDocument }) {
 
 export function PreviewPage() {
   const cv = useActiveCv();
+  const empty = isCvEmpty(cv);
+  // Juste après la rédaction d'un tout premier CV : on le dit, et on montre où le télécharger.
+  const justDone = useQuickDraft((s) => s.done);
   return (
-    // Sur téléphone : export, puis aperçu, puis réglages. Sur grand écran : réglages à gauche, aperçu à droite.
-    <div className="grid grid-cols-[minmax(0,1fr)] gap-4 lg:grid-cols-[360px_minmax(0,1fr)] lg:grid-rows-[auto_auto_auto_auto_auto_1fr]">
-      <Card tour="export" title={t('Télécharger mon CV')} className="lg:col-start-1">
-        <ExportButtons cv={cv} />
-      </Card>
-      {!isCvEmpty(cv) && (
-        <div className="space-y-4 lg:col-start-1">
-          <ShareCv cv={cv} />
-          <NextSteps
-            id="apercu"
-            steps={[
-              { icon: Target, label: t('L’adapter à une offre'), text: t('Un CV qui reprend les mots de l’annonce.'), tab: 'offre' },
-              { icon: PenLine, label: t('Écrire la lettre'), text: t('La lettre de motivation, à partir de ce CV.'), tab: 'lettre' },
-              { icon: BellRing, label: t('Recevoir des offres'), text: t('Les annonces qui vous correspondent, chaque matin.'), tab: 'veille' },
-            ]}
-          />
-        </div>
-      )}
-      <div data-tour="preview" className="lg:sticky lg:top-20 lg:col-start-2 lg:row-span-6 lg:row-start-1 lg:self-start">
+    // Sur téléphone : télécharger, puis le CV, puis le reste replié. Sur grand écran : à gauche, le CV à droite.
+    <div className="grid grid-cols-[minmax(0,1fr)] gap-4 lg:grid-cols-[360px_minmax(0,1fr)] lg:grid-rows-[auto_auto_auto_1fr]">
+      <div className="space-y-3 lg:col-start-1">
+        {justDone && !empty && (
+          <div role="status" className="flex items-start gap-3 rounded-2xl border border-emerald-200 bg-emerald-50 p-3.5">
+            <CheckCircle2 className="mt-0.5 size-5 shrink-0 text-emerald-700" aria-hidden="true" />
+            <div className="min-w-0">
+              <p className="font-semibold text-slate-900">{t('Votre CV est prêt.')}</p>
+              <p className="text-sm text-slate-700">{t('Regardez-le ci-dessous, puis téléchargez-le.')}{' '}
+                <button type="button" onClick={() => { useQuickDraft.getState().set({ done: false }); window.location.hash = 'infos'; }} className="font-semibold text-brand-700 underline underline-offset-2">
+                  {t('Corriger une information')}
+                </button>
+              </p>
+            </div>
+          </div>
+        )}
+        <Card tour="export" title={t('Télécharger mon CV')}>
+          <ExportButtons cv={cv} simple />
+        </Card>
+      </div>
+      <div data-tour="preview" className="lg:sticky lg:top-20 lg:col-start-2 lg:row-span-4 lg:row-start-1 lg:self-start">
         <div className="mx-auto max-w-[700px]">
           <Preview source={{ kind: 'cv', cv }} />
         </div>
       </div>
-      {!isCvEmpty(cv) && (
+      <div className="lg:col-start-1">
+        <Disclosure title={t('Changer de modèle ou de couleur')} hint={t('33 modèles, la couleur, la photo, la date de naissance…')}>
+          <DesignPanel cv={cv} />
+        </Disclosure>
+      </div>
+      {!empty && (
         <div className="lg:col-start-1">
-          <ReviseCard />
+          <Disclosure title={t('Aller plus loin (facultatif)')} hint={t('Corriger en parlant, traduire, partager, dossier PDF, conseils')}>
+            <ReviseCard />
+            <TranslateCard cv={cv} />
+            <ShareCv cv={cv} />
+            <DossierLink />
+            <ChecksCard cv={cv} />
+            <NaturalReview hits={cvCliches(cv)} edit={t('Corrigez directement dans « Mes infos », ou dites-la dans « Corriger mon CV en parlant ».')} />
+            <NextSteps
+              id="apercu"
+              steps={[
+                { icon: Target, label: t('L’adapter à une offre'), text: t('Un CV qui reprend les mots de l’annonce.'), tab: 'offre' },
+                { icon: PenLine, label: t('Écrire la lettre'), text: t('La lettre de motivation, à partir de ce CV.'), tab: 'lettre' },
+                { icon: BellRing, label: t('Recevoir des offres'), text: t('Les annonces qui vous correspondent, chaque matin.'), tab: 'veille' },
+              ]}
+            />
+          </Disclosure>
         </div>
       )}
-      <div className="lg:col-start-1">
-        <DesignPanel cv={cv} />
-      </div>
-      <div className="lg:col-start-1">
-        <TranslateCard cv={cv} />
-      </div>
-      <div className="space-y-4 lg:col-start-1">
-        <ChecksCard cv={cv} />
-        {!isCvEmpty(cv) && <NaturalReview hits={cvCliches(cv)} edit={t('Corrigez directement dans « Mes infos », ou dites-la dans « Corriger mon CV en parlant ».')} />}
-      </div>
     </div>
   );
 }

@@ -146,20 +146,11 @@ export function Tour({ tab }: { tab: Tab }) {
     markSeen(tab);
   }, [tab]);
 
-  // Lancement automatique à la première visite de la page, une fois la page affichée.
+  // Plus de lancement automatique : sur téléphone, des bulles qui s'ouvrent seules à chaque page gênaient plus
+  // qu'elles n'aidaient. Le guide se lance seulement quand la personne touche « ? » dans l'en-tête.
   useEffect(() => {
     setActive(false);
-    if (!steps || seenTours().includes(tab)) return;
-    let tries = 0;
-    const id = window.setInterval(() => {
-      tries++;
-      // On attend qu'aucune fenêtre (connexion, paiement…) ne soit ouverte.
-      if (document.querySelector('[role="dialog"]') && tries < 40) return;
-      window.clearInterval(id);
-      start();
-    }, 700);
-    return () => window.clearInterval(id);
-  }, [tab, steps, start]);
+  }, [tab]);
 
   const step = active ? visible[index] : undefined;
 

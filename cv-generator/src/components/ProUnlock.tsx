@@ -39,8 +39,11 @@ export function ProOffer({
   cv,
   reason,
   onUnlocked,
+  compact = false,
 }: {
   cv: CvDocument;
+  /** Une seule ligne (page de téléchargement), tant que la personne n'a rien demandé de Pro. */
+  compact?: boolean;
   /** Pourquoi on le propose maintenant (Word demandé, modèle Pro choisi…). */
   reason?: string | null;
   onUnlocked?: () => void;
@@ -50,6 +53,25 @@ export function ProOffer({
     return (
       <p className="flex items-center gap-1.5 text-sm font-medium text-emerald-700">
         <BadgeCheck className="size-4" /> {' '}{t('Version Pro : sans mention, tous les modèles, Word.')}</p>
+    );
+  }
+  if (compact && !reason) {
+    return (
+      <div className="flex items-center gap-3 rounded-2xl border border-amber-200 bg-amber-50 px-3 py-2">
+        <Crown className="size-4 shrink-0 text-amber-800" aria-hidden="true" />
+        <p className="min-w-0 flex-1 text-xs text-amber-900">{t('Sans la mention, tous les modèles, Word : version Pro.')}</p>
+        <Button
+          size="sm"
+          variant="secondary"
+          loading={busy}
+          onClick={async () => {
+            if (await unlock()) onUnlocked?.();
+          }}
+        >
+          {t('Pro')}{' '}<Cost n={UNLOCK_COST} />
+        </Button>
+        {error && <span className="sr-only">{error}</span>}
+      </div>
     );
   }
   return (

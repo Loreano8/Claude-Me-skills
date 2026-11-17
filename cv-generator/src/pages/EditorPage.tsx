@@ -1,6 +1,7 @@
 import { useRef, useState } from 'react';
 import { useQuickDraft } from '../lib/quickDraft.ts';
 import { useEffect } from '../lib/safeEffects.ts';
+import { useAccount } from '../lib/account.ts';
 import { StepGuide } from '../components/StepGuide.tsx';
 import { AlignLeft, ArrowDown, ArrowUp, Award, Briefcase, Camera, FileText, GraduationCap, Heart, Languages, ListChecks, Loader2, Paperclip, PenLine, Plus, Trash2, Undo2, User, Wrench, X } from 'lucide-react';
 import type { Attachment } from '../../shared/schema.ts';
@@ -12,8 +13,7 @@ import { ACCEPTED_DOCS, fileToAttachment } from '../lib/files.ts';
 import { PhotoInput } from '../components/PhotoInput.tsx';
 import { appendSpoken, MicButton } from '../components/MicButton.tsx';
 import { ReviseCard } from '../components/ReviseCard.tsx';
-import { learnStyle, WriteLikeMe } from '../components/WriteLikeMe.tsx';
-import { useWritingStyle } from '../lib/writingStyle.ts';
+import { WriteLikeMe } from '../components/WriteLikeMe.tsx';
 import { SignaturePad } from '../components/SignaturePad.tsx';
 import { TagInput } from '../components/TagInput.tsx';
 import { Button, Card, Cost, Disclosure, Field, Notice, Section, Select, TextArea, Toggle } from '../components/ui.tsx';
@@ -45,36 +45,21 @@ function QuickFill({ compact = false }: { compact?: boolean }) {
   // Erreur de lecture d'un fichier : affichée juste sous les boutons d'import, là où la personne regarde.
   const [importError, setImportError] = useState<string | null>(null);
   const [reading, setReading] = useState(false);
-  /** Ancien CV importé : proposé ensuite pour « Écrire comme moi », si aucun style n'est encore retenu. */
-  const [styleOffer, setStyleOffer] = useState<Attachment[] | null>(null);
-  const [styleBusy, setStyleBusy] = useState(false);
-  const [styleNote, setStyleNote] = useState<string | null>(null);
-  const hasStyle = useWritingStyle((s) => s.style !== null);
   const hasContent = !isCvEmpty(cv);
 
-  async function keepStyle(docs: Attachment[]) {
-    setStyleBusy(true);
-    try {
-      const problem = await learnStyle(docs, '');
-      setStyleNote(problem ?? t('C’est noté : vos prochains CV et lettres reprendront votre façon d’écrire.'));
-      setStyleOffer(null);
-    } catch (e) {
-      setStyleNote((e as Error).message);
-    } finally {
-      setStyleBusy(false);
-    }
-  }
-
   async function run(mode: 'fill' | 'improve') {
+    // Lu au moment de l'appel : la rédaction peut partir juste après un import, avant le nouveau rendu.
+    const now = useQuickDraft.getState();
+    const firstCv = mode === 'fill' && !hasContent;
     draft.set({ done: false });
     setBusy(mode);
     setError(null);
     try {
       const before = structuredClone(cv);
       const res = await api.structure({
-        text: mode === 'fill' ? text : '',
+        text: mode === 'fill' ? now.text : '',
         file: null,
-        files: mode === 'fill' ? files : [],
+        files: mode === 'fill' ? now.files : [],
         current: mode === 'improve' || (hasContent && merge) ? toAiContent(cv) : null,
         // Nouveau CV : l'IA le rédige dans la langue de la personne (anglais si elle parle anglais…).
         lang: hasContent ? cv.settings.headingLang : null,
@@ -85,9 +70,13 @@ function QuickFill({ compact = false }: { compact?: boolean }) {
       });
       draft.set({ undo: before, suggestions: res.suggestions, done: true });
       if (mode === 'fill') {
-        if (files.length && !hasStyle) setStyleOffer(files);
         setText('');
         setFiles([]);
+      }
+      // Tout premier CV : on montre directement le CV prêt, avec le bouton « Télécharger ».
+      if (firstCv) {
+        window.location.hash = 'apercu';
+        window.scrollTo({ top: 0 });
       }
     } catch (e) {
       setError((e as Error).message);
@@ -96,7 +85,7 @@ function QuickFill({ compact = false }: { compact?: boolean }) {
     }
   }
 
-  async function onFiles(list: FileList | null) {
+  async function onFiles(list: FileList | null, auto = false) {
     if (!list?.length) return;
     setImportError(null);
     setReading(true);
@@ -106,19 +95,19 @@ function QuickFill({ compact = false }: { compact?: boolean }) {
         const { size: _size, ...att } = await fileToAttachment(f);
         added.push(att);
       }
+      const cur = useQuickDraft.getState().files;
+      const next = [...cur, ...added];
+      if (next.length > MAX_QUICK_FILES) return setImportError(t('{0} documents maximum à la fois.', [MAX_QUICK_FILES]));
+      if (next.reduce((n, a) => n + a.data.length, 0) > MAX_QUICK_BYTES) return setImportError(t('Ces documents sont trop lourds ensemble. Envoyez-en moins à la fois.'));
+      setFiles(next);
+      // Ancien CV choisi dans les fichiers, CV encore vide : la rédaction démarre aussitôt, sans autre bouton.
+      // (Les photos, elles, s'enchaînent page par page : la personne lance la rédaction quand elle a fini.)
+      if (auto && !hasContent) {
+        setReading(false);
+        await run('fill');
+        return;
+      }
       requestAnimationFrame(() => document.querySelector('[data-tour="generate"]')?.scrollIntoView({ block: 'center', behavior: 'smooth' }));
-      setFiles((cur) => {
-        const next = [...cur, ...added];
-        if (next.length > MAX_QUICK_FILES) {
-          setImportError(t('{0} documents maximum à la fois.', [MAX_QUICK_FILES]));
-          return cur;
-        }
-        if (next.reduce((n, a) => n + a.data.length, 0) > MAX_QUICK_BYTES) {
-          setImportError(t('Ces documents sont trop lourds ensemble. Envoyez-en moins à la fois.'));
-          return cur;
-        }
-        return next;
-      });
     } catch (e) {
       setImportError((e as Error).message);
     } finally {
@@ -135,6 +124,19 @@ function QuickFill({ compact = false }: { compact?: boolean }) {
     if (text.trim() || files.length) void run('fill');
   }, [wantRun]); // eslint-disable-line react-hooks/exhaustive-deps
   const [expanded, setExpanded] = useState(false);
+  // Départ sans CV : l'écriture libre n'apparaît que si la personne la demande.
+  const [writing, setWriting] = useState(false);
+  // Import fait sans être connecté : la fenêtre de compte s'ouvre ; dès que le compte existe, la rédaction reprend seule.
+  const userId = useAccount((s) => s.user?.identifier ?? null);
+  const [waitLogin, setWaitLogin] = useState(false);
+  useEffect(() => {
+    if (!busy && error && userId === null && useQuickDraft.getState().files.length) setWaitLogin(true);
+  }, [error]); // eslint-disable-line react-hooks/exhaustive-deps
+  useEffect(() => {
+    if (!waitLogin || userId === null || busy) return;
+    setWaitLogin(false);
+    if (!hasContent && (useQuickDraft.getState().files.length || useQuickDraft.getState().text.trim())) void run('fill');
+  }, [userId, waitLogin]); // eslint-disable-line react-hooks/exhaustive-deps
   // CV déjà rempli : la saisie rapide se replie en une ligne (elle reste ouverte si un import est en cours).
   if (compact && !expanded && !text.trim() && !files.length && !busy && !error && !importError) {
     return (
@@ -145,6 +147,125 @@ function QuickFill({ compact = false }: { compact?: boolean }) {
           <span className="block text-xs text-slate-500">{t('Ancien CV, photo, quelques lignes : tout est ajouté à votre CV.')}</span>
         </span>
       </button>
+    );
+  }
+  // CV encore vide : un seul geste. « Importer » lit le fichier et rédige le CV tout de suite ;
+  // les photos s'enchaînent page par page ; écrire quelques lignes reste possible, mais rangé.
+  if (!hasContent) {
+    const inputs = (
+      <>
+        <input
+          ref={fileInput}
+          type="file"
+          multiple
+          accept={ACCEPTED_DOCS}
+          className="hidden"
+          onChange={(e) => {
+            void onFiles(e.target.files, true);
+            e.target.value = '';
+          }}
+        />
+        <input
+          ref={cameraInput}
+          type="file"
+          accept="image/*"
+          capture="environment"
+          className="hidden"
+          onChange={(e) => {
+            void onFiles(e.target.files);
+            e.target.value = '';
+          }}
+        />
+      </>
+    );
+    if (busy === 'fill') {
+      return (
+        <Card className="border-brand-100" tour="quickfill" title={t('Créez votre CV')}>
+          <div role="status" className="flex flex-col items-center gap-3 py-8 text-center">
+            <Loader2 className="size-10 animate-spin text-brand-600" aria-hidden="true" />
+            <p className="text-lg font-semibold text-slate-900">{t('Lecture et rédaction de votre CV…')}</p>
+            <p className="max-w-xs text-sm text-slate-600">{t('Cela prend jusqu’à une minute. Restez sur cette page : votre CV s’affichera tout seul.')}</p>
+          </div>
+        </Card>
+      );
+    }
+    const photos = files.length > 0;
+    const onlyPhotos = files.every((f) => f.mediaType.startsWith('image/'));
+    return (
+      <Card className="border-brand-100" tour="quickfill" title={t('Créez votre CV')} subtitle={t('À partir de votre ancien CV, en une minute.')}>
+        {inputs}
+        <div className="space-y-2.5">
+          {!photos && (
+            <>
+              <Button data-tour="import" size="lg" className="w-full" icon={<Paperclip className="size-5" />} loading={reading} onClick={() => fileInput.current?.click()}>
+                {t('Importer mon ancien CV')}
+              </Button>
+              <p className="text-center text-xs text-slate-500">{t('PDF, Word ou photo. 1 crédit, offert à l’inscription.')}</p>
+              <Button size="lg" variant="secondary" className="w-full" icon={<Camera className="size-5" />} onClick={() => cameraInput.current?.click()}>
+                {t('Photographier mon CV papier')}
+              </Button>
+            </>
+          )}
+          {photos && (
+            <>
+              <div className="flex flex-wrap gap-2">
+                {files.map((f, i) => (
+                  <span key={i} className="inline-flex max-w-full items-center gap-2 rounded-xl bg-slate-50 px-3 py-2 text-sm ring-1 ring-slate-200">
+                    <Paperclip className="size-4 shrink-0 text-slate-500" />
+                    <span className="truncate">{f.mediaType.startsWith('image/') ? t('Page {0}', [i + 1]) : f.name}</span>
+                    <button type="button" onClick={() => setFiles((cur) => cur.filter((_, j) => j !== i))} aria-label={t('Retirer ce document')} className="text-slate-400 hover:text-slate-700">
+                      <X className="size-4" />
+                    </button>
+                  </span>
+                ))}
+              </div>
+              <Button data-tour="generate" size="lg" className="w-full" icon={<FileText className="size-5" />} onClick={() => run('fill')}>
+                {onlyPhotos ? t('C’est tout : créer mon CV') : t('Créer mon CV')}
+              </Button>
+              {files.length < MAX_QUICK_FILES && onlyPhotos && (
+                <Button variant="secondary" className="w-full" icon={<Camera className="size-4" />} onClick={() => cameraInput.current?.click()}>
+                  {t('Photographier une autre page')}
+                </Button>
+              )}
+            </>
+          )}
+          {reading && (
+            <p className="flex items-center justify-center gap-2 text-sm text-brand-700" role="status">
+              <Loader2 className="size-4 animate-spin" aria-hidden="true" /> {t('Lecture du fichier…')}
+            </p>
+          )}
+          {importError && (
+            <div role="alert">
+              <Notice tone="error">{importError}</Notice>
+            </div>
+          )}
+          {error && (
+            <div role="alert">
+              <Notice tone="error">{error}</Notice>
+            </div>
+          )}
+        </div>
+
+        <div className="mt-4 border-t border-slate-100 pt-3">
+          {!writing && !text.trim() ? (
+            <button type="button" onClick={() => setWriting(true)} className="flex min-h-11 w-full items-center justify-center gap-2 text-sm font-semibold text-brand-700">
+              <PenLine className="size-4" aria-hidden="true" /> {t('Pas de CV ? Écrire quelques lignes')}
+            </button>
+          ) : (
+            <div>
+              <label htmlFor="quick-text" className="text-sm font-semibold text-slate-900">{t('Votre parcours, en quelques lignes')}</label>
+              <p className="mt-0.5 mb-2 text-xs text-slate-500">{t('Dans le désordre, sans phrases parfaites : vos études, vos emplois, ce que vous savez faire.')}</p>
+              <TextArea id="quick-text" value={text} onChange={(v) => setText(v)} rows={5} placeholder={QUICK_PLACEHOLDER} />
+              <div className="mt-2" data-tour="mic">
+                <MicButton onText={(t) => setText((cur) => appendSpoken(cur, t))} lang={cv.settings.headingLang} label={t('Dicter au lieu d’écrire')} />
+              </div>
+              <Button className="mt-3 w-full" size="lg" data-tour="generate" icon={<FileText className="size-5" />} disabled={!text.trim()} onClick={() => run('fill')}>
+                {t('Créer mon CV')}{' '}<Cost />
+              </Button>
+            </div>
+          )}
+        </div>
+      </Card>
     );
   }
   return (
@@ -168,7 +289,7 @@ function QuickFill({ compact = false }: { compact?: boolean }) {
           accept={ACCEPTED_DOCS}
           className="hidden"
           onChange={(e) => {
-            void onFiles(e.target.files);
+            void onFiles(e.target.files, true);
             e.target.value = '';
           }}
         />
@@ -278,18 +399,6 @@ function QuickFill({ compact = false }: { compact?: boolean }) {
           <Notice tone="error">{error}</Notice>
         </div>
       )}
-      {styleOffer && (
-        <div className="mt-3 rounded-xl bg-white p-3 text-sm text-slate-700 ring-1 ring-brand-100">
-          <p>{t('Cet ancien CV, c’est vous qui l’avez écrit ? CVCasa peut retenir votre façon d’écrire pour vos prochains CV et lettres (gratuit).')}</p>
-          <div className="mt-2 flex flex-wrap gap-2">
-            <Button size="sm" icon={<PenLine className="size-4" />} loading={styleBusy} onClick={() => void keepStyle(styleOffer)}>
-              {t('Oui, écrire comme moi')}</Button>
-            <Button size="sm" variant="ghost" onClick={() => setStyleOffer(null)}>
-              {t('Non merci')}</Button>
-          </div>
-        </div>
-      )}
-      {styleNote && <p className="mt-3 text-sm text-brand-700">{styleNote}</p>}
     </Card>
   );
 }
