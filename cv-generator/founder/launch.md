@@ -36,7 +36,7 @@ Pourquoi ces chiffres : 10 acheteurs, c'est la condition commune des trois membr
 
 | Tâche | Qui | Pour le | Chemin critique ? |
 | --- | --- | --- | --- |
-| **Appeler la personne qui a laissé expirer son paiement Mobile Money** le 27 octobre. Lui demander pourquoi, sans rien lui vendre. Noter la réponse mot pour mot. | F | mer. 18 nov. | **Oui** : sa réponse peut changer l'écran de paiement. |
+| ~~Appeler la personne qui a laissé expirer son paiement~~ : **sans objet**, c'était un test du fondateur sur un autre téléphone (correction du 17 novembre). | — | — | — |
 | **Gel des nouvelles fonctions** jusqu'au 31 décembre : seulement des corrections de bugs et ce qui sert le paiement. | F + D | dès le 17 nov. | — |
 | **Une seule promesse** sur l'accueil et le premier écran : « Collez une offre, recevez votre CV adapté avec son score avant→après. » Le reste passe au second plan. Captures avant mise en ligne. | D (F valide) | jeu. 19 nov. | **Oui** |
 | **Un lien suivi par canal**, du type `cvcasa.com/?src=…` (le site enregistre déjà la source à l'inscription) : `whatsapp-statut`, `groupe-<nom>`, `tiktok-<vidéo>`, `cyber-<nom>`, `ambassadeur-<nom>`. Une liste partagée avec F. | D | mer. 18 nov. | **Oui** : sans source notée, le test ne prouve rien sur les canaux. |
@@ -61,7 +61,7 @@ Pourquoi ces chiffres : 10 acheteurs, c'est la condition commune des trois membr
 
 Si une de ces tâches glisse, la date du 1er décembre glisse :
 
-**appel au client du 27 octobre → promesse unique sur l'accueil → liens suivis → messages aux admins et aux cybercafés → 10 acheteurs au 30 novembre.**
+**promesse unique sur l'accueil → liens suivis → messages aux admins et aux cybercafés → 10 acheteurs au 30 novembre.**
 
 ---
 

@@ -243,7 +243,7 @@ export function PreviewPage() {
   const justDone = useQuickDraft((s) => s.done);
   return (
     // Sur téléphone : télécharger, puis le CV, puis le reste replié. Sur grand écran : à gauche, le CV à droite.
-    <div className="grid grid-cols-[minmax(0,1fr)] gap-4 lg:grid-cols-[360px_minmax(0,1fr)] lg:grid-rows-[auto_auto_auto_1fr]">
+    <div className="grid grid-cols-[minmax(0,1fr)] gap-4 lg:grid-cols-[360px_minmax(0,1fr)] lg:grid-rows-[auto_auto_auto_auto_1fr]">
       <div className="space-y-3 lg:col-start-1">
         {justDone && !empty && (
           <div role="status" className="flex items-start gap-3 rounded-2xl border border-emerald-200 bg-emerald-50 p-3.5">
@@ -262,11 +262,23 @@ export function PreviewPage() {
           <ExportButtons cv={cv} simple />
         </Card>
       </div>
-      <div data-tour="preview" className="lg:sticky lg:top-20 lg:col-start-2 lg:row-span-4 lg:row-start-1 lg:self-start">
+      <div data-tour="preview" className="lg:sticky lg:top-20 lg:col-start-2 lg:row-span-5 lg:row-start-1 lg:self-start">
         <div className="mx-auto max-w-[700px]">
           <Preview source={{ kind: 'cv', cv }} />
         </div>
       </div>
+      {!empty && (
+        // La suite naturelle d'un CV prêt : recevoir des offres sans chercher.
+        <section className="rounded-2xl bg-ink p-4 text-white lg:col-start-1">
+          <p className="flex items-center gap-2 font-semibold text-white">
+            <BellRing className="size-5 text-sun-400" aria-hidden="true" /> {t('Recevez les offres qui vous correspondent')}
+          </p>
+          <p className="mt-1 text-sm text-slate-300">{t('Chaque matin par e-mail, à partir de votre profil. La première recherche est offerte.')}</p>
+          <button type="button" onClick={() => { window.location.hash = 'veille'; }} className="mt-3 inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-xl bg-sun-400 px-4 text-sm font-semibold text-ink hover:bg-sun-400/90 sm:w-auto">
+            {t('Activer ma veille emploi')}
+          </button>
+        </section>
+      )}
       <div className="lg:col-start-1">
         <Disclosure title={t('Changer de modèle ou de couleur')} hint={t('33 modèles, la couleur, la photo, la date de naissance…')}>
           <DesignPanel cv={cv} />

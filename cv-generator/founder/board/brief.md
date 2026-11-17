@@ -38,7 +38,7 @@ Referral: when a friend makes a first purchase, both get credits. Ambassador pro
 ## Traction and evidence (honest, from the production database on 16 Nov 2026)
 
 - Accounts: **6 in total** (3 created in the last 7 days). All signed up with no tracked source.
-- Paying customers: **0 besides the founder**. The only two paid orders are the founder's own tests (500 FCFA by Mobile Money on 25 Oct, 1,500 FCFA by crypto on 14 Nov). One other person started a Mobile Money payment and let it expire.
+- Paying customers: **0 besides the founder**. The only two paid orders are the founder's own tests (500 FCFA by Mobile Money on 25 Oct, 1,500 FCFA by crypto on 14 Nov). (Correction, 17 Nov: the Mobile Money payment left to expire on 27 Oct was also a founder test, made on another phone with a tester's account.)
 - Two testers were given free credits (10 and 15 + 10, with an automatic withdrawal of 1 credit every 3 days so they do not hoard them). They used the product for real: 8 CV generations, 10 adaptations, 7 cover letters, 3 Pro unlocks across all accounts.
 - Site visits in the last 30 days: about 172, almost all "direct" (no ad campaign, no tracked channel).
 - Testimonials: 0. Ambassadors signed: 1 (a tester). Job alerts created: 0.

@@ -655,9 +655,14 @@ function CreditsDialog() {
         ))}
         {!packs && !error && <div className="h-40 animate-pulse rounded-2xl bg-slate-100" />}
       </div>
+      <p className="mt-3 flex items-center gap-1.5 text-xs text-slate-500">
+        <Check className="size-3.5 shrink-0" /> {' '}
+        {money.mobileMoney
+          ? t('Paiement sécurisé par FedaPay : MTN MoMo ou Moov Money.')
+          : t('Dans cette devise, le paiement se fait en crypto (USDT ou USDC). Le prix affiché est indicatif. Carte bancaire : bientôt.')}</p>
       <div className="mt-3">
-        <Disclosure title={t('Ce que coûte chaque action')}>
-      <table className="w-full text-sm">
+        <Disclosure title={t('Prix des actions et devise')} hint={t('Ce que coûte chaque action, changer de devise')}>
+          <table className="w-full text-sm">
         <caption className="sr-only">{t('Ce que coûte chaque action')}</caption>
         <tbody className="divide-y divide-slate-100">
           {PRICES.map(([what, price]) => (
@@ -670,14 +675,9 @@ function CreditsDialog() {
           ))}
         </tbody>
       </table>
+          <CurrencyPicker />
         </Disclosure>
       </div>
-      <p className="mt-3 flex items-center gap-1.5 text-xs text-slate-500">
-        <Check className="size-3.5 shrink-0" /> {' '}
-        {money.mobileMoney
-          ? t('Paiement sécurisé par FedaPay : MTN MoMo ou Moov Money.')
-          : t('Dans cette devise, le paiement se fait en crypto (USDT ou USDC). Le prix affiché est indicatif. Carte bancaire : bientôt.')}</p>
-      <CurrencyPicker className="mt-1" />
       {user && packs && <CryptoPay packs={offerOpen ? [offerOpen.pack, ...packs] : packs} request={cryptoAsk} />}
       {!paymentsOn && (
         <div className="mt-3">

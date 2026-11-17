@@ -3,6 +3,8 @@
 **Vote : 3 FUND IF (financer sous conditions) — note moyenne 4,0/10**
 (Offres 4/10 · Monopole 3/10 · Produit 5/10)
 
+> **Correction du 17 novembre (fondateur)** : le paiement Mobile Money abandonné du 27 octobre n'était pas un client. C'était un test du fondateur, fait sur un autre téléphone avec le compte d'une testeuse. Les remarques du conseil sur « la personne qui a abandonné son paiement » ne s'appliquent donc pas. Le constat principal reste le même : aucun client payant en dehors du fondateur.
+
 **Comparaison** : les deux premiers examens (25 et 27 octobre) donnaient 4,7/10. **La note baisse.** Le conseil ne juge pas le travail fourni, il juge les preuves : en trois semaines, le produit a beaucoup avancé, mais il n'y a toujours aucun client payant en dehors du fondateur. La lentille Monopole prévient : si ses conditions ne sont pas tenues au prochain examen, son vote passe à **PASS**. Les avis complets sont dans `founder/board/` ; l'examen précédent est archivé dans `founder/historique/2026-10-27/`.
 
 ## Ce qui a progressé (reconnu par les trois membres)
@@ -13,7 +15,7 @@
 
 ## Les risques soulevés par plusieurs membres (les plus graves d'abord)
 
-1. **Toujours aucune preuve que des gens paient** (les trois membres). 6 comptes, 0 client payant hors fondateur, 0 témoignage. Les testeurs avaient des crédits offerts : ils n'ont jamais vu le moment de payer. Une personne a lancé un paiement Mobile Money puis l'a laissé expirer, et personne ne sait pourquoi. Les trois membres posent la même question : *l'avez-vous appelée ?*
+1. **Toujours aucune preuve que des gens paient** (les trois membres). 6 comptes, 0 client payant hors fondateur, 0 témoignage. Les testeurs avaient des crédits offerts : ils n'ont jamais vu le moment de payer. *(Le paiement abandonné que les membres citaient était en fait un test du fondateur : voir la correction en haut.)*
 2. **La dispersion continue** (les trois membres). L'examen précédent demandait de choisir une promesse et de couper. Depuis, une dizaine de fonctions ont été ajoutées (alertes emploi, e-mail de candidature, relances, photo, « écrire comme moi », QR code…). Les alertes emploi n'ont aucun utilisateur. Pour la lentille Produit, replier les outils dans des menus « cache le problème, il ne le règle pas ».
 3. **On vend des crédits, pas un résultat, et la grille s'est encore compliquée** (Offres, Produit). Trois packs, offre de lancement, offre de retour sur 72 h, Pro à 2 crédits, seuils gratuits différents. Ce n'est pas lisible en dix secondes sur un petit téléphone.
 4. **Aucun canal mesuré** (Offres, Monopole). 172 visites en 30 jours, presque toutes sans source connue. Aucun coût par client.
@@ -28,7 +30,7 @@
 ## Les conditions, en liste à cocher
 
 **Preuve, avant le 31 décembre (fin de l'offre de lancement) :**
-- [ ] **Appeler la personne qui a laissé expirer son paiement** et noter pourquoi. *(les trois membres)*
+- [x] ~~Appeler la personne qui a laissé expirer son paiement~~ : sans objet, c'était un test du fondateur (correction du 17 novembre).
 - [ ] **10 acheteurs réels hors entourage, sans crédits offerts**, avec la source de chacun notée. *(Offres, Monopole ; Produit en demande 3 d'abord)*
 - [ ] **3 témoignages vérifiés** (nom, ville ou photo/voix, accord écrit). *(les trois membres)*
 - [ ] **Regarder 10 inconnus** aller d'une vidéo jusqu'au reçu Mobile Money, sans crédits offerts ; noter et corriger chaque arrêt, surtout au paiement. *(Produit)*
