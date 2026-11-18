@@ -3,6 +3,7 @@ import { BadgeCheck, Crown } from 'lucide-react';
 import { useStore } from '../store.ts';
 import type { CvDocument } from '../types.ts';
 import { api } from '../lib/api.ts';
+import { useAccount } from '../lib/account.ts';
 import { Button, Cost, Notice } from './ui.tsx';
 
 import { t } from '../i18n.ts';
@@ -20,6 +21,8 @@ export function useUnlock(cv: CvDocument) {
     setError(null);
     try {
       await api.unlock();
+      const s = useAccount.getState();
+      if (s.user) useAccount.setState({ user: { ...s.user, pro: true } });
       unlockCv(cv.id);
       return true;
     } catch (e) {
@@ -80,7 +83,7 @@ export function ProOffer({
       <p className="flex items-start gap-2 text-sm text-amber-900">
         <Crown className="mt-0.5 size-4 shrink-0" />
         <span>
-          <strong>{t('Version Pro, {0} crédits', [UNLOCK_COST])}</strong> {' '}{t(': sans la mention « Créé avec CVCasa », tous les modèles, l’export Word, et la lettre de ce CV. Acquis pour toujours sur ce CV : modifiez-le et retéléchargez-le autant de fois que vous voulez.')}</span>
+          <strong>{t('Version Pro, {0} crédits', [UNLOCK_COST])}</strong> {' '}{t(': sans la mention « Créé avec CVCasa », tous les modèles, l’export Word et les lettres. Payée une seule fois pour tout votre compte : tous vos CV, sur le téléphone comme sur le site.')}</span>
       </p>
       <Button
         size="sm"

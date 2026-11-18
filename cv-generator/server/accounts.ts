@@ -44,6 +44,8 @@ export interface User {
   identifier: string;
   name: string;
   credits: number;
+  /** Version Pro achetée (une fois pour tout le compte). */
+  pro: boolean;
 }
 
 export class AccountError extends Error {
@@ -65,7 +67,8 @@ export interface AccountOptions {
   freeIpCooldownDays: number;
 }
 
-const USER_COLUMNS = 'id, identifier, name, credits';
+// Version Pro : liée au compte (payée une fois, valable pour tous les CV, sur tous les appareils).
+const USER_COLUMNS = "id, identifier, name, credits, exists (select 1 from credit_ledger cl where cl.user_id = users.id and cl.reason = 'unlock') as pro";
 
 export function createAccounts(db: Db, opts: AccountOptions) {
   async function addCredits(tx: Db, userId: number, delta: number, reason: string, ref = ''): Promise<number> {

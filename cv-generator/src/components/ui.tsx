@@ -1,5 +1,5 @@
 import { useId, useState, type ButtonHTMLAttributes, type ReactNode } from 'react';
-import { ChevronDown, Eye, EyeOff, Loader2 } from 'lucide-react';
+import { ChevronDown, Eye, EyeOff, Loader2, X } from 'lucide-react';
 
 import { t } from '../i18n.ts';
 export function cx(...classes: (string | false | null | undefined)[]): string {
@@ -114,6 +114,40 @@ export function Section({
 const inputClass =
   'w-full rounded-xl border border-slate-300 bg-white px-3 py-2.5 text-[15px] text-slate-900 placeholder:text-slate-400 focus:border-brand-500 focus:ring-2 focus:ring-brand-200 focus:outline-none';
 
+/**
+ * Croix « Effacer » d'une case remplie : vide tout d'un coup (un ancien texte d'offre, de lettre…),
+ * avec « Annuler » pendant quelques secondes si c'était une erreur.
+ */
+function useClear(value: string, onChange: (v: string) => void) {
+  const [undo, setUndo] = useState<string | null>(null);
+  const clear = () => {
+    setUndo(value);
+    onChange('');
+    window.setTimeout(() => setUndo(null), 8000);
+  };
+  const button = value ? (
+    <button
+      type="button"
+      onClick={clear}
+      aria-label={t('Effacer le texte')}
+      title={t('Effacer le texte')}
+      className="absolute top-1.5 right-1.5 flex size-8 items-center justify-center rounded-full text-slate-400 hover:bg-slate-100 hover:text-slate-700"
+    >
+      <X className="size-4" aria-hidden="true" />
+    </button>
+  ) : null;
+  const notice =
+    undo !== null && !value ? (
+      <p className="mt-1 text-xs text-slate-500" role="status">
+        {t('Texte effacé.')}{' '}
+        <button type="button" className="hit font-semibold text-brand-700 underline underline-offset-2" onClick={() => { onChange(undo); setUndo(null); }}>
+          {t('Annuler')}
+        </button>
+      </p>
+    ) : null;
+  return { button, notice };
+}
+
 export function Field({
   label,
   value,
@@ -139,6 +173,8 @@ export function Field({
   // Mot de passe ou code : un bouton œil pour voir ce qu'on tape (et le masquer à nouveau).
   const secret = type === 'password';
   const [shown, setShown] = useState(false);
+  const clearable = !secret && ['text', 'url', 'email', 'tel', 'search'].includes(type);
+  const { button: clearButton, notice: clearNotice } = useClear(value, onChange);
   return (
     <div className={className}>
       <label htmlFor={id} className="mb-1 block text-sm font-medium text-slate-700">
@@ -153,7 +189,7 @@ export function Field({
           autoComplete={autoComplete}
           placeholder={placeholder}
           onChange={(e) => onChange(e.target.value)}
-          className={cx(inputClass, secret && 'pr-12')}
+          className={cx(inputClass, secret && 'pr-12', clearable && value && 'pr-10')}
           {...(secret ? { autoCapitalize: 'none', autoCorrect: 'off', spellCheck: false } : {})}
         />
         {secret && (
@@ -167,7 +203,9 @@ export function Field({
             {shown ? <EyeOff className="size-5" aria-hidden="true" /> : <Eye className="size-5" aria-hidden="true" />}
           </button>
         )}
+        {clearable && clearButton}
       </div>
+      {clearable && clearNotice}
       {hint && <p className="mt-1 text-xs text-slate-500">{hint}</p>}
     </div>
   );
@@ -194,6 +232,7 @@ export function TextArea({
 }) {
   const autoId = useId();
   const id = givenId ?? autoId;
+  const { button: clearButton, notice: clearNotice } = useClear(value, onChange);
   return (
     <div className={className}>
       {label && (
@@ -201,14 +240,18 @@ export function TextArea({
           {label}
         </label>
       )}
-      <textarea
-        id={id}
-        rows={rows}
-        value={value}
-        placeholder={placeholder}
-        onChange={(e) => onChange(e.target.value)}
-        className={cx(inputClass, 'resize-y leading-relaxed')}
-      />
+      <div className="relative">
+        <textarea
+          id={id}
+          rows={rows}
+          value={value}
+          placeholder={placeholder}
+          onChange={(e) => onChange(e.target.value)}
+          className={cx(inputClass, 'resize-y leading-relaxed', value && 'pr-10')}
+        />
+        {clearButton}
+      </div>
+      {clearNotice}
       {hint && <div className="mt-1 text-xs text-slate-500">{hint}</div>}
     </div>
   );

@@ -145,7 +145,7 @@ export function createApp({ fetchPage = fetchJobPage, ai, aiEn = null, allowedOr
     return session ? accounts.forSession(session.uid, session.iat) : null;
   }
 
-  const publicUser = (u: User) => ({ identifier: u.identifier, name: u.name, credits: u.credits });
+  const publicUser = (u: User) => ({ identifier: u.identifier, name: u.name, credits: u.credits, pro: Boolean(u.pro) });
 
   function accountError(c: Context, error: unknown) {
     if (error instanceof AccountError || error instanceof PaymentError || error instanceof CryptoError) {
@@ -628,6 +628,12 @@ export function createApp({ fetchPage = fetchJobPage, ai, aiEn = null, allowedOr
     };
   }
 
+  // Déjà Pro (payé sur un autre appareil ou pour un autre CV) : rien à repayer.
+  app.post('/api/unlock', async (c, next) => {
+    const user = accounts ? await currentUser(c) : null;
+    if (user?.pro) return c.json({ credits: user.credits, pro: true });
+    return next();
+  });
   app.post('/api/unlock', spendRoute('unlock', UNLOCK_COST, 'La version Pro', 'Créez un compte gratuit ou connectez-vous pour passer en version Pro.'));
   // Dossier ou scan au-delà de la limite gratuite.
   app.post('/api/dossier/unlock', spendRoute('dossier', DOSSIER_COST, 'Ce dossier', 'Créez un compte gratuit ou connectez-vous pour créer ce dossier.'));

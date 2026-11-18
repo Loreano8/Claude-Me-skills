@@ -206,7 +206,7 @@ export const EN: Record<string, string> = {
   "La première fois, l’outil se charge (quelques secondes).": "The first time, the tool loads (a few seconds).",
   "Version Pro : sans mention, tous les modèles, Word.": "Pro version: no footer mention, all templates, Word.",
   "Version Pro, {0} crédits": "Pro version, {0} credits",
-  ": sans la mention « Créé avec CVCasa », tous les modèles, l’export Word, et la lettre de ce CV. Acquis pour toujours sur ce CV : modifiez-le et retéléchargez-le autant de fois que vous voulez.": ": without the “Made with CVCasa” mention, all templates, Word export, and this CV’s letter. Yours forever on this CV: edit it and download it again as often as you like.",
+  ": sans la mention « Créé avec CVCasa », tous les modèles, l’export Word et les lettres. Payée une seule fois pour tout votre compte : tous vos CV, sur le téléphone comme sur le site.": ": no “Made with CVCasa” mention, every template, Word export and cover letters. Paid once for your whole account: all your CVs, on your phone and on the website.",
   "Passer en Pro": "Go Pro",
   "{0} crédits pour {1} F au lieu de 3, jusqu’au {2}. Une seule fois.": "{0} credits for {1} F instead of 3, until {2}. One time only.",
   "En profiter": "Get it",
@@ -1641,6 +1641,9 @@ export const EN: Record<string, string> = {
   "Ce que vous avez fait, et le résultat.": "What you did, and the result.",
   "Lien (facultatif)": "Link (optional)",
   "Une page web à votre nom, déjà remplie avec ce CV.": "A web page in your name, already filled in with this CV.",
+  "Effacer le texte": "Clear text",
+  "Texte effacé.": "Text cleared.",
+  "Effacer le lien": "Clear link",
 // Messages du serveur (erreurs, veille) : traduits à l’envoi quand l’interface est en anglais.
   "Fichier trop volumineux (15 Mo maximum).": "File too large (15 MB maximum).",
   "Erreur interne du serveur.": "Internal server error.",

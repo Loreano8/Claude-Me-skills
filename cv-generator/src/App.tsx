@@ -276,6 +276,15 @@ export default function App() {
     };
   }, []);
 
+  // Version Pro liée au compte : une fois payée (sur ce téléphone, un autre, ou le site), tous les CV passent en Pro,
+  // y compris ceux créés plus tard (copies adaptées à une offre, CV importés).
+  const accountPro = useAccount((s) => Boolean(s.user?.pro));
+  const cvCount = useStore((s) => s.cvs.filter((c) => !c.unlocked).length);
+  useEffect(() => {
+    if (!accountPro || cvCount === 0) return;
+    useStore.setState((s) => ({ cvs: s.cvs.map((c) => (c.unlocked ? c : { ...c, unlocked: { at: Date.now() } })) }));
+  }, [accountPro, cvCount]);
+
   useEffect(() => {
     // Enregistre la visite (et décide du rappel) même si l'appli s'ouvre sur une autre page.
     decideReturnBanner();

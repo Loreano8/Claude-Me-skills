@@ -155,7 +155,7 @@ describe('paiements', () => {
       return new Response(JSON.stringify(body), { status: 200 });
     }) as unknown as typeof fetch;
     const provider = fedapay('sk_test', 'sandbox', fetchImpl);
-    const user = { id: 1, identifier: 'a@b.co', name: 'Awa', credits: 0 };
+    const user = { id: 1, identifier: 'a@b.co', name: 'Awa', credits: 0, pro: false };
     const res = await provider.createCheckout({ user, pack: { id: 'p', name: 'P', credits: 3, price: 500 }, returnUrl: 'https://site/return' });
     expect(res).toEqual({ ref: '123', url: 'https://checkout.fedapay.com/tok' });
     expect(calls[0].url).toBe('https://sandbox-api.fedapay.com/v1/transactions');

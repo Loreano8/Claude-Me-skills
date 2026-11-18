@@ -91,6 +91,11 @@ export function JobInputCard() {
             placeholder={t('https://… lien de l’offre')}
             className="min-w-0 flex-1 bg-transparent py-2.5 text-sm outline-none"
           />
+          {link && (
+            <button type="button" onClick={() => setLink('')} aria-label={t('Effacer le lien')} className="-mr-1.5 flex size-8 shrink-0 items-center justify-center rounded-full text-slate-400 hover:bg-slate-100 hover:text-slate-700">
+              <X className="size-4" aria-hidden="true" />
+            </button>
+          )}
         </label>
         <Button variant="secondary" loading={reading} disabled={!link.trim() || reading} onClick={() => void readLink(link.trim())}>
           {t('Lire l’offre')}</Button>

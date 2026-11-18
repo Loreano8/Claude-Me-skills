@@ -5,6 +5,8 @@ export interface AccountUser {
   identifier: string;
   name: string;
   credits: number;
+  /** Version Pro achetée : tous les CV du compte sont Pro, sur tous les appareils. */
+  pro?: boolean;
 }
 
 export interface Pack {
