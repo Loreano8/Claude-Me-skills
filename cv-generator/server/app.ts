@@ -21,6 +21,7 @@ import { RecoveryInput, type Recovery } from './recovery.ts';
 import { memoryRateLimiter, type RateLimiter } from './rateLimit.ts';
 import { ShareError, type Shares } from './shares.ts';
 import { PortfolioError, type Portfolios } from './portfolios.ts';
+import { SyncError, type Sync } from './sync.ts';
 import { PortfolioSaveRequest } from '../shared/portfolio.ts';
 import type { Turnstile } from './turnstile.ts';
 import { WatchError, type Watches } from './watch.ts';
@@ -41,6 +42,7 @@ export interface AppOptions {
   /** CV partagés par lien ou QR code. */
   shares?: Shares | null;
   portfolios?: Portfolios | null;
+  sync?: Sync | null;
   /** Veille emploi (recherche d'offres chaque matin ou chaque semaine). */
   watches?: Watches | null;
   /** Secret des appels automatiques (planificateur de la base) qui lancent les veilles. */
@@ -103,7 +105,7 @@ const Credentials = z.object({
   source: z.string().max(60).optional(),
 });
 
-export function createApp({ fetchPage = fetchJobPage, ai, aiEn = null, allowedOrigins, rateLimitPerHour, accounts = null, payments = null, cryptoPay = null, rates = null, testimonials = null, support = null, vault = null, recovery = null, sources = null, push = null, sessionSecret = '', publicUrl = '', apiPublicUrl = '', adminToken = '', adminEmail = '', adminMailer = null, ambassadors = null, authLimiter = null, shares = null, portfolios = null, watches = null, cronSecret = '', turnstile = null }: AppOptions) {
+export function createApp({ fetchPage = fetchJobPage, ai, aiEn = null, allowedOrigins, rateLimitPerHour, accounts = null, payments = null, cryptoPay = null, rates = null, testimonials = null, support = null, vault = null, recovery = null, sources = null, push = null, sessionSecret = '', publicUrl = '', apiPublicUrl = '', adminToken = '', adminEmail = '', adminMailer = null, ambassadors = null, authLimiter = null, shares = null, portfolios = null, sync = null, watches = null, cronSecret = '', turnstile = null }: AppOptions) {
   const app = new Hono();
   const allow = memoryRateLimiter(rateLimitPerHour);
   const allowAuth = authLimiter ?? memoryRateLimiter(20);
@@ -821,6 +823,33 @@ export function createApp({ fetchPage = fetchJobPage, ai, aiEn = null, allowedOr
     const user = await currentUser(c);
     if (!user) return c.json({ error: 'Connectez-vous.', code: 'auth' }, 401);
     await shares.stop(user.id, String((await body(c)).cvKey ?? ''));
+    return c.json({ ok: true });
+  });
+
+  // ---- Synchronisation entre appareils ---------------------------------------------
+  app.get('/api/sync', async (c) => {
+    if (!sync) return c.json({ available: false, data: null });
+    const user = await currentUser(c);
+    if (!user) return c.json({ error: 'Connectez-vous.', code: 'auth' }, 401);
+    const found = await sync.get(user.id);
+    return c.json({ available: true, data: found?.data ?? null, updatedAt: found?.updatedAt ?? null });
+  });
+  app.post('/api/sync', async (c) => {
+    if (!sync) return c.json({ error: 'Synchronisation indisponible.' }, 503);
+    const user = await currentUser(c);
+    if (!user) return c.json({ error: 'Connectez-vous.', code: 'auth' }, 401);
+    try {
+      return c.json({ updatedAt: await sync.save(user.id, (await body(c)).data) });
+    } catch (error) {
+      if (error instanceof SyncError) return c.json({ error: error.message }, error.status);
+      throw error;
+    }
+  });
+  app.post('/api/sync/erase', async (c) => {
+    if (!sync) return c.json({ ok: true });
+    const user = await currentUser(c);
+    if (!user) return c.json({ error: 'Connectez-vous.', code: 'auth' }, 401);
+    await sync.erase(user.id);
     return c.json({ ok: true });
   });
 

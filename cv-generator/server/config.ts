@@ -5,6 +5,7 @@ import { createAccounts } from './accounts.ts';
 import { dbRateLimiter, type RateLimiter } from './rateLimit.ts';
 import { createShares, type Shares } from './shares.ts';
 import { createPortfolios, type Portfolios } from './portfolios.ts';
+import { createSync, type Sync } from './sync.ts';
 import { createPgDb, migrate, type Db } from './db.ts';
 import { createPayments, fedapay } from './payments.ts';
 import { bscChain, createCrypto, type Crypto } from './crypto.ts';
@@ -50,6 +51,7 @@ export async function createServer(env: Settings, opts: { db?: Db; migrate?: boo
   let shares: Shares | null = null;
   let watches: Watches | null = null;
   let portfolios: Portfolios | null = null;
+  let sync: Sync | null = null;
   let ambassadors: Ambassadors | null = null;
   let cryptoPay: Crypto | null = null;
   let rates: RatesService | null = null;
@@ -73,6 +75,7 @@ export async function createServer(env: Settings, opts: { db?: Db; migrate?: boo
     authLimiter = dbRateLimiter(db, 'auth', 20);
     shares = createShares(db);
     portfolios = createPortfolios(db, accounts);
+    sync = createSync(db);
     // Veille emploi : même modèle que le reste, sauf réglage WATCH_MODEL (ex. un modèle plus léger pour baisser le coût).
     // Notifications sur le téléphone : clé du compte de service Firebase dans les réglages (FCM_SERVICE_ACCOUNT).
     push = createPush(db, env.FCM_SERVICE_ACCOUNT ?? '');
@@ -111,6 +114,7 @@ export async function createServer(env: Settings, opts: { db?: Db; migrate?: boo
     ambassadors,
     shares,
     portfolios,
+    sync,
     watches,
     cronSecret: env.CRON_SECRET ?? '',
     turnstile: createTurnstile(env),

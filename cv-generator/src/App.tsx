@@ -23,6 +23,8 @@ import { LandingPage } from './pages/LandingPage.tsx';
 import { ContactPage } from './pages/ContactPage.tsx';
 import { DossierPage } from './pages/DossierPage.tsx';
 import { PortfolioPage } from './pages/PortfolioPage.tsx';
+import { initSync } from './lib/sync.ts';
+import { SyncAnnouncement } from './components/SyncCard.tsx';
 import { WatchPage } from './pages/WatchPage.tsx';
 import { SettingsPage } from './pages/SettingsPage.tsx';
 import { AmbassadorPage } from './pages/AmbassadorPage.tsx';
@@ -285,6 +287,9 @@ export default function App() {
     useStore.setState((s) => ({ cvs: s.cvs.map((c) => (c.unlocked ? c : { ...c, unlocked: { at: Date.now() } })) }));
   }, [accountPro, cvCount]);
 
+  // Travail synchronisé entre le téléphone et le site (compte connecté, désactivable dans Réglages).
+  useEffect(() => initSync(), []);
+
   useEffect(() => {
     // Enregistre la visite (et décide du rappel) même si l'appli s'ouvre sur une autre page.
     decideReturnBanner();
@@ -365,6 +370,7 @@ export default function App() {
       <SaveDialog />
 
       <main className="mx-auto max-w-7xl px-4 pt-4 pb-28 lg:pb-10">
+        {tab !== 'accueil' && <SyncAnnouncement onSettings={() => setTab('reglages')} />}
         {BANNER_TABS.includes(tab) && <CryptoReminder />}
         {BANNER_TABS.includes(tab) && <ReturnBanner onAdapt={() => setTab('offre')} />}
         {['infos', 'apercu', 'offre', 'lettre', 'plus'].includes(tab) && <FollowUpNudge onNavigate={setTab} />}

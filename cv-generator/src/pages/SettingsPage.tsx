@@ -7,6 +7,7 @@ import { api, ApiError } from '../lib/api.ts';
 import { LangPicker } from '../components/LangSwitch.tsx';
 import { ThemePicker } from '../components/ThemePicker.tsx';
 import { NotificationsCard } from '../components/NotificationsCard.tsx';
+import { SyncCard } from '../components/SyncCard.tsx';
 import { AppUpdateCard } from '../components/AppUpdateCard.tsx';
 import { AccountSecurity } from '../components/AccountDialogs.tsx';
 import { Button, Field, Notice } from '../components/ui.tsx';
@@ -82,6 +83,7 @@ export function SettingsPage({ onNavigate }: { onNavigate: (t: Tab) => void }) {
         </h1>
       </div>
       <AccountSection />
+      <SyncCard />
       <div data-tour="settings-lang">
         <LangPicker />
       </div>

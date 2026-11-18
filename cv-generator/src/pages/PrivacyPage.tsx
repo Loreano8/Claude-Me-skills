@@ -7,7 +7,8 @@ const SECTIONS: { title: string; text: string[] }[] = [
   {
     title: t('Vos CV et vos lettres'),
     text: [
-      t('Vos CV, lettres et candidatures sont enregistrés sur votre appareil (téléphone ou ordinateur), pas sur nos serveurs.'),
+      t('Vos CV, lettres et candidatures sont enregistrés sur votre appareil (téléphone ou ordinateur).'),
+      t('Quand vous êtes connecté à votre compte, une copie est aussi gardée sur notre serveur, rattachée à votre compte, pour que vous retrouviez votre travail sur tous vos appareils. Vous pouvez l’arrêter à tout moment dans Réglages : la copie du serveur est alors effacée.'),
       t('Quand vous demandez une adaptation à une offre, une lettre, une fiche entretien, une traduction ou une retranscription, le contenu nécessaire est transmis à notre serveur et à notre prestataire de traitement du texte, le temps de produire le résultat. Nous ne le conservons pas après.'),
     ],
   },

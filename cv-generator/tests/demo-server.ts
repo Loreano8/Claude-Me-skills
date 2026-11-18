@@ -11,6 +11,7 @@ import { createTestimonials } from '../server/testimonials.ts';
 import { createSources } from '../server/sources.ts';
 import { createShares } from '../server/shares.ts';
 import { createPortfolios } from '../server/portfolios.ts';
+import { createSync } from '../server/sync.ts';
 import { createWatches, type WatchSearch } from '../server/watch.ts';
 
 // Veille emploi de démonstration : offres fictives (aucune recherche réelle, aucun nom de personne).
@@ -101,7 +102,7 @@ const support = createSupport(db, async (t) => console.log('[notification]', t))
 const vault = createVault(db, accounts, async (to, subject, text) => console.log('[e-mail]', to, subject, text.replace(/\n/g, ' ')));
 // Paiement crypto de démo : toute transaction « existe » ; un identifiant qui commence par 0xbad reçoit un montant trop faible.
 const cryptoPay = createCrypto(db, payments, { fetch: async (h) => ({ success: true, confirmations: 30, time: new Date(), transfers: [{ token: BEP20_TOKENS.USDT, from: '0x2222222222222222222222222222222222222222', to: '0x1111111111111111111111111111111111111111', amount: h.startsWith('0xbad') ? 0.5 : 5 }] }) }, { address: '0x1111111111111111111111111111111111111111', tokens: ['USDT', 'USDC'], auto: true });
-const app = createApp({ ai, accounts, payments, cryptoPay, ambassadors, vault, testimonials: createTestimonials(db), support, recovery: createRecovery(db, accounts, support), sources: createSources(db), shares: createShares(db), portfolios: createPortfolios(db, accounts), watches: createWatches(db, accounts, demoSearch, null, 'http://localhost:5173'), cronSecret: 'demo', sessionSecret: 'dev', adminToken: 'demo', publicUrl: 'http://localhost:5173', allowedOrigins: [], rateLimitPerHour: 100 });
+const app = createApp({ ai, accounts, payments, cryptoPay, ambassadors, vault, testimonials: createTestimonials(db), support, recovery: createRecovery(db, accounts, support), sources: createSources(db), shares: createShares(db), portfolios: createPortfolios(db, accounts), sync: createSync(db), watches: createWatches(db, accounts, demoSearch, null, 'http://localhost:5173'), cronSecret: 'demo', sessionSecret: 'dev', adminToken: 'demo', publicUrl: 'http://localhost:5173', allowedOrigins: [], rateLimitPerHour: 100 });
 // Fausse page de paiement : « payer » puis revenir comme le ferait FedaPay.
 app.get('/fake-pay', (c) => { paid.add(c.req.query('id')!); return c.redirect(`/api/payments/return?id=${c.req.query('id')}&status=approved`); });
 // Démo seulement : donne à un ambassadeur validé quelques filleuls et des gains, pour les vidéos.
