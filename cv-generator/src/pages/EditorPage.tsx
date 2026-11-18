@@ -19,6 +19,9 @@ import { TagInput } from '../components/TagInput.tsx';
 import { Button, Card, Cost, Disclosure, Field, Notice, Section, Select, TextArea, Toggle } from '../components/ui.tsx';
 
 import { t } from '../i18n.ts';
+import { FIELD_TEMPLATES } from '../lib/fieldTemplates.ts';
+import { detectField } from '../lib/portfolio.ts';
+import { catalogEntry, settingsForTemplate } from '../pdf/catalog.ts';
 type Update = (recipe: (cv: CvDocument) => CvDocument) => void;
 
 // ---------------------------------------------------------------------------
@@ -65,8 +68,14 @@ function QuickFill({ compact = false }: { compact?: boolean }) {
         lang: hasContent ? cv.settings.headingLang : null,
       });
       updateCv((c) => {
-        const next = applyAiContent(c, res.cv);
-        return res.language && res.language !== c.settings.headingLang ? { ...next, settings: { ...next.settings, ...settingsForLang(res.language) } } : next;
+        let next = applyAiContent(c, res.cv);
+        if (res.language && res.language !== c.settings.headingLang) next = { ...next, settings: { ...next.settings, ...settingsForLang(res.language) } };
+        // Tout premier CV : le modèle offert conseillé pour son métier (santé, finance, informatique…).
+        if (firstCv) {
+          const entry = catalogEntry(FIELD_TEMPLATES[detectField(next)].free);
+          if (entry) next = { ...next, settings: { ...next.settings, ...settingsForTemplate(entry) } };
+        }
+        return next;
       });
       draft.set({ undo: before, suggestions: res.suggestions, done: true });
       if (mode === 'fill') {

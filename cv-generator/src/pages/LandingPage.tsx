@@ -18,6 +18,8 @@ import { Capacitor } from '@capacitor/core';
 import { PUBLIC_SITE } from '../lib/referral.ts';
 
 import { LANG, LOCALE, t } from '../i18n.ts';
+// Le tutoriel vidéo est lu depuis le site, même dans l'appli : il n'alourdit pas les mises à jour du téléphone.
+const TUTO = `${Capacitor.isNativePlatform() ? PUBLIC_SITE + '/' : import.meta.env.BASE_URL}tutoriel/`;
 import { CATALOG, isProTemplate, settingsForTemplate } from '../pdf/catalog.ts';
 // Dans l'application Android, les guides s'ouvrent sur le site.
 const GUIDE_BASE = Capacitor.isNativePlatform() ? PUBLIC_SITE.replace(/\/$/, '') : '';
@@ -609,12 +611,12 @@ export function LandingPage({ onNavigate }: { onNavigate: (t: Tab) => void }) {
             controls
             playsInline
             preload="none"
-            poster={`${import.meta.env.BASE_URL}tutoriel/poster.jpg`}
-            src={`${import.meta.env.BASE_URL}tutoriel/tutoriel.mp4`}
+            poster={`${TUTO}poster${LANG === 'en' ? '-en' : ''}.jpg`}
+            src={`${TUTO}tutoriel${LANG === 'en' ? '-en' : ''}.mp4`}
             className="aspect-video w-full rounded-2xl bg-slate-900 shadow-lg ring-1 ring-white/15"
           >
             {t('Votre navigateur ne lit pas cette vidéo.')}</video>
-          <figcaption className="mt-2 text-center text-sm text-slate-400">{t('Le tutoriel complet : CV, modèle, offre, lettre, veille emploi et suivi, pas à pas.')}</figcaption>
+          <figcaption className="mt-2 text-center text-sm text-slate-400">{t('Le tutoriel complet : CV, modèle, offre, lettre, veille emploi, portfolio et suivi, pas à pas.')}</figcaption>
         </figure>
        </div>
       </section>

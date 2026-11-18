@@ -1,5 +1,5 @@
 import type { CvDocument } from '../types.ts';
-import type { PortfolioData, PortfolioProject } from '../../shared/portfolio.ts';
+import type { PortfolioData, PortfolioField, PortfolioProject } from '../../shared/portfolio.ts';
 
 // Remplissage automatique du portfolio à partir du CV : la personne n'a rien à retaper.
 // Seuls les projets (images, liens) et le choix du design s'ajoutent à la main.
@@ -35,7 +35,7 @@ const L = {
   en: { years: (n: number) => `${n} yr${n > 1 ? 's' : ''}`, exp: 'of experience', certs: 'certifications', langs: 'languages', roles: 'roles held', tech: 'Technical skills', soft: 'Strengths', today: 'Present' },
 };
 
-export function portfolioFromCv(cv: CvDocument, extras: { projects?: PortfolioProject[]; showPhoto?: boolean; showPhone?: boolean; cvUrl?: string; video?: string; accent?: string; lang?: 'fr' | 'en' } = {}): PortfolioData {
+export function portfolioFromCv(cv: CvDocument, extras: { projects?: PortfolioProject[]; showPhoto?: boolean; showPhone?: boolean; cvUrl?: string; video?: string; accent?: string; lang?: 'fr' | 'en'; field?: PortfolioField | 'aucun' } = {}): PortfolioData {
   // Langue de la page : celle des titres du CV, sauf si la personne en choisit une autre.
   const lang = extras.lang ?? (cv.settings.headingLang === 'en' ? 'en' : 'fr');
   const l = L[lang];
@@ -102,6 +102,8 @@ export function portfolioFromCv(cv: CvDocument, extras: { projects?: PortfolioPr
     cvUrl: (extras.cvUrl ?? '').slice(0, 300),
     video: (extras.video ?? '').trim().slice(0, 300),
     accent: /^#[0-9a-fA-F]{6}$/.test(extras.accent ?? '') ? extras.accent! : '',
+    // Domaine : détecté d'après le CV, sauf si la personne en a choisi un (ou aucun motif).
+    field: extras.field === 'aucun' ? '' : (extras.field ?? detectField(cv)),
   };
 }
 
@@ -113,6 +115,8 @@ export type HideableSection = (typeof HIDEABLE_SECTIONS)[number];
 
 /** Ce que la personne a retouché ; un champ absent = on garde ce qui vient du CV. */
 export interface PortfolioOverrides {
+  /** Domaine choisi à la main (motifs du métier) ; « aucun » = pas de motif. */
+  field?: PortfolioField | 'aucun';
   /** Langue des titres de la page (À propos / About…). */
   lang?: 'fr' | 'en';
   name?: string;
@@ -140,4 +144,35 @@ export function applyOverrides(base: PortfolioData, o: PortfolioOverrides): Port
 
 export function hasOverrides(o: PortfolioOverrides): boolean {
   return Object.values(o).some((v) => (Array.isArray(v) ? v.length > 0 : v !== undefined));
+}
+
+// ---- Domaine de la personne (motifs du métier sur le portfolio) ------------------
+
+const FIELD_WORDS: Record<Exclude<PortfolioField, 'general'>, string[]> = {
+  sante: ['infirmi', 'nurse', 'sage-femme', 'midwife', 'médec', 'medic', 'docteur', 'doctor', 'pharmac', 'soins', 'santé', 'health', 'hôpital', 'hospital', 'clinique', 'clinic', 'patient', 'aide-soignant', 'kiné', 'dentist', 'laborantin', 'biolog', 'réanimation', 'urgences', 'paramédical', 'caregiver'],
+  tech: ['développeu', 'developer', 'software', 'logiciel', 'informatique', 'devops', 'data', 'javascript', 'python', 'java', 'react', 'node', 'sql', 'réseau', 'network', 'cyber', 'cloud', 'programm', 'full stack', 'fullstack', 'backend', 'frontend', 'it support', 'technicien support', 'système'],
+  design: ['design', 'graphi', 'ux', 'ui ', 'figma', 'photoshop', 'illustrat', 'motion', 'créati', 'creative', 'architecte d’intérieur', 'photograph', 'vidéaste', 'video editor', 'directeur artistique', 'art director', 'mode', 'fashion'],
+  finance: ['comptab', 'account', 'finance', 'audit', 'fiscal', 'tax', 'banque', 'bank', 'contrôleur de gestion', 'controller', 'trésor', 'treasury', 'paie', 'payroll', 'syscohada', 'sage', 'analyste financier', 'assurance', 'insurance', 'microfinance'],
+  education: ['enseignant', 'teacher', 'professeur', 'formateur', 'trainer', 'éducat', 'education', 'instituteur', 'pédagog', 'tutor', 'école', 'school', 'animateur'],
+  btp: ['btp', 'génie civil', 'civil engineer', 'chantier', 'construction', 'architecte', 'architect', 'topograph', 'électricien', 'electrician', 'plomb', 'mécanicien', 'mechanic', 'maintenance', 'ingénieur', 'engineer', 'soudeur', 'conducteur de travaux'],
+  commerce: ['commercial', 'sales', 'vente', 'vendeu', 'marketing', 'business developer', 'chargé de clientèle', 'customer', 'retail', 'e-commerce', 'communication', 'community manager', 'relation client'],
+  juridique: ['juriste', 'lawyer', 'avocat', 'droit', 'legal', 'notaire', 'huissier', 'conformité', 'compliance', 'contrat'],
+  hotellerie: ['hôtel', 'hotel', 'restaura', 'cuisin', 'chef', 'serveu', 'barman', 'tourisme', 'tourism', 'réception', 'hospitality', 'pâtiss', 'traiteur'],
+  logistique: ['logisti', 'transport', 'supply chain', 'entrepôt', 'warehouse', 'chauffeur', 'driver', 'transit', 'douane', 'customs', 'achat', 'procurement', 'stock', 'magasinier'],
+};
+
+/** Le domaine le plus probable d'après le titre (compte double), les postes, la formation et les compétences. */
+export function detectField(cv: CvDocument): PortfolioField {
+  const title = `${cv.personal.title} `.toLowerCase();
+  const rest = [...cv.experiences.map((e) => e.position), ...cv.education.map((e) => e.degree), ...cv.skills].join(' ').toLowerCase();
+  let best: PortfolioField = 'general';
+  let bestScore = 0;
+  for (const [field, words] of Object.entries(FIELD_WORDS) as [Exclude<PortfolioField, 'general'>, string[]][]) {
+    const score = words.reduce((n, w) => n + (title.includes(w) ? 3 : 0) + (rest.includes(w) ? 1 : 0), 0);
+    if (score > bestScore) {
+      best = field;
+      bestScore = score;
+    }
+  }
+  return best;
 }

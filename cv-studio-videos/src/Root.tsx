@@ -1,6 +1,7 @@
 import { Composition, Folder } from "remotion";
 import { WEB_TUTORIAL_SECONDS, WebTutorial } from "./demo/WebTutorial";
 import { WEB_TUTORIAL2_SECONDS, WebTutorial2 } from "./demo/WebTutorial2";
+import { WEB_TUTORIAL3_SECONDS, WEB_TUTORIAL3_EN_SECONDS, WebTutorial3 } from "./demo/WebTutorial3";
 import { AdVideo, durationFor, FPS } from "./ad/AdVideo";
 import { PUB1, PUB2, PUB3, PUB4, PUB_FPS, PubVideo, pubDuration } from "./ad/PubVideo";
 import { DEMO_SECONDS, DemoVideo } from "./demo/DemoVideo";
@@ -122,6 +123,23 @@ export const RemotionRoot: React.FC = () => {
         height={1080}
         fps={FPS}
         durationInFrames={Math.ceil(WEB_TUTORIAL2_SECONDS * FPS)}
+      />
+      <Composition
+        id="Tutoriel-Web-3"
+        component={WebTutorial3}
+        width={1920}
+        height={1080}
+        fps={FPS}
+        durationInFrames={Math.ceil(WEB_TUTORIAL3_SECONDS * FPS)}
+      />
+      <Composition
+        id="Tutoriel-Web-3-EN"
+        component={WebTutorial3}
+        defaultProps={{ lang: "en" as const }}
+        width={1920}
+        height={1080}
+        fps={FPS}
+        durationInFrames={Math.ceil(WEB_TUTORIAL3_EN_SECONDS * FPS)}
       />
       <Composition id="Pub1-Veille" component={PubVideo} defaultProps={PUB1} width={1080} height={1920} fps={PUB_FPS} durationInFrames={pubDuration(PUB1)} />
       <Composition id="Pub2-AncienCV" component={PubVideo} defaultProps={PUB2} width={1080} height={1920} fps={PUB_FPS} durationInFrames={pubDuration(PUB2)} />

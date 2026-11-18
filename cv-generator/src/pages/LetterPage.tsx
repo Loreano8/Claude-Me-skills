@@ -22,6 +22,7 @@ import { DownloadHint } from '../components/DownloadHint.tsx';
 import type { Tab } from '../App.tsx';
 
 import { LANG, t } from '../i18n.ts';
+import { HideablePreview } from '../components/HideablePreview.tsx';
 
 /** Liste vide stable (réponses aux questions avant la lettre). */
 const EMPTY: string[] = [];
@@ -314,7 +315,9 @@ export function LetterPage({ onNavigate }: { onNavigate: (t: Tab) => void }) {
         </div>
         {error && <Notice tone="error">{error}</Notice>}
         <div className="mx-auto max-w-[700px]">
-          <Preview source={{ kind: 'letter', letter, cv }} />
+          <HideablePreview label={t('Votre lettre')}>
+            <Preview source={{ kind: 'letter', letter, cv }} />
+          </HideablePreview>
         </div>
       </div>
     </div>

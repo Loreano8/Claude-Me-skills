@@ -20,3 +20,15 @@ describe('retouches du portfolio', () => {
     expect(hasOverrides({ pitch: '' })).toBe(true);
   });
 });
+
+describe('domaine détecté pour les motifs du portfolio', () => {
+  it('reconnaît la comptabilité, la santé et le développement', async () => {
+    const { detectField } = await import('../src/lib/portfolio.ts');
+    const { sampleCv } = await import('./fixtures.ts');
+    const cv = sampleCv();
+    expect(detectField(cv)).toBe('finance');
+    expect(detectField({ ...cv, personal: { ...cv.personal, title: 'Infirmière diplômée d’État' }, skills: ['Soins intensifs'], experiences: [] })).toBe('sante');
+    expect(detectField({ ...cv, personal: { ...cv.personal, title: 'Développeur web full stack' }, skills: ['React', 'Node.js'], experiences: [] })).toBe('tech');
+    expect(detectField({ ...cv, personal: { ...cv.personal, title: '' }, skills: [], experiences: [], education: [] })).toBe('general');
+  });
+});

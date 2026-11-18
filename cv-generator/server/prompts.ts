@@ -283,11 +283,14 @@ Il veut un portfolio dans le même esprit, avec SES informations : tu ne t'inté
 - colonne : colonne fixe sur le côté avec le profil, contenu à droite ;
 - bento : grille de tuiles arrondies de tailles différentes (style « bento »), chiffres dans des tuiles colorées ;
 - magazine : fond papier crème ou clair, grande typographie à empattement, filets fins, sections numérotées, style éditorial ;
-- aurore : fond nuit, lueurs colorées floues, effets de verre, texte en dégradé, très moderne ;
-- pastel : fond clair et chaleureux, cartes blanches avec des touches de couleurs douces (corail, menthe, ciel), joyeux et accueillant ;
-- onde : fond blanc très propre, bandeau d'en-tête en dégradé doux (bleu ciel, menthe) qui ondule lentement, cartes nettes ;
+- dossier : comme un dossier imprimé ou un « portfolio de stage » : couverture avec grande photo et formes noir et or, sommaire, une page par partie ;
+- studio : site moderne d'indépendant (type Framer) : fond blanc, très gros titre, outils en pastilles, parcours en liste, appel à l'action, grand bas de page noir avec le nom ;
+- livre : un livre dont on tourne les pages (feuilletage, effet « flipbook »), papier crème ;
+- aurore : fond nuit, lueurs colorées floues, effets de verre, navigation par onglets comme une application ;
+- pastel : une colonne étroite centrée comme une carte de visite ou une page « lien en bio », gros boutons arrondis, parties qui se déplient, couleurs douces ;
+- onde : fond clair, bandeau en dégradé doux, et surtout le parcours en frise chronologique verticale au centre ;
 - defile : noir et blanc net, très grand nom, une bande noire où défilent les compétences, une touche orange ;
-- soleil : fond clair lumineux, lueurs chaudes (pêche, jaune, rose) qui bougent, texte en dégradé orangé, moderne et gai.
+- soleil : une section par écran, comme des diapositives plein écran, très grande typographie, fond clair chaud ;
 
 3. accent : la couleur principale de la page (#RRGGBB). Si elle est criarde ou peu lisible, prends une nuance plus sobre de la même famille. Si la page est en noir et blanc, donne un noir ou gris très foncé.
 

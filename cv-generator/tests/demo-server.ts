@@ -17,6 +17,7 @@ import { createWatches, type WatchSearch } from '../server/watch.ts';
 // Veille emploi de démonstration : offres fictives (aucune recherche réelle, aucun nom de personne).
 const demoSearch: WatchSearch = async (criteria) => {
   await new Promise((r) => setTimeout(r, 1500));
+  if (DEMO_EN) return demoSearchEn(criteria.jobs[0] ?? 'Accountant');
   const job = criteria.jobs[0] ?? 'Comptable';
   const mk = (n: number, company: string, location: string, contract: string, salary: string, skills: string[], beninEligible: 'oui' | 'à vérifier' = 'oui') => ({
     title: n === 1 ? job : n === 2 ? `${job} junior` : `Assistant ${job.toLowerCase()}`,
@@ -40,10 +41,36 @@ const demoSearch: WatchSearch = async (criteria) => {
     ],
   };
 };
+// DEMO_LANG=en : contenus de démonstration en anglais (tutoriel et captures de la version anglaise).
+const DEMO_EN = process.env.DEMO_LANG === 'en';
+const demoSearchEn = (job: string) => {
+  const mk = (n: number, company: string, location: string, contract: string, salary: string, skills: string[], beninEligible: 'oui' | 'à vérifier' = 'oui') => ({
+    title: n === 1 ? job : n === 2 ? `Junior ${job.toLowerCase()}` : `Assistant ${job.toLowerCase()}`,
+    company,
+    location,
+    contract,
+    salary,
+    experience: n === 2 ? '0 to 2 years' : '2 years',
+    beninEligible,
+    deadline: n === 3 ? '' : `${20 + n}/12/2026`,
+    url: `https://emplois.example.com/offre/${Date.now()}-${n}`,
+    summary: 'General accounting, payroll preparation and tax returns.',
+    skills,
+  });
+  return {
+    note: '3 new jobs match your criteria.',
+    offers: [
+      mk(1, 'Logistics company', 'Cotonou, Benin', 'Permanent', '250,000 FCFA / month', ['Excel', 'Sage', 'Payroll', 'Tax']),
+      mk(2, 'Chartered accounting firm', 'Abomey-Calavi, Benin', 'Fixed-term, 12 months', '', ['Excel', 'Bookkeeping', 'Rigour']),
+      mk(3, 'International NGO', 'Lomé, Togo', 'Fixed-term', '', ['English', 'Excel', 'Financial reports'], 'à vérifier'),
+    ],
+  };
+};
 import { createSupport } from '../server/support.ts';
 import { testDb } from './pglite.ts';
 import { createAmbassadors } from '../server/ambassadors.ts';
 import { BEP20_TOKENS, createCrypto } from '../server/crypto.ts';
+import { sampleAdaptEn, sampleClarifyEn, sampleKeywordsEn, sampleLetterEn, sampleLetterQuestionsEn, sampleStructureEn } from './fixtures-en.ts';
 import { sampleAdapt, sampleInterview, sampleLetter, sampleRevise, sampleTemplateAnalysis, sampleTranslation, sampleClarify, sampleTranscript, sampleStyle, sampleLetterQuestions, sampleKeywords } from './fixtures.ts';
 const db = await testDb();
 const accounts = createAccounts(db, { freeCredits: 1, freeIpCooldownDays: 0 });
@@ -63,27 +90,28 @@ const anonymous = (cv: typeof sampleAdapt.cv) => {
 };
 const ai = {
   // CV de démonstration sans nom de personne réelle (vidéos et captures).
-  structure: async () => (await wait(), ({ cv: anonymous(sampleAdapt.cv), suggestions: ['Ajoutez un lien LinkedIn'], language: 'fr' as const })),
+  structure: async () => (await wait(), DEMO_EN ? { cv: structuredClone(sampleStructureEn), suggestions: [], language: 'en' as const } : ({ cv: anonymous(sampleAdapt.cv), suggestions: ['Ajoutez un lien LinkedIn'], language: 'fr' as const })),
   // Version adaptée qui diffère vraiment du CV de départ (titre, une réalisation, une compétence), pour la revue des modifications.
   adapt: async () => {
     await wait();
+    if (DEMO_EN) return structuredClone(sampleAdaptEn);
     const cv = anonymous(sampleAdapt.cv);
     cv.personal.title = 'Responsable comptable SYSCOHADA';
     cv.experiences[0].achievements = ['Tenir la comptabilité selon le SYSCOHADA révisé et préparer les clôtures mensuelles', ...cv.experiences[0].achievements];
     cv.skills = [...cv.skills, 'Clôtures mensuelles'];
     return { ...sampleAdapt, cv };
   },
-  coverLetter: async () => (await wait(), sampleLetter),
+  coverLetter: async () => (await wait(), DEMO_EN ? sampleLetterEn : sampleLetter),
   translate: async () => (await wait(), sampleTranslation),
   interview: async () => (await wait(), sampleInterview),
   revise: async () => (await wait(), sampleRevise),
   analyzeTemplate: async () => (await wait(), sampleTemplateAnalysis),
-  portfolioStyle: async () => (await wait(), { isPortfolio: true, theme: 'aurore' as const, accent: '#7c3aed', summary: 'Fond nuit, lueurs colorées et cartes en verre, grande typographie moderne.' }),
-  clarify: async () => (await wait(), sampleClarify),
-  keywords: async () => (await wait(), sampleKeywords),
+  portfolioStyle: async () => (await wait(), { isPortfolio: true, theme: 'aurore' as const, accent: '#7c3aed', summary: DEMO_EN ? 'Night background, coloured glows and glass cards, large modern type.' : 'Fond nuit, lueurs colorées et cartes en verre, grande typographie moderne.' }),
+  clarify: async () => (await wait(), DEMO_EN ? sampleClarifyEn : sampleClarify),
+  keywords: async () => (await wait(), DEMO_EN ? sampleKeywordsEn : sampleKeywords),
   transcribe: async () => (await wait(), sampleTranscript),
   style: async () => (await wait(), sampleStyle),
-  letterQuestions: async () => (await wait(), sampleLetterQuestions),
+  letterQuestions: async () => (await wait(), DEMO_EN ? sampleLetterQuestionsEn : sampleLetterQuestions),
   translateLetter: async (req: LetterTranslateRequest) => (
     await wait(),
     {

@@ -15,8 +15,8 @@ import { Capacitor } from '@capacitor/core';
 // Veille emploi : on coche, on remplit deux ou trois cases, et les offres arrivent toutes seules.
 
 const CONTRACTS: { id: WatchCriteria['contracts'][number]; label: string }[] = [
-  { id: 'cdi', label: 'CDI' },
-  { id: 'cdd', label: 'CDD' },
+  { id: 'cdi', label: t('CDI') },
+  { id: 'cdd', label: t('CDD') },
   { id: 'stage', label: t('Stage') },
   { id: 'freelance', label: t('Freelance, mission') },
   { id: 'teletravail', label: t('Télétravail') },

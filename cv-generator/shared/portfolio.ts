@@ -3,10 +3,12 @@ import { z } from 'zod';
 // Portfolio en ligne : une page publique (cvcasa.com/p/#lien) construite à partir du CV,
 // avec des projets en plus si la personne le veut. Partagé entre l'appli, le serveur et la page publique.
 
-export const PORTFOLIO_THEMES = ['classique', 'pastel', 'epure', 'bento', 'magazine', 'colonne', 'creatif', 'soleil', 'onde', 'defile', 'aurore'] as const;
+export const PORTFOLIO_THEMES = ['classique', 'pastel', 'dossier', 'studio', 'epure', 'bento', 'magazine', 'colonne', 'creatif', 'soleil', 'livre', 'onde', 'defile', 'aurore'] as const;
 export type PortfolioTheme = (typeof PORTFOLIO_THEMES)[number];
 /** Rangement des designs à l'écran : les simples, puis les animés (lumières qui bougent). */
-export const ANIMATED_THEMES: readonly PortfolioTheme[] = ['soleil', 'onde', 'defile', 'aurore'];
+export const ANIMATED_THEMES: readonly PortfolioTheme[] = ['soleil', 'livre', 'onde', 'defile', 'aurore'];
+/** Designs avec motifs du métier en filigrane ; les autres ont seulement une petite étiquette du métier. */
+export const WATERMARK_THEMES: readonly PortfolioTheme[] = ['classique', 'pastel', 'dossier', 'colonne', 'onde', 'soleil', 'livre'];
 /** Le design offert ; les autres font partie du Portfolio Pro (sans mention CVCasa). */
 export const FREE_PORTFOLIO_THEME: PortfolioTheme = 'classique';
 export const PORTFOLIO_PRO_COST = 2;
@@ -21,6 +23,10 @@ export const PortfolioProject = z.object({
   image: z.string().max(400_000).regex(/^(data:image\/(jpeg|png|webp);base64,[A-Za-z0-9+/=]+)?$/),
 });
 export type PortfolioProject = z.infer<typeof PortfolioProject>;
+
+/** Domaine de la personne : il donne au portfolio des motifs et un pictogramme de son métier. */
+export const PORTFOLIO_FIELDS = ['sante', 'tech', 'design', 'finance', 'education', 'btp', 'commerce', 'juridique', 'hotellerie', 'logistique', 'general'] as const;
+export type PortfolioField = (typeof PORTFOLIO_FIELDS)[number];
 
 export const PortfolioData = z.object({
   lang: z.enum(['fr', 'en']),
@@ -49,6 +55,8 @@ export const PortfolioData = z.object({
   video: str(300).default(''),
   /** Couleur principale choisie (#RRGGBB) ; vide = celle du design. */
   accent: z.string().regex(/^(#[0-9a-fA-F]{6})?$/).default(''),
+  /** Domaine (motifs du métier) ; vide = aucun motif. */
+  field: z.enum(PORTFOLIO_FIELDS).or(z.literal('')).default(''),
 });
 export type PortfolioData = z.infer<typeof PortfolioData>;
 
@@ -109,6 +117,15 @@ export const PORTFOLIO_LABELS = {
     madeWith: 'Page créée avec',
     makeYours: 'Créez la vôtre',
     about: 'À propos',
+    toc: 'Sommaire',
+    prev: 'Page précédente',
+    next: 'Page suivante',
+    turn: 'Tournez les pages',
+    portfolio: 'Portfolio',
+    page: 'Page',
+    ctaTitle: 'Un poste à pourvoir ?',
+    ctaText: 'Parlons-en : je réponds vite.',
+    fields: { sante: 'Santé', tech: 'Informatique', design: 'Design', finance: 'Finance', education: 'Enseignement', btp: 'BTP & technique', commerce: 'Commerce', juridique: 'Droit', hotellerie: 'Hôtellerie', logistique: 'Logistique', general: 'Professionnel' },
     video: 'Ma présentation en vidéo',
     watch: 'Voir la vidéo',
   },
@@ -125,6 +142,15 @@ export const PORTFOLIO_LABELS = {
     madeWith: 'Made with',
     makeYours: 'Create yours',
     about: 'About',
+    toc: 'Contents',
+    prev: 'Previous page',
+    next: 'Next page',
+    turn: 'Turn the pages',
+    portfolio: 'Portfolio',
+    page: 'Page',
+    ctaTitle: 'Hiring?',
+    ctaText: 'Let’s talk: I reply fast.',
+    fields: { sante: 'Healthcare', tech: 'Tech', design: 'Design', finance: 'Finance', education: 'Education', btp: 'Engineering & trades', commerce: 'Sales & marketing', juridique: 'Legal', hotellerie: 'Hospitality', logistique: 'Logistics', general: 'Professional' },
     video: 'Video introduction',
     watch: 'Watch the video',
   },

@@ -48,6 +48,7 @@ export const SAMPLE_NURSE: PortfolioData = {
   cvUrl: 'https://cvcasa.com/',
   video: '',
   accent: '',
+  field: 'sante',
 };
 
 export const SAMPLE_DESIGNER: PortfolioData = {
@@ -90,4 +91,5 @@ export const SAMPLE_DESIGNER: PortfolioData = {
   cvUrl: 'https://cvcasa.com/',
   video: '',
   accent: '',
+  field: 'design',
 };

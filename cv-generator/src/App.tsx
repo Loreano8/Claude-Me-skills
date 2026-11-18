@@ -37,6 +37,7 @@ import { PrivacyPage } from './pages/PrivacyPage.tsx';
 import { refreshSupportBadge, useSupportBadge } from './lib/supportBadge.ts';
 
 import { t } from './i18n.ts';
+import { HideablePreview } from './components/HideablePreview.tsx';
 export type Tab = 'accueil' | 'infos' | 'apercu' | 'offre' | 'lettre' | 'plus' | 'suivi' | 'veille' | 'portfolio' | 'reglages' | 'documents' | 'dossier' | 'scanner' | 'confidentialite' | 'contact' | 'ambassadeur';
 
 // La navigation suit le parcours : 1. le CV, 2. l'offre, 3. la lettre. Tout le reste est rangé dans « Plus ».
@@ -249,7 +250,9 @@ function InfosLayout() {
       <EditorPage />
       <aside data-tour="live" className="hidden space-y-3 lg:sticky lg:top-20 lg:block lg:self-start">
         <ExportButtons cv={cv} />
-        <Preview source={{ kind: 'cv', cv }} />
+        <HideablePreview label={t('Votre CV')}>
+          <Preview source={{ kind: 'cv', cv }} />
+        </HideablePreview>
       </aside>
     </div>
   );

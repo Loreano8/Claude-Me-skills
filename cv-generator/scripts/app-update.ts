@@ -20,7 +20,8 @@ const walk = (dir: string) => {
   for (const f of readdirSync(dir)) {
     const p = join(dir, f);
     if (statSync(p).isDirectory()) {
-      if (!['app-update', 'admin', (process.env.ADMIN_PATH ?? '').trim().replace(/^\/+|\/+$/g, '')].includes(relative(dist, p))) walk(p);
+      // tutoriel : vidéos lues depuis le site, inutile de les télécharger dans l'appli.
+      if (!['app-update', 'admin', 'tutoriel', (process.env.ADMIN_PATH ?? '').trim().replace(/^\/+|\/+$/g, '')].includes(relative(dist, p))) walk(p);
     } else files.push(relative(dist, p).split('\\').join('/'));
   }
 };

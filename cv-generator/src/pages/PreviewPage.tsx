@@ -23,6 +23,7 @@ import { useQuickDraft } from '../lib/quickDraft.ts';
 import { NotificationsNudge } from '../components/NotificationsCard.tsx';
 
 import { t } from '../i18n.ts';
+import { HideablePreview } from '../components/HideablePreview.tsx';
 export function DesignPanel({ cv }: { cv: CvDocument }) {
   const updateCv = useStore((s) => s.updateCv);
   const set = (patch: Partial<CvSettings>) => updateCv((c) => ({ ...c, settings: { ...c.settings, ...patch } }));
@@ -266,7 +267,9 @@ export function PreviewPage() {
       </div>
       <div data-tour="preview" className="lg:sticky lg:top-20 lg:col-start-2 lg:row-span-5 lg:row-start-1 lg:self-start">
         <div className="mx-auto max-w-[700px]">
-          <Preview source={{ kind: 'cv', cv }} />
+          <HideablePreview label={t('Votre CV')}>
+            <Preview source={{ kind: 'cv', cv }} />
+          </HideablePreview>
         </div>
       </div>
       {!empty && (

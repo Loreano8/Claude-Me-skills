@@ -9,6 +9,8 @@ import { tint } from '../pdf/theme.ts';
 import { Button, cx, Notice } from './ui.tsx';
 
 import { t } from '../i18n.ts';
+import { FIELD_LABELS, FIELD_TEMPLATES } from '../lib/fieldTemplates.ts';
+import { detectField } from '../lib/portfolio.ts';
 const bar = 'h-1 rounded bg-slate-300';
 
 /** Vignettes des 3 modèles dessinés à la main. */
@@ -300,8 +302,37 @@ export function TemplateGallery({ cv, set }: { cv: CvDocument; set: (patch: Part
   const tile = (selected: boolean) =>
     cx('rounded-xl border-2 p-1.5 text-left transition', selected ? 'border-brand-600 bg-brand-50' : 'border-slate-200 hover:border-slate-300');
 
+  // Modèles conseillés pour le métier détecté dans le CV.
+  const field = detectField(cv);
+  const advice = FIELD_TEMPLATES[field];
+  const adviceIds = [advice.free, advice.pro];
   return (
     <div>
+      {field !== 'general' && (
+        <div className="mb-3 rounded-xl border border-brand-200 bg-brand-50 p-3">
+          <p className="text-sm font-semibold text-ink">{t('Conseillé pour votre métier : {0}', [FIELD_LABELS[field]])}</p>
+          <div className="mt-2 flex flex-wrap gap-2">
+            {adviceIds.map((id) => {
+              const entry = catalogEntry(id);
+              if (!entry) return null;
+              return (
+                <button
+                  key={id}
+                  type="button"
+                  onClick={() => {
+                    set(settingsForTemplate(entry));
+                    setNote(entry.settingsNote ?? null);
+                  }}
+                  className={cx('inline-flex min-h-10 items-center gap-1.5 rounded-full px-3 text-sm font-semibold ring-1', st.template === id ? 'bg-brand-600 text-white ring-brand-600' : 'bg-white text-brand-800 ring-brand-200 hover:bg-brand-100')}
+                >
+                  {entry.name}
+                  {isProTemplate(id) && !cv.unlocked ? <span className="rounded bg-amber-100 px-1 text-[10px] font-bold text-amber-800">PRO</span> : <span className="text-[11px] font-medium opacity-80">{t('offert')}</span>}
+                </button>
+              );
+            })}
+          </div>
+        </div>
+      )}
       <p className="mb-3 text-sm text-slate-600">
         {t('Vous postulez sur un site de recrutement ou par formulaire ? Préférez')}{' '}<strong>{t('Classique ATS')}</strong> {' '}{t(': une seule colonne, c’est le modèle le mieux lu par les logiciels de tri.')}</p>
       <div className="-mx-1 mb-3 flex gap-1.5 overflow-x-auto px-1 pb-1">
@@ -344,6 +375,7 @@ export function TemplateGallery({ cv, set }: { cv: CvDocument; set: (patch: Part
             </div>
             <p className="mt-1.5 flex items-center gap-1 text-xs font-semibold text-slate-800 sm:text-sm">
               <span className="truncate">{t.name}</span>
+              {field !== 'general' && adviceIds.includes(t.id) && <span className="shrink-0 rounded bg-brand-100 px-1 text-[10px] font-bold text-brand-800">★</span>}
               {isProTemplate(t.id) && !cv.unlocked && <span className="shrink-0 rounded bg-amber-100 px-1 text-[10px] font-bold text-amber-800">PRO</span>}
             </p>
           </button>

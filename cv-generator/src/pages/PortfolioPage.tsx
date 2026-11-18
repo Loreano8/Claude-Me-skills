@@ -1,7 +1,7 @@
 import { useMemo, useRef, useState } from 'react';
 import { useEffect } from '../lib/safeEffects.ts';
 import { Capacitor } from '@capacitor/core';
-import { Check, ChevronDown, Copy, Eye, ImagePlus, Lock, Palette, Plus, QrCode, Share2, Sparkles, Trash2, Wand2, X } from 'lucide-react';
+import { Check, ChevronDown, Copy, ImagePlus, Lock, Plus, QrCode, Share2, Sparkles, Trash2, Wand2, X } from 'lucide-react';
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import type { Tab } from '../App.tsx';
@@ -9,14 +9,16 @@ import { useActiveCv } from '../store.ts';
 import { useAccount } from '../lib/account.ts';
 import { api, type MyPortfolio } from '../lib/api.ts';
 import { fullName, isCvEmpty } from '../lib/cv.ts';
-import { applyOverrides, hasOverrides, HIDEABLE_SECTIONS, portfolioFromCv, type HideableSection, type PortfolioOverrides } from '../lib/portfolio.ts';
+import { applyOverrides, detectField, hasOverrides, HIDEABLE_SECTIONS, portfolioFromCv, type HideableSection, type PortfolioOverrides } from '../lib/portfolio.ts';
 import { saveFile } from '../export/save.ts';
 import { fileToAttachment } from '../lib/files.ts';
-import { ANIMATED_THEMES, FREE_PORTFOLIO_THEME, type PortfolioData, PORTFOLIO_PRO_COST, PORTFOLIO_THEMES, slugify, type PortfolioProject, type PortfolioTheme } from '../../shared/portfolio.ts';
+import { ANIMATED_THEMES, FREE_PORTFOLIO_THEME, PORTFOLIO_FIELDS, type PortfolioField, type PortfolioData, PORTFOLIO_PRO_COST, PORTFOLIO_THEMES, slugify, type PortfolioProject, type PortfolioTheme } from '../../shared/portfolio.ts';
 import { PortfolioView } from '../portfolio/PortfolioView.tsx';
 import { NeedCv } from '../components/NeedCv.tsx';
 import { Button, Card, Cost, cx, Disclosure, Field, Notice, Select, TextArea, Toggle } from '../components/ui.tsx';
 import { LANG, t } from '../i18n.ts';
+import { HideablePreview } from '../components/HideablePreview.tsx';
+import { FIELD_LABELS } from '../lib/fieldTemplates.ts';
 
 // Portfolio en ligne : la page se remplit à partir du CV. La personne choisit un design, ajoute des projets si elle veut,
 // et publie. Un lien et un QR code à mettre dans sa candidature, sa signature d'e-mail ou son profil.
@@ -26,14 +28,29 @@ export const THEME_INFO: Record<PortfolioTheme, { name: string; hint: string; sw
   epure: { name: t('Épuré'), hint: t('Noir et blanc, très lisible'), swatch: ['#ffffff', '#111827'] },
   creatif: { name: t('Créatif'), hint: t('Fond sombre, projets en premier'), swatch: ['#0b0e17', '#ffc933'] },
   colonne: { name: t('Colonne'), hint: t('Profil à gauche, parcours à droite'), swatch: ['#101a4a', '#f6f8fb'] },
-  pastel: { name: t('Pastel'), hint: t('Clair et joyeux, couleurs douces'), swatch: ['#fdf8f1', '#f2545b'] },
-  onde: { name: t('Onde'), hint: t('Blanc et net, dégradé qui ondule'), swatch: ['#e0f2fe', '#0e7490'] },
+  pastel: { name: t('Pastel'), hint: t('Carte de visite au centre, parties qui se déplient'), swatch: ['#fdf8f1', '#f2545b'] },
+  onde: { name: t('Onde'), hint: t('Votre parcours en frise, du plus récent au plus ancien'), swatch: ['#e0f2fe', '#0e7490'] },
   defile: { name: t('Défilé'), hint: t('Noir et blanc, compétences qui défilent'), swatch: ['#ffffff', '#0a0a0a'] },
-  soleil: { name: t('Soleil'), hint: t('Clair, lumières chaudes qui bougent'), swatch: ['#fff3e0', '#f97316'] },
+  soleil: { name: t('Soleil'), hint: t('Une diapositive par partie, plein écran'), swatch: ['#fff3e0', '#f97316'] },
+  dossier: { name: t('Dossier'), hint: t('Comme un dossier imprimé : couverture, sommaire, pages'), swatch: ['#111111', '#c9a227'] },
+  studio: { name: 'Studio', hint: t('Site moderne d’indépendant : gros titre, outils, appel à l’action'), swatch: ['#ffffff', '#111111'] },
+  livre: { name: t('Livre'), hint: t('Des pages qui se tournent, comme un vrai livre'), swatch: ['#fbf7ef', '#8b2e3c'] },
   bento: { name: 'Bento', hint: t('Des tuiles, très tendance, idéal avec des projets'), swatch: ['#eef1f6', '#2549eb'] },
   magazine: { name: t('Magazine'), hint: t('Grande typographie, papier crème, chic'), swatch: ['#f3eee4', '#b4532a'] },
-  aurore: { name: t('Aurore'), hint: t('Sombre, lumières animées, effet waouh'), swatch: ['#070b14', '#2dd4bf'] },
+  aurore: { name: t('Aurore'), hint: t('Comme une appli : des onglets, fond nuit animé'), swatch: ['#070b14', '#2dd4bf'] },
 };
+
+/** Couleurs proposées : franches mais lisibles, sur fond clair comme sur fond sombre. */
+const ACCENTS: { hex: string; name: string }[] = [
+  { hex: '#2549eb', name: t('Bleu') },
+  { hex: '#0e7490', name: t('Bleu canard') },
+  { hex: '#059669', name: t('Vert') },
+  { hex: '#d97706', name: t('Ambre') },
+  { hex: '#e11d48', name: t('Rouge') },
+  { hex: '#db2777', name: t('Rose') },
+  { hex: '#7c3aed', name: t('Violet') },
+  { hex: '#334155', name: t('Ardoise') },
+];
 
 /** Réglages gardés sur l'appareil entre deux visites (avant comme après publication). */
 interface Draft {
@@ -121,8 +138,8 @@ export function PortfolioPage({ onNavigate }: { onNavigate: (tab: Tab) => void }
   }, [live?.url]);
 
   const base = useMemo(
-    () => portfolioFromCv(cv, { projects: draft.projects, showPhoto: draft.showPhoto, showPhone: draft.showPhone, cvUrl: draft.withCv ? 'https://cvcasa.com/' : '', video: draft.video, accent: draft.accent, lang: draft.overrides?.lang ?? (LANG === 'en' ? 'en' : undefined) }),
-    [cv, draft.projects, draft.showPhoto, draft.showPhone, draft.withCv, draft.video, draft.accent, draft.overrides?.lang],
+    () => portfolioFromCv(cv, { projects: draft.projects, showPhoto: draft.showPhoto, showPhone: draft.showPhone, cvUrl: draft.withCv ? 'https://cvcasa.com/' : '', video: draft.video, accent: draft.accent, lang: draft.overrides?.lang ?? (LANG === 'en' ? 'en' : undefined), field: draft.overrides?.field }),
+    [cv, draft.projects, draft.showPhoto, draft.showPhone, draft.withCv, draft.video, draft.accent, draft.overrides?.lang, draft.overrides?.field],
   );
   const overrides = draft.overrides ?? {};
   const data = useMemo(() => applyOverrides(base, overrides), [base, overrides]);
@@ -337,12 +354,11 @@ export function PortfolioPage({ onNavigate }: { onNavigate: (tab: Tab) => void }
         </Card>
 
         <section aria-label={t('Aperçu du portfolio')} data-tour="portfolio-preview" className="lg:sticky lg:top-20 lg:col-start-2 lg:row-span-2 lg:row-start-1">
-          <p className="mb-2 flex items-center gap-1.5 text-sm font-semibold text-slate-600">
-            <Eye className="size-4" aria-hidden="true" /> {t('Aperçu : ce que verra le recruteur')}
-          </p>
-          <div ref={previewRef} className="max-h-[70vh] overflow-y-auto rounded-2xl shadow-lg ring-1 ring-slate-200 lg:max-h-[calc(100dvh-8rem)]">
-            <PortfolioView data={data} theme={draft.theme} pro={pro || draft.theme !== FREE_PORTFOLIO_THEME} home="#" />
-          </div>
+          <HideablePreview label={t('Ce que verra le recruteur')}>
+            <div ref={previewRef} className="max-h-[70vh] overflow-y-auto rounded-2xl shadow-lg ring-1 ring-slate-200 lg:max-h-[calc(100dvh-8rem)]">
+              <PortfolioView data={data} theme={draft.theme} pro={pro || draft.theme !== FREE_PORTFOLIO_THEME} home="#" />
+            </div>
+          </HideablePreview>
         </section>
 
         {/* Tout le reste est facultatif, et replié. */}
@@ -408,23 +424,37 @@ export function PortfolioPage({ onNavigate }: { onNavigate: (tab: Tab) => void }
 
             <Disclosure title={t('Couleur, ou s’inspirer d’un portfolio')} hint={t('Votre couleur, ou le style d’une page qui vous plaît')}>
               <div className="pt-1">
-                <div className="flex flex-wrap items-center gap-2">
-                  <label className="inline-flex min-h-11 cursor-pointer items-center gap-2 rounded-xl border border-slate-300 bg-white px-3 text-sm font-medium text-slate-800 hover:bg-slate-50">
-                    <Palette className="size-4 text-brand-600" aria-hidden="true" /> {t('Couleur')}
-                    <input type="color" value={draft.accent || '#2549eb'} onChange={(e) => draft.set({ accent: e.target.value })} className="size-6 cursor-pointer rounded border-0 bg-transparent p-0" aria-label={t('Couleur principale du portfolio')} />
-                  </label>
-                  {draft.accent && (
-                    <button type="button" className="hit text-sm font-medium text-brand-700 underline-offset-2 hover:underline" onClick={() => draft.set({ accent: '' })}>
-                      {t('Couleur du design')}
-                    </button>
-                  )}
+                {/* Pastilles de couleur (le sélecteur de couleur du téléphone est peu fiable sur Android). */}
+                <div className="flex flex-wrap items-center gap-2" role="radiogroup" aria-label={t('Couleur principale du portfolio')}>
+                  <button
+                    type="button"
+                    role="radio"
+                    aria-checked={!draft.accent}
+                    onClick={() => draft.set({ accent: '' })}
+                    className={cx('inline-flex min-h-10 items-center rounded-full px-3 text-xs font-semibold ring-1', !draft.accent ? 'bg-ink text-white ring-ink' : 'bg-white text-slate-700 ring-slate-300')}
+                  >
+                    {t('Couleur du design')}
+                  </button>
+                  {ACCENTS.map((c) => (
+                    <button
+                      key={c.hex}
+                      type="button"
+                      role="radio"
+                      aria-checked={draft.accent === c.hex}
+                      aria-label={c.name}
+                      title={c.name}
+                      onClick={() => draft.set({ accent: c.hex })}
+                      className={cx('size-10 rounded-full ring-offset-2 transition-transform hover:scale-105', draft.accent === c.hex ? 'ring-2 ring-ink' : 'ring-1 ring-black/10')}
+                      style={{ background: c.hex }}
+                    />
+                  ))}
                 </div>
                 <Inspire onPick={(theme, accent) => draft.set({ theme, accent })} />
               </div>
             </Disclosure>
 
             <Disclosure title={t('Retoucher les textes')} hint={t('Corriger un texte, un chiffre, masquer une partie. Votre CV ne change pas.')}>
-              <Retouches base={base} value={overrides} onChange={(o) => draft.set({ overrides: o })} />
+              <Retouches base={base} value={overrides} detected={detectField(cv)} onChange={(o) => draft.set({ overrides: o })} />
             </Disclosure>
 
             <Disclosure title={t('Ce qui s’affiche')} hint={t('Photo, téléphone, bouton CV, adresse de la page')}>
@@ -461,6 +491,8 @@ export function PortfolioPage({ onNavigate }: { onNavigate: (tab: Tab) => void }
   );
 }
 
+const FIELD_NAMES = FIELD_LABELS;
+
 const SECTION_LABELS: Record<HideableSection, string> = {
   badges: t('Étiquettes'),
   stats: t('Chiffres clés'),
@@ -473,7 +505,7 @@ const SECTION_LABELS: Record<HideableSection, string> = {
 };
 
 /** Retouches propres au portfolio : textes, chiffres clés, réalisations, parties masquées. L'aperçu suit en direct. */
-function Retouches({ base, value, onChange }: { base: PortfolioData; value: PortfolioOverrides; onChange: (o: PortfolioOverrides) => void }) {
+function Retouches({ base, value, onChange, detected }: { base: PortfolioData; value: PortfolioOverrides; onChange: (o: PortfolioOverrides) => void; detected: PortfolioField }) {
   const set = (p: Partial<PortfolioOverrides>) => onChange({ ...value, ...p });
   const stats = value.stats ?? base.stats;
   const wins = value.wins ?? base.wins;
@@ -481,6 +513,16 @@ function Retouches({ base, value, onChange }: { base: PortfolioData; value: Port
   const small = 'min-w-0 rounded-lg border border-slate-300 bg-white px-2.5 py-2 text-sm';
   return (
     <div className="space-y-4 pt-2">
+      <Select
+        label={t('Votre domaine (motifs en fond)')}
+        value={value.field ?? 'auto'}
+        onChange={(f) => set({ field: f === 'auto' ? undefined : (f as PortfolioField | 'aucun') })}
+        options={[
+          { value: 'auto', label: t('Automatique : {0}', [FIELD_NAMES[detected]]) },
+          ...PORTFOLIO_FIELDS.filter((f) => f !== 'general').map((f) => ({ value: f, label: FIELD_NAMES[f] })),
+          { value: 'aucun', label: t('Aucun motif') },
+        ]}
+      />
       <Select
         label={t('Langue de la page')}
         value={value.lang ?? base.lang}

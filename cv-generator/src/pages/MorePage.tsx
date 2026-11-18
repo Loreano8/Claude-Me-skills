@@ -5,7 +5,7 @@ import type { Tab } from '../App.tsx';
 import { PUBLIC_SITE } from '../lib/referral.ts';
 import { useSupportBadge } from '../lib/supportBadge.ts';
 
-import { t } from '../i18n.ts';
+import { LANG, t } from '../i18n.ts';
 import { REGION } from '../lib/currency.ts';
 // Les guides sont des pages du site : depuis l'application Android, ils s'ouvrent sur cvcasa.com.
 const SITE = Capacitor.isNativePlatform() ? PUBLIC_SITE : '';
@@ -27,7 +27,7 @@ const OTHERS: Entry[] = [
 ];
 
 const HELP: Entry[] = [
-  { icon: PlayCircle, title: t('Tutoriel en vidéo'), text: '', href: `${SITE}/tutoriel/tutoriel.mp4` },
+  { icon: PlayCircle, title: t('Tutoriel en vidéo'), text: '', href: `${SITE}/tutoriel/tutoriel${LANG === 'en' ? '-en' : ''}.mp4` },
   { icon: BookOpen, title: t('Guides et exemples'), text: '', href: `${SITE}/guides/` },
   { icon: MessageCircle, title: t('Nous contacter'), text: '', tab: 'contact' },
   { icon: Settings, title: t('Réglages'), text: '', tab: 'reglages' },

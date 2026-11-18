@@ -12,6 +12,9 @@ const PortfolioView = lazy(() => import('../portfolio/PortfolioView.tsx').then((
 
 const NAMES: Record<PortfolioTheme, string> = {
   pastel: t('Pastel'),
+  dossier: t('Dossier'),
+  studio: 'Studio',
+  livre: t('Livre'),
   soleil: t('Soleil'),
   onde: t('Onde'),
   defile: t('Défilé'), classique: t('Classique'), epure: t('Épuré'), creatif: t('Créatif'), colonne: t('Colonne'), bento: 'Bento', magazine: t('Magazine'), aurore: t('Aurore') };
