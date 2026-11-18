@@ -9,10 +9,10 @@ import { useActiveCv } from '../store.ts';
 import { useAccount } from '../lib/account.ts';
 import { api, type MyPortfolio } from '../lib/api.ts';
 import { fullName, isCvEmpty } from '../lib/cv.ts';
-import { portfolioFromCv } from '../lib/portfolio.ts';
+import { applyOverrides, hasOverrides, HIDEABLE_SECTIONS, portfolioFromCv, type HideableSection, type PortfolioOverrides } from '../lib/portfolio.ts';
 import { saveFile } from '../export/save.ts';
 import { fileToAttachment } from '../lib/files.ts';
-import { ANIMATED_THEMES, FREE_PORTFOLIO_THEME, PORTFOLIO_PRO_COST, PORTFOLIO_THEMES, slugify, type PortfolioProject, type PortfolioTheme } from '../../shared/portfolio.ts';
+import { ANIMATED_THEMES, FREE_PORTFOLIO_THEME, type PortfolioData, PORTFOLIO_PRO_COST, PORTFOLIO_THEMES, slugify, type PortfolioProject, type PortfolioTheme } from '../../shared/portfolio.ts';
 import { PortfolioView } from '../portfolio/PortfolioView.tsx';
 import { NeedCv } from '../components/NeedCv.tsx';
 import { Button, Card, Cost, cx, Disclosure, Field, Notice, TextArea, Toggle } from '../components/ui.tsx';
@@ -45,9 +45,11 @@ interface Draft {
   slug: string;
   video: string;
   accent: string;
+  /** Retouches propres au portfolio (le CV ne change pas). */
+  overrides: PortfolioOverrides;
 }
 const usePortfolioDraft = create<Draft & { set: (p: Partial<Draft>) => void }>()(
-  persist((set) => ({ theme: FREE_PORTFOLIO_THEME, projects: [], showPhoto: true, showPhone: false, withCv: true, slug: '', video: '', accent: '', set: (p) => set(p) }), { name: 'cvcasa-portfolio' }),
+  persist((set) => ({ theme: FREE_PORTFOLIO_THEME, projects: [], showPhoto: true, showPhone: false, withCv: true, slug: '', video: '', accent: '', overrides: {}, set: (p) => set(p) }), { name: 'cvcasa-portfolio' }),
 );
 
 /** Image de projet : réduite en JPEG léger (moins de 300 Ko) pour que la page s'ouvre vite. */
@@ -116,10 +118,12 @@ export function PortfolioPage({ onNavigate }: { onNavigate: (tab: Tab) => void }
     void import('qrcode').then((QR) => QR.toDataURL(live.url, { margin: 1, width: 480, color: { dark: '#101a4a', light: '#ffffff' } }).then(setQr));
   }, [live?.url]);
 
-  const data = useMemo(
+  const base = useMemo(
     () => portfolioFromCv(cv, { projects: draft.projects, showPhoto: draft.showPhoto, showPhone: draft.showPhone, cvUrl: draft.withCv ? 'https://cvcasa.com/' : '', video: draft.video, accent: draft.accent }),
     [cv, draft.projects, draft.showPhoto, draft.showPhone, draft.withCv, draft.video, draft.accent],
   );
+  const overrides = draft.overrides ?? {};
+  const data = useMemo(() => applyOverrides(base, overrides), [base, overrides]);
   const pro = mine?.pro ?? false;
   const needsPro = draft.theme !== FREE_PORTFOLIO_THEME && !pro;
 
@@ -363,6 +367,12 @@ export function PortfolioPage({ onNavigate }: { onNavigate: (tab: Tab) => void }
             )}
           </Card>
 
+          <Card>
+            <Disclosure title={t('Retoucher mon portfolio')} hint={t('Corriger un texte, un chiffre, masquer une partie. Votre CV ne change pas.')}>
+              <Retouches base={base} value={overrides} onChange={(o) => draft.set({ overrides: o })} />
+            </Disclosure>
+          </Card>
+
           <Card title={t('3. Publiez')}>
             <Disclosure title={t('Ce qui s’affiche')} hint={t('Photo, téléphone, bouton CV, adresse de la page')}>
               <div className="space-y-1 pt-1">
@@ -430,6 +440,107 @@ export function PortfolioPage({ onNavigate }: { onNavigate: (tab: Tab) => void }
           </div>
         </section>
       </div>
+    </div>
+  );
+}
+
+const SECTION_LABELS: Record<HideableSection, string> = {
+  badges: t('Étiquettes'),
+  stats: t('Chiffres clés'),
+  wins: t('Réalisations'),
+  experiences: t('Parcours'),
+  credentials: t('Diplômes et certifications'),
+  education: t('Formation'),
+  skills: t('Compétences'),
+  languages: t('Langues'),
+};
+
+/** Retouches propres au portfolio : textes, chiffres clés, réalisations, parties masquées. L'aperçu suit en direct. */
+function Retouches({ base, value, onChange }: { base: PortfolioData; value: PortfolioOverrides; onChange: (o: PortfolioOverrides) => void }) {
+  const set = (p: Partial<PortfolioOverrides>) => onChange({ ...value, ...p });
+  const stats = value.stats ?? base.stats;
+  const wins = value.wins ?? base.wins;
+  const hidden = value.hidden ?? [];
+  const small = 'min-w-0 rounded-lg border border-slate-300 bg-white px-2.5 py-2 text-sm';
+  return (
+    <div className="space-y-4 pt-2">
+      <Field label={t('Nom affiché')} value={value.name ?? base.name} onChange={(v) => set({ name: v })} />
+      <Field label={t('Titre')} value={value.title ?? base.title} onChange={(v) => set({ title: v })} />
+      <Field label={t('Lieu')} value={value.location ?? base.location} onChange={(v) => set({ location: v })} />
+      <TextArea label={t('Présentation')} rows={4} value={value.pitch ?? base.pitch} onChange={(v) => set({ pitch: v })} />
+
+      <div>
+        <p className="mb-1 text-sm font-medium text-slate-700">{t('Chiffres clés')}</p>
+        <div className="space-y-2">
+          {stats.map((s, i) => (
+            <div key={i} className="flex items-center gap-2">
+              <input aria-label={t('Chiffre')} className={cx(small, 'w-24')} value={s.value} maxLength={14} onChange={(e) => set({ stats: stats.map((x, j) => (j === i ? { ...x, value: e.target.value } : x)) })} />
+              <input aria-label={t('Ce qu’il mesure')} className={cx(small, 'flex-1')} value={s.label} maxLength={60} onChange={(e) => set({ stats: stats.map((x, j) => (j === i ? { ...x, label: e.target.value } : x)) })} />
+              <button type="button" className="hit rounded-lg p-2 text-slate-500 hover:bg-slate-100 hover:text-red-700" aria-label={t('Retirer')} onClick={() => set({ stats: stats.filter((_, j) => j !== i) })}>
+                <X className="size-4" />
+              </button>
+            </div>
+          ))}
+        </div>
+        {stats.length < 3 && (
+          <button type="button" className="hit mt-1.5 inline-flex items-center gap-1 text-sm font-semibold text-brand-700" onClick={() => set({ stats: [...stats, { value: '', label: '' }] })}>
+            <Plus className="size-4" aria-hidden="true" /> {t('Ajouter un chiffre')}
+          </button>
+        )}
+      </div>
+
+      <div>
+        <p className="mb-1 text-sm font-medium text-slate-700">{t('Réalisations')}</p>
+        <div className="space-y-2">
+          {wins.map((w, i) => (
+            <div key={i} className="space-y-1.5 rounded-xl border border-slate-200 p-2">
+              <div className="flex items-center gap-2">
+                <input aria-label={t('Chiffre de la réalisation')} className={cx(small, 'w-24')} value={w.value} maxLength={14} onChange={(e) => set({ wins: wins.map((x, j) => (j === i ? { ...x, value: e.target.value } : x)) })} />
+                <input aria-label={t('Ce qui a été réalisé')} className={cx(small, 'flex-1')} value={w.title} maxLength={80} onChange={(e) => set({ wins: wins.map((x, j) => (j === i ? { ...x, title: e.target.value } : x)) })} />
+                <button type="button" className="hit rounded-lg p-2 text-slate-500 hover:bg-slate-100 hover:text-red-700" aria-label={t('Retirer')} onClick={() => set({ wins: wins.filter((_, j) => j !== i) })}>
+                  <X className="size-4" />
+                </button>
+              </div>
+              <input aria-label={t('Détail')} placeholder={t('Détail (facultatif)')} className={cx(small, 'w-full')} value={w.text} maxLength={200} onChange={(e) => set({ wins: wins.map((x, j) => (j === i ? { ...x, text: e.target.value } : x)) })} />
+            </div>
+          ))}
+        </div>
+        {wins.length < 4 && (
+          <button type="button" className="hit mt-1.5 inline-flex items-center gap-1 text-sm font-semibold text-brand-700" onClick={() => set({ wins: [...wins, { value: '', title: '', text: '' }] })}>
+            <Plus className="size-4" aria-hidden="true" /> {t('Ajouter une réalisation')}
+          </button>
+        )}
+      </div>
+
+      <div>
+        <p className="mb-1 text-sm font-medium text-slate-700">{t('Parties affichées')}</p>
+        <div className="flex flex-wrap gap-2">
+          {HIDEABLE_SECTIONS.map((h) => {
+            const shown = !hidden.includes(h);
+            return (
+              <button
+                key={h}
+                type="button"
+                aria-pressed={shown}
+                onClick={() => set({ hidden: shown ? [...hidden, h] : hidden.filter((x) => x !== h) })}
+                className={cx(
+                  'inline-flex min-h-9 items-center gap-1 rounded-full px-3 text-sm font-medium ring-1',
+                  shown ? 'bg-brand-50 text-brand-800 ring-brand-200' : 'bg-white text-slate-400 line-through ring-slate-200',
+                )}
+              >
+                {shown && <Check className="size-3.5" aria-hidden="true" />} {SECTION_LABELS[h]}
+              </button>
+            );
+          })}
+        </div>
+        <p className="mt-1 text-xs text-slate-500">{t('Touchez une partie pour la masquer ou la remontrer.')}</p>
+      </div>
+
+      {hasOverrides(value) && (
+        <button type="button" className="hit text-sm font-semibold text-red-700" onClick={() => onChange({})}>
+          {t('Tout reprendre depuis mon CV')}
+        </button>
+      )}
     </div>
   );
 }

@@ -103,3 +103,38 @@ export function portfolioFromCv(cv: CvDocument, extras: { projects?: PortfolioPr
     accent: /^#[0-9a-fA-F]{6}$/.test(extras.accent ?? '') ? extras.accent! : '',
   };
 }
+
+// ---- Retouches propres au portfolio (sans toucher au CV) ------------------------
+
+/** Parties qu'on peut masquer sur la page. */
+export const HIDEABLE_SECTIONS = ['badges', 'stats', 'wins', 'experiences', 'credentials', 'education', 'skills', 'languages'] as const;
+export type HideableSection = (typeof HIDEABLE_SECTIONS)[number];
+
+/** Ce que la personne a retouché ; un champ absent = on garde ce qui vient du CV. */
+export interface PortfolioOverrides {
+  name?: string;
+  title?: string;
+  location?: string;
+  pitch?: string;
+  stats?: PortfolioData['stats'];
+  wins?: PortfolioData['wins'];
+  hidden?: HideableSection[];
+}
+
+export function applyOverrides(base: PortfolioData, o: PortfolioOverrides): PortfolioData {
+  const d: PortfolioData = { ...base };
+  if (o.name !== undefined && o.name.trim()) d.name = o.name.slice(0, 80);
+  if (o.title !== undefined) d.title = o.title.slice(0, 120);
+  if (o.location !== undefined) d.location = o.location.slice(0, 120);
+  if (o.pitch !== undefined) d.pitch = o.pitch.slice(0, 600);
+  if (o.stats) d.stats = o.stats.filter((s) => s.value.trim() || s.label.trim()).slice(0, 3).map((s) => ({ value: s.value.slice(0, 14), label: s.label.slice(0, 60) }));
+  if (o.wins) d.wins = o.wins.filter((w) => w.value.trim() || w.title.trim()).slice(0, 4).map((w) => ({ value: w.value.slice(0, 14), title: w.title.slice(0, 80), text: w.text.slice(0, 200) }));
+  for (const h of o.hidden ?? []) {
+    if (h in d && Array.isArray(d[h])) (d[h] as unknown[]) = [];
+  }
+  return d;
+}
+
+export function hasOverrides(o: PortfolioOverrides): boolean {
+  return Object.values(o).some((v) => (Array.isArray(v) ? v.length > 0 : v !== undefined));
+}
