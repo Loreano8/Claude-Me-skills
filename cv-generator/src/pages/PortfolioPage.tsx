@@ -1,7 +1,7 @@
 import { useMemo, useRef, useState } from 'react';
 import { useEffect } from '../lib/safeEffects.ts';
 import { Capacitor } from '@capacitor/core';
-import { Check, Copy, Eye, ImagePlus, Lock, Palette, Plus, QrCode, Share2, Sparkles, Trash2, Wand2, X } from 'lucide-react';
+import { Check, ChevronDown, Copy, Eye, ImagePlus, Lock, Palette, Plus, QrCode, Share2, Sparkles, Trash2, Wand2, X } from 'lucide-react';
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import type { Tab } from '../App.tsx';
@@ -47,9 +47,11 @@ interface Draft {
   accent: string;
   /** Retouches propres au portfolio (le CV ne change pas). */
   overrides: PortfolioOverrides;
+  /** Projet en cours d'écriture : gardé tel quel si l'appli est fermée en cours de route. */
+  pendingProject: PortfolioProject | null;
 }
 const usePortfolioDraft = create<Draft & { set: (p: Partial<Draft>) => void }>()(
-  persist((set) => ({ theme: FREE_PORTFOLIO_THEME, projects: [], showPhoto: true, showPhone: false, withCv: true, slug: '', video: '', accent: '', overrides: {}, set: (p) => set(p) }), { name: 'cvcasa-portfolio' }),
+  persist((set) => ({ theme: FREE_PORTFOLIO_THEME, projects: [], showPhoto: true, showPhone: false, withCv: true, slug: '', video: '', accent: '', overrides: {}, pendingProject: null, set: (p) => set(p) }), { name: 'cvcasa-portfolio' }),
 );
 
 /** Image de projet : réduite en JPEG léger (moins de 300 Ko) pour que la page s'ouvre vite. */
@@ -94,7 +96,7 @@ export function PortfolioPage({ onNavigate }: { onNavigate: (tab: Tab) => void }
   const [error, setError] = useState<string | null>(null);
   const [qr, setQr] = useState('');
   const [copied, setCopied] = useState(false);
-  const [adding, setAdding] = useState(false);
+  const [pickerOpen, setPickerOpen] = useState(false);
   const previewRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -201,7 +203,7 @@ export function PortfolioPage({ onNavigate }: { onNavigate: (tab: Tab) => void }
       <header>
         <h1 className="font-display text-2xl font-bold text-ink sm:text-3xl">{t('Mon portfolio en ligne')}</h1>
         <p className="mt-1 max-w-2xl text-[15px] text-slate-600">
-          {t('Une page web à votre nom, déjà remplie à partir de votre CV : parcours, diplômes, réalisations. Choisissez un design, publiez, et donnez le lien aux recruteurs.')}
+          {t('Une page web à votre nom, à donner aux recruteurs. Elle se remplit toute seule avec votre CV.')}
         </p>
       </header>
 
@@ -230,112 +232,165 @@ export function PortfolioPage({ onNavigate }: { onNavigate: (tab: Tab) => void }
                   {t('Enregistrer le QR code')}
                 </Button>
               </div>
-              <p className="text-xs text-slate-500">{t('Vous avez changé votre CV, vos projets ou le design ? Touchez « Mettre à jour ma page » plus bas : le lien reste le même.')}</p>
+              <p className="text-xs text-slate-500">{t('Vous avez changé quelque chose ? Touchez « Mettre à jour ma page » : le lien reste le même.')}</p>
             </div>
           </div>
         </Card>
       )}
 
-      <div className="grid gap-4 lg:grid-cols-[minmax(0,380px)_minmax(0,1fr)] lg:items-start">
-        <div className="space-y-4">
-          <Card title={t('1. Choisissez un design')}>
-            {[
-              { title: t('Simples'), animated: false, hint: t('Sobres et efficaces, pour tous les métiers.'), themes: PORTFOLIO_THEMES.filter((x) => !ANIMATED_THEMES.includes(x)) },
-              { title: t('Animés'), animated: true, hint: t('Des lumières qui bougent doucement : pour marquer les esprits.'), themes: [...ANIMATED_THEMES] },
-            ].map((group) => (
-            <div key={group.title} className="mb-4 last:mb-0">
-            <p className="flex items-center gap-1.5 text-sm font-semibold text-ink">
-              {group.animated && <Sparkles className="size-4 text-sun-700" aria-hidden="true" />}
-              {group.title}
+      {/* Simple : le portfolio est déjà prêt (aperçu), un gros bouton pour publier. Le reste est rangé et replié. */}
+      <div className="grid gap-4 lg:grid-cols-[minmax(0,380px)_minmax(0,1fr)] lg:grid-rows-[auto_1fr] lg:items-start">
+        <Card tour="portfolio-ready" className="lg:col-start-1 lg:row-start-1">
+          {!live && (
+            <p className="flex items-center gap-2 font-semibold text-ink">
+              <Check className="size-5 text-emerald-600" aria-hidden="true" /> {t('Votre portfolio est déjà prêt')}
             </p>
-            <p className="mb-2 text-xs text-slate-500">{group.hint}</p>
-            <div className="grid grid-cols-2 gap-2.5" role="radiogroup" aria-label={group.title}>
-              {group.themes.map((th) => {
-                const info = THEME_INFO[th];
-                const selected = draft.theme === th;
-                const locked = th !== FREE_PORTFOLIO_THEME && !pro;
-                return (
-                  <button
-                    key={th}
-                    type="button"
-                    role="radio"
-                    aria-checked={selected}
-                    onClick={() => {
-                      draft.set({ theme: th });
-                      previewRef.current?.scrollTo({ top: 0, behavior: 'smooth' });
-                    }}
-                    className={cx(
-                      'rounded-xl border p-2.5 text-left transition-colors',
-                      selected ? 'border-brand-600 bg-brand-50 ring-2 ring-brand-600' : 'border-slate-200 bg-white hover:border-slate-300',
-                    )}
-                  >
-                    <span className="mb-2 flex h-12 overflow-hidden rounded-lg ring-1 ring-slate-200" aria-hidden="true">
-                      <span className="w-2/3" style={{ background: info.swatch[0] }} />
-                      <span className="w-1/3" style={{ background: info.swatch[1] }} />
-                    </span>
-                    <span className="flex items-center justify-between gap-1">
-                      <span className="text-sm font-semibold text-ink">{info.name}</span>
-                      {locked ? (
-                        <span className="inline-flex items-center gap-0.5 rounded-full bg-sun-100 px-1.5 py-0.5 text-[11px] font-semibold text-sun-900">
-                          <Lock className="size-3" aria-hidden="true" /> Pro
-                        </span>
-                      ) : (
-                        th === FREE_PORTFOLIO_THEME && !pro && <span className="rounded-full bg-emerald-100 px-1.5 py-0.5 text-[11px] font-semibold text-emerald-900">{t('Offert')}</span>
-                      )}
-                    </span>
-                    <span className="mt-0.5 block text-xs leading-snug text-slate-500">{info.hint}</span>
-                  </button>
-                );
-              })}
-            </div>
-            </div>
-            ))}
-            <div className="mt-3 flex flex-wrap items-center gap-2">
-              <label className="inline-flex min-h-11 cursor-pointer items-center gap-2 rounded-xl border border-slate-300 bg-white px-3 text-sm font-medium text-slate-800 hover:bg-slate-50">
-                <Palette className="size-4 text-brand-600" aria-hidden="true" /> {t('Couleur')}
-                <input
-                  type="color"
-                  value={draft.accent || '#2549eb'}
-                  onChange={(e) => draft.set({ accent: e.target.value })}
-                  className="size-6 cursor-pointer rounded border-0 bg-transparent p-0"
-                  aria-label={t('Couleur principale du portfolio')}
-                />
-              </label>
-              {draft.accent && (
-                <button type="button" className="hit text-sm font-medium text-brand-700 underline-offset-2 hover:underline" onClick={() => draft.set({ accent: '' })}>
-                  {t('Couleur du design')}
-                </button>
-              )}
-            </div>
-            <Inspire onPick={(theme, accent) => draft.set({ theme, accent })} />
-          </Card>
+          )}
+          <p className={cx('text-sm text-slate-600', !live && 'mt-1')}>{t('Il est rempli avec votre CV. Regardez l’aperçu, choisissez un design si vous voulez, puis publiez.')}</p>
 
-          <Card title={t('2. Ajoutez vos projets')} subtitle={t('Facultatif. Une photo, un titre, deux lignes : un chantier, une campagne, une appli, un dossier de soins anonymisé…')}>
-            {draft.projects.length > 0 && (
-              <ul className="mb-3 space-y-2">
-                {draft.projects.map((p, i) => (
-                  <li key={i} className="flex items-center gap-3 rounded-xl border border-slate-200 p-2">
-                    {p.image ? <img src={p.image} alt="" className="size-12 shrink-0 rounded-lg object-cover" /> : <span className="size-12 shrink-0 rounded-lg bg-slate-100" />}
-                    <span className="min-w-0 flex-1">
-                      <span className="block truncate text-sm font-semibold text-ink">{p.title}</span>
-                      {p.text && <span className="block truncate text-xs text-slate-500">{p.text}</span>}
-                    </span>
-                    <button type="button" className="hit rounded-lg p-2 text-slate-500 hover:bg-slate-100 hover:text-red-700" aria-label={t('Retirer ce projet')} onClick={() => setProjects(draft.projects.filter((_, j) => j !== i))}>
-                      <Trash2 className="size-4" />
-                    </button>
-                  </li>
+          {/* Design : une ligne repliée ; on l'ouvre pour en choisir un autre. */}
+          <div className="mt-3 rounded-xl border border-slate-200" data-tour="portfolio-design">
+            <button
+              type="button"
+              aria-expanded={pickerOpen}
+              onClick={() => setPickerOpen(!pickerOpen)}
+              className="flex min-h-12 w-full items-center gap-3 px-3 text-left"
+            >
+              <span className="flex h-7 w-10 shrink-0 overflow-hidden rounded-md ring-1 ring-slate-200" aria-hidden="true">
+                <span className="w-2/3" style={{ background: THEME_INFO[draft.theme].swatch[0] }} />
+                <span className="w-1/3" style={{ background: THEME_INFO[draft.theme].swatch[1] }} />
+              </span>
+              <span className="min-w-0 flex-1">
+                <span className="block text-xs text-slate-500">{t('Design')}</span>
+                <span className="block truncate text-sm font-semibold text-ink">{THEME_INFO[draft.theme].name}</span>
+              </span>
+              <span className="text-sm font-semibold text-brand-700">{pickerOpen ? t('Fermer') : t('Changer')}</span>
+              <ChevronDown className={cx('size-4 text-slate-500 transition-transform', pickerOpen && 'rotate-180')} aria-hidden="true" />
+            </button>
+            {pickerOpen && (
+              <div className="border-t border-slate-200 p-3">
+                {[
+                  { title: t('Simples'), animated: false, themes: PORTFOLIO_THEMES.filter((x) => !ANIMATED_THEMES.includes(x)) },
+                  { title: t('Animés'), animated: true, themes: [...ANIMATED_THEMES] },
+                ].map((group) => (
+                  <div key={group.title} className="mb-3 last:mb-0">
+                    <p className="mb-1.5 flex items-center gap-1 text-xs font-semibold tracking-wide text-slate-500 uppercase">
+                      {group.animated && <Sparkles className="size-3.5 text-sun-700" aria-hidden="true" />}
+                      {group.title}
+                    </p>
+                    <div className="grid grid-cols-3 gap-2" role="radiogroup" aria-label={group.title}>
+                      {group.themes.map((th) => {
+                        const info = THEME_INFO[th];
+                        const selected = draft.theme === th;
+                        const locked = th !== FREE_PORTFOLIO_THEME && !pro;
+                        return (
+                          <button
+                            key={th}
+                            type="button"
+                            role="radio"
+                            aria-checked={selected}
+                            title={info.hint}
+                            onClick={() => {
+                              draft.set({ theme: th });
+                              previewRef.current?.scrollTo({ top: 0, behavior: 'smooth' });
+                            }}
+                            className={cx('rounded-lg border p-1.5 text-left transition-colors', selected ? 'border-brand-600 ring-2 ring-brand-600' : 'border-slate-200 hover:border-slate-300')}
+                          >
+                            <span className="flex h-8 overflow-hidden rounded-md ring-1 ring-slate-200" aria-hidden="true">
+                              <span className="w-2/3" style={{ background: info.swatch[0] }} />
+                              <span className="w-1/3" style={{ background: info.swatch[1] }} />
+                            </span>
+                            <span className="mt-1 flex items-center justify-between gap-1">
+                              <span className="truncate text-xs font-semibold text-ink">{info.name}</span>
+                              {locked ? <Lock className="size-3 shrink-0 text-sun-800" aria-label="Pro" />  : null}
+                            </span>
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
                 ))}
-              </ul>
+              </div>
             )}
-            <div className="mb-3">
-              <Field
-                label={t('Vidéo de présentation (facultatif)')}
-                hint={t('Un lien YouTube, Vimeo ou Loom : une minute pour vous présenter, face caméra ou en montrant votre travail.')}
-                placeholder="https://youtu.be/…"
-                value={draft.video}
-                onChange={(v) => draft.set({ video: v.trim().slice(0, 300) })}
-              />
-              <div className="mt-2">
+          </div>
+
+          {needsPro && (
+            <p className="mt-3 rounded-xl bg-sun-50 px-3 py-2 text-xs text-slate-700 ring-1 ring-sun-200">
+              <span className="font-semibold text-ink">{t('Portfolio Pro')}</span> : {t('Tous les designs (7, dont un animé), à changer quand vous voulez, et une page sans la mention CVCasa en bas. Payé une seule fois.')}
+            </p>
+          )}
+
+          <Button size="lg" className="mt-3 w-full" loading={busy === 'publish'} icon={needsPro ? <Lock className="size-4" /> : undefined} onClick={() => void publish()} data-tour="portfolio-publish">
+            {needsPro ? t('Débloquer et publier') : live ? t('Mettre à jour ma page') : t('Publier mon portfolio')}
+            {needsPro ? <Cost n={PORTFOLIO_PRO_COST} /> : !live && <Cost free />}
+          </Button>
+          {needsPro && (
+            <button type="button" className="hit mt-2 w-full text-center text-sm font-medium text-brand-700 underline-offset-2 hover:underline" onClick={() => draft.set({ theme: FREE_PORTFOLIO_THEME })}>
+              {t('Garder le design offert')}
+            </button>
+          )}
+          {error && (
+            <div className="mt-3">
+              <Notice tone="error">{error}</Notice>
+            </div>
+          )}
+        </Card>
+
+        <section aria-label={t('Aperçu du portfolio')} data-tour="portfolio-preview" className="lg:sticky lg:top-20 lg:col-start-2 lg:row-span-2 lg:row-start-1">
+          <p className="mb-2 flex items-center gap-1.5 text-sm font-semibold text-slate-600">
+            <Eye className="size-4" aria-hidden="true" /> {t('Aperçu : ce que verra le recruteur')}
+          </p>
+          <div ref={previewRef} className="max-h-[70vh] overflow-y-auto rounded-2xl shadow-lg ring-1 ring-slate-200 lg:max-h-[calc(100dvh-8rem)]">
+            <PortfolioView data={data} theme={draft.theme} pro={pro || draft.theme !== FREE_PORTFOLIO_THEME} home="#" />
+          </div>
+        </section>
+
+        {/* Tout le reste est facultatif, et replié. */}
+        <Card tour="portfolio-more" className="lg:col-start-1 lg:row-start-2">
+          <p className="font-semibold text-ink">{t('Personnaliser')} <span className="text-sm font-normal text-slate-500">({t('facultatif')})</span></p>
+          <div className="mt-2 space-y-2">
+            <Disclosure title={t('Ajouter des projets ou une vidéo')} hint={t('Des photos de votre travail, une minute de présentation')}>
+              <div className="space-y-3 pt-1">
+                {draft.projects.length > 0 && (
+                  <ul className="space-y-2">
+                    {draft.projects.map((p, i) => (
+                      <li key={i} className="flex items-center gap-3 rounded-xl border border-slate-200 p-2">
+                        {p.image ? <img src={p.image} alt="" className="size-12 shrink-0 rounded-lg object-cover" /> : <span className="size-12 shrink-0 rounded-lg bg-slate-100" />}
+                        <span className="min-w-0 flex-1">
+                          <span className="block truncate text-sm font-semibold text-ink">{p.title}</span>
+                          {p.text && <span className="block truncate text-xs text-slate-500">{p.text}</span>}
+                        </span>
+                        <button type="button" className="hit rounded-lg p-2 text-slate-500 hover:bg-slate-100 hover:text-red-700" aria-label={t('Retirer ce projet')} onClick={() => setProjects(draft.projects.filter((_, j) => j !== i))}>
+                          <Trash2 className="size-4" />
+                        </button>
+                      </li>
+                    ))}
+                  </ul>
+                )}
+                {draft.pendingProject ? (
+                  <ProjectForm
+                    value={draft.pendingProject}
+                    onChange={(pendingProject) => draft.set({ pendingProject })}
+                    onCancel={() => draft.set({ pendingProject: null })}
+                    onAdd={(p) => {
+                      setProjects([...draft.projects, p]);
+                      draft.set({ pendingProject: null });
+                    }}
+                  />
+                ) : (
+                  draft.projects.length < 6 && (
+                    <Button variant="secondary" icon={<Plus className="size-4" />} onClick={() => draft.set({ pendingProject: { title: '', text: '', link: '', image: '' } })}>
+                      {t('Ajouter un projet')}
+                    </Button>
+                  )
+                )}
+                <Field
+                  label={t('Vidéo de présentation (facultatif)')}
+                  hint={t('Un lien YouTube, Vimeo ou Loom : une minute pour vous présenter, face caméra ou en montrant votre travail.')}
+                  placeholder="https://youtu.be/…"
+                  value={draft.video}
+                  onChange={(v) => draft.set({ video: v.trim().slice(0, 300) })}
+                />
                 <Disclosure title={t('Comment faire ma vidéo en 5 minutes')} hint={t('Avec votre téléphone, sans matériel')}>
                   <ol className="list-decimal space-y-1.5 pl-5 pt-1 text-sm text-slate-700">
                     <li>{t('Placez-vous face à une fenêtre (lumière de face), fond simple, téléphone posé à hauteur des yeux, à l’horizontale.')}</li>
@@ -349,31 +404,29 @@ export function PortfolioPage({ onNavigate }: { onNavigate: (tab: Tab) => void }
                   </p>
                 </Disclosure>
               </div>
-            </div>
-            {adding ? (
-              <ProjectForm
-                onCancel={() => setAdding(false)}
-                onAdd={(p) => {
-                  setProjects([...draft.projects, p]);
-                  setAdding(false);
-                }}
-              />
-            ) : (
-              draft.projects.length < 6 && (
-                <Button variant="secondary" icon={<Plus className="size-4" />} onClick={() => setAdding(true)}>
-                  {t('Ajouter un projet')}
-                </Button>
-              )
-            )}
-          </Card>
+            </Disclosure>
 
-          <Card>
-            <Disclosure title={t('Retoucher mon portfolio')} hint={t('Corriger un texte, un chiffre, masquer une partie. Votre CV ne change pas.')}>
+            <Disclosure title={t('Couleur, ou s’inspirer d’un portfolio')} hint={t('Votre couleur, ou le style d’une page qui vous plaît')}>
+              <div className="pt-1">
+                <div className="flex flex-wrap items-center gap-2">
+                  <label className="inline-flex min-h-11 cursor-pointer items-center gap-2 rounded-xl border border-slate-300 bg-white px-3 text-sm font-medium text-slate-800 hover:bg-slate-50">
+                    <Palette className="size-4 text-brand-600" aria-hidden="true" /> {t('Couleur')}
+                    <input type="color" value={draft.accent || '#2549eb'} onChange={(e) => draft.set({ accent: e.target.value })} className="size-6 cursor-pointer rounded border-0 bg-transparent p-0" aria-label={t('Couleur principale du portfolio')} />
+                  </label>
+                  {draft.accent && (
+                    <button type="button" className="hit text-sm font-medium text-brand-700 underline-offset-2 hover:underline" onClick={() => draft.set({ accent: '' })}>
+                      {t('Couleur du design')}
+                    </button>
+                  )}
+                </div>
+                <Inspire onPick={(theme, accent) => draft.set({ theme, accent })} />
+              </div>
+            </Disclosure>
+
+            <Disclosure title={t('Retoucher les textes')} hint={t('Corriger un texte, un chiffre, masquer une partie. Votre CV ne change pas.')}>
               <Retouches base={base} value={overrides} onChange={(o) => draft.set({ overrides: o })} />
             </Disclosure>
-          </Card>
 
-          <Card title={t('3. Publiez')}>
             <Disclosure title={t('Ce qui s’affiche')} hint={t('Photo, téléphone, bouton CV, adresse de la page')}>
               <div className="space-y-1 pt-1">
                 {cv.photo && <Toggle label={t('Montrer ma photo')} checked={draft.showPhoto} onChange={(v) => draft.set({ showPhoto: v })} />}
@@ -391,54 +444,18 @@ export function PortfolioPage({ onNavigate }: { onNavigate: (tab: Tab) => void }
                 </div>
               </div>
             </Disclosure>
-
-            {needsPro && (
-              <div className="mt-3 rounded-xl border border-sun-300 bg-sun-50 p-3 text-sm text-slate-800">
-                <p className="flex items-center gap-1.5 font-semibold text-ink">
-                  <Sparkles className="size-4 text-sun-700" aria-hidden="true" /> {t('Portfolio Pro')}
-                </p>
-                <p className="mt-1">{t('Tous les designs (7, dont un animé), à changer quand vous voulez, et une page sans la mention CVCasa en bas. Payé une seule fois.')}</p>
-              </div>
-            )}
-
-            <div className="mt-3 flex flex-wrap items-center gap-2">
-              <Button size="lg" className="w-full sm:w-auto" loading={busy === 'publish'} icon={needsPro ? <Lock className="size-4" /> : undefined} onClick={() => void publish()}>
-                {needsPro ? t('Débloquer et publier') : live ? t('Mettre à jour ma page') : t('Publier mon portfolio')}
-                {needsPro ? <Cost n={PORTFOLIO_PRO_COST} /> : !live && <Cost free />}
-              </Button>
-              {needsPro && (
-                <button type="button" className="hit text-sm font-medium text-brand-700 underline-offset-2 hover:underline" onClick={() => draft.set({ theme: FREE_PORTFOLIO_THEME })}>
-                  {t('Garder le design offert')}
-                </button>
-              )}
-            </div>
-            {error && (
-              <div className="mt-3">
-                <Notice tone="error">{error}</Notice>
-              </div>
-            )}
-            {live && (
-              <Button variant="danger" size="sm" className="mt-3" loading={busy === 'stop'} onClick={() => void stop()}>
-                {t('Retirer ma page')}
-              </Button>
-            )}
-            <p className="mt-3 text-xs text-slate-500">
-              {t('Le contenu vient de votre CV.')}{' '}
-              <button type="button" className="font-medium text-brand-700 underline-offset-2 hover:underline" onClick={() => onNavigate('infos')}>
-                {t('Modifier mon CV')}
-              </button>
-            </p>
-          </Card>
-        </div>
-
-        <section aria-label={t('Aperçu du portfolio')} className="lg:sticky lg:top-20">
-          <p className="mb-2 flex items-center gap-1.5 text-sm font-semibold text-slate-600">
-            <Eye className="size-4" aria-hidden="true" /> {t('Aperçu : ce que verra le recruteur')}
-          </p>
-          <div ref={previewRef} className="max-h-[70vh] overflow-y-auto rounded-2xl shadow-lg ring-1 ring-slate-200 lg:max-h-[calc(100dvh-8rem)]">
-            <PortfolioView data={data} theme={draft.theme} pro={pro || draft.theme !== FREE_PORTFOLIO_THEME} home="#" />
           </div>
-        </section>
+          <p className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-slate-500">
+            <button type="button" className="font-medium text-brand-700 underline-offset-2 hover:underline" onClick={() => onNavigate('infos')}>
+              {t('Modifier mon CV')}
+            </button>
+            {live && (
+              <button type="button" className="font-medium text-red-700 underline-offset-2 hover:underline" disabled={busy === 'stop'} onClick={() => void stop()}>
+                {t('Retirer ma page')}
+              </button>
+            )}
+          </p>
+        </Card>
       </div>
     </div>
   );
@@ -604,8 +621,11 @@ function Inspire({ onPick }: { onPick: (theme: PortfolioTheme, accent: string) =
   );
 }
 
-function ProjectForm({ onAdd, onCancel }: { onAdd: (p: PortfolioProject) => void; onCancel: () => void }) {
-  const [p, setP] = useState<PortfolioProject>({ title: '', text: '', link: '', image: '' });
+function ProjectForm({ value: p, onChange, onAdd, onCancel }: { value: PortfolioProject; onChange: (p: PortfolioProject) => void; onAdd: (p: PortfolioProject) => void; onCancel: () => void }) {
+  // Le projet en cours est gardé dans le stockage de l'appli à chaque frappe : rien n'est perdu si on sort de l'appli.
+  const latest = useRef(p);
+  latest.current = p;
+  const setP = (next: PortfolioProject | ((x: PortfolioProject) => PortfolioProject)) => onChange(typeof next === 'function' ? next(latest.current) : next);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const input = useRef<HTMLInputElement>(null);

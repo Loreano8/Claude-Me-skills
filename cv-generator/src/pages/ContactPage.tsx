@@ -1,4 +1,5 @@
 import { useRef, useState } from 'react';
+import { useSavedState } from '../lib/savedState.ts';
 import { useEffect } from '../lib/safeEffects.ts';
 import { MessageCircle, Send } from 'lucide-react';
 import { api, saveSupportSecret, type SupportMessage } from '../lib/api.ts';
@@ -15,7 +16,7 @@ const time = (iso: string) =>
 export function ContactPage() {
   const user = useAccount((s) => s.user);
   const [messages, setMessages] = useState<SupportMessage[] | null>(null);
-  const [body, setBody] = useState('');
+  const [body, setBody] = useSavedState('contact-message', '');
   const [name, setName] = useState(user?.name ?? '');
   const [contact, setContact] = useState(user?.identifier ?? '');
   const [busy, setBusy] = useState(false);

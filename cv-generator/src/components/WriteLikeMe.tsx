@@ -1,4 +1,5 @@
 import { useRef, useState } from 'react';
+import { useSavedState } from '../lib/savedState.ts';
 import { Paperclip, PenLine, Trash2, X } from 'lucide-react';
 import type { Attachment } from '../../shared/schema.ts';
 import { api } from '../lib/api.ts';
@@ -29,7 +30,7 @@ export function WriteLikeMe({ compact = false }: { compact?: boolean }) {
   const [open, setOpen] = useState(!compact);
   const [editing, setEditing] = useState(false);
   const [files, setFiles] = useState<Attachment[]>([]);
-  const [text, setText] = useState('');
+  const [text, setText] = useSavedState('ecrire-comme-moi', '');
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
 

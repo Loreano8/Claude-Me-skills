@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useSavedState } from '../lib/savedState.ts';
 import { useEffect } from '../lib/safeEffects.ts';
 import { FileDown, FileText, Lock, Mail, MessageCircleQuestion, PenLine } from 'lucide-react';
 import { DossierLink } from './DossierPage.tsx';
@@ -21,6 +22,9 @@ import { DownloadHint } from '../components/DownloadHint.tsx';
 import type { Tab } from '../App.tsx';
 
 import { LANG, t } from '../i18n.ts';
+
+/** Liste vide stable (réponses aux questions avant la lettre). */
+const EMPTY: string[] = [];
 function GenerateCard({ onNavigate }: { onNavigate: (t: Tab) => void }) {
   const cv = useActiveCv();
   const job = useStore((s) => s.job);
@@ -28,14 +32,14 @@ function GenerateCard({ onNavigate }: { onNavigate: (t: Tab) => void }) {
   const [tone, setTone] = useState<CoverLetterRequest['tone']>('formel');
   const [length, setLength] = useState<CoverLetterRequest['length']>('standard');
   const [lang, setLang] = useState<'auto' | 'fr' | 'en'>('auto');
-  const [notes, setNotes] = useState('');
+  const [notes, setNotes] = useSavedState('lettre-notes', '');
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const hasJob = !!job.text.trim() || !!job.file;
 
   /** Questions posées avant d'écrire (motivation, exemple vécu) et réponses de la personne. */
-  const [questions, setQuestions] = useState<LetterQuestionsResult['questions'] | null>(null);
-  const [answers, setAnswers] = useState<string[]>([]);
+  const [questions, setQuestions] = useSavedState<LetterQuestionsResult['questions'] | null>('lettre-questions', null);
+  const [answers, setAnswers] = useSavedState<string[]>('lettre-reponses', EMPTY);
   const [asking, setAsking] = useState(false);
 
   const jobInput = () => ({ text: job.text, file: job.file ? { name: job.file.name, mediaType: job.file.mediaType, data: job.file.data } : null, answers: '' });

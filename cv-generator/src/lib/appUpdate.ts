@@ -31,9 +31,13 @@ export async function findUpdate(): Promise<LatestBundle | null> {
   return shouldInstall(latest, __BUILD_ID__, nativeBuild) ? latest : null;
 }
 
+const PENDING = 'cvcasa-update-pret';
+
 /**
- * Télécharge la version (seulement les fichiers modifiés) puis l'applique :
- * tout de suite si la personne l'a demandé (l'appli redémarre), sinon au prochain lancement.
+ * Télécharge la version (seulement les fichiers modifiés). Elle est appliquée :
+ * tout de suite si la personne l'a demandé (l'appli redémarre), sinon au prochain vrai lancement de l'appli.
+ * Jamais au passage en arrière-plan : une personne qui sort de l'appli un instant (touche Accueil, autre appli)
+ * doit retrouver son travail en cours exactement comme elle l'a laissé.
  */
 export async function installUpdate(latest: LatestBundle, now = false): Promise<void> {
   // Déjà téléchargée (lancement précédent) : pas besoin de recommencer.
@@ -41,16 +45,39 @@ export async function installUpdate(latest: LatestBundle, now = false): Promise<
   const ready = bundles.find((b) => b.version === latest.version && b.status === 'success');
   const bundle = ready ?? (await CapacitorUpdater.download({ url: '', version: latest.version, manifest: latest.manifest }));
   if (now) await CapacitorUpdater.set({ id: bundle.id });
-  else await CapacitorUpdater.next({ id: bundle.id });
+  else {
+    try {
+      localStorage.setItem(PENDING, JSON.stringify({ id: bundle.id, version: latest.version }));
+    } catch {
+      /* stockage indisponible : la mise à jour sera retéléchargée au prochain lancement */
+    }
+  }
+}
+
+/** Au lancement seulement (rien n'est encore en cours de saisie) : applique la version téléchargée la fois d'avant. */
+async function applyPendingAtLaunch(): Promise<boolean> {
+  let pending: { id: string; version: string } | null = null;
+  try {
+    pending = JSON.parse(localStorage.getItem(PENDING) ?? 'null');
+    localStorage.removeItem(PENDING);
+  } catch {
+    return false;
+  }
+  if (!pending || pending.version === __BUILD_ID__) return false;
+  const { bundles } = await CapacitorUpdater.list();
+  if (!bundles.some((b) => b.id === pending!.id && b.status === 'success')) return false;
+  await CapacitorUpdater.set({ id: pending.id });
+  return true;
 }
 
 export async function setupAppUpdates(): Promise<void> {
   // Toujours en premier : signale que cette version démarre bien (sinon retour automatique à la précédente).
   await CapacitorUpdater.notifyAppReady();
+  if (await applyPendingAtLaunch().catch(() => false)) return;
   const check = async () => {
     try {
       const latest = await findUpdate();
-      // Appliquée quand l'appli passe en arrière-plan ou au prochain lancement : jamais en pleine saisie.
+      // Téléchargée maintenant, appliquée au prochain lancement : jamais en pleine saisie, jamais en arrière-plan.
       if (latest) await installUpdate(latest);
     } catch (e) {
       console.warn('Mise à jour de l’appli', e);

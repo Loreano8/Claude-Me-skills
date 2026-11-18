@@ -54,6 +54,12 @@ export const TOURS: Partial<Record<Tab, Step[]>> = {
     { target: 'watch-run', title: t('Voir les offres maintenant'), text: t('Lancez une recherche : les offres s’affichent ici, chacune avec un bouton pour adapter votre CV. La première est offerte.') },
     { target: 'watch-auto', title: t('Chaque matin, sans rien faire'), text: t('Choisissez la fréquence et activez la veille : les nouvelles offres arrivent par e-mail. Arrêt possible à tout moment.') },
   ],
+  portfolio: [
+    { target: 'portfolio-preview', title: t('Votre portfolio est déjà prêt'), text: t('Il est rempli avec votre CV : voici ce que verra le recruteur.') },
+    { target: 'portfolio-design', title: t('Le design'), text: t('Touchez « Changer » pour en essayer un autre. L’aperçu change tout de suite.') },
+    { target: 'portfolio-publish', title: t('Publier'), text: t('Un clic : vous recevez un lien et un QR code à donner aux recruteurs.') },
+    { target: 'portfolio-more', title: t('Si vous voulez'), text: t('Projets, vidéo, couleur, retouches : tout est facultatif et rangé ici.') },
+  ],
   ambassadeur: [
     { target: 'ambassador-apply', title: t('Devenir ambassadeur'), text: t('Indiquez votre numéro Mobile Money : c’est là que vous recevrez vos gains. L’équipe valide votre demande.') },
     { target: 'ambassador-link', title: t('Votre lien'), text: t('Partagez-le dans vos groupes : chaque ami qui s’inscrit par ce lien vous est rattaché.') },

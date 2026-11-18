@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useSavedState } from '../lib/savedState.ts';
 import { MessageSquareText, PenLine, Undo2 } from 'lucide-react';
 import { useActiveCv, useStore } from '../store.ts';
 import type { CvDocument } from '../types.ts';
@@ -14,7 +15,7 @@ const PLACEHOLDER = t('Dites ou écrivez ce qu’il faut changer, par exemple :\
 export function ReviseCard() {
   const cv = useActiveCv();
   const updateCv = useStore((s) => s.updateCv);
-  const [text, setText] = useState('');
+  const [text, setText] = useSavedState('corriger-cv', '');
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [result, setResult] = useState<{ changes: string[]; notDone: string[] } | null>(null);
