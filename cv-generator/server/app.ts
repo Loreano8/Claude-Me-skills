@@ -20,6 +20,8 @@ import type { Push } from './push.ts';
 import { RecoveryInput, type Recovery } from './recovery.ts';
 import { memoryRateLimiter, type RateLimiter } from './rateLimit.ts';
 import { ShareError, type Shares } from './shares.ts';
+import { PortfolioError, type Portfolios } from './portfolios.ts';
+import { PortfolioSaveRequest } from '../shared/portfolio.ts';
 import type { Turnstile } from './turnstile.ts';
 import { WatchError, type Watches } from './watch.ts';
 import { LetterTranslateRequest, WatchSaveRequest } from '../shared/schema.ts';
@@ -38,6 +40,7 @@ export interface AppOptions {
   authLimiter?: RateLimiter | null;
   /** CV partagés par lien ou QR code. */
   shares?: Shares | null;
+  portfolios?: Portfolios | null;
   /** Veille emploi (recherche d'offres chaque matin ou chaque semaine). */
   watches?: Watches | null;
   /** Secret des appels automatiques (planificateur de la base) qui lancent les veilles. */
@@ -100,7 +103,7 @@ const Credentials = z.object({
   source: z.string().max(60).optional(),
 });
 
-export function createApp({ fetchPage = fetchJobPage, ai, aiEn = null, allowedOrigins, rateLimitPerHour, accounts = null, payments = null, cryptoPay = null, rates = null, testimonials = null, support = null, vault = null, recovery = null, sources = null, push = null, sessionSecret = '', publicUrl = '', apiPublicUrl = '', adminToken = '', adminEmail = '', adminMailer = null, ambassadors = null, authLimiter = null, shares = null, watches = null, cronSecret = '', turnstile = null }: AppOptions) {
+export function createApp({ fetchPage = fetchJobPage, ai, aiEn = null, allowedOrigins, rateLimitPerHour, accounts = null, payments = null, cryptoPay = null, rates = null, testimonials = null, support = null, vault = null, recovery = null, sources = null, push = null, sessionSecret = '', publicUrl = '', apiPublicUrl = '', adminToken = '', adminEmail = '', adminMailer = null, ambassadors = null, authLimiter = null, shares = null, portfolios = null, watches = null, cronSecret = '', turnstile = null }: AppOptions) {
   const app = new Hono();
   const allow = memoryRateLimiter(rateLimitPerHour);
   const allowAuth = authLimiter ?? memoryRateLimiter(20);
@@ -813,6 +816,55 @@ export function createApp({ fetchPage = fetchJobPage, ai, aiEn = null, allowedOr
     if (!user) return c.json({ error: 'Connectez-vous.', code: 'auth' }, 401);
     await shares.stop(user.id, String((await body(c)).cvKey ?? ''));
     return c.json({ ok: true });
+  });
+
+  // ---- Portfolio en ligne -------------------------------------------------------
+  const portfolioLink = (slug: string) => `${(publicUrl || '').replace(/\/$/, '')}/p/#${slug}`;
+  const portfolioError = (c: Context, error: unknown) => {
+    if (error instanceof PortfolioError) return c.json({ error: error.message, code: error.code || undefined }, error.status);
+    return accountError(c, error);
+  };
+
+  app.get('/api/portfolio', async (c) => {
+    if (!portfolios) return c.json({ available: false, portfolio: null });
+    const user = await currentUser(c);
+    if (!user) return c.json({ available: true, portfolio: null });
+    const p = await portfolios.get(user.id);
+    return c.json({ available: true, portfolio: p ? { ...p, url: portfolioLink(p.slug) } : null });
+  });
+
+  app.post('/api/portfolio', async (c) => {
+    if (!portfolios) return c.json({ error: 'Portfolio indisponible.' }, 503);
+    const user = await currentUser(c);
+    if (!user) return c.json({ error: 'Créez un compte gratuit ou connectez-vous pour publier votre portfolio.', code: 'auth' }, 401);
+    const b = await body(c);
+    const parsed = PortfolioSaveRequest.safeParse(b);
+    if (!parsed.success) {
+      const slugIssue = parsed.error.issues.some((i) => i.path[0] === 'slug');
+      return c.json({ error: slugIssue ? 'Adresse invalide : lettres, chiffres et tirets, 3 à 40 caractères.' : 'Requête invalide.', code: slugIssue ? 'slug' : undefined }, 400);
+    }
+    try {
+      const p = await portfolios.save(user.id, parsed.data, b.unlock === true);
+      const fresh = await accounts?.get(user.id).catch(() => null);
+      return c.json({ portfolio: { ...p, published: true, url: portfolioLink(p.slug) }, credits: fresh?.credits ?? user.credits });
+    } catch (error) {
+      return portfolioError(c, error);
+    }
+  });
+
+  app.post('/api/portfolio/stop', async (c) => {
+    if (!portfolios) return c.json({ ok: true });
+    const user = await currentUser(c);
+    if (!user) return c.json({ error: 'Connectez-vous.', code: 'auth' }, 401);
+    await portfolios.remove(user.id);
+    return c.json({ ok: true });
+  });
+
+  app.get('/api/portfolio/public/:slug', async (c) => {
+    const found = portfolios && (await portfolios.open(c.req.param('slug')));
+    if (!found) return c.json({ error: 'Cette page n’existe pas ou a été retirée.' }, 404);
+    c.header('cache-control', 'public, max-age=60');
+    return c.json(found);
   });
 
   // ---- Veille emploi ----------------------------------------------------------

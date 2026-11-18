@@ -1,3 +1,4 @@
+import type { PortfolioSaveRequest, PortfolioState } from '../../shared/portfolio.ts';
 import { Capacitor } from '@capacitor/core';
 import type {
   AdaptRequest,
@@ -39,6 +40,9 @@ import { LANG, t } from '../i18n.ts';
 // Sur le web, l'API est servie par le même domaine. Dans l'application Android,
 // VITE_API_URL pointe vers le serveur en ligne.
 /** CV partagé par lien : `url` mène à la page de présentation, qui ouvre le PDF. */
+/** Mon portfolio tel que le serveur le garde, avec son adresse publique. */
+export type MyPortfolio = PortfolioState & { published: boolean; url: string };
+
 export interface SharedCv {
   token: string;
   name: string;
@@ -81,7 +85,7 @@ async function request<T>(method: 'GET' | 'POST', path: string, body?: unknown, 
     const message = typeof data?.error === 'string' ? data.error : null;
     // Pas de réponse de notre API : site publié sans serveur (ex. version de démonstration).
     if (!message) throw new ApiError(t('Les fonctions en ligne ne sont pas encore activées sur ce site.'));
-    if (res.status === 401 && (path.startsWith('/api/ai/') || path.startsWith('/api/vault/') || path === '/api/unlock' || path === '/api/dossier/unlock' || path.startsWith('/api/watch'))) {
+    if (res.status === 401 && (path.startsWith('/api/ai/') || path.startsWith('/api/vault/') || path === '/api/unlock' || path === '/api/dossier/unlock' || path.startsWith('/api/watch') || path === '/api/portfolio')) {
       account.logout();
       account.open('account', message);
     }
@@ -116,6 +120,9 @@ export const api = {
   shareCv: (cvKey: string, name: string, pdf: string) => post<SharedCv>('/api/share', { cvKey, name, pdf }),
   shareStatus: (cvKey: string) => post<{ share: SharedCv | null }>('/api/share/status', { cvKey }),
   shareStop: (cvKey: string) => post<{ ok: true }>('/api/share/stop', { cvKey }),
+  portfolioGet: () => request<{ available: boolean; portfolio: MyPortfolio | null }>('GET', '/api/portfolio'),
+  portfolioSave: (req: PortfolioSaveRequest & { unlock?: boolean }) => post<{ portfolio: MyPortfolio; credits: number }>('/api/portfolio', req),
+  portfolioStop: () => post<{ ok: true }>('/api/portfolio/stop', {}),
   watchGet: () => request<{ available: boolean; watch: WatchState | null; runs: WatchRun[] }>('GET', '/api/watch'),
   watchSave: (req: WatchSaveRequest) => post<{ watch: WatchState }>('/api/watch', req),
   watchRun: () => post<{ run: WatchRun; credits: number | null; free: boolean }>('/api/watch/run', {}),

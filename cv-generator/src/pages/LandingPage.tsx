@@ -3,6 +3,7 @@ import { useEffect } from '../lib/safeEffects.ts';
 import { ArrowRight, BadgeCheck, ChevronLeft, ChevronRight, FileUp, BellRing, Briefcase, Check, ClipboardList, FileDown, FileStack, Globe2, GraduationCap, Languages, Link2, Mail, MessagesSquare, PenLine, PlayCircle, Send, ShieldCheck, Target, UserRound } from 'lucide-react';
 import { PACKS, type Pack } from '../../server/payments.ts';
 import { HeroScene } from '../components/HeroScene.tsx';
+import { PortfolioShowcase } from '../components/PortfolioShowcase.tsx';
 import type { Tab } from '../App.tsx';
 import { Button, cx } from '../components/ui.tsx';
 import { CurrencyPicker } from '../components/CurrencyPicker.tsx';
@@ -534,7 +535,7 @@ export function LandingPage({ onNavigate }: { onNavigate: (t: Tab) => void }) {
           <div className="order-2 text-center lg:order-none lg:self-start lg:text-left">
             <p className="mx-auto max-w-xl text-base text-slate-600 sm:text-lg lg:mx-0">
               {abroad
-                ? t('Chaque jour, CVCasa cherche pour vous les offres qui correspondent à votre CV, en France, au Canada, aux États-Unis ou ailleurs, et vous les envoie. Puis il adapte votre CV à celle qui vous plaît.')
+                ? t('Chaque jour, CVCasa cherche pour vous les offres qui correspondent à votre CV, en France, aux États-Unis, au Royaume-Uni ou ailleurs, et vous les envoie. Puis il adapte votre CV à celle qui vous plaît.')
                 : t('CVCasa reprend les mots-clés de l’annonce et vous montre le score avant → après. Vous partez de votre ancien CV (PDF, Word ou photo) ou de quelques lignes.')}</p>
             {!abroad && <p className="mt-3 inline-flex flex-wrap items-center justify-center gap-x-2 gap-y-0.5 rounded-2xl bg-brand-50 px-3.5 py-1.5 text-sm text-slate-700 ring-1 ring-brand-100">
               <span className="inline-flex items-center gap-2 whitespace-nowrap">
@@ -569,9 +570,14 @@ export function LandingPage({ onNavigate }: { onNavigate: (t: Tab) => void }) {
         </div>
       </section>
 
+      {/* Hors d'Afrique, le portfolio est très demandé (États-Unis surtout) : on le montre tout de suite. */}
+      {abroad && <PortfolioShowcase onStart={() => onNavigate(isCvEmpty(cv) ? 'infos' : 'portfolio')} />}
+
       <PhotoStory />
 
       <BeyondCv onNavigate={onNavigate} />
+
+      {!abroad && <PortfolioShowcase onStart={() => onNavigate(isCvEmpty(cv) ? 'infos' : 'portfolio')} />}
 
       <TemplatesShowcase onNavigate={onNavigate} />
 

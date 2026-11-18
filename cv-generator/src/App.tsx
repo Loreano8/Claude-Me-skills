@@ -22,6 +22,7 @@ import { ApplicationsPage } from './pages/ApplicationsPage.tsx';
 import { LandingPage } from './pages/LandingPage.tsx';
 import { ContactPage } from './pages/ContactPage.tsx';
 import { DossierPage } from './pages/DossierPage.tsx';
+import { PortfolioPage } from './pages/PortfolioPage.tsx';
 import { WatchPage } from './pages/WatchPage.tsx';
 import { SettingsPage } from './pages/SettingsPage.tsx';
 import { AmbassadorPage } from './pages/AmbassadorPage.tsx';
@@ -34,7 +35,7 @@ import { PrivacyPage } from './pages/PrivacyPage.tsx';
 import { refreshSupportBadge, useSupportBadge } from './lib/supportBadge.ts';
 
 import { t } from './i18n.ts';
-export type Tab = 'accueil' | 'infos' | 'apercu' | 'offre' | 'lettre' | 'plus' | 'suivi' | 'veille' | 'reglages' | 'documents' | 'dossier' | 'scanner' | 'confidentialite' | 'contact' | 'ambassadeur';
+export type Tab = 'accueil' | 'infos' | 'apercu' | 'offre' | 'lettre' | 'plus' | 'suivi' | 'veille' | 'portfolio' | 'reglages' | 'documents' | 'dossier' | 'scanner' | 'confidentialite' | 'contact' | 'ambassadeur';
 
 // La navigation suit le parcours : 1. le CV, 2. l'offre, 3. la lettre. Tout le reste est rangé dans « Plus ».
 type Section = 'cv' | 'offre' | 'lettre' | 'plus';
@@ -42,10 +43,10 @@ const NAV: { id: Section; tab: Tab; label: string; short: string; step?: number;
   { id: 'cv', tab: 'infos', label: t('Mon CV'), short: t('Mon CV'), step: 1, tabs: ['infos', 'apercu'] },
   { id: 'offre', tab: 'offre', label: t('Adapter à une offre'), short: t('Offre'), step: 2, tabs: ['offre'] },
   { id: 'lettre', tab: 'lettre', label: t('Lettre de motivation'), short: t('Lettre'), step: 3, tabs: ['lettre'] },
-  { id: 'plus', tab: 'plus', label: t('Scanner, documents, suivi, aide'), short: t('Plus'), tabs: ['plus', 'suivi', 'veille', 'reglages', 'ambassadeur', 'documents', 'dossier', 'scanner', 'contact', 'confidentialite'] },
+  { id: 'plus', tab: 'plus', label: t('Scanner, documents, suivi, aide'), short: t('Plus'), tabs: ['plus', 'suivi', 'veille', 'portfolio', 'reglages', 'ambassadeur', 'documents', 'dossier', 'scanner', 'contact', 'confidentialite'] },
 ];
 /** Pages ouvertes depuis « Plus » : elles affichent un retour vers ce menu. */
-const MORE_PAGES: Tab[] = ['suivi', 'veille', 'reglages', 'ambassadeur', 'documents', 'dossier', 'scanner', 'contact', 'confidentialite'];
+const MORE_PAGES: Tab[] = ['suivi', 'veille', 'portfolio', 'reglages', 'ambassadeur', 'documents', 'dossier', 'scanner', 'contact', 'confidentialite'];
 const ALL_TABS: Tab[] = ['accueil', ...NAV.flatMap((n) => n.tabs)];
 
 const isTab = (v: string): v is Tab => ALL_TABS.includes(v as Tab);
@@ -371,6 +372,7 @@ export default function App() {
         {tab === 'lettre' && <LetterPage onNavigate={setTab} />}
         {tab === 'suivi' && <ApplicationsPage onNavigate={setTab} />}
         {tab === 'veille' && <WatchPage onNavigate={setTab} />}
+        {tab === 'portfolio' && <PortfolioPage onNavigate={setTab} />}
         {tab === 'reglages' && <SettingsPage onNavigate={setTab} />}
         {tab === 'ambassadeur' && <AmbassadorPage />}
         {tab === 'documents' && <DocumentsPage onNavigate={setTab} />}

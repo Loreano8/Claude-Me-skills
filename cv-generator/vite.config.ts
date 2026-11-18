@@ -79,7 +79,7 @@ export default defineConfig({
     chunkSizeWarningLimit: 2500,
     // Deux pages : le site (index.html) et l'espace administrateur (admin/), construit à part pour qu'il
     // n'apparaisse ni dans le site public ni dans l'appli.
-    rollupOptions: { input: { main: 'index.html', admin: 'admin/index.html' } },
+    rollupOptions: { input: { main: 'index.html', admin: 'admin/index.html', portfolio: 'p/index.html' } },
   },
   define: {
     __BUILD_ID__: JSON.stringify(BUILD_ID),

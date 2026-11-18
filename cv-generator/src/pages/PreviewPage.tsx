@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { AlertTriangle, BellRing, Check, PenLine, Target, CheckCircle2, FileDown, FileText, Languages, Lightbulb, Lock } from 'lucide-react';
+import { AlertTriangle, BellRing, Check, Globe, ChevronRight, PenLine, Target, CheckCircle2, FileDown, FileText, Languages, Lightbulb, Lock } from 'lucide-react';
 import type { Market } from '../../shared/schema.ts';
 import { MARKET_LABELS, useActiveCv, useStore } from '../store.ts';
 import type { CvDocument, CvSettings } from '../types.ts';
@@ -280,6 +280,18 @@ export function PreviewPage() {
             {t('Activer ma veille emploi')}
           </button>
         </section>
+      )}
+      {!empty && (
+        <button type="button" onClick={() => { window.location.hash = 'portfolio'; }} className="flex min-h-16 items-center gap-3 rounded-2xl border border-slate-200 bg-white p-4 text-left hover:bg-slate-50 lg:col-start-1">
+          <span className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-brand-50 text-brand-700">
+            <Globe className="size-5" aria-hidden="true" />
+          </span>
+          <span className="min-w-0 flex-1">
+            <span className="block font-semibold text-slate-900">{t('Mon portfolio en ligne')}</span>
+            <span className="block text-sm text-slate-600">{t('Une page web à votre nom, déjà remplie avec ce CV.')}</span>
+          </span>
+          <ChevronRight className="size-5 shrink-0 text-slate-400" aria-hidden="true" />
+        </button>
       )}
       <div className="lg:col-start-1">
         <Disclosure title={t('Changer de modèle ou de couleur')} hint={t('33 modèles, la couleur, la photo, la date de naissance…')}>

@@ -231,6 +231,8 @@ export function createAccounts(db: Db, opts: AccountOptions) {
 
     /** Retire des crédits (1 par défaut, avant un appel à l'IA) ; lève une erreur 402 s'il n'y en a pas assez. */
     spend: (userId: number, reason: string, amount = 1) => db.transaction((tx) => addCredits(tx, userId, -amount, reason)),
+    /** Dépense dans une opération déjà ouverte (tout réussit ou rien). */
+    spendIn: (tx: Db, userId: number, amount: number, reason: string) => addCredits(tx, userId, -amount, reason),
     /** Rend le crédit si l'appel à l'IA a échoué. */
     refund: (userId: number, reason: string, amount = 1) => db.transaction((tx) => addCredits(tx, userId, amount, `refund:${reason}`)),
     grant: (userId: number, credits: number, reason: string, ref = '') =>

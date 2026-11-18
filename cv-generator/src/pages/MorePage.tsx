@@ -1,5 +1,5 @@
 import { Disclosure } from '../components/ui.tsx';
-import { BellRing, BookOpen, Settings, ChevronRight, ClipboardList, CreditCard, FileStack, FolderOpen, Link2, Mail, MessageCircle, Mic, PlayCircle, ScanLine, HandCoins } from 'lucide-react';
+import { BellRing, BookOpen, Settings, ChevronRight, ClipboardList, CreditCard, Globe, FileStack, FolderOpen, Link2, Mail, MessageCircle, Mic, PlayCircle, ScanLine, HandCoins } from 'lucide-react';
 import { Capacitor } from '@capacitor/core';
 import type { Tab } from '../App.tsx';
 import { PUBLIC_SITE } from '../lib/referral.ts';
@@ -13,6 +13,7 @@ const SITE = Capacitor.isNativePlatform() ? PUBLIC_SITE : '';
 type Entry = { icon: typeof ScanLine; title: string; text: string; tab?: Tab; href?: string };
 
 const MAIN: Entry[] = [
+  { icon: Globe, title: t('Mon portfolio en ligne'), text: t('Une page web à votre nom, faite à partir du CV.'), tab: 'portfolio' },
   { icon: ClipboardList, title: t('Suivi et relances'), text: t('Où vous avez postulé, et quand relancer.'), tab: 'suivi' },
   { icon: FolderOpen, title: t('Mes documents'), text: t('Vos CV, lettres et papiers.'), tab: 'documents' },
   { icon: ScanLine, title: t('Scanner un document'), text: t('Une photo devient un PDF propre.'), tab: 'scanner' },

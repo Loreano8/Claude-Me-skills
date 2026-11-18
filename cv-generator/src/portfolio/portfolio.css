@@ -1,0 +1,198 @@
+/* Portfolio : 4 designs pour un même contenu. Classes « pf- » à part du reste de l'appli :
+   la page garde le même rendu dans l'aperçu (même en mode sombre) et sur la page publique.
+   Mise en page selon la largeur du cadre (container queries) : l'aperçu étroit et l'écran large sont justes. */
+
+@font-face { font-family: 'Besley'; src: url('/fonts/besley.woff2') format('woff2'); font-weight: 400 900; font-display: swap; }
+@font-face { font-family: 'Libre Franklin'; src: url('/fonts/franklin.woff2') format('woff2'); font-weight: 100 900; font-display: swap; }
+
+.pf {
+  --ink: #101a4a; --accent: #2549eb; --accent-soft: #eef4ff; --accent-line: #dbe6fe;
+  --sun: #ffc933; --text: #1c2333; --muted: #5b6478; --line: #e3e8f1; --bg: #f6f8fb; --card: #ffffff;
+  --display: 'Besley', Georgia, serif; --body: 'Libre Franklin', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  container-type: inline-size;
+  font-family: var(--body); color: var(--text); background: var(--bg); line-height: 1.55;
+  -webkit-font-smoothing: antialiased; color-scheme: light;
+}
+:where(.pf) *, :where(.pf) *::before, :where(.pf) *::after { box-sizing: border-box; }
+:where(.pf) :where(h1, h2, h3, p, ul, ol) { margin: 0; padding: 0; }
+:where(.pf) :where(ul, ol) { list-style: none; }
+:where(.pf) a { color: inherit; }
+.pf svg { width: 1em; height: 1em; flex: none; }
+.pf-wrap { max-width: 1060px; margin: 0 auto; padding: 0 20px; }
+
+/* Identité */
+.pf-id { display: flex; align-items: center; gap: 16px; }
+.pf-avatar { width: 84px; height: 84px; border-radius: 50%; overflow: hidden; flex: none; display: grid; place-items: center; background: var(--accent-soft); color: var(--accent); font: 700 28px/1 var(--display); }
+.pf-avatar img { width: 100%; height: 100%; object-fit: cover; }
+.pf-name { font: 800 32px/1.05 var(--display); letter-spacing: -0.015em; color: var(--ink); }
+.pf-title { margin-top: 6px; font-size: 16.5px; font-weight: 500; }
+.pf-loc { margin-top: 4px; font-size: 14px; color: var(--muted); display: flex; align-items: center; gap: 6px; }
+.pf-pitch { margin-top: 18px; font-size: 16.5px; max-width: 62ch; }
+
+.pf-badges { display: flex; flex-wrap: wrap; gap: 8px; }
+.pf-badge { padding: 6px 12px; border-radius: 999px; font-size: 13px; font-weight: 600; border: 1px solid var(--line); background: var(--card); }
+.pf-badge--hi { background: var(--sun); border-color: var(--sun); color: var(--ink); }
+.pf-actions { display: flex; flex-wrap: wrap; gap: 10px; }
+.pf-btn { display: inline-flex; align-items: center; justify-content: center; gap: 8px; min-height: 46px; padding: 0 18px; border-radius: 12px; font-weight: 650; font-size: 15px; text-decoration: none; transition: transform .15s ease, box-shadow .15s ease; }
+.pf-btn:hover { transform: translateY(-1px); }
+.pf-btn--main { background: var(--accent); color: #fff; box-shadow: 0 10px 24px -14px var(--accent); }
+.pf-btn--alt { border: 1px solid var(--line); background: var(--card); color: var(--ink); }
+
+/* Corps */
+.pf-body { padding-top: 22px; padding-bottom: 36px; display: grid; gap: 20px; }
+.pf-grid { display: grid; gap: 20px; }
+.pf-col { display: grid; gap: 20px; align-content: start; }
+.pf-sec { background: var(--card); border: 1px solid var(--line); border-radius: 18px; padding: 20px; }
+.pf-sec > h2 { font: 700 21px/1.2 var(--display); color: var(--ink); margin-bottom: 14px; letter-spacing: -0.01em; }
+.pf-sec h3 { font-size: 15.5px; font-weight: 700; color: var(--text); }
+.pf-about p { font-size: 16px; }
+
+.pf-stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(96px, 1fr)); gap: 1px; background: var(--line); border: 1px solid var(--line); border-radius: 16px; overflow: hidden; }
+.pf-stat { background: var(--card); padding: 14px 12px; text-align: center; }
+.pf-stat b { display: block; font: 700 24px/1.15 var(--display); color: var(--ink); }
+.pf-stat span { display: block; margin-top: 2px; font-size: 12.5px; line-height: 1.35; color: var(--muted); }
+
+.pf-wins { display: grid; gap: 12px; }
+.pf-win { border-radius: 16px; padding: 16px; background: linear-gradient(180deg, var(--accent-soft), var(--card)); border: 1px solid var(--accent-line); }
+.pf-win-value { font: 700 30px/1 var(--display); color: var(--accent); }
+.pf-win h3 { margin-top: 8px; }
+.pf-win p { margin-top: 4px; font-size: 13.5px; color: var(--muted); }
+
+.pf-projects { display: grid; gap: 14px; }
+.pf-project { border: 1px solid var(--line); border-radius: 16px; overflow: hidden; background: var(--card); }
+.pf-project img { display: block; width: 100%; aspect-ratio: 16 / 10; object-fit: cover; background: var(--bg); }
+.pf-project-body { padding: 14px 16px 16px; }
+.pf-project-body p { margin-top: 4px; font-size: 14px; color: var(--muted); }
+.pf-project-body a { margin-top: 8px; display: inline-flex; align-items: center; gap: 4px; font-size: 13.5px; font-weight: 650; color: var(--accent); text-decoration: none; }
+
+.pf-timeline { position: relative; display: grid; gap: 18px; padding-left: 22px; }
+.pf-timeline::before { content: ''; position: absolute; left: 6px; top: 6px; bottom: 6px; width: 2px; background: var(--accent-line); }
+.pf-timeline > li { position: relative; }
+.pf-timeline > li::before { content: ''; position: absolute; left: -22px; top: 5px; width: 14px; height: 14px; border-radius: 50%; background: var(--card); border: 3px solid var(--accent); }
+.pf-tl-head { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 2px 12px; }
+.pf-dates { font-size: 13px; color: var(--muted); white-space: nowrap; }
+.pf-meta { font-size: 13.5px; color: var(--muted); margin-top: 1px; }
+.pf-timeline ul { margin-top: 6px; display: grid; gap: 3px; }
+.pf-timeline ul li { position: relative; padding-left: 14px; font-size: 14.5px; }
+.pf-timeline ul li::before { content: ''; position: absolute; left: 0; top: .62em; width: 5px; height: 5px; border-radius: 50%; background: var(--muted); }
+
+.pf-creds { display: grid; gap: 10px; }
+.pf-creds li { display: flex; gap: 12px; align-items: flex-start; padding: 12px 14px; border: 1px solid var(--line); border-radius: 14px; }
+.pf-cred-mark { flex: none; width: 24px; height: 24px; border-radius: 50%; display: grid; place-items: center; font-size: 13px; font-weight: 800; background: #e7f6ef; color: #0f7a55; }
+.pf-creds p, .pf-edu p { font-size: 13.5px; color: var(--muted); margin-top: 1px; }
+.pf-edu { display: grid; gap: 12px; }
+
+.pf-skill-group + .pf-skill-group { margin-top: 14px; }
+.pf-skill-group h3 { font-size: 12px; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); margin-bottom: 8px; }
+.pf-chips { display: flex; flex-wrap: wrap; gap: 8px; }
+.pf-chips li { padding: 6px 12px; border-radius: 999px; background: var(--bg); border: 1px solid var(--line); font-size: 13.5px; }
+.pf-langs { display: grid; gap: 6px; font-size: 14.5px; }
+.pf-contact ul { display: grid; gap: 8px; font-size: 14.5px; }
+.pf-contact li { display: flex; align-items: center; gap: 8px; min-width: 0; }
+.pf-contact a { overflow-wrap: anywhere; }
+
+.pf-foot { text-align: center; font-size: 12.5px; color: var(--muted); padding: 4px 16px 28px; }
+.pf-foot a { color: var(--ink); font-weight: 700; text-decoration: none; }
+
+/* ---------- 1. Classique : bandeau bleu nuit, cartes ---------- */
+.pf--classique .pf-hero { background: var(--ink); color: #fff; padding: 34px 0 30px; position: relative; overflow: hidden; }
+.pf--classique .pf-hero::after { content: ''; position: absolute; inset: 0; background-image: radial-gradient(#fff 1px, transparent 1px); background-size: 18px 18px; opacity: .07; pointer-events: none; }
+.pf--classique .pf-hero-grid { position: relative; z-index: 1; display: grid; gap: 20px; }
+.pf--classique .pf-name { color: #fff; }
+.pf--classique .pf-title { color: #cfd8ff; }
+.pf--classique .pf-loc { color: #aab4d6; }
+.pf--classique .pf-pitch { color: #e7ebff; }
+.pf--classique .pf-avatar { border: 3px solid rgba(255,255,255,.85); background: #dbe3ee; }
+.pf--classique .pf-hero .pf-badge { background: rgba(255,255,255,.1); border-color: rgba(255,255,255,.2); color: #fff; }
+.pf--classique .pf-hero .pf-badge--hi { background: var(--sun); border-color: var(--sun); color: var(--ink); }
+.pf--classique .pf-hero .pf-btn--alt { background: transparent; color: #fff; border-color: rgba(255,255,255,.35); }
+.pf--classique .pf-hero-side { display: grid; gap: 14px; }
+
+/* ---------- 2. Épuré : blanc, grande typographie, sans cartes ---------- */
+.pf--epure { --bg: #ffffff; --line: #e8eaef; --accent: #111827; --accent-soft: #f5f5f4; --accent-line: #e7e5e4; --ink: #0b0b0f; }
+.pf--epure .pf-hero { padding: 48px 0 8px; }
+.pf--epure .pf-hero-grid { display: grid; gap: 22px; }
+.pf--epure .pf-name { font: 800 44px/1 var(--body); letter-spacing: -0.035em; }
+.pf--epure .pf-title { font-size: 18px; color: var(--muted); font-weight: 450; }
+.pf--epure .pf-avatar { width: 72px; height: 72px; background: #f1f1f0; color: #111827; }
+.pf--epure .pf-hero-side { display: grid; gap: 14px; }
+.pf--epure .pf-badge, .pf--epure .pf-badge--hi { background: transparent; border-color: #d6d3d1; color: #292524; }
+.pf--epure .pf-btn { border-radius: 999px; }
+.pf--epure .pf-btn--main { background: #111827; box-shadow: none; }
+.pf--epure .pf-sec { background: transparent; border: 0; border-top: 1px solid var(--line); border-radius: 0; padding: 22px 0 0; }
+.pf--epure .pf-sec > h2 { font: 600 12.5px/1 var(--body); letter-spacing: .14em; text-transform: uppercase; color: var(--muted); margin-bottom: 16px; }
+.pf--epure .pf-stats { border: 0; background: transparent; gap: 0; border-top: 1px solid var(--line); border-bottom: 1px solid var(--line); border-radius: 0; }
+.pf--epure .pf-stat { background: transparent; text-align: left; padding: 16px 10px 16px 0; }
+.pf--epure .pf-stat b { overflow-wrap: anywhere; }
+.pf--epure .pf-stat b { font: 800 30px/1.1 var(--body); letter-spacing: -0.03em; }
+.pf--epure .pf-win { background: transparent; border: 0; border-left: 2px solid #111827; border-radius: 0; padding: 2px 0 2px 14px; }
+.pf--epure .pf-win-value { font: 800 28px/1 var(--body); color: #111827; letter-spacing: -0.03em; }
+.pf--epure .pf-about p { font-size: 18px; line-height: 1.6; color: #292524; max-width: 62ch; }
+.pf--epure .pf-timeline::before { background: var(--line); }
+.pf--epure .pf-timeline > li::before { border-color: #111827; width: 10px; height: 10px; left: -20px; top: 7px; border-width: 2px; }
+.pf--epure .pf-creds li { border: 0; padding: 0; border-radius: 0; }
+.pf--epure .pf-chips li { background: transparent; }
+.pf--epure .pf-project { border-radius: 12px; }
+
+/* ---------- 3. Créatif : fond sombre, projets d'abord, jaune ---------- */
+.pf--creatif { --bg: #0b0e17; --card: #121725; --line: #232a3d; --text: #e7eaf3; --muted: #9aa3b8; --ink: #ffffff; --accent: #ffc933; --accent-soft: #1b2133; --accent-line: #2c3550; color-scheme: dark; }
+.pf--creatif .pf-hero { padding: 44px 0 18px; background: radial-gradient(1200px 400px at 10% -10%, rgba(37,73,235,.35), transparent 60%), radial-gradient(800px 300px at 100% 0%, rgba(255,201,51,.12), transparent 60%); }
+.pf--creatif .pf-hero-grid { display: grid; gap: 22px; }
+.pf--creatif .pf-name { font: 800 42px/1 var(--body); letter-spacing: -0.03em; }
+.pf--creatif .pf-name::after { content: '.'; color: var(--accent); }
+.pf--creatif .pf-title { color: #c9d1ff; }
+.pf--creatif .pf-avatar { background: #1b2133; color: var(--accent); border: 2px solid var(--accent); }
+.pf--creatif .pf-hero-side { display: grid; gap: 14px; }
+.pf--creatif .pf-badge { background: transparent; border-color: var(--line); color: var(--text); }
+.pf--creatif .pf-badge--hi { background: var(--accent); color: #0b0e17; }
+.pf--creatif .pf-btn--main { background: var(--accent); color: #0b0e17; box-shadow: 0 12px 30px -16px var(--accent); }
+.pf--creatif .pf-btn--alt { background: transparent; color: var(--text); border-color: var(--line); }
+.pf--creatif .pf-stat b, .pf--creatif .pf-win-value { color: var(--accent); }
+.pf--creatif .pf-win { background: var(--card); border-color: var(--line); }
+.pf--creatif .pf-cred-mark { background: rgba(255,201,51,.15); color: var(--accent); }
+.pf--creatif .pf-project img { aspect-ratio: 4 / 3; }
+.pf--creatif .pf-project-body a { color: var(--accent); }
+.pf--creatif .pf-foot a { color: var(--accent); }
+
+/* ---------- 4. Colonne : profil fixe à gauche ---------- */
+.pf--colonne { --bg: #f4f6fb; }
+.pf--colonne .pf-shell { display: grid; }
+.pf--colonne .pf-side { background: var(--ink); color: #fff; padding: 28px 22px; display: grid; gap: 18px; align-content: start; }
+.pf--colonne .pf-side .pf-id { flex-direction: column; align-items: flex-start; }
+.pf--colonne .pf-side .pf-avatar { width: 96px; height: 96px; border: 3px solid rgba(255,255,255,.85); background: #dbe3ee; }
+.pf--colonne .pf-side .pf-name { color: #fff; font-size: 30px; }
+.pf--colonne .pf-side .pf-title { color: #cfd8ff; }
+.pf--colonne .pf-side .pf-loc { color: #aab4d6; }
+.pf--colonne .pf-side .pf-badge { background: rgba(255,255,255,.1); border-color: rgba(255,255,255,.2); color: #fff; }
+.pf--colonne .pf-side .pf-badge--hi { background: var(--sun); color: var(--ink); border-color: var(--sun); }
+.pf--colonne .pf-side .pf-btn--alt { background: transparent; color: #fff; border-color: rgba(255,255,255,.35); }
+.pf--colonne .pf-side .pf-sec { background: transparent; border: 0; padding: 0; }
+.pf--colonne .pf-side .pf-sec > h2 { color: #fff; font: 600 12.5px/1 var(--body); letter-spacing: .14em; text-transform: uppercase; opacity: .7; margin-bottom: 10px; }
+.pf--colonne .pf-side .pf-skill-group h3 { color: #aab4d6; }
+.pf--colonne .pf-side .pf-chips li { background: rgba(255,255,255,.08); border-color: rgba(255,255,255,.16); color: #fff; }
+.pf--colonne .pf-side .pf-langs, .pf--colonne .pf-side .pf-contact { color: #e7ebff; }
+.pf--colonne .pf-main { padding: 22px 20px 0; display: grid; gap: 20px; align-content: start; }
+.pf--colonne .pf-main .pf-foot { padding-top: 10px; }
+
+/* ---------- Écran large ---------- */
+@container (min-width: 860px) {
+  .pf-wrap { padding: 0 32px; }
+  .pf-name { font-size: 44px; }
+  .pf-avatar { width: 104px; height: 104px; }
+  .pf-grid { grid-template-columns: 1.35fr 1fr; align-items: start; }
+  .pf-wins { grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); }
+  .pf-projects { grid-template-columns: repeat(2, 1fr); }
+  .pf--classique .pf-hero { padding: 48px 0 40px; }
+  .pf--classique .pf-hero-grid, .pf--creatif .pf-hero-grid { grid-template-columns: 1.4fr 1fr; align-items: end; }
+  .pf--classique .pf-hero-side, .pf--creatif .pf-hero-side { justify-items: end; }
+  .pf--classique .pf-hero-side .pf-badges, .pf--classique .pf-hero-side .pf-actions,
+  .pf--creatif .pf-hero-side .pf-badges, .pf--creatif .pf-hero-side .pf-actions { justify-content: flex-end; }
+  .pf--epure .pf-wrap { max-width: 860px; }
+  .pf--epure .pf-name { font-size: 64px; }
+  .pf--epure .pf-grid { grid-template-columns: 1fr; }
+  .pf--creatif .pf-name { font-size: 68px; }
+  .pf--creatif .pf-grid { grid-template-columns: 1.5fr 1fr; }
+  .pf--colonne .pf-shell { grid-template-columns: 340px 1fr; min-height: 100vh; }
+  .pf--colonne .pf-side { position: sticky; top: 0; align-self: start; min-height: 100vh; padding: 40px 28px; }
+  .pf--colonne .pf-main { padding: 40px 40px 0; max-width: 820px; }
+}

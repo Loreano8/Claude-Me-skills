@@ -7,7 +7,7 @@ import { t } from '../i18n.ts';
  * Si un document a été importé mais pas encore lu (le CV n'est rédigé qu'au clic sur « Générer mon CV »),
  * un bouton lance la rédaction tout de suite.
  */
-export function NeedCv({ what }: { what: 'offre' | 'lettre' }) {
+export function NeedCv({ what }: { what: 'offre' | 'lettre' | 'portfolio' }) {
   const pending = useQuickDraft((s) => s.files.length > 0 || s.text.trim().length > 0);
   const go = (run: boolean) => {
     useQuickDraft.getState().set({ run });
@@ -21,7 +21,9 @@ export function NeedCv({ what }: { what: 'offre' | 'lettre' }) {
           ? t('Vous avez ajouté un document, mais votre CV n’est pas encore rédigé : CVCasa n’a rien à utiliser pour l’instant.')
           : what === 'offre'
             ? t('Pour adapter votre CV à une offre, il faut d’abord un CV : importez l’ancien ou écrivez votre parcours.')
-            : t('La lettre s’appuie sur votre CV : importez l’ancien ou écrivez votre parcours d’abord.')}
+            : what === 'portfolio'
+              ? t('Le portfolio se remplit tout seul à partir de votre CV : importez l’ancien ou écrivez votre parcours d’abord.')
+              : t('La lettre s’appuie sur votre CV : importez l’ancien ou écrivez votre parcours d’abord.')}
       </p>
       <button
         type="button"
