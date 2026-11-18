@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "1099403192493",
+    "project_id": "cvcasa",
+    "storage_bucket": "cvcasa.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1099403192493:android:2d187b61e926950f163e24",
+        "android_client_info": {
+          "package_name": "com.cvstudio.app"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCdIcBVh_I78AJ3VjeIXhNBC4umYOY2YUY"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
