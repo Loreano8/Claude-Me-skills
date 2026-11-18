@@ -1524,7 +1524,7 @@ export const EN: Record<string, string> = {
   'Collez l’offre. Recevez votre CV *adapté*.': 'Paste the job ad. Get your CV *tailored*.',
   'CVCasa reprend les mots-clés de l’annonce et vous montre le score avant → après. Vous partez de votre ancien CV (PDF, Word ou photo) ou de quelques lignes.': 'CVCasa picks up the ad’s keywords and shows you the before → after score. Start from your old CV (PDF, Word or photo) or a few lines.',
   'Score de correspondance :': 'Match score:',
-  '(exemple, estimé par l’IA)': '(example, estimated by the AI)',
+  '(exemple)': '(example)',
   'Adapter mon CV à une offre': 'Tailor my CV to a job',
   'CV gratuit': 'Free CV',
   'Sans abonnement': 'No subscription',

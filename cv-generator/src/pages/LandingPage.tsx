@@ -541,7 +541,7 @@ export function LandingPage({ onNavigate }: { onNavigate: (t: Tab) => void }) {
                 <Target className="size-4 shrink-0 text-brand-600" aria-hidden="true" />
                 {t('Score de correspondance :')}{' '}<span className="font-semibold text-slate-900">68 → 86</span>
               </span>
-              <span className="text-xs whitespace-nowrap text-slate-500">{t('(exemple, estimé par l’IA)')}</span>
+              <span className="text-xs whitespace-nowrap text-slate-500">{t('(exemple)')}</span>
             </p>}
             <div className="mt-7 flex flex-col items-stretch justify-center gap-3 sm:flex-row sm:flex-wrap sm:items-center lg:justify-start">
               {abroad ? (
