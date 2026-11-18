@@ -15,7 +15,7 @@ import { fileToAttachment } from '../lib/files.ts';
 import { ANIMATED_THEMES, FREE_PORTFOLIO_THEME, type PortfolioData, PORTFOLIO_PRO_COST, PORTFOLIO_THEMES, slugify, type PortfolioProject, type PortfolioTheme } from '../../shared/portfolio.ts';
 import { PortfolioView } from '../portfolio/PortfolioView.tsx';
 import { NeedCv } from '../components/NeedCv.tsx';
-import { Button, Card, Cost, cx, Disclosure, Field, Notice, TextArea, Toggle } from '../components/ui.tsx';
+import { Button, Card, Cost, cx, Disclosure, Field, Notice, Select, TextArea, Toggle } from '../components/ui.tsx';
 import { LANG, t } from '../i18n.ts';
 
 // Portfolio en ligne : la page se remplit à partir du CV. La personne choisit un design, ajoute des projets si elle veut,
@@ -119,8 +119,8 @@ export function PortfolioPage({ onNavigate }: { onNavigate: (tab: Tab) => void }
   }, [live?.url]);
 
   const base = useMemo(
-    () => portfolioFromCv(cv, { projects: draft.projects, showPhoto: draft.showPhoto, showPhone: draft.showPhone, cvUrl: draft.withCv ? 'https://cvcasa.com/' : '', video: draft.video, accent: draft.accent }),
-    [cv, draft.projects, draft.showPhoto, draft.showPhone, draft.withCv, draft.video, draft.accent],
+    () => portfolioFromCv(cv, { projects: draft.projects, showPhoto: draft.showPhoto, showPhone: draft.showPhone, cvUrl: draft.withCv ? 'https://cvcasa.com/' : '', video: draft.video, accent: draft.accent, lang: draft.overrides?.lang ?? (LANG === 'en' ? 'en' : undefined) }),
+    [cv, draft.projects, draft.showPhoto, draft.showPhone, draft.withCv, draft.video, draft.accent, draft.overrides?.lang],
   );
   const overrides = draft.overrides ?? {};
   const data = useMemo(() => applyOverrides(base, overrides), [base, overrides]);
@@ -384,10 +384,10 @@ export function PortfolioPage({ onNavigate }: { onNavigate: (tab: Tab) => void }
                     label={t('Adresse de la page')}
                     hint={t('Laissez vide : elle sera faite à partir de votre nom.')}
                     value={draft.slug}
-                    placeholder={slugify(fullName(cv.personal)) || 'prenom-nom'}
+                    placeholder={slugify(fullName(cv.personal)) || t('prenom-nom')}
                     onChange={(v) => draft.set({ slug: v.toLowerCase().replace(/[^a-z0-9-]/g, '-').slice(0, 40) })}
                   />
-                  <p className="mt-1 text-xs text-slate-500">cvcasa.com/p/#{slugify(draft.slug) || slugify(fullName(cv.personal)) || 'prenom-nom'}</p>
+                  <p className="mt-1 text-xs text-slate-500">cvcasa.com/p/#{slugify(draft.slug) || slugify(fullName(cv.personal)) || t('prenom-nom')}</p>
                 </div>
               </div>
             </Disclosure>
@@ -464,6 +464,15 @@ function Retouches({ base, value, onChange }: { base: PortfolioData; value: Port
   const small = 'min-w-0 rounded-lg border border-slate-300 bg-white px-2.5 py-2 text-sm';
   return (
     <div className="space-y-4 pt-2">
+      <Select
+        label={t('Langue de la page')}
+        value={value.lang ?? base.lang}
+        onChange={(lang) => set({ lang })}
+        options={[
+          { value: 'fr', label: 'Français' },
+          { value: 'en', label: 'English' },
+        ]}
+      />
       <Field label={t('Nom affiché')} value={value.name ?? base.name} onChange={(v) => set({ name: v })} />
       <Field label={t('Titre')} value={value.title ?? base.title} onChange={(v) => set({ title: v })} />
       <Field label={t('Lieu')} value={value.location ?? base.location} onChange={(v) => set({ location: v })} />
@@ -568,7 +577,7 @@ function Inspire({ onPick }: { onPick: (theme: PortfolioTheme, accent: string) =
       }
       const accent = /^#[0-9a-fA-F]{6}$/.test(r.accent) ? r.accent : '';
       onPick(r.theme, accent);
-      setNote({ tone: 'success', text: t('Design « {0} » choisi, avec la couleur de votre modèle. {1} Votre contenu reste le vôtre : rien n’est copié.', [THEME_INFO[r.theme].name, LANG === 'fr' ? r.summary : '']) });
+      setNote({ tone: 'success', text: t('Design « {0} » choisi, avec la couleur de votre modèle. {1} Votre contenu reste le vôtre : rien n’est copié.', [THEME_INFO[r.theme].name, r.summary]) });
     } catch (e) {
       const d = useAccount.getState().dialog;
       if (d !== 'account' && d !== 'credits') setNote({ tone: 'error', text: (e as Error).message });

@@ -35,8 +35,9 @@ const L = {
   en: { years: (n: number) => `${n} yr${n > 1 ? 's' : ''}`, exp: 'of experience', certs: 'certifications', langs: 'languages', roles: 'roles held', tech: 'Technical skills', soft: 'Strengths', today: 'Present' },
 };
 
-export function portfolioFromCv(cv: CvDocument, extras: { projects?: PortfolioProject[]; showPhoto?: boolean; showPhone?: boolean; cvUrl?: string; video?: string; accent?: string } = {}): PortfolioData {
-  const lang = cv.settings.headingLang === 'en' ? 'en' : 'fr';
+export function portfolioFromCv(cv: CvDocument, extras: { projects?: PortfolioProject[]; showPhoto?: boolean; showPhone?: boolean; cvUrl?: string; video?: string; accent?: string; lang?: 'fr' | 'en' } = {}): PortfolioData {
+  // Langue de la page : celle des titres du CV, sauf si la personne en choisit une autre.
+  const lang = extras.lang ?? (cv.settings.headingLang === 'en' ? 'en' : 'fr');
   const l = L[lang];
   const p = cv.personal;
   const name = `${p.firstName} ${p.lastName}`.trim();
@@ -112,6 +113,8 @@ export type HideableSection = (typeof HIDEABLE_SECTIONS)[number];
 
 /** Ce que la personne a retouché ; un champ absent = on garde ce qui vient du CV. */
 export interface PortfolioOverrides {
+  /** Langue des titres de la page (À propos / About…). */
+  lang?: 'fr' | 'en';
   name?: string;
   title?: string;
   location?: string;

@@ -1721,6 +1721,8 @@ export const EN: Record<string, string> = {
   "Tout reprendre depuis mon CV": "Reset everything from my CV",
   "Chiffre de la réalisation": "Highlight figure",
   "Ce qui a été réalisé": "What was achieved",
+  "Langue de la page": "Page language",
+  "prenom-nom": "first-last",
 // Messages du serveur (erreurs, veille) : traduits à l’envoi quand l’interface est en anglais.
   "Fichier trop volumineux (15 Mo maximum).": "File too large (15 MB maximum).",
   "Erreur interne du serveur.": "Internal server error.",
