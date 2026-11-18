@@ -35,7 +35,7 @@ const L = {
   en: { years: (n: number) => `${n} yr${n > 1 ? 's' : ''}`, exp: 'of experience', certs: 'certifications', langs: 'languages', roles: 'roles held', tech: 'Technical skills', soft: 'Strengths', today: 'Present' },
 };
 
-export function portfolioFromCv(cv: CvDocument, extras: { projects?: PortfolioProject[]; showPhoto?: boolean; showPhone?: boolean; cvUrl?: string } = {}): PortfolioData {
+export function portfolioFromCv(cv: CvDocument, extras: { projects?: PortfolioProject[]; showPhoto?: boolean; showPhone?: boolean; cvUrl?: string; video?: string; accent?: string } = {}): PortfolioData {
   const lang = cv.settings.headingLang === 'en' ? 'en' : 'fr';
   const l = L[lang];
   const p = cv.personal;
@@ -99,5 +99,7 @@ export function portfolioFromCv(cv: CvDocument, extras: { projects?: PortfolioPr
     languages: cv.languages.slice(0, 6).map((x) => [x.name, x.level].filter(Boolean).join(' · ').slice(0, 60)),
     projects: (extras.projects ?? []).slice(0, 6),
     cvUrl: (extras.cvUrl ?? '').slice(0, 300),
+    video: (extras.video ?? '').trim().slice(0, 300),
+    accent: /^#[0-9a-fA-F]{6}$/.test(extras.accent ?? '') ? extras.accent! : '',
   };
 }

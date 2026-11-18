@@ -1,6 +1,6 @@
 import { lazy, Suspense, useState } from 'react';
-import { ArrowRight, ExternalLink, Globe, Lock } from 'lucide-react';
-import { PORTFOLIO_THEMES, FREE_PORTFOLIO_THEME, type PortfolioTheme } from '../../shared/portfolio.ts';
+import { ArrowRight, ExternalLink, Globe, Lock, Sparkles } from 'lucide-react';
+import { ANIMATED_THEMES, FREE_PORTFOLIO_THEME, type PortfolioTheme } from '../../shared/portfolio.ts';
 import { SAMPLE_DESIGNER, SAMPLE_NURSE } from '../portfolio/samples.ts';
 import { Button, cx } from './ui.tsx';
 import { LANG, t } from '../i18n.ts';
@@ -10,12 +10,18 @@ import { PUBLIC_SITE } from '../lib/referral.ts';
 // Chargé à part : la page d'accueil reste légère, l'aperçu arrive quand on y descend.
 const PortfolioView = lazy(() => import('../portfolio/PortfolioView.tsx').then((m) => ({ default: m.PortfolioView })));
 
-const NAMES: Record<PortfolioTheme, string> = { classique: t('Classique'), epure: t('Épuré'), creatif: t('Créatif'), colonne: t('Colonne') };
+const NAMES: Record<PortfolioTheme, string> = {
+  pastel: t('Pastel'),
+  soleil: t('Soleil'),
+  onde: t('Onde'),
+  defile: t('Défilé'), classique: t('Classique'), epure: t('Épuré'), creatif: t('Créatif'), colonne: t('Colonne'), bento: 'Bento', magazine: t('Magazine'), aurore: t('Aurore') };
+/** Sur l'accueil : quelques designs simples (dont des clairs et gais), puis les animés. */
+const SHOWN: PortfolioTheme[] = ['classique', 'pastel', 'bento', 'magazine', ...ANIMATED_THEMES];
 const SITE = Capacitor.isNativePlatform() ? PUBLIC_SITE : '';
 
 /** Accueil : « Votre portfolio en ligne », avec les 4 vrais designs remplis d'un exemple (aucune vraie personne). */
 export function PortfolioShowcase({ onStart }: { onStart: () => void }) {
-  const [theme, setTheme] = useState<PortfolioTheme>(LANG === 'en' ? 'creatif' : FREE_PORTFOLIO_THEME);
+  const [theme, setTheme] = useState<PortfolioTheme>(LANG === 'en' ? 'soleil' : 'pastel');
   // Exemples : une infirmière en français, un designer avec ses projets en anglais.
   const sample = LANG === 'en' ? SAMPLE_DESIGNER : SAMPLE_NURSE;
   const exampleSlug = LANG === 'en' ? 'exemple-designer' : 'exemple';
@@ -55,8 +61,14 @@ export function PortfolioShowcase({ onStart }: { onStart: () => void }) {
         </div>
 
         <div>
-          <div className="mb-3 flex flex-wrap justify-center gap-1.5" role="tablist" aria-label={t('Designs du portfolio')}>
-            {PORTFOLIO_THEMES.map((th) => (
+          <div className="mb-3 flex flex-wrap items-center justify-center gap-1.5" role="tablist" aria-label={t('Designs du portfolio')}>
+            {SHOWN.map((th) => (
+              <span key={th} className="contents">
+              {th === ANIMATED_THEMES[0] && (
+                <span className="ml-1 inline-flex items-center gap-1 text-xs font-semibold text-sun-800" aria-hidden="true">
+                  <Sparkles className="size-3.5" /> {t('Animés')}
+                </span>
+              )}
               <button
                 key={th}
                 type="button"
@@ -71,6 +83,7 @@ export function PortfolioShowcase({ onStart }: { onStart: () => void }) {
                 {NAMES[th]}
                 {th !== FREE_PORTFOLIO_THEME && <Lock className="size-3 opacity-60" aria-label="Pro" />}
               </button>
+              </span>
             ))}
           </div>
           {/* Fenêtre de navigateur : l'aperçu est la vraie page, coupée en bas. */}

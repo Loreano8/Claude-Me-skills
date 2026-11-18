@@ -1,4 +1,4 @@
-import type { PortfolioSaveRequest, PortfolioState } from '../../shared/portfolio.ts';
+import type { PortfolioSaveRequest, PortfolioState, PortfolioStyleResult } from '../../shared/portfolio.ts';
 import { Capacitor } from '@capacitor/core';
 import type {
   AdaptRequest,
@@ -115,6 +115,7 @@ export const api = {
   writingStyle: (req: StyleRequest) => post<StyleResult>('/api/ai/style', req),
   letterQuestions: (req: LetterQuestionsRequest) => post<LetterQuestionsResult>('/api/ai/letter-questions', req),
   analyzeTemplate: (req: AnalyzeTemplateRequest) => post<TemplateAnalysis>('/api/ai/analyze-template', req),
+  portfolioStyle: (req: AnalyzeTemplateRequest) => post<PortfolioStyleResult>('/api/ai/portfolio-style', req),
   clarify: (req: ClarifyRequest) => post<ClarifyResult>('/api/ai/clarify', req),
   keywords: (req: KeywordsRequest) => post<KeywordsResult>('/api/ai/keywords', req),
   shareCv: (cvKey: string, name: string, pdf: string) => post<SharedCv>('/api/share', { cvKey, name, pdf }),

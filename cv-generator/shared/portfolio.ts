@@ -3,8 +3,10 @@ import { z } from 'zod';
 // Portfolio en ligne : une page publique (cvcasa.com/p/#lien) construite à partir du CV,
 // avec des projets en plus si la personne le veut. Partagé entre l'appli, le serveur et la page publique.
 
-export const PORTFOLIO_THEMES = ['classique', 'epure', 'creatif', 'colonne'] as const;
+export const PORTFOLIO_THEMES = ['classique', 'pastel', 'epure', 'bento', 'magazine', 'colonne', 'creatif', 'soleil', 'onde', 'defile', 'aurore'] as const;
 export type PortfolioTheme = (typeof PORTFOLIO_THEMES)[number];
+/** Rangement des designs à l'écran : les simples, puis les animés (lumières qui bougent). */
+export const ANIMATED_THEMES: readonly PortfolioTheme[] = ['soleil', 'onde', 'defile', 'aurore'];
 /** Le design offert ; les autres font partie du Portfolio Pro (sans mention CVCasa). */
 export const FREE_PORTFOLIO_THEME: PortfolioTheme = 'classique';
 export const PORTFOLIO_PRO_COST = 2;
@@ -43,6 +45,10 @@ export const PortfolioData = z.object({
   projects: z.array(PortfolioProject).max(6),
   /** Lien vers le CV en PDF (partage CVCasa), facultatif. */
   cvUrl: str(300),
+  /** Vidéo de présentation (YouTube, Vimeo ou Loom), facultative. */
+  video: str(300).default(''),
+  /** Couleur principale choisie (#RRGGBB) ; vide = celle du design. */
+  accent: z.string().regex(/^(#[0-9a-fA-F]{6})?$/).default(''),
 });
 export type PortfolioData = z.infer<typeof PortfolioData>;
 
@@ -60,6 +66,15 @@ export interface PortfolioState {
   data: PortfolioData;
   updatedAt: string;
 }
+
+/** « S'inspirer d'un portfolio que j'aime » : une capture d'écran, on en tire un design et une couleur (jamais le contenu). */
+export const PortfolioStyleResult = z.object({
+  isPortfolio: z.boolean().describe('L’image montre-t-elle bien une page web de type portfolio ou CV en ligne ?'),
+  theme: z.enum(PORTFOLIO_THEMES).describe('Le design CVCasa le plus proche'),
+  accent: z.string().describe('Couleur principale de la page, #RRGGBB'),
+  summary: z.string().describe('Ce qui fait le style de cette page, en une phrase'),
+});
+export type PortfolioStyleResult = z.infer<typeof PortfolioStyleResult>;
 
 /** Ce que voit le visiteur. */
 export interface PublicPortfolio {
@@ -94,6 +109,8 @@ export const PORTFOLIO_LABELS = {
     madeWith: 'Page créée avec',
     makeYours: 'Créez la vôtre',
     about: 'À propos',
+    video: 'Ma présentation en vidéo',
+    watch: 'Voir la vidéo',
   },
   en: {
     downloadCv: 'Download my CV',
@@ -108,5 +125,7 @@ export const PORTFOLIO_LABELS = {
     madeWith: 'Made with',
     makeYours: 'Create yours',
     about: 'About',
+    video: 'Video introduction',
+    watch: 'Watch the video',
   },
 } as const;

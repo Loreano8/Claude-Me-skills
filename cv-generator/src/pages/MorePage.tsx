@@ -1,5 +1,5 @@
 import { Disclosure } from '../components/ui.tsx';
-import { BellRing, BookOpen, Settings, ChevronRight, ClipboardList, CreditCard, Globe, FileStack, FolderOpen, Link2, Mail, MessageCircle, Mic, PlayCircle, ScanLine, HandCoins } from 'lucide-react';
+import { BellRing, BookOpen, Settings, ChevronRight, ClipboardList, CreditCard, Globe, Video, FileStack, FolderOpen, Link2, Mail, MessageCircle, Mic, PlayCircle, ScanLine, HandCoins } from 'lucide-react';
 import { Capacitor } from '@capacitor/core';
 import type { Tab } from '../App.tsx';
 import { PUBLIC_SITE } from '../lib/referral.ts';
@@ -36,6 +36,7 @@ const HELP: Entry[] = [
 /** Ce qui arrive bientôt : annoncé, pas encore cliquable. */
 const SOON: { icon: typeof Mic; title: string; text: string }[] = [
   { icon: Mic, title: t('Entraînement à l’entretien, à l’oral'), text: t('L’appli vous pose les questions du recruteur, vous répondez au micro, elle vous conseille.') },
+  { icon: Video, title: t('Portfolio vidéo'), text: t('Une courte vidéo animée de votre parcours, faite à partir de votre CV, prête à partager.') },
   { icon: CreditCard, title: t('Paiement par carte bancaire'), text: t('En plus du Mobile Money, pour payer depuis l’étranger.') },
 ];
 

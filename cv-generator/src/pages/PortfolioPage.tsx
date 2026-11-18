@@ -1,7 +1,7 @@
 import { useMemo, useRef, useState } from 'react';
 import { useEffect } from '../lib/safeEffects.ts';
 import { Capacitor } from '@capacitor/core';
-import { Check, Copy, Eye, ImagePlus, Lock, Plus, QrCode, Share2, Sparkles, Trash2, X } from 'lucide-react';
+import { Check, Copy, Eye, ImagePlus, Lock, Palette, Plus, QrCode, Share2, Sparkles, Trash2, Wand2, X } from 'lucide-react';
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import type { Tab } from '../App.tsx';
@@ -11,11 +11,12 @@ import { api, type MyPortfolio } from '../lib/api.ts';
 import { fullName, isCvEmpty } from '../lib/cv.ts';
 import { portfolioFromCv } from '../lib/portfolio.ts';
 import { saveFile } from '../export/save.ts';
-import { FREE_PORTFOLIO_THEME, PORTFOLIO_PRO_COST, PORTFOLIO_THEMES, slugify, type PortfolioProject, type PortfolioTheme } from '../../shared/portfolio.ts';
+import { fileToAttachment } from '../lib/files.ts';
+import { ANIMATED_THEMES, FREE_PORTFOLIO_THEME, PORTFOLIO_PRO_COST, PORTFOLIO_THEMES, slugify, type PortfolioProject, type PortfolioTheme } from '../../shared/portfolio.ts';
 import { PortfolioView } from '../portfolio/PortfolioView.tsx';
 import { NeedCv } from '../components/NeedCv.tsx';
 import { Button, Card, Cost, cx, Disclosure, Field, Notice, TextArea, Toggle } from '../components/ui.tsx';
-import { t } from '../i18n.ts';
+import { LANG, t } from '../i18n.ts';
 
 // Portfolio en ligne : la page se remplit à partir du CV. La personne choisit un design, ajoute des projets si elle veut,
 // et publie. Un lien et un QR code à mettre dans sa candidature, sa signature d'e-mail ou son profil.
@@ -25,6 +26,13 @@ export const THEME_INFO: Record<PortfolioTheme, { name: string; hint: string; sw
   epure: { name: t('Épuré'), hint: t('Noir et blanc, très lisible'), swatch: ['#ffffff', '#111827'] },
   creatif: { name: t('Créatif'), hint: t('Fond sombre, projets en premier'), swatch: ['#0b0e17', '#ffc933'] },
   colonne: { name: t('Colonne'), hint: t('Profil à gauche, parcours à droite'), swatch: ['#101a4a', '#f6f8fb'] },
+  pastel: { name: t('Pastel'), hint: t('Clair et joyeux, couleurs douces'), swatch: ['#fdf8f1', '#f2545b'] },
+  onde: { name: t('Onde'), hint: t('Blanc et net, dégradé qui ondule'), swatch: ['#e0f2fe', '#0e7490'] },
+  defile: { name: t('Défilé'), hint: t('Noir et blanc, compétences qui défilent'), swatch: ['#ffffff', '#0a0a0a'] },
+  soleil: { name: t('Soleil'), hint: t('Clair, lumières chaudes qui bougent'), swatch: ['#fff3e0', '#f97316'] },
+  bento: { name: 'Bento', hint: t('Des tuiles, très tendance, idéal avec des projets'), swatch: ['#eef1f6', '#2549eb'] },
+  magazine: { name: t('Magazine'), hint: t('Grande typographie, papier crème, chic'), swatch: ['#f3eee4', '#b4532a'] },
+  aurore: { name: t('Aurore'), hint: t('Sombre, lumières animées, effet waouh'), swatch: ['#070b14', '#2dd4bf'] },
 };
 
 /** Réglages gardés sur l'appareil entre deux visites (avant comme après publication). */
@@ -35,9 +43,11 @@ interface Draft {
   showPhone: boolean;
   withCv: boolean;
   slug: string;
+  video: string;
+  accent: string;
 }
 const usePortfolioDraft = create<Draft & { set: (p: Partial<Draft>) => void }>()(
-  persist((set) => ({ theme: FREE_PORTFOLIO_THEME, projects: [], showPhoto: true, showPhone: false, withCv: true, slug: '', set: (p) => set(p) }), { name: 'cvcasa-portfolio' }),
+  persist((set) => ({ theme: FREE_PORTFOLIO_THEME, projects: [], showPhoto: true, showPhone: false, withCv: true, slug: '', video: '', accent: '', set: (p) => set(p) }), { name: 'cvcasa-portfolio' }),
 );
 
 /** Image de projet : réduite en JPEG léger (moins de 300 Ko) pour que la page s'ouvre vite. */
@@ -107,8 +117,8 @@ export function PortfolioPage({ onNavigate }: { onNavigate: (tab: Tab) => void }
   }, [live?.url]);
 
   const data = useMemo(
-    () => portfolioFromCv(cv, { projects: draft.projects, showPhoto: draft.showPhoto, showPhone: draft.showPhone, cvUrl: draft.withCv ? 'https://cvcasa.com/' : '' }),
-    [cv, draft.projects, draft.showPhoto, draft.showPhone, draft.withCv],
+    () => portfolioFromCv(cv, { projects: draft.projects, showPhoto: draft.showPhoto, showPhone: draft.showPhone, cvUrl: draft.withCv ? 'https://cvcasa.com/' : '', video: draft.video, accent: draft.accent }),
+    [cv, draft.projects, draft.showPhoto, draft.showPhone, draft.withCv, draft.video, draft.accent],
   );
   const pro = mine?.pro ?? false;
   const needsPro = draft.theme !== FREE_PORTFOLIO_THEME && !pro;
@@ -225,8 +235,18 @@ export function PortfolioPage({ onNavigate }: { onNavigate: (tab: Tab) => void }
       <div className="grid gap-4 lg:grid-cols-[minmax(0,380px)_minmax(0,1fr)] lg:items-start">
         <div className="space-y-4">
           <Card title={t('1. Choisissez un design')}>
-            <div className="grid grid-cols-2 gap-2.5" role="radiogroup" aria-label={t('Design du portfolio')}>
-              {PORTFOLIO_THEMES.map((th) => {
+            {[
+              { title: t('Simples'), animated: false, hint: t('Sobres et efficaces, pour tous les métiers.'), themes: PORTFOLIO_THEMES.filter((x) => !ANIMATED_THEMES.includes(x)) },
+              { title: t('Animés'), animated: true, hint: t('Des lumières qui bougent doucement : pour marquer les esprits.'), themes: [...ANIMATED_THEMES] },
+            ].map((group) => (
+            <div key={group.title} className="mb-4 last:mb-0">
+            <p className="flex items-center gap-1.5 text-sm font-semibold text-ink">
+              {group.animated && <Sparkles className="size-4 text-sun-700" aria-hidden="true" />}
+              {group.title}
+            </p>
+            <p className="mb-2 text-xs text-slate-500">{group.hint}</p>
+            <div className="grid grid-cols-2 gap-2.5" role="radiogroup" aria-label={group.title}>
+              {group.themes.map((th) => {
                 const info = THEME_INFO[th];
                 const selected = draft.theme === th;
                 const locked = th !== FREE_PORTFOLIO_THEME && !pro;
@@ -264,6 +284,26 @@ export function PortfolioPage({ onNavigate }: { onNavigate: (tab: Tab) => void }
                 );
               })}
             </div>
+            </div>
+            ))}
+            <div className="mt-3 flex flex-wrap items-center gap-2">
+              <label className="inline-flex min-h-11 cursor-pointer items-center gap-2 rounded-xl border border-slate-300 bg-white px-3 text-sm font-medium text-slate-800 hover:bg-slate-50">
+                <Palette className="size-4 text-brand-600" aria-hidden="true" /> {t('Couleur')}
+                <input
+                  type="color"
+                  value={draft.accent || '#2549eb'}
+                  onChange={(e) => draft.set({ accent: e.target.value })}
+                  className="size-6 cursor-pointer rounded border-0 bg-transparent p-0"
+                  aria-label={t('Couleur principale du portfolio')}
+                />
+              </label>
+              {draft.accent && (
+                <button type="button" className="hit text-sm font-medium text-brand-700 underline-offset-2 hover:underline" onClick={() => draft.set({ accent: '' })}>
+                  {t('Couleur du design')}
+                </button>
+              )}
+            </div>
+            <Inspire onPick={(theme, accent) => draft.set({ theme, accent })} />
           </Card>
 
           <Card title={t('2. Ajoutez vos projets')} subtitle={t('Facultatif. Une photo, un titre, deux lignes : un chantier, une campagne, une appli, un dossier de soins anonymisé…')}>
@@ -283,6 +323,29 @@ export function PortfolioPage({ onNavigate }: { onNavigate: (tab: Tab) => void }
                 ))}
               </ul>
             )}
+            <div className="mb-3">
+              <Field
+                label={t('Vidéo de présentation (facultatif)')}
+                hint={t('Un lien YouTube, Vimeo ou Loom : une minute pour vous présenter, face caméra ou en montrant votre travail.')}
+                placeholder="https://youtu.be/…"
+                value={draft.video}
+                onChange={(v) => draft.set({ video: v.trim().slice(0, 300) })}
+              />
+              <div className="mt-2">
+                <Disclosure title={t('Comment faire ma vidéo en 5 minutes')} hint={t('Avec votre téléphone, sans matériel')}>
+                  <ol className="list-decimal space-y-1.5 pl-5 pt-1 text-sm text-slate-700">
+                    <li>{t('Placez-vous face à une fenêtre (lumière de face), fond simple, téléphone posé à hauteur des yeux, à l’horizontale.')}</li>
+                    <li>{t('Parlez 60 à 90 secondes : qui vous êtes et votre métier, une réussite avec un chiffre, puis le poste que vous cherchez.')}</li>
+                    <li>{t('Souriez, regardez l’objectif, parlez lentement. Refaites-la deux ou trois fois et gardez la meilleure.')}</li>
+                    <li>{t('Mettez-la sur YouTube en « Non répertoriée » (seules les personnes qui ont le lien la voient), copiez le lien et collez-le ci-dessus.')}</li>
+                  </ol>
+                  <p className="mt-2 rounded-xl bg-sun-50 px-3 py-2 text-xs text-slate-700 ring-1 ring-sun-200">
+                    <span className="mr-1 rounded-full bg-sun-100 px-2 py-0.5 font-semibold text-sun-900">{t('Bientôt')}</span>
+                    {t('CVCasa montera pour vous un portfolio vidéo animé à partir de votre CV, prêt à partager.')}
+                  </p>
+                </Disclosure>
+              </div>
+            </div>
             {adding ? (
               <ProjectForm
                 onCancel={() => setAdding(false)}
@@ -324,7 +387,7 @@ export function PortfolioPage({ onNavigate }: { onNavigate: (tab: Tab) => void }
                 <p className="flex items-center gap-1.5 font-semibold text-ink">
                   <Sparkles className="size-4 text-sun-700" aria-hidden="true" /> {t('Portfolio Pro')}
                 </p>
-                <p className="mt-1">{t('Les 4 designs, à changer quand vous voulez, et une page sans la mention CVCasa en bas. Payé une seule fois.')}</p>
+                <p className="mt-1">{t('Tous les designs (7, dont un animé), à changer quand vous voulez, et une page sans la mention CVCasa en bas. Payé une seule fois.')}</p>
               </div>
             )}
 
@@ -367,6 +430,56 @@ export function PortfolioPage({ onNavigate }: { onNavigate: (tab: Tab) => void }
           </div>
         </section>
       </div>
+    </div>
+  );
+}
+
+/**
+ * « S'inspirer d'un portfolio que j'aime » : une capture d'écran d'une page qui plaît ; on garde son style
+ * (design le plus proche et couleur), jamais son contenu. 1 crédit.
+ */
+function Inspire({ onPick }: { onPick: (theme: PortfolioTheme, accent: string) => void }) {
+  const input = useRef<HTMLInputElement>(null);
+  const [busy, setBusy] = useState(false);
+  const [note, setNote] = useState<{ tone: 'success' | 'warn' | 'error'; text: string } | null>(null);
+
+  async function pick(f: File | undefined) {
+    if (!f) return;
+    setBusy(true);
+    setNote(null);
+    try {
+      const { size: _size, ...file } = await fileToAttachment(f);
+      if (file.mediaType === 'text/plain') throw new Error(t('Importez une capture d’écran du portfolio qui vous plaît.'));
+      const r = await api.portfolioStyle({ file });
+      if (!r.isPortfolio) {
+        setNote({ tone: 'warn', text: t('Cette image ne ressemble pas à une page de portfolio. Essayez une capture d’écran du site qui vous plaît.') });
+        return;
+      }
+      const accent = /^#[0-9a-fA-F]{6}$/.test(r.accent) ? r.accent : '';
+      onPick(r.theme, accent);
+      setNote({ tone: 'success', text: t('Design « {0} » choisi, avec la couleur de votre modèle. {1} Votre contenu reste le vôtre : rien n’est copié.', [THEME_INFO[r.theme].name, LANG === 'fr' ? r.summary : '']) });
+    } catch (e) {
+      const d = useAccount.getState().dialog;
+      if (d !== 'account' && d !== 'credits') setNote({ tone: 'error', text: (e as Error).message });
+    } finally {
+      setBusy(false);
+      if (input.current) input.current.value = '';
+    }
+  }
+
+  return (
+    <div className="mt-3 rounded-xl border border-dashed border-brand-300 bg-brand-50/60 p-3">
+      <input ref={input} type="file" accept="image/*,application/pdf" className="sr-only" onChange={(e) => void pick(e.target.files?.[0])} />
+      <p className="text-sm font-semibold text-ink">{t('Vous avez vu un portfolio qui vous plaît ?')}</p>
+      <p className="mt-0.5 text-xs text-slate-600">{t('Envoyez une capture d’écran : on reprend son style (disposition et couleur) avec vos informations à vous.')}</p>
+      <Button variant="secondary" size="sm" className="mt-2" loading={busy} icon={<Wand2 className="size-4" />} onClick={() => input.current?.click()}>
+        {t('M’inspirer de ce portfolio')} <Cost n={1} />
+      </Button>
+      {note && (
+        <div className="mt-2">
+          <Notice tone={note.tone}>{note.text}</Notice>
+        </div>
+      )}
     </div>
   );
 }

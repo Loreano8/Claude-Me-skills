@@ -46,6 +46,8 @@ export const SAMPLE_NURSE: PortfolioData = {
   languages: ['Français · Courant', 'Anglais · Professionnel (B2)'],
   projects: [],
   cvUrl: 'https://cvcasa.com/',
+  video: '',
+  accent: '',
 };
 
 export const SAMPLE_DESIGNER: PortfolioData = {
@@ -86,4 +88,6 @@ export const SAMPLE_DESIGNER: PortfolioData = {
     { title: 'Accessibility audit', text: 'Made a public service website usable with a screen reader.', link: '', image: thumb('#4c1d95', '#a78bfa', '#7c3aed') },
   ],
   cvUrl: 'https://cvcasa.com/',
+  video: '',
+  accent: '',
 };

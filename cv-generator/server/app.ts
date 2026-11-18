@@ -1281,6 +1281,14 @@ export function createApp({ fetchPage = fetchJobPage, ai, aiEn = null, allowedOr
     ),
   );
 
+  // « S'inspirer d'un portfolio que j'aime » : une capture d'écran → le design et la couleur les plus proches.
+  app.post(
+    '/api/ai/portfolio-style',
+    aiRoute('portfolio-style', AnalyzeTemplateRequest, (ai, body) => ai.portfolioStyle(body), (body) =>
+      body.file.mediaType === 'text/plain' ? 'Importez une capture d’écran du portfolio qui vous plaît.' : null,
+    ),
+  );
+
   // « Écrire comme moi » : analyse du style d'écriture, gratuite.
   app.post(
     '/api/ai/style',

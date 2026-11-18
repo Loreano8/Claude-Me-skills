@@ -13,6 +13,7 @@ function fakeAi(overrides: Partial<Ai> = {}): Ai {
     interview: vi.fn(async () => sampleInterview),
     revise: vi.fn(async () => sampleRevise),
     analyzeTemplate: vi.fn(async () => sampleTemplateAnalysis),
+    portfolioStyle: vi.fn(async () => ({ isPortfolio: true, theme: 'bento' as const, accent: '#0f766e', summary: 'Tuiles arrondies, fond clair.' })),
     clarify: vi.fn(async () => sampleClarify),
     keywords: vi.fn(async () => sampleKeywords),
     transcribe: vi.fn(async () => sampleTranscript),

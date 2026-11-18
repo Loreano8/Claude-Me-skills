@@ -78,6 +78,7 @@ const ai = {
   interview: async () => (await wait(), sampleInterview),
   revise: async () => (await wait(), sampleRevise),
   analyzeTemplate: async () => (await wait(), sampleTemplateAnalysis),
+  portfolioStyle: async () => (await wait(), { isPortfolio: true, theme: 'aurore' as const, accent: '#7c3aed', summary: 'Fond nuit, lueurs colorées et cartes en verre, grande typographie moderne.' }),
   clarify: async () => (await wait(), sampleClarify),
   keywords: async () => (await wait(), sampleKeywords),
   transcribe: async () => (await wait(), sampleTranscript),

@@ -270,6 +270,32 @@ ${UNTRUSTED_INPUT_RULE}
 Rédige summary, strengths et issues en français.`;
 }
 
+export function portfolioStyleSystem(): string {
+  return `Tu es directeur artistique. On te montre la capture d'écran d'un portfolio en ligne (ou d'un site personnel, d'un CV en ligne) que l'utilisateur aime.
+Il veut un portfolio dans le même esprit, avec SES informations : tu ne t'intéresses qu'au style, jamais au contenu. Ne recopie aucune information personnelle, aucun texte, aucun nom.
+
+1. isPortfolio : l'image montre-t-elle bien une page web de ce type ? Si non, mets false et remplis le reste au mieux.
+
+2. theme : le design CVCasa le plus proche parmi :
+- classique : grand bandeau bleu nuit en haut, puis des cartes blanches, sobre et rassurant ;
+- epure : fond blanc, très grande typographie noire, sans cartes, beaucoup d'espace, style suisse ou minimaliste ;
+- creatif : fond sombre, couleur vive en accent, projets en images en premier ;
+- colonne : colonne fixe sur le côté avec le profil, contenu à droite ;
+- bento : grille de tuiles arrondies de tailles différentes (style « bento »), chiffres dans des tuiles colorées ;
+- magazine : fond papier crème ou clair, grande typographie à empattement, filets fins, sections numérotées, style éditorial ;
+- aurore : fond nuit, lueurs colorées floues, effets de verre, texte en dégradé, très moderne ;
+- pastel : fond clair et chaleureux, cartes blanches avec des touches de couleurs douces (corail, menthe, ciel), joyeux et accueillant ;
+- onde : fond blanc très propre, bandeau d'en-tête en dégradé doux (bleu ciel, menthe) qui ondule lentement, cartes nettes ;
+- defile : noir et blanc net, très grand nom, une bande noire où défilent les compétences, une touche orange ;
+- soleil : fond clair lumineux, lueurs chaudes (pêche, jaune, rose) qui bougent, texte en dégradé orangé, moderne et gai.
+
+3. accent : la couleur principale de la page (#RRGGBB). Si elle est criarde ou peu lisible, prends une nuance plus sobre de la même famille. Si la page est en noir et blanc, donne un noir ou gris très foncé.
+
+4. summary : en une phrase, en français, ce qui fait le style de cette page (disposition, couleurs, typographie), sans citer de contenu.
+
+${UNTRUSTED_INPUT_RULE}`;
+}
+
 export function transcribeSystem(): string {
   return `Tu retranscris fidèlement des documents photographiés au téléphone : pages écrites à la main, lettres, attestations, formulaires, notes.
 Ta mission : restituer le texte exact, tapé proprement, pour qu'il puisse être imprimé ou envoyé.

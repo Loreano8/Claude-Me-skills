@@ -32,7 +32,8 @@ import {
   StyleResult,
   type StyleRequest,
 } from '../shared/schema.ts';
-import { adaptSystem, analyzeTemplateSystem, clarifySystem, keywordsSystem, letterQuestionsSystem, styleSystem, transcribeSystem, coverLetterSystem, interviewSystem, reviseSystem, structureSystem, translateSystem, translateLetterSystem } from './prompts.ts';
+import { PortfolioStyleResult } from '../shared/portfolio.ts';
+import { adaptSystem, analyzeTemplateSystem, portfolioStyleSystem, clarifySystem, keywordsSystem, letterQuestionsSystem, styleSystem, transcribeSystem, coverLetterSystem, interviewSystem, reviseSystem, structureSystem, translateSystem, translateLetterSystem } from './prompts.ts';
 
 type ContentBlock = Anthropic.Beta.BetaContentBlockParam;
 type Effort = 'low' | 'medium' | 'high';
@@ -237,6 +238,11 @@ export function createAi(client: Anthropic, model = DEFAULT_MODEL, uiLang: 'fr' 
     analyzeTemplate(req: AnalyzeTemplateRequest): Promise<TemplateAnalysis> {
       const content: ContentBlock[] = [attachmentBlock(req.file), { type: 'text', text: 'Analyse ce modèle de CV.' }];
       return run(TemplateAnalysis, analyzeTemplateSystem(), content, 'medium');
+    },
+
+    portfolioStyle(req: AnalyzeTemplateRequest): Promise<PortfolioStyleResult> {
+      const content: ContentBlock[] = [attachmentBlock(req.file), { type: 'text', text: 'Analyse le style de cette page.' }];
+      return run(PortfolioStyleResult, portfolioStyleSystem(), content, 'low');
     },
 
     style(req: StyleRequest): Promise<StyleResult> {
